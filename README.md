@@ -2,16 +2,23 @@
 
 Missing native portal implementation for react-native
 
-## Installation
+## Key features
 
+- 📱 Supports both iOS and Android
+- 🎉 Zero dependencies
+- 💪 Written in TypeScript
+- 🧬 Supports new/old architectures
+- Acts as portal and teleport
+- Native view teleportation
+- 🪞 Mirror support (in future)
+
+## Installation
 
 ```sh
 npm install react-native-teleport
 ```
 
-
 ## Usage
-
 
 ```js
 import { TeleportView } from "react-native-teleport";
@@ -20,7 +27,6 @@ import { TeleportView } from "react-native-teleport";
 
 <TeleportView color="tomato" />
 ```
-
 
 ## Contributing
 

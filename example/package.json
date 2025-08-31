@@ -11,6 +11,7 @@
   },
   "dependencies": {
     "@react-native/new-app-screen": "0.81.0",
+    "lottie-react-native": "^7.3.3",
     "react": "19.1.0",
     "react-native": "0.81.0",
     "react-native-safe-area-context": "^5.5.2"

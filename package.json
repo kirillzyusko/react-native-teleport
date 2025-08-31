@@ -125,10 +125,7 @@
   },
   "prettier": {
     "quoteProps": "consistent",
-    "singleQuote": true,
-    "tabWidth": 2,
-    "trailingComma": "es5",
-    "useTabs": false
+    "trailingComma": "all"
   },
   "react-native-builder-bob": {
     "source": "src",
@@ -151,13 +148,14 @@
   "codegenConfig": {
     "name": "TeleportViewSpec",
     "type": "all",
-    "jsSrcsDir": "src",
+    "jsSrcsDir": "src/specs",
     "android": {
       "javaPackageName": "com.teleport"
     },
     "ios": {
       "componentProvider": {
-        "TeleportView": "TeleportView"
+        "PortalView": "PortalView",
+        "PortalHostView": "PortalHostView"
       }
     }
   },
