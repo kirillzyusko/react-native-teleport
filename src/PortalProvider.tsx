@@ -1,5 +1,6 @@
 import { createContext } from "react";
-import PortalHostView from "./specs/PortalHostViewNativeComponent";
+import PortalHost from "./views/PortalHost";
+import NativePortalProvider from "./views/PortalProvider";
 
 type PortalProviderProps = {
   children: React.ReactNode;
@@ -10,9 +11,11 @@ const PortalContext = createContext<PortalContextType>({});
 
 export default function PortalProvider({ children }: PortalProviderProps) {
   return (
-    <PortalContext.Provider value={{}}>
-      {children}
-      <PortalHostView name="root" />
-    </PortalContext.Provider>
+    <NativePortalProvider>
+      <PortalContext.Provider value={{}}>
+        {children}
+        <PortalHost name="root" />
+      </PortalContext.Provider>
+    </NativePortalProvider>
   );
 }

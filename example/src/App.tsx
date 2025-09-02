@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { View, StyleSheet, Button } from "react-native";
-import { PortalProvider, PortalView } from "react-native-teleport";
+import { PortalProvider, Portal } from "react-native-teleport";
 import {
   initialWindowMetrics,
   SafeAreaProvider,
@@ -13,9 +13,9 @@ function AppContent() {
 
   return (
     <View style={styles.container}>
-      <PortalView hostName={shouldBeTeleported ? "root" : undefined}>
+      <Portal hostName={shouldBeTeleported ? "root" : undefined}>
         <LottieView source={Bottle} style={styles.box} autoPlay loop />
-      </PortalView>
+      </Portal>
       <Button
         title={shouldBeTeleported ? "Move back" : "Move to portal"}
         onPress={() => setTeleported((t) => !t)}

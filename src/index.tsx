@@ -1,3 +1,3 @@
-export { default as PortalHostView } from "./specs/PortalHostViewNativeComponent";
-export { default as PortalView } from "./specs/PortalViewNativeComponent";
+export { default as PortalHost } from "./views/PortalHost";
+export { default as Portal } from "./views/Portal";
 export { default as PortalProvider } from "./PortalProvider";
