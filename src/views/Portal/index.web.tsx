@@ -1,3 +1,5 @@
+/// <reference lib="dom" />
+
 import { useRef, useLayoutEffect } from "react";
 import { createPortal } from "react-dom";
 import { usePortalRegistryContext } from "../../contexts/PortalRegistry";
@@ -17,7 +19,7 @@ export default function Portal({ hostName, children }: PortalProps) {
     if (!el) return;
 
     let target: Node | null = null;
-    const hostNode = getHost(hostName);
+    const hostNode = hostName ? getHost(hostName) : null;
 
     if (hostNode) {
       // Teleport: Append to host (use appendChild for end positioning; adjust if specific index needed)
@@ -32,7 +34,7 @@ export default function Portal({ hostName, children }: PortalProps) {
     return () => {
       // Cleanup: Remove el from current parent to avoid leaks/duplicates
       if (el.parentNode === target) {
-        target.removeChild(el);
+        target?.removeChild(el);
       }
     };
   }, [hostName, getHost]);
@@ -41,7 +43,13 @@ export default function Portal({ hostName, children }: PortalProps) {
     <>
       {createPortal(children, elRef.current)}
       {/* Invisible sentinel for local position */}
-      <div ref={sentinelRef} style={{ display: "contents" }} />
+      <div ref={sentinelRef} style={styles.anchor} />
     </>
   );
 }
+
+const styles = {
+  anchor: {
+    display: "contents",
+  },
+};
