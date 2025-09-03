@@ -40,7 +40,8 @@ export default function Portal({ hostName, children }: PortalProps) {
   return (
     <>
       {createPortal(children, elRef.current)}
-      <div ref={sentinelRef} style={{ display: "contents" }} /> {/* Invisible sentinel for local position */}
+      {/* Invisible sentinel for local position */}
+      <div ref={sentinelRef} style={{ display: "contents" }} />
     </>
   );
 }
