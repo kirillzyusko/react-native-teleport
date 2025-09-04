@@ -1,3 +1,10 @@
+//
+//  PortalHostView.h
+//  Pods
+//
+//  Created by Kiryl Ziusko on 02/09/2025.
+//
+
 #import <React/RCTViewComponentView.h>
 #import <UIKit/UIKit.h>
 

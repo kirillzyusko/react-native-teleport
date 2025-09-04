@@ -6,6 +6,7 @@
 //
 
 #import "PortalView.h"
+#import "PortalRegistry.h"
 
 #import <react/renderer/components/TeleportViewSpec/ComponentDescriptors.h>
 #import <react/renderer/components/TeleportViewSpec/EventEmitters.h>
@@ -15,27 +16,6 @@
 #import "RCTFabricComponentsPlugins.h"
 
 using namespace facebook::react;
-
-@interface UIView (Find)
-- (nullable UIView *)findSubviewWithAccessibilityIdentifier:(NSString *)identifier;
-@end
-
-@implementation UIView (Find)
-
-- (nullable UIView *)findSubviewWithAccessibilityIdentifier:(NSString *)identifier {
-    if ([self.accessibilityIdentifier isEqualToString:identifier]) {
-        return self;
-    }
-    for (UIView *subview in self.subviews) {
-        UIView *found = [subview findSubviewWithAccessibilityIdentifier:identifier];
-        if (found) {
-            return found;
-        }
-    }
-    return nil;
-}
-
-@end
 
 @interface PortalView () <RCTPortalViewViewProtocol>
 
@@ -79,18 +59,14 @@ using namespace facebook::react;
     if (![self.hostName isEqualToString:newHostName]) {
         self.hostName = newHostName;
 
-        UIView *hostView = nil;
+        PortalHostView *hostView = nil;
         if (self.hostName) {
-            UIView *root = self;
-            while (root.superview) {
-                root = root.superview;
-            }
-            hostView = [root findSubviewWithAccessibilityIdentifier:self.hostName];
+            hostView = [[PortalRegistry sharedInstance] getHostWithName:self.hostName];
         }
 
         UIView *newTarget = self.contentView;
-        if (hostView && [hostView isKindOfClass:[RCTViewComponentView class]]) {
-          newTarget = hostView; // ((RCTViewComponentView *)hostView).contentView;
+        if (hostView) {
+            newTarget = (UIView *) hostView;
         }
 
         if (newTarget != self.targetView) {

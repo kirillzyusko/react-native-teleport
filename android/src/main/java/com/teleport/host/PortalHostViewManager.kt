@@ -21,7 +21,7 @@ class PortalHostViewManager : ReactViewManager(),
 
   @ReactProp(name = "name")
   override fun setName(view: PortalHostView?, name: String?) {
-    view?.tag = name
+    view?.setName(name)
   }
 
   companion object {

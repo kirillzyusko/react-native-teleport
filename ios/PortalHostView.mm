@@ -1,4 +1,12 @@
+//
+//  PortalHostView.mm
+//  Pods
+//
+//  Created by Kiryl Ziusko on 02/09/2025.
+//
+
 #import "PortalHostView.h"
+#import "PortalRegistry.h"
 
 #import <react/renderer/components/TeleportViewSpec/ComponentDescriptors.h>
 #import <react/renderer/components/TeleportViewSpec/EventEmitters.h>
@@ -11,11 +19,11 @@ using namespace facebook::react;
 
 @interface PortalHostView () <RCTPortalHostViewViewProtocol>
 
+@property (nonatomic, strong) NSString *registeredName;
+
 @end
 
-@implementation PortalHostView {
-    // UIView * _view;
-}
+@implementation PortalHostView
 
 + (ComponentDescriptorProvider)componentDescriptorProvider
 {
@@ -27,10 +35,6 @@ using namespace facebook::react;
   if (self = [super initWithFrame:frame]) {
     static const auto defaultProps = std::make_shared<const PortalHostViewProps>();
     _props = defaultProps;
-
-    // _view = [[UIView alloc] init];
-
-    //self.contentView = _view;
   }
 
   return self;
@@ -43,10 +47,26 @@ using namespace facebook::react;
 
     if (oldViewProps.name != newViewProps.name) {
         std::string nameStr = newViewProps.name;
-        self.accessibilityIdentifier = nameStr.empty() ? nil : [NSString stringWithUTF8String:nameStr.c_str()];
+        NSString *newName = nameStr.empty() ? nil : [NSString stringWithUTF8String:nameStr.c_str()];
+
+        if (![self.registeredName isEqualToString:newName]) {
+            if (self.registeredName) {
+                [[PortalRegistry sharedInstance] unregisterHostWithName:self.registeredName];
+            }
+            self.registeredName = newName;
+            if (newName) {
+                [[PortalRegistry sharedInstance] registerHost:self withName:newName];
+            }
+        }
     }
 
     [super updateProps:props oldProps:oldProps];
+}
+
+- (void)dealloc {
+    if (self.registeredName) {
+        [[PortalRegistry sharedInstance] unregisterHostWithName:self.registeredName];
+    }
 }
 
 Class<RCTComponentViewProtocol> PortalHostViewCls(void)
