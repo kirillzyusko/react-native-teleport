@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { memo, useEffect } from "react";
 import { usePortalRegistryContext } from "../../contexts/PortalRegistry";
 import type { PortalHostProps } from "../../types";
 
@@ -14,4 +14,4 @@ function PortalHost({ name, children }: PortalHostProps) {
   return <div ref={(ref) => setHost(name, ref)}>{children}</div>;
 }
 
-export default PortalHost;
+export default memo(PortalHost);
