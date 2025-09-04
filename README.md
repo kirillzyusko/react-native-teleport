@@ -4,12 +4,12 @@ Missing native portal implementation for react-native
 
 ## Key features
 
-- 📱 Supports both iOS and Android
+- 🚀 Supports iOS, Android and Web
 - 🎉 Zero dependencies
 - 💪 Written in TypeScript
-- 🧬 Supports new/old architectures
-- Acts as portal and teleport
-- Native view teleportation
+- 🧬 Supports new architectures
+- ✨ Acts as portal and teleport
+- 🕳️ Native view teleportation
 - 🪞 Mirror support (in future)
 
 ## Installation
