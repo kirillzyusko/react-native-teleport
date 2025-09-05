@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { View, StyleSheet, Button } from "react-native";
+import { View, StyleSheet, Button, TouchableOpacity } from "react-native";
 import { PortalProvider, Portal, PortalHost } from "react-native-teleport";
 import {
   initialWindowMetrics,
@@ -11,7 +11,7 @@ import Bottle from "./assets/bottle.json";
 import RootStack from "./navigation";
 import {
   GestureHandlerRootView,
-  TouchableOpacity,
+  // TouchableOpacity,
 } from "react-native-gesture-handler";
 
 function AppContent() {
@@ -51,10 +51,13 @@ export default function App() {
     <SafeAreaProvider initialMetrics={initialWindowMetrics}>
       <GestureHandlerRootView style={{ flex: 1 }}>
         <PortalProvider>
-          <AppContent />
+          <NavigationContainer>
+            <RootStack />
+          </NavigationContainer>
+          {/*<AppContent />
           <View style={StyleSheet.absoluteFillObject}>
             <PortalHost name="root3" />
-          </View>
+          </View>*/}
         </PortalProvider>
       </GestureHandlerRootView>
     </SafeAreaProvider>

@@ -4,8 +4,13 @@ const HtmlWebpackPlugin = require("html-webpack-plugin");
 const appDirectory = path.resolve(__dirname);
 const { presets, plugins } = require(`${appDirectory}/babel.config.js`);
 const compileNodeModules = [
-  // Add every react-native package that needs compiling
-  // 'react-native-gesture-handler',
+  "react-native-reanimated",
+  "react-native-gesture-handler",
+  "react-native-screens",
+  "react-native-safe-area-context",
+  "@react-navigation/native",
+  "@react-navigation/elements",
+  "@react-navigation/native-stack",
 ].map((moduleName) => path.resolve(appDirectory, `node_modules/${moduleName}`));
 
 const teleportSrc = path.resolve(__dirname, "..", "src");
@@ -28,6 +33,7 @@ const babelLoaderConfiguration = {
       plugins,
     },
   },
+  type: "javascript/auto",
 };
 
 const svgLoaderConfiguration = {
