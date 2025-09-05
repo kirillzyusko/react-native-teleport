@@ -37,6 +37,7 @@ class PortalView(context: Context) : ReactViewGroup(context) {
     return hostName != null && PortalRegistry.getHost(hostName) != null
   }
 
+  // region Children management
   override fun getChildCount(): Int {
     return if (isTeleported()) {
       PortalRegistry.getHost(hostName)?.childCount ?: 0
@@ -84,4 +85,5 @@ class PortalView(context: Context) : ReactViewGroup(context) {
       super.removeViewAt(index)
     }
   }
+  // endregion
 }
