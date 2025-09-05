@@ -56,6 +56,13 @@ const imageLoaderConfiguration = {
 };
 
 module.exports = {
+  ignoreWarnings: [
+    {
+      // worklet is a new library, so let's simply ignore it :)
+      module: /react-native-worklets[\\/]/,
+      message: /Critical dependency: require function is used in a way/,
+    },
+  ],
   entry: {
     app: path.join(__dirname, "index.web.js"),
   },
