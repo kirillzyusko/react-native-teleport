@@ -8,7 +8,8 @@
     "web": "webpack serve --mode=development --config webpack.config.js",
     "start": "react-native start",
     "build:android": "react-native build-android --extra-params \"--no-daemon --console=plain -PreactNativeArchitectures=arm64-v8a\"",
-    "build:ios": "react-native build-ios --mode Debug"
+    "build:ios": "react-native build-ios --mode Debug",
+    "build:web": "webpack --mode=production --config webpack.config.js"
   },
   "dependencies": {
     "@lottiefiles/dotlottie-react": "^0.15.2",
