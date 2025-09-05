@@ -15,6 +15,8 @@
 
 #import "RCTFabricComponentsPlugins.h"
 
+#import <React/RCTSurfaceTouchHandler.h>
+
 using namespace facebook::react;
 
 @interface PortalView () <RCTPortalViewViewProtocol>
@@ -24,7 +26,9 @@ using namespace facebook::react;
 
 @end
 
-@implementation PortalView
+@implementation PortalView {
+  RCTSurfaceTouchHandler *_touchHandler;
+}
 
 + (ComponentDescriptorProvider)componentDescriptorProvider
 {
@@ -37,6 +41,7 @@ using namespace facebook::react;
     static const auto defaultProps = std::make_shared<const PortalViewProps>();
     _props = defaultProps;
 
+    _touchHandler = [RCTSurfaceTouchHandler new];
     UIView *content = [[UIView alloc] init];
     self.contentView = content;
     self.targetView = content;
@@ -81,11 +86,13 @@ using namespace facebook::react;
             for (UIView *child in children) {
                 [newTarget insertSubview:child atIndex:i++];
             }
+           
+          if (newHostName != nil) {
+            [_touchHandler attachToView:newTarget];
+          } else {
+            [_touchHandler detachFromView:oldTarget];
+          }
         }
-    }
-
-    if (oldViewProps.name != newViewProps.name) {
-        self.accessibilityIdentifier = newName;
     }
 
     [super updateProps:props oldProps:oldProps];
@@ -97,6 +104,36 @@ using namespace facebook::react;
 
 - (void)unmountChildComponentView:(UIView<RCTComponentViewProtocol> *)childComponentView index:(NSInteger)index {
     [childComponentView removeFromSuperview];
+}
+
+// MARK: touch handling
+- (UIView *)hitTest:(CGPoint)point withEvent:(UIEvent *)event
+{
+  BOOL canReceiveTouchEvents = ([self isUserInteractionEnabled] && ![self isHidden]);
+  if (!canReceiveTouchEvents) {
+    return nil;
+  }
+
+  // `hitSubview` is the topmost subview which was hit. The hit point can
+  // be outside the bounds of `view` (e.g., if -clipsToBounds is NO).
+  UIView *hitSubview = nil;
+  BOOL isPointInside = [self pointInside:point withEvent:event];
+  if (![self clipsToBounds] || isPointInside) {
+    // The default behaviour of UIKit is that if a view does not contain a point,
+    // then no subviews will be returned from hit testing, even if they contain
+    // the hit point. By doing hit testing directly on the subviews, we bypass
+    // the strict containment policy (i.e., UIKit guarantees that every ancestor
+    // of the hit view will return YES from -pointInside:withEvent:). See:
+    //  - https://developer.apple.com/library/ios/qa/qa2013/qa1812.html
+    for (UIView *subview in [_targetView.subviews reverseObjectEnumerator]) {
+      CGPoint convertedPoint = [subview convertPoint:point fromView:self];
+      hitSubview = [subview hitTest:convertedPoint withEvent:event];
+      if (hitSubview != nil) {
+        break;
+      }
+    }
+  }
+  return hitSubview;
 }
 
 Class<RCTComponentViewProtocol> PortalViewCls(void)
