@@ -1,23 +1,32 @@
-import { View, StyleSheet } from 'react-native';
-import { TeleportView } from 'react-native-teleport';
+import { StyleSheet, View } from "react-native";
+import { PortalHost, PortalProvider } from "react-native-teleport";
+import {
+  initialWindowMetrics,
+  SafeAreaProvider,
+} from "react-native-safe-area-context";
+import { NavigationContainer } from "@react-navigation/native";
+import RootStack from "./navigation";
+import { GestureHandlerRootView } from "react-native-gesture-handler";
 
 export default function App() {
   return (
-    <View style={styles.container}>
-      <TeleportView color="#32a852" style={styles.box} />
-    </View>
+    <SafeAreaProvider initialMetrics={initialWindowMetrics}>
+      <GestureHandlerRootView style={styles.container}>
+        <PortalProvider>
+          <NavigationContainer>
+            <RootStack />
+          </NavigationContainer>
+          <View style={StyleSheet.absoluteFillObject} pointerEvents="box-none">
+            <PortalHost name="overlay" />
+          </View>
+        </PortalProvider>
+      </GestureHandlerRootView>
+    </SafeAreaProvider>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  box: {
-    width: 60,
-    height: 60,
-    marginVertical: 20,
   },
 });
