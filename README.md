@@ -44,6 +44,7 @@ export const App = () => (
     </View>
   </Portal>
 );
+```
 
 ## Contributing
 
