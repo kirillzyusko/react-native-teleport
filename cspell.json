@@ -46,6 +46,7 @@
     "**/*.xcworkspacedata",
     "**/*.svg",
     "**/*.storyboard",
+    "example/src/assets/lottie/**",
     "cspell.json",
     "**/patches/**"
   ],

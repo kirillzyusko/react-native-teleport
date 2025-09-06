@@ -1,0 +1,56 @@
+name: ✨ Validate iOS
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - ".github/workflows/verify-ios.yml"
+      - "ios/**"
+  pull_request:
+    branches:
+      - main
+    paths:
+      - ".github/workflows/verify-ios.yml"
+      - "ios/**"
+
+jobs:
+  swift-lint:
+    runs-on: ubuntu-latest
+    name: 🔎 Swift Lint
+    steps:
+      - uses: actions/checkout@v4
+      - name: Run SwiftLint GitHub Action (--strict)
+        uses: norio-nomura/action-swiftlint@master
+        with:
+          args: --strict
+        env:
+          WORKING_DIRECTORY: ios
+  format:
+    runs-on: macOS-14
+    name: 📚 Swift Format
+    defaults:
+      run:
+        working-directory: ./ios
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install SwiftFormat
+        run: brew install swiftformat
+
+      - name: Format Swift code
+        run: swiftformat --verbose .
+
+      - name: Verify that the formatted code hasn't been changed
+        run: git diff --exit-code HEAD
+  objc-lint:
+    runs-on: macOS-14
+    name: 🔎 ObjC Lint
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install dependencies
+        run: yarn install --frozen-lockfile
+
+      - name: Verify formatting
+        run: yarn lint-clang
