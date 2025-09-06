@@ -15,8 +15,10 @@ class PortalHostView(context: Context?) : ReactViewGroup(context) {
     newName?.let { PortalRegistry.register(it, this) }
   }
 
+  // region Lifecycle
   override fun onDetachedFromWindow() {
     super.onDetachedFromWindow()
     name?.let { PortalRegistry.unregister(it) }
   }
+  // endregion
 }

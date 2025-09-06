@@ -2,7 +2,7 @@ import { useState } from "react";
 import { View, StyleSheet, Button } from "react-native";
 import { Portal, PortalHost } from "react-native-teleport";
 import LottieView from "lottie-react-native";
-import Bottle from "../../assets/bottle.json";
+import Bottle from "../../assets/lottie/bottle.json";
 import {
   GestureHandlerRootView,
   TouchableOpacity,
