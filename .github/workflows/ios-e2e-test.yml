@@ -93,8 +93,6 @@ jobs:
     name: ⚙️ Automated test cases (iOS-${{ matrix.devices.ios }})
     runs-on: macos-${{ matrix.devices.macos }}
     timeout-minutes: 90
-    env:
-      WORKING_DIRECTORY: example
     concurrency:
       group: ios-e2e-${{ matrix.devices.ios }}-${{ github.ref }}
       cancel-in-progress: true
@@ -109,3 +107,26 @@ jobs:
         with:
           name: ios-e2e-ipa
           path: example/ios/build/Build/Products/Release-iphonesimulator/TeleportExample.app/
+      - name: Install Maestro CLI
+        run: |
+          brew tap mobile-dev-inc/tap
+          brew install maestro
+
+      - name: Install app on simulator
+        run: |
+          UDID=$(xcrun simctl list devices | grep "iPhone 16 Pro (" | grep -oE "[0-9A-F-]{36}" | head -n 1)
+          open -a Simulator --args -CurrentDeviceUDID $UDID
+          xcrun simctl bootstatus "$UDID"
+          osascript -e 'tell application "Simulator" to activate'
+          xcrun simctl install "$UDID" example/ios/build/Build/Products/Release-iphonesimulator/TeleportExample.app
+      - name: Run E2E tests
+        run: |
+          export MAESTRO_DRIVER_STARTUP_TIMEOUT=600000
+          maestro test e2e/* --format html ./reports/debug --debug-output ./reports/debug --flatten-debug-output
+
+      - name: Upload test report
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          path: ./reports/debug
+          name: e2e-report-ios
