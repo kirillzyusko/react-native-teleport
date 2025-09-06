@@ -1,4 +1,5 @@
 appId: teleport.example
+url: http://localhost:8080
 ---
 - launchApp
 - tapOn:
