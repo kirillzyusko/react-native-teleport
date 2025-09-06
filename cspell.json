@@ -34,7 +34,8 @@
     "APPL",
     "androiddebugkey",
     "preact",
-    "Srcs"
+    "Srcs",
+    "Werror"
   ],
   "ignorePaths": [
     "node_modules",

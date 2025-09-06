@@ -6,7 +6,10 @@ import java.lang.ref.WeakReference
 object PortalRegistry {
   private val hosts: MutableMap<String, WeakReference<PortalHostView>> = HashMap()
 
-  fun register(name: String, view: PortalHostView) {
+  fun register(
+    name: String,
+    view: PortalHostView,
+  ) {
     hosts[name] = WeakReference(view)
   }
 
@@ -14,7 +17,5 @@ object PortalRegistry {
     hosts.remove(name)
   }
 
-  fun getHost(name: String?): PortalHostView? {
-    return hosts[name]?.get()
-  }
+  fun getHost(name: String?): PortalHostView? = hosts[name]?.get()
 }

@@ -4,7 +4,9 @@ import android.content.Context
 import com.facebook.react.views.view.ReactViewGroup
 import com.teleport.global.PortalRegistry
 
-class PortalHostView(context: Context?) : ReactViewGroup(context) {
+class PortalHostView(
+  context: Context?,
+) : ReactViewGroup(context) {
   private var name: String? = null
 
   fun setName(newName: String?) {

@@ -8,19 +8,18 @@ import com.facebook.react.views.view.ReactViewGroup
 import com.facebook.react.views.view.ReactViewManager
 
 @ReactModule(name = PortalHostViewManager.NAME)
-class PortalHostViewManager : ReactViewManager(),
+class PortalHostViewManager :
+  ReactViewManager(),
   PortalHostViewManagerInterface<PortalHostView> {
+  override fun getName(): String = NAME
 
-  override fun getName(): String {
-    return NAME
-  }
-
-  override fun createViewInstance(context: ThemedReactContext): ReactViewGroup {
-    return PortalHostView(context)
-  }
+  override fun createViewInstance(context: ThemedReactContext): ReactViewGroup = PortalHostView(context)
 
   @ReactProp(name = "name")
-  override fun setName(view: PortalHostView?, name: String?) {
+  override fun setName(
+    view: PortalHostView?,
+    name: String?,
+  ) {
     view?.setName(name)
   }
 
