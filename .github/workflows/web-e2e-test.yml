@@ -1,0 +1,41 @@
+name: 🌐 Test Web
+on:
+  pull_request:
+    paths:
+      - ".github/workflows/web-e2e-test.yml"
+      - "package.json"
+      - "example/**"
+      - "e2e/**"
+      - "src/**"
+  push:
+    branches:
+      - main
+    paths:
+      - ".github/workflows/web-e2e-test.yml"
+      - "package.json"
+      - "example/**"
+      - "e2e/**"
+      - "src/**"
+
+jobs:
+  build-web:
+    name: 🏗️ Build web
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+
+      - name: Setup
+        uses: ./.github/actions/setup
+
+      - name: Build web
+        run: yarn build:web
+
+  test-web:
+    name: ⚙️ Automated test cases
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    needs: build-web
+    steps:
+      - name: Checkout
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2

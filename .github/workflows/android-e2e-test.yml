@@ -1,4 +1,4 @@
-name: 🛠 Android e2e tests
+name: 🤖 Test Android
 on:
   pull_request:
     paths:
@@ -72,7 +72,7 @@ jobs:
       cancel-in-progress: true
     strategy:
       matrix:
-        devices: [{ api: 31, target: google_apis, soft-check: true }]
+        devices: [{ api: 31, target: google_apis }]
     needs: build-android
     steps:
       - name: Checkout
