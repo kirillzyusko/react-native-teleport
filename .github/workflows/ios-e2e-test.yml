@@ -84,7 +84,7 @@ jobs:
           -configuration Release \
           -destination 'platform=iOS Simulator,name=iPhone 16 Pro' \
           build \
-          CODE_SIGNING_ALLOWED=NO"
+          CODE_SIGNING_ALLOWED=NO | xcpretty"
       - uses: actions/upload-artifact@v4
         with:
           name: ios-e2e-ipa
