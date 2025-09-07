@@ -69,9 +69,11 @@ jobs:
           export MAESTRO_DRIVER_STARTUP_TIMEOUT=600000
       - name: Specify web env
         run: |
-          find e2e -name "*.yml" -exec sed -i '' '1i\
-          url: http://localhost:8080
-          ' {} \;
+          find e2e -name "*.yml" -exec sh -c '
+            for file; do
+              printf "url: http://localhost:8080\n" | cat - "$file" > temp && mv temp "$file"
+            done
+          ' sh {} +
         shell: bash
       - name: Run tests
         run: |
