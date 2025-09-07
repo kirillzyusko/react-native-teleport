@@ -27,7 +27,7 @@ using namespace facebook::react;
 
 + (ComponentDescriptorProvider)componentDescriptorProvider
 {
-    return concreteComponentDescriptorProvider<PortalHostViewComponentDescriptor>();
+  return concreteComponentDescriptorProvider<PortalHostViewComponentDescriptor>();
 }
 
 - (instancetype)initWithFrame:(CGRect)frame
@@ -42,36 +42,37 @@ using namespace facebook::react;
 
 - (void)updateProps:(Props::Shared const &)props oldProps:(Props::Shared const &)oldProps
 {
-    const auto &oldViewProps = *std::static_pointer_cast<PortalHostViewProps const>(_props);
-    const auto &newViewProps = *std::static_pointer_cast<PortalHostViewProps const>(props);
+  const auto &oldViewProps = *std::static_pointer_cast<PortalHostViewProps const>(_props);
+  const auto &newViewProps = *std::static_pointer_cast<PortalHostViewProps const>(props);
 
-    if (oldViewProps.name != newViewProps.name) {
-        std::string nameStr = newViewProps.name;
-        NSString *newName = nameStr.empty() ? nil : [NSString stringWithUTF8String:nameStr.c_str()];
+  if (oldViewProps.name != newViewProps.name) {
+    std::string nameStr = newViewProps.name;
+    NSString *newName = nameStr.empty() ? nil : [NSString stringWithUTF8String:nameStr.c_str()];
 
-        if (![self.registeredName isEqualToString:newName]) {
-            if (self.registeredName) {
-                [[PortalRegistry sharedInstance] unregisterHostWithName:self.registeredName];
-            }
-            self.registeredName = newName;
-            if (newName) {
-                [[PortalRegistry sharedInstance] registerHost:self withName:newName];
-            }
-        }
+    if (![self.registeredName isEqualToString:newName]) {
+      if (self.registeredName) {
+        [[PortalRegistry sharedInstance] unregisterHostWithName:self.registeredName];
+      }
+      self.registeredName = newName;
+      if (newName) {
+        [[PortalRegistry sharedInstance] registerHost:self withName:newName];
+      }
     }
+  }
 
-    [super updateProps:props oldProps:oldProps];
+  [super updateProps:props oldProps:oldProps];
 }
 
-- (void)dealloc {
-    if (self.registeredName) {
-        [[PortalRegistry sharedInstance] unregisterHostWithName:self.registeredName];
-    }
+- (void)dealloc
+{
+  if (self.registeredName) {
+    [[PortalRegistry sharedInstance] unregisterHostWithName:self.registeredName];
+  }
 }
 
 Class<RCTComponentViewProtocol> PortalHostViewCls(void)
 {
-    return PortalHostView.class;
+  return PortalHostView.class;
 }
 
 @end

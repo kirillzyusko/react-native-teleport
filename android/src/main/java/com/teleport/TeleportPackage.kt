@@ -8,7 +8,7 @@ import com.teleport.host.PortalHostViewManager
 import com.teleport.portal.PortalViewManager
 import java.util.ArrayList
 
-class TeleportViewPackage : ReactPackage {
+class TeleportPackage : ReactPackage {
   override fun createViewManagers(reactContext: ReactApplicationContext): List<ViewManager<*, *>> {
     val viewManagers: MutableList<ViewManager<*, *>> = ArrayList()
     viewManagers.add(PortalHostViewManager())
@@ -16,7 +16,5 @@ class TeleportViewPackage : ReactPackage {
     return viewManagers
   }
 
-  override fun createNativeModules(reactContext: ReactApplicationContext): List<NativeModule> {
-    return emptyList()
-  }
+  override fun createNativeModules(reactContext: ReactApplicationContext): List<NativeModule> = emptyList()
 }

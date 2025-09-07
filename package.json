@@ -37,8 +37,9 @@
     "typecheck": "tsc",
     "lint": "eslint \"**/*.{js,ts,tsx}\"",
     "clean": "del-cli android/build example/android/build example/android/app/build example/ios/build lib",
-    "prepare": "bob build",
-    "release": "release-it --only-version"
+    "prepare": "bob build > /dev/null 2>&1",
+    "release": "release-it --only-version",
+    "lint-clang": "find ios/ -iname *.h -o -iname *.m -o -iname *.mm | grep -v -e Pods -e build | xargs clang-format -i -n --Werror"
   },
   "keywords": [
     "react-native",
@@ -85,7 +86,6 @@
     "react-native": "0.81.0",
     "react-native-builder-bob": "^0.40.13",
     "release-it": "^17.10.0",
-    "turbo": "^1.10.7",
     "typescript": "^5.8.3"
   },
   "peerDependencies": {
@@ -168,5 +168,8 @@
     "languages": "kotlin-objc",
     "type": "fabric-view",
     "version": "0.53.0"
+  },
+  "dependencies": {
+    "clang-format": "^1.8.0"
   }
 }
