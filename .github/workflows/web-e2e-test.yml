@@ -23,7 +23,7 @@ jobs:
     defaults:
       run:
         working-directory: example
-    runs-on: ubuntu-latest
+    runs-on: macos-15
     steps:
       - name: Checkout
         uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
@@ -57,10 +57,6 @@ jobs:
           cd example
           npx http-server dist -p 8080 --silent --gzip --brotli --hostname 127.0.0.1 >/dev/null 2>&1 &
           echo $! > .server-pid
-      - name: Install Chrome
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y google-chrome-stable
       - name: Setup JDK 17
         uses: actions/setup-java@v4
         with:
@@ -73,12 +69,10 @@ jobs:
           export MAESTRO_DRIVER_STARTUP_TIMEOUT=600000
       - name: Specify web env
         run: |
-          find e2e -name "*.yml" -exec sed -i '1i\url: http://localhost:8080' {} \;
+          find e2e -name "*.yml" -exec sed -i '' '1i\
+          url: http://localhost:8080
+          ' {} \;
         shell: bash
-      - name: Kill existing Chrome processes
-        run: |
-          pkill -f chrome || true
-          pkill -f chromedriver || true
       - name: Run tests
         run: |
           mkdir -p ./reports/debug
