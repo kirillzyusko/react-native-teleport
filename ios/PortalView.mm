@@ -32,7 +32,7 @@ using namespace facebook::react;
 
 + (ComponentDescriptorProvider)componentDescriptorProvider
 {
-    return concreteComponentDescriptorProvider<PortalViewComponentDescriptor>();
+  return concreteComponentDescriptorProvider<PortalViewComponentDescriptor>();
 }
 
 - (instancetype)initWithFrame:(CGRect)frame
@@ -52,58 +52,63 @@ using namespace facebook::react;
 
 - (void)updateProps:(Props::Shared const &)props oldProps:(Props::Shared const &)oldProps
 {
-    const auto &oldViewProps = *std::static_pointer_cast<PortalViewProps const>(_props);
-    const auto &newViewProps = *std::static_pointer_cast<PortalViewProps const>(props);
+  const auto &oldViewProps = *std::static_pointer_cast<PortalViewProps const>(_props);
+  const auto &newViewProps = *std::static_pointer_cast<PortalViewProps const>(props);
 
-    std::string newHostStr = newViewProps.hostName;
-    NSString *newHostName = newHostStr.empty() ? nil : [NSString stringWithUTF8String:newHostStr.c_str()];
+  std::string newHostStr = newViewProps.hostName;
+  NSString *newHostName =
+      newHostStr.empty() ? nil : [NSString stringWithUTF8String:newHostStr.c_str()];
 
-    std::string newNameStr = newViewProps.name;
-    NSString *newName = newNameStr.empty() ? nil : [NSString stringWithUTF8String:newNameStr.c_str()];
+  std::string newNameStr = newViewProps.name;
+  NSString *newName = newNameStr.empty() ? nil : [NSString stringWithUTF8String:newNameStr.c_str()];
 
-    if (![self.hostName isEqualToString:newHostName]) {
-        self.hostName = newHostName;
+  if (![self.hostName isEqualToString:newHostName]) {
+    self.hostName = newHostName;
 
-        PortalHostView *hostView = nil;
-        if (self.hostName) {
-            hostView = [[PortalRegistry sharedInstance] getHostWithName:self.hostName];
-        }
-
-        UIView *newTarget = self.contentView;
-        if (hostView) {
-            newTarget = (UIView *) hostView;
-        }
-
-        if (newTarget != self.targetView) {
-            UIView *oldTarget = self.targetView;
-            self.targetView = newTarget;
-
-            NSArray<UIView *> *children = [oldTarget.subviews copy];
-            for (UIView *child in children) {
-                [child removeFromSuperview];
-            }
-            NSInteger i = 0;
-            for (UIView *child in children) {
-                [newTarget insertSubview:child atIndex:i++];
-            }
-           
-          if (newHostName != nil) {
-            [_touchHandler attachToView:newTarget];
-          } else {
-            [_touchHandler detachFromView:oldTarget];
-          }
-        }
+    PortalHostView *hostView = nil;
+    if (self.hostName) {
+      hostView = [[PortalRegistry sharedInstance] getHostWithName:self.hostName];
     }
 
-    [super updateProps:props oldProps:oldProps];
+    UIView *newTarget = self.contentView;
+    if (hostView) {
+      newTarget = (UIView *)hostView;
+    }
+
+    if (newTarget != self.targetView) {
+      UIView *oldTarget = self.targetView;
+      self.targetView = newTarget;
+
+      NSArray<UIView *> *children = [oldTarget.subviews copy];
+      for (UIView *child in children) {
+        [child removeFromSuperview];
+      }
+      NSInteger i = 0;
+      for (UIView *child in children) {
+        [newTarget insertSubview:child atIndex:i++];
+      }
+
+      if (newHostName != nil) {
+        [_touchHandler attachToView:newTarget];
+      } else {
+        [_touchHandler detachFromView:oldTarget];
+      }
+    }
+  }
+
+  [super updateProps:props oldProps:oldProps];
 }
 
-- (void)mountChildComponentView:(UIView<RCTComponentViewProtocol> *)childComponentView index:(NSInteger)index {
-    [self.targetView insertSubview:childComponentView atIndex:index];
+- (void)mountChildComponentView:(UIView<RCTComponentViewProtocol> *)childComponentView
+                          index:(NSInteger)index
+{
+  [self.targetView insertSubview:childComponentView atIndex:index];
 }
 
-- (void)unmountChildComponentView:(UIView<RCTComponentViewProtocol> *)childComponentView index:(NSInteger)index {
-    [childComponentView removeFromSuperview];
+- (void)unmountChildComponentView:(UIView<RCTComponentViewProtocol> *)childComponentView
+                            index:(NSInteger)index
+{
+  [childComponentView removeFromSuperview];
 }
 
 // MARK: touch handling
@@ -138,7 +143,7 @@ using namespace facebook::react;
 
 Class<RCTComponentViewProtocol> PortalViewCls(void)
 {
-    return PortalView.class;
+  return PortalView.class;
 }
 
 @end
