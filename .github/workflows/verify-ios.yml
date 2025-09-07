@@ -15,9 +15,23 @@ on:
       - "ios/**"
 
 jobs:
+  check-swift-files:
+    runs-on: ubuntu-latest
+    outputs:
+      has-swift-files: ${{ steps.filter.outputs.swift-files }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Check for Swift files in ios directory
+        id: filter
+        uses: dorny/paths-filter@v3
+        with:
+          filters: |
+            swift-files: 'ios/**/*.swift'
   swift-lint:
     runs-on: ubuntu-latest
     name: 🔎 Swift Lint
+    needs: check-swift-files
+    if: ${{ needs.check-swift-files.outputs.has-swift-files == 'true' }}
     steps:
       - uses: actions/checkout@v4
       - name: Run SwiftLint GitHub Action (--strict)
