@@ -41,7 +41,7 @@ jobs:
 
   test-web:
     name: ⚙️ Automated test cases
-    runs-on: ubuntu-latest
+    runs-on: macos-15
     timeout-minutes: 60
     needs: build-web
     steps:
