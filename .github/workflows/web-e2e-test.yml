@@ -61,6 +61,11 @@ jobs:
         run: |
           sudo apt-get update
           sudo apt-get install -y google-chrome-stable
+      - name: Setup JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: "microsoft"
+          java-version: "17"
       - name: Install Maestro
         run: |
           curl -fsSL "https://get.maestro.mobile.dev" | bash
@@ -70,7 +75,7 @@ jobs:
         run: |
           mkdir -p ./reports/debug
           export MAESTRO_CHROME_FLAGS="--user-data-dir=/tmp/chrome-profile-$(date +%s)"
-          maestro --platform web test -e APP_ID=http://localhost:8080 e2e/* --format html ./reports/debug --debug-output ./reports/debug --flatten-debug-output
+          maestro --platform web test -e APP_ID=http://localhost:8080 e2e/* --format html ./reports/debug --debug-output ./reports/debug --flatten-debug-output --verbose
       - name: Stop server
         if: always()
         run: |
