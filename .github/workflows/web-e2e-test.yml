@@ -41,7 +41,7 @@ jobs:
 
   test-web:
     name: ⚙️ Automated test cases
-    runs-on: macos-15
+    runs-on: ubuntu-latest
     timeout-minutes: 60
     needs: build-web
     steps:
@@ -71,11 +71,15 @@ jobs:
           curl -fsSL "https://get.maestro.mobile.dev" | bash
           echo "$HOME/.maestro/bin" >> $GITHUB_PATH
           export MAESTRO_DRIVER_STARTUP_TIMEOUT=600000
+      - name: Specify web env
+        run: |
+          find e2e -name "*.yml" -exec sed -i '1i\url: http://localhost:8080' {} \;
+        shell: bash
       - name: Run tests
         run: |
           mkdir -p ./reports/debug
           export MAESTRO_CHROME_FLAGS="--user-data-dir=/tmp/chrome-profile-$(date +%s)"
-          maestro --platform web --verbose test -e APP_ID=http://localhost:8080 e2e/* --format html ./reports/debug --debug-output ./reports/debug --flatten-debug-output
+          maestro --platform=web test -e APP_ID=http://localhost:8080 e2e/* --format html ./reports/debug --debug-output ./reports/debug --flatten-debug-output
       - name: Stop server
         if: always()
         run: |
