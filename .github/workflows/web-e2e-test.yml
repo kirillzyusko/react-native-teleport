@@ -57,6 +57,10 @@ jobs:
           cd example
           npx http-server dist -p 8080 --silent --gzip --brotli --hostname 127.0.0.1 >/dev/null 2>&1 &
           echo $! > .server-pid
+      - name: Install Chrome
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y google-chrome-stable
       - name: Install Maestro
         run: |
           curl -fsSL "https://get.maestro.mobile.dev" | bash

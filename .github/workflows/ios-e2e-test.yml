@@ -25,6 +25,7 @@ on:
 
 jobs:
   build-ios:
+    name: 🏗️ Build E2E ipa
     runs-on: macos-15
     defaults:
       run:
