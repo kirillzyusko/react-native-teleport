@@ -65,7 +65,8 @@ jobs:
       - name: Run tests
         run: |
           mkdir -p ./reports/debug
-          maestro test e2e/* --format html ./reports/debug --debug-output ./reports/debug --flatten-debug-output
+          export MAESTRO_CHROME_FLAGS="--no-sandbox --user-data-dir=/tmp/chrome-profile-$(date +%s)"
+          maestro --platform web test -e APP_ID=http://localhost:8080 e2e/* --format html ./reports/debug --debug-output ./reports/debug --flatten-debug-output
       - name: Stop server
         if: always()
         run: |

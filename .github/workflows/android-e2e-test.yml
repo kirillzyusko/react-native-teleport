@@ -117,9 +117,9 @@ jobs:
           avd-name: e2e_emulator_${{ matrix.devices.api }}
           arch: x86_64
           script: |
-            adb install -r -d -t apps/example/android/app/build/outputs/apk/release/app-release.apk
+            adb install -r -d -t example/android/app/build/outputs/apk/release/app-release.apk
             mkdir -p ./reports/debug
-            maestro test e2e/* --format html ./reports/debug --debug-output ./reports/debug --flatten-debug-output
+            maestro --platform android test -e APP_ID=teleport.example e2e/* --format html ./reports/debug --debug-output ./reports/debug --flatten-debug-output
       - name: Upload test report
         if: failure()
         uses: actions/upload-artifact@v4

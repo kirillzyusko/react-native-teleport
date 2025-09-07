@@ -20,6 +20,7 @@ class PortalViewManager :
     view: PortalView?,
     name: String?,
   ) {
+    // implement later if needed
   }
 
   @ReactProp(name = "hostName")
