@@ -5,23 +5,25 @@ on:
       - main
     paths:
       - ".github/workflows/ios-e2e-test.yml"
+      - "package.json"
+      - "yarn.lock"
       - "Teleport.podspec"
       - "ios/**"
-      - "example/ios/**"
-      - "yarn.lock"
-      - "example/yarn.lock"
-      - "example/patches/**"
+      - "example/**"
+      - "e2e/**"
+      - "src/**"
   pull_request:
     branches:
       - main
     paths:
       - ".github/workflows/ios-e2e-test.yml"
+      - "package.json"
+      - "yarn.lock"
       - "Teleport.podspec"
       - "ios/**"
-      - "example/ios/**"
-      - "yarn.lock"
-      - "example/yarn.lock"
-      - "example/patches/**"
+      - "example/**"
+      - "e2e/**"
+      - "src/**"
 
 jobs:
   build-ios:
