@@ -1,28 +1,32 @@
 import { useState } from "react";
 import { View, StyleSheet, Button } from "react-native";
 import { Portal, PortalHost } from "react-native-teleport";
-import LottieView from "lottie-react-native";
-import Bottle from "../../assets/lottie/bottle.json";
+import {
+  GestureHandlerRootView,
+  TouchableOpacity,
+} from "react-native-gesture-handler";
 
-export default function LottieExample() {
+export default function GestureHandlerTouchableExample() {
+  const [isPressed, setPressed] = useState(false);
   const [shouldBeTeleported, setTeleported] = useState(false);
 
   return (
     <>
       <View style={styles.container}>
         <Portal hostName={shouldBeTeleported ? "local" : undefined}>
-          <LottieView source={Bottle} style={styles.box} autoPlay loop />
+          <GestureHandlerRootView style={styles.wrapper}>
+            <TouchableOpacity onPress={() => setPressed(true)}>
+              <View style={styles.box} testID="touchable" />
+            </TouchableOpacity>
+          </GestureHandlerRootView>
         </Portal>
         <Button
           title={shouldBeTeleported ? "Move back" : "Move to portal"}
           onPress={() => setTeleported((t) => !t)}
         />
-        <View
-          style={{
-            ...StyleSheet.absoluteFillObject,
-            backgroundColor: "#3c3c3c90",
-          }}
-          pointerEvents="none"
+        <Button
+          title={isPressed ? "OK" : "NOT TOUCHED"}
+          onPress={() => setPressed(false)}
         />
       </View>
       <View style={styles.absolute}>
@@ -37,14 +41,17 @@ const styles = StyleSheet.create({
     flex: 1,
     alignItems: "center",
     justifyContent: "center",
-    backgroundColor: "white",
   },
   box: {
     width: 160,
     height: 160,
     marginVertical: 20,
+    backgroundColor: "blue",
   },
   absolute: {
     position: "absolute",
+  },
+  wrapper: {
+    flex: 0,
   },
 });
