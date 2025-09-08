@@ -28,9 +28,6 @@ jobs:
       - name: Install dependencies
         run: yarn install --frozen-lockfile
 
-      - name: Pack
-        run: npm pack --json
-
       - name: Calculate size of package (target)
         id: old-size
         run: echo "OLD_SIZE=$(node scripts/size.js)" >> "$GITHUB_OUTPUT"
@@ -39,9 +36,6 @@ jobs:
 
       - name: Install dependencies
         run: yarn install --frozen-lockfile
-
-      - name: Pack
-        run: npm pack --json
 
       - name: Calculate size of package (current)
         id: new-size
