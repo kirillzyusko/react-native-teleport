@@ -26,7 +26,8 @@ using namespace facebook::react;
 
 @end
 
-@implementation PortalView {}
+@implementation PortalView {
+}
 
 + (ComponentDescriptorProvider)componentDescriptorProvider
 {
