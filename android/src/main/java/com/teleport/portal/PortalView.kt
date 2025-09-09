@@ -5,6 +5,7 @@ import android.view.View
 import android.view.ViewGroup
 import com.facebook.react.views.view.ReactViewGroup
 import com.teleport.global.PortalRegistry
+import java.util.ArrayList
 
 class PortalView(
   context: Context,
@@ -90,6 +91,16 @@ class PortalView(
     } else {
       super.removeViewAt(index)
     }
+  }
+  // endregion
+
+  // region Accessibility
+  // Override to prevent accessibility from trying to include non-descendant children
+  override fun addChildrenForAccessibility(outChildren: ArrayList<View>) {
+    if (!isTeleported()) {
+      super.addChildrenForAccessibility(outChildren)
+    }
+    // When teleported, do nothing—children are handled by the host's accessibility tree
   }
   // endregion
 }
