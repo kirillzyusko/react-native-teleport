@@ -35,7 +35,9 @@
     "androiddebugkey",
     "preact",
     "Srcs",
-    "Werror"
+    "Werror",
+    "reparent",
+    "reparentable"
   ],
   "ignorePaths": [
     "node_modules",

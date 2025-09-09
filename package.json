@@ -45,6 +45,11 @@
     "react-native",
     "portal",
     "teleport",
+    "tunnel",
+    "re-parent",
+    "reparent",
+    "reparentable",
+    "gateway",
     "ios",
     "android",
     "web"
