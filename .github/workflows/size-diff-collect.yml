@@ -22,7 +22,7 @@ jobs:
 
       - uses: actions/setup-node@v4
         with:
-          node-version: 18.19.0
+          node-version: 20.19.4
           cache: yarn
 
       - name: Install dependencies
@@ -36,9 +36,6 @@ jobs:
 
       - name: Install dependencies
         run: yarn install --frozen-lockfile
-
-      - name: Pack
-        run: npm pack --json
 
       - name: Calculate size of package (current)
         id: new-size
