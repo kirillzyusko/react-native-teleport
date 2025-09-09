@@ -1,21 +1,27 @@
 # react-native-teleport
 
-Missing native portal implementation for react-native
+Missing native portal implementation for react-native. Teleport views across your component tree for seamless transitions and powerful UI patterns.
 
 ## Key features
 
+- 🕳️ Native view teleportation
+- ✨ Acts as portal and teleport (aka re-parenting)
+- ⚡ Native performance
+- 🔓 Escape any layout
 - 🚀 Supports iOS, Android and Web
-- 🎉 Zero dependencies
+- 📝 Declarative API
+- ✅ No private API usage
+- 📦 Zero dependencies
 - 💪 Written in TypeScript
 - 🧬 Supports new architectures
-- ✨ Acts as portal and teleport
-- 🕳️ Native view teleportation
 - 🪞 Mirror support (in future)
 
 ## Installation
 
 ```sh
 npm install react-native-teleport
+# or
+yarn add react-native-teleport
 ```
 
 ## Usage
