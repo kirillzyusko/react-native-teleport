@@ -26,9 +26,7 @@ using namespace facebook::react;
 
 @end
 
-@implementation PortalView {
-  RCTSurfaceTouchHandler *_touchHandler;
-}
+@implementation PortalView {}
 
 + (ComponentDescriptorProvider)componentDescriptorProvider
 {
@@ -41,7 +39,6 @@ using namespace facebook::react;
     static const auto defaultProps = std::make_shared<const PortalViewProps>();
     _props = defaultProps;
 
-    _touchHandler = [RCTSurfaceTouchHandler new];
     UIView *content = [[UIView alloc] init];
     self.contentView = content;
     self.targetView = content;
@@ -86,12 +83,6 @@ using namespace facebook::react;
       NSInteger i = 0;
       for (UIView *child in children) {
         [newTarget insertSubview:child atIndex:i++];
-      }
-
-      if (newHostName != nil) {
-        [_touchHandler attachToView:newTarget];
-      } else {
-        [_touchHandler detachFromView:oldTarget];
       }
     }
   }
