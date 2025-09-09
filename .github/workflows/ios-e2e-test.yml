@@ -125,7 +125,7 @@ jobs:
       - name: Run E2E tests
         run: |
           export MAESTRO_DRIVER_STARTUP_TIMEOUT=600000
-          maestro test e2e/* --format html ./reports/debug --debug-output ./reports/debug --flatten-debug-output
+          maestro test e2e/flows/* --format html ./reports/debug --debug-output ./reports/debug --flatten-debug-output
 
       - name: Upload test report
         if: failure()

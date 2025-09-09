@@ -1,6 +1,7 @@
 export enum ScreenNames {
   LOTTIE = "LOTTIE",
   GESTURE_HANDLER_TOUCHABLE = "GESTURE_HANDLER_TOUCHABLE",
+  REACT_NATIVE_TOUCHABLE = "RN_TOUCHABLE",
 }
 
 export enum StackNames {
