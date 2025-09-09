@@ -4,6 +4,7 @@ on:
     paths:
       - ".github/workflows/web-e2e-test.yml"
       - "package.json"
+      - "yarn.lock"
       - "example/**"
       - "e2e/**"
       - "src/**"
@@ -13,6 +14,7 @@ on:
     paths:
       - ".github/workflows/web-e2e-test.yml"
       - "package.json"
+      - "yarn.lock"
       - "example/**"
       - "e2e/**"
       - "src/**"

@@ -5,23 +5,25 @@ on:
       - main
     paths:
       - ".github/workflows/ios-e2e-test.yml"
+      - "package.json"
+      - "yarn.lock"
       - "Teleport.podspec"
       - "ios/**"
-      - "example/ios/**"
-      - "yarn.lock"
-      - "example/yarn.lock"
-      - "example/patches/**"
+      - "example/**"
+      - "e2e/**"
+      - "src/**"
   pull_request:
     branches:
       - main
     paths:
       - ".github/workflows/ios-e2e-test.yml"
+      - "package.json"
+      - "yarn.lock"
       - "Teleport.podspec"
       - "ios/**"
-      - "example/ios/**"
-      - "yarn.lock"
-      - "example/yarn.lock"
-      - "example/patches/**"
+      - "example/**"
+      - "e2e/**"
+      - "src/**"
 
 jobs:
   build-ios:
@@ -35,7 +37,7 @@ jobs:
 
       - uses: maxim-lobanov/setup-xcode@v1
         with:
-          xcode-version: "16.4"
+          xcode-version: "16.3"
 
       - name: Setup
         uses: ./.github/actions/setup
@@ -82,7 +84,7 @@ jobs:
           -scheme TeleportExample \
           -sdk iphonesimulator \
           -configuration Release \
-          -destination 'platform=iOS Simulator,name=iPhone 16 Pro' \
+          -destination 'platform=iOS Simulator,name=iPhone 16 Pro,OS=18.4' \
           build \
           CODE_SIGNING_ALLOWED=NO | xcpretty"
       - uses: actions/upload-artifact@v4
