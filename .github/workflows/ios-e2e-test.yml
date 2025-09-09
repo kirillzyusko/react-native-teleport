@@ -115,6 +115,9 @@ jobs:
           brew tap mobile-dev-inc/tap
           brew install maestro
 
+      - name: Run snapshot engine
+        run: cd e2e && npm install && node snapshot-engine.js
+
       - name: Install app on simulator
         run: |
           UDID=$(xcrun simctl list devices | grep "iPhone 16 Pro (" | grep -oE "[0-9A-F-]{36}" | head -n 1)
@@ -125,7 +128,7 @@ jobs:
       - name: Run E2E tests
         run: |
           export MAESTRO_DRIVER_STARTUP_TIMEOUT=600000
-          maestro --platform ios test e2e/flows/* --format html ./reports/debug --debug-output ./reports/debug --flatten-debug-output
+          maestro --platform ios test -e DEVICE="iPhone 16 Pro" e2e/flows/* --format html ./reports/debug --debug-output ./reports/debug --flatten-debug-output
 
       - name: Upload test report
         if: failure()

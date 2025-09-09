@@ -1,0 +1,89 @@
+const fs = require("fs");
+const path = require("path");
+const http = require("http");
+const { PNG } = require("pngjs");
+const pixelmatch = require("pixelmatch").default;
+
+const server = http.createServer(async (req, res) => {
+  res.setHeader("Access-Control-Allow-Origin", "*");
+  res.setHeader("Content-Type", "application/json");
+  let body = "";
+  req.on("data", (chunk) => {
+    body += chunk.toString();
+  });
+  req.on("end", async () => {
+    console.log(1, body);
+    const { base, target, diff: threshold = 0.3 } = JSON.parse(body);
+    console.log(2, base, target);
+    if (!base || !target) {
+      res.statusCode = 400;
+      return res.end(
+        JSON.stringify({ error: "Missing base or target parameter" }),
+      );
+    }
+    console.log(3);
+    try {
+      const basePath = path.resolve(__dirname, base);
+      const targetPath = path.resolve(__dirname, target);
+      console.log(4, basePath, targetPath);
+      const [img1, img2] = await Promise.all([
+        readPngFile(`${basePath}.png`),
+        readPngFile(`${targetPath}.png`),
+      ]);
+
+      if (img1.width !== img2.width || img1.height !== img2.height) {
+        res.statusCode = 400;
+        console.log(5);
+        return res.end(
+          JSON.stringify({ error: "Images have different dimensions" }),
+        );
+      }
+
+      const diff = new PNG({ width: img1.width, height: img1.height });
+      const numDiffPixels = pixelmatch(
+        img1.data,
+        img2.data,
+        diff.data,
+        img1.width,
+        img1.height,
+        { threshold: 0.1 },
+      );
+
+      const totalPixels = img1.width * img1.height;
+      const diffPercent = (numDiffPixels / totalPixels) * 100;
+      const matches = diffPercent <= parseFloat(threshold);
+      console.log(6, matches, threshold, diffPercent);
+      const result = {
+        matches,
+        diff: diffPercent,
+        diffImage: null,
+      };
+
+      if (!matches) {
+        const diffPath = path.join(__dirname, "diff.png");
+        fs.writeFileSync(diffPath, PNG.sync.write(diff));
+        result.diffImage = fs.readFileSync(diffPath).toString("base64");
+      }
+
+      res.end(JSON.stringify(result));
+    } catch (error) {
+      console.error(error);
+      res.statusCode = 500;
+      res.end(JSON.stringify({ matches: false, error: error.message }));
+    }
+  });
+});
+
+function readPngFile(filePath) {
+  return new Promise((resolve, reject) => {
+    fs.readFile(filePath, (err, data) => {
+      if (err) reject(err);
+      else resolve(PNG.sync.read(data));
+    });
+  });
+}
+
+const PORT = 3000;
+server.listen(PORT, () => {
+  console.log(`Snapshot engine running on port ${PORT}`);
+});

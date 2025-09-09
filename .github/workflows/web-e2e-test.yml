@@ -77,7 +77,7 @@ jobs:
           mkdir -p ./reports/debug
           export MAESTRO_CLI_NO_ANALYTICS="true"
           export MAESTRO_CHROME_FLAGS="--no-sandbox --user-data-dir=/tmp/chrome-profile-$GITHUB_RUN_ID"
-          maestro --platform web test e2e/flows/* --format html ./reports/debug --debug-output ./reports/debug --flatten-debug-output
+          maestro --platform web test -e DEVICE="Chrome" e2e/flows/* --format html ./reports/debug --debug-output ./reports/debug --flatten-debug-output
       - name: Stop server
         if: always()
         run: |
