@@ -21,4 +21,10 @@ export const examples: Example[] = [
     info: ScreenNames.REACT_NATIVE_TOUCHABLE,
     icons: "👆🔮",
   },
+  {
+    title: "Dynamic children",
+    testID: "dynamic_children",
+    info: ScreenNames.DYNAMIC_CHILDREN,
+    icons: "🌀",
+  },
 ];
