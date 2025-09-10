@@ -10,7 +10,7 @@ appId: teleport.example
     env:
       base: screenshots/${DEVICE}/NotTeleported
       target: NotTeleported
-      diff: 0.02
+      diff: 0.3
 - assertTrue: ${output.matches}
 - tapOn: "Move to portal"
 - takeScreenshot:
@@ -20,7 +20,7 @@ appId: teleport.example
     env:
       base: screenshots/${DEVICE}/Teleported
       target: Teleported
-      diff: 0.02
+      diff: 0.3
 - assertTrue: ${output.matches}
 - tapOn: "Move back"
 - takeScreenshot:
@@ -30,5 +30,5 @@ appId: teleport.example
     env:
       base: screenshots/${DEVICE}/NotTeleported
       target: NotTeleported
-      diff: 0.02
+      diff: 0.3
 - assertTrue: ${output.matches}

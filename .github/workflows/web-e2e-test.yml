@@ -80,7 +80,7 @@ jobs:
           SERVER_PID=$!
           export MAESTRO_CLI_NO_ANALYTICS="true"
           export MAESTRO_CHROME_FLAGS="--no-sandbox --user-data-dir=/tmp/chrome-profile-$GITHUB_RUN_ID"
-          maestro --platform web test -e DEVICE="Chrome" e2e/flows/* --format html ./e2e/reports/debug --debug-output ./e2e/reports/debug --flatten-debug-output
+          maestro --platform web test -e DEVICE="Chrome" --headless e2e/flows/* --format html ./e2e/reports/debug --debug-output ./e2e/reports/debug --flatten-debug-output
           kill $SERVER_PID
       - name: Stop server
         if: always()
