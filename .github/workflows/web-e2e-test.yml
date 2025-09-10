@@ -72,12 +72,17 @@ jobs:
             done
           ' sh {} +
         shell: bash
+      - name: Prepare snapshot engine
+        run: cd e2e && npm install
       - name: Run tests
         run: |
+          node e2e/snapshot-engine.js &
+          SERVER_PID=$!
           mkdir -p ./reports/debug
           export MAESTRO_CLI_NO_ANALYTICS="true"
           export MAESTRO_CHROME_FLAGS="--no-sandbox --user-data-dir=/tmp/chrome-profile-$GITHUB_RUN_ID"
           maestro --platform web test -e DEVICE="Chrome" e2e/flows/* --format html ./reports/debug --debug-output ./reports/debug --flatten-debug-output
+          kill $SERVER_PID
       - name: Stop server
         if: always()
         run: |

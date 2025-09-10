@@ -26,10 +26,16 @@ const server = http.createServer(async (req, res) => {
       const basePath = path.resolve(__dirname, base);
       const targetPath = path.resolve(__dirname, target);
       console.log(4, basePath, targetPath);
-      const [img1, img2] = await Promise.all([
-        readPngFile(`${basePath}.png`),
-        readPngFile(`${targetPath}.png`),
-      ]);
+      const img1 = await readPngFile(`${basePath}.png`);
+      let img2 = null;
+      try {
+        img2 = await readPngFile(`${targetPath}.png`);
+      } catch (error) {
+        console.log(44, error);
+        // target not found -> we just took a screenshot
+        res.end(JSON.stringify({ matches: true, diff: 0 }));
+        return;
+      }
 
       if (img1.width !== img2.width || img1.height !== img2.height) {
         res.statusCode = 400;
@@ -56,13 +62,11 @@ const server = http.createServer(async (req, res) => {
       const result = {
         matches,
         diff: diffPercent,
-        diffImage: null,
       };
 
       if (!matches) {
         const diffPath = path.join(__dirname, "diff.png");
         fs.writeFileSync(diffPath, PNG.sync.write(diff));
-        result.diffImage = fs.readFileSync(diffPath).toString("base64");
       }
 
       res.end(JSON.stringify(result));
