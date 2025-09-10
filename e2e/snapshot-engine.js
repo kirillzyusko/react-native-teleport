@@ -40,6 +40,14 @@ const server = http.createServer(async (req, res) => {
       if (img1.width !== img2.width || img1.height !== img2.height) {
         res.statusCode = 400;
         console.log(5, img1.width, img2.width, img1.height, img2.height);
+        fs.copyFileSync(
+          `${basePath}.png`,
+          path.join(__dirname, "reports", `${target}-base.png`),
+        );
+        fs.copyFileSync(
+          `${targetPath}.png`,
+          path.join(__dirname, "reports", `${target}-new.png`),
+        );
         return res.end(
           JSON.stringify({ error: "Images have different dimensions" }),
         );
@@ -65,8 +73,16 @@ const server = http.createServer(async (req, res) => {
       };
 
       if (!matches) {
-        const diffPath = path.join(__dirname, "diff.png");
+        const diffPath = path.join(__dirname, "reports", `${target}-diff.png`);
         fs.writeFileSync(diffPath, PNG.sync.write(diff));
+        fs.copyFileSync(
+          `${basePath}.png`,
+          path.join(__dirname, "reports", `${target}-base.png`),
+        );
+        fs.copyFileSync(
+          `${targetPath}.png`,
+          path.join(__dirname, "reports", `${target}-new.png`),
+        );
       }
 
       res.end(JSON.stringify(result));

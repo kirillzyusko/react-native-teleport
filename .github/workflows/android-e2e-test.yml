@@ -117,12 +117,11 @@ jobs:
             adb install -r -d -t example/android/app/build/outputs/apk/release/app-release.apk
             node e2e/snapshot-engine.js &
             SERVER_PID=$!
-            mkdir -p ./reports/debug
-            maestro --platform android test -e DEVICE="e2e_emulator_31" e2e/flows/* --format html ./reports/debug --debug-output ./reports/debug --flatten-debug-output
+            maestro --platform android test -e DEVICE="e2e_emulator_31" e2e/flows/* --format html ./e2e/reports/debug --debug-output ./e2e/reports/debug --flatten-debug-output
             kill $SERVER_PID
       - name: Upload test report
         if: failure()
         uses: actions/upload-artifact@v4
         with:
-          path: ./reports/debug
+          path: ./e2e/reports
           name: e2e-report-android

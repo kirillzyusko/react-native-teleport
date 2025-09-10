@@ -78,12 +78,17 @@ jobs:
         run: |
           node e2e/snapshot-engine.js &
           SERVER_PID=$!
-          mkdir -p ./reports/debug
           export MAESTRO_CLI_NO_ANALYTICS="true"
           export MAESTRO_CHROME_FLAGS="--no-sandbox --user-data-dir=/tmp/chrome-profile-$GITHUB_RUN_ID"
-          maestro --platform web test -e DEVICE="Chrome" e2e/flows/* --format html ./reports/debug --debug-output ./reports/debug --flatten-debug-output
+          maestro --platform web test -e DEVICE="Chrome" e2e/flows/* --format html ./e2e/reports/debug --debug-output ./e2e/reports/debug --flatten-debug-output
           kill $SERVER_PID
       - name: Stop server
         if: always()
         run: |
           kill $(cat .server-pid) || true
+      - name: Upload test report
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          path: ./e2e/reports
+          name: e2e-report-web
