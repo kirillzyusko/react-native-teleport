@@ -15,4 +15,16 @@ export const examples: Example[] = [
     info: ScreenNames.GESTURE_HANDLER_TOUCHABLE,
     icons: "👆🧬",
   },
+  {
+    title: "React Native Touchable",
+    testID: "react_native_touchable",
+    info: ScreenNames.REACT_NATIVE_TOUCHABLE,
+    icons: "👆🔮",
+  },
+  {
+    title: "Dynamic children",
+    testID: "dynamic_children",
+    info: ScreenNames.DYNAMIC_CHILDREN,
+    icons: "🌀",
+  },
 ];

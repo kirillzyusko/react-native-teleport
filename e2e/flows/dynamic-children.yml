@@ -1,0 +1,45 @@
+appId: teleport.example
+---
+- launchApp
+- tapOn:
+    id: "dynamic_children"
+- takeScreenshot:
+    path: e2e/DynamicChildrenInitial
+- runScript:
+    file: ../scripts/compare-screenshots.js
+    env:
+      base: screenshots/${DEVICE}/DynamicChildrenInitial
+      target: DynamicChildrenInitial
+      diff: 0.3
+- assertTrue: ${output.matches}
+- tapOn: "Move to portal"
+- tapOn: "Add child"
+- takeScreenshot:
+    path: e2e/DynamicChildrenAddedAndTeleported
+- runScript:
+    file: ../scripts/compare-screenshots.js
+    env:
+      base: screenshots/${DEVICE}/DynamicChildrenAddedAndTeleported
+      target: DynamicChildrenAddedAndTeleported
+      diff: 0.3
+- assertTrue: ${output.matches}
+- tapOn: "Move back"
+- takeScreenshot:
+    path: e2e/DynamicChildrenAdded
+- runScript:
+    file: ../scripts/compare-screenshots.js
+    env:
+      base: screenshots/${DEVICE}/DynamicChildrenAdded
+      target: DynamicChildrenAdded
+      diff: 0.3
+- assertTrue: ${output.matches}
+- tapOn: "Remove child"
+- takeScreenshot:
+    path: e2e/DynamicChildrenInitial
+- runScript:
+    file: ../scripts/compare-screenshots.js
+    env:
+      base: screenshots/${DEVICE}/DynamicChildrenInitial
+      target: DynamicChildrenInitial
+      diff: 0.3
+- assertTrue: ${output.matches}

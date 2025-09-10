@@ -1,0 +1,34 @@
+appId: teleport.example
+---
+- launchApp
+- tapOn:
+    id: "gesture_handler_touchable"
+- takeScreenshot:
+    path: e2e/NotTeleported
+- runScript:
+    file: ../scripts/compare-screenshots.js
+    env:
+      base: screenshots/${DEVICE}/NotTeleported
+      target: NotTeleported
+      diff: 0.3
+- assertTrue: ${output.matches}
+- tapOn: "Move to portal"
+- takeScreenshot:
+    path: e2e/Teleported
+- runScript:
+    file: ../scripts/compare-screenshots.js
+    env:
+      base: screenshots/${DEVICE}/Teleported
+      target: Teleported
+      diff: 0.3
+- assertTrue: ${output.matches}
+- tapOn: "Move back"
+- takeScreenshot:
+    path: e2e/NotTeleported
+- runScript:
+    file: ../scripts/compare-screenshots.js
+    env:
+      base: screenshots/${DEVICE}/NotTeleported
+      target: NotTeleported
+      diff: 0.3
+- assertTrue: ${output.matches}
