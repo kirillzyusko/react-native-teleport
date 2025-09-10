@@ -118,7 +118,7 @@ jobs:
             node e2e/snapshot-engine.js &
             SERVER_PID=$!
             maestro --platform android test -e DEVICE="e2e_emulator_31" e2e/flows/* --format html ./e2e/reports/debug --debug-output ./e2e/reports/debug --flatten-debug-output
-            kill $SERVER_PID
+            trap 'kill $SERVER_PID 2>/dev/null || true' EXIT
       - name: Upload test report
         if: failure()
         uses: actions/upload-artifact@v4
