@@ -102,6 +102,12 @@ jobs:
           key: avd-${{ matrix.devices.api }}-${{ matrix.devices.target }}
       - name: Prepare snapshot engine
         run: cd e2e && npm install
+
+      - name: Start snapshot engine (background)
+        shell: bash
+        run: |
+          node e2e/snapshot-engine.js > server.log 2>&1 &
+          echo $! > server.pid
       - name: Run emulator and tests
         uses: reactivecircus/android-emulator-runner@v2.33.0
         with:
@@ -115,10 +121,21 @@ jobs:
           arch: x86_64
           script: |
             adb install -r -d -t example/android/app/build/outputs/apk/release/app-release.apk
-            node e2e/snapshot-engine.js &
-            SERVER_PID=$!
             maestro --platform android test -e DEVICE="e2e_emulator_31" e2e/flows/* --format html ./e2e/reports/debug --debug-output ./e2e/reports/debug --flatten-debug-output
-            trap 'kill $SERVER_PID 2>/dev/null || true' EXIT
+      - name: Show snapshot engine logs
+        if: always()
+        run: |
+          echo "===== FULL server.log ====="
+          cat server.log || true
+
+      - name: Kill snapshot engine
+        if: always()
+        shell: bash
+        run: |
+          if [ -f server.pid ]; then
+            kill $(cat server.pid) || true
+            rm -f server.pid
+          fi
       - name: Upload test report
         if: failure()
         uses: actions/upload-artifact@v4
