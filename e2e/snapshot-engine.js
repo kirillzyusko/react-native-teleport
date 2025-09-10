@@ -39,7 +39,7 @@ const server = http.createServer(async (req, res) => {
 
       if (img1.width !== img2.width || img1.height !== img2.height) {
         res.statusCode = 400;
-        console.log(5);
+        console.log(5, img1.width, img2.width, img1.height, img2.height);
         return res.end(
           JSON.stringify({ error: "Images have different dimensions" }),
         );
