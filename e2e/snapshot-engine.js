@@ -12,26 +12,25 @@ const server = http.createServer(async (req, res) => {
     body += chunk.toString();
   });
   req.on("end", async () => {
-    console.log(1, body);
     const { base, target, diff: threshold = 0.3 } = JSON.parse(body);
-    console.log(2, base, target);
+    console.log("Request to compare images: ", base, target);
     if (!base || !target) {
       res.statusCode = 400;
       return res.end(
         JSON.stringify({ error: "Missing base or target parameter" }),
       );
     }
-    console.log(3);
+
     try {
       const basePath = path.resolve(__dirname, base);
       const targetPath = path.resolve(__dirname, target);
-      console.log(4, basePath, targetPath);
+      console.log("Comparing images: ", basePath, targetPath);
       const img1 = await readPngFile(`${basePath}.png`);
       let img2 = null;
       try {
         img2 = await readPngFile(`${targetPath}.png`);
       } catch (error) {
-        console.log(44, error);
+        console.log("Can not read a file: ", error);
         // target not found -> we just took a screenshot
         res.end(JSON.stringify({ matches: true, diff: 0 }));
         return;
@@ -39,7 +38,13 @@ const server = http.createServer(async (req, res) => {
 
       if (img1.width !== img2.width || img1.height !== img2.height) {
         res.statusCode = 400;
-        console.log(5, img1.width, img2.width, img1.height, img2.height);
+        console.log(
+          "Image size mismatch: ",
+          img1.width,
+          img2.width,
+          img1.height,
+          img2.height,
+        );
         fs.copyFileSync(
           `${basePath}.png`,
           path.join(__dirname, "reports", `${target}-base.png`),
@@ -66,7 +71,7 @@ const server = http.createServer(async (req, res) => {
       const totalPixels = img1.width * img1.height;
       const diffPercent = (numDiffPixels / totalPixels) * 100;
       const matches = diffPercent <= parseFloat(threshold);
-      console.log(6, matches, threshold, diffPercent);
+      console.log("Image diff: ", matches, threshold, diffPercent);
       const result = {
         matches,
         diff: diffPercent,
