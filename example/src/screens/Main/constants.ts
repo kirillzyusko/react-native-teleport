@@ -27,4 +27,10 @@ export const examples: Example[] = [
     info: ScreenNames.DYNAMIC_CHILDREN,
     icons: "🌀",
   },
+  {
+    title: "Instant root",
+    testID: "instant_root",
+    info: ScreenNames.INSTANT_ROOT,
+    icons: "⏱️",
+  },
 ];
