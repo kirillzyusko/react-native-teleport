@@ -11,25 +11,23 @@ export default function InstantRootExample() {
   const [shouldBeTeleported, setTeleported] = useState(true);
 
   return (
-    <>
-      <View style={styles.container}>
-        <Portal hostName={shouldBeTeleported ? "overlay" : undefined}>
-          <GestureHandlerRootView style={styles.wrapper}>
-            <TouchableOpacity onPress={() => setPressed(true)}>
-              <View style={styles.box} testID="touchable" />
-            </TouchableOpacity>
-          </GestureHandlerRootView>
-        </Portal>
-        <Button
-          title={shouldBeTeleported ? "Move back" : "Move to portal"}
-          onPress={() => setTeleported((t) => !t)}
-        />
-        <Button
-          title={isPressed ? "OK" : "NOT TOUCHED"}
-          onPress={() => setPressed(false)}
-        />
-      </View>
-    </>
+    <View style={styles.container}>
+      <Portal hostName={shouldBeTeleported ? "overlay" : undefined}>
+        <GestureHandlerRootView style={styles.wrapper}>
+          <TouchableOpacity onPress={() => setPressed(true)}>
+            <View style={styles.box} testID="touchable" />
+          </TouchableOpacity>
+        </GestureHandlerRootView>
+      </Portal>
+      <Button
+        title={shouldBeTeleported ? "Move back" : "Move to portal"}
+        onPress={() => setTeleported((t) => !t)}
+      />
+      <Button
+        title={isPressed ? "OK" : "NOT TOUCHED"}
+        onPress={() => setPressed(false)}
+      />
+    </View>
   );
 }
 
@@ -44,9 +42,6 @@ const styles = StyleSheet.create({
     height: 160,
     marginVertical: 20,
     backgroundColor: "blue",
-  },
-  absolute: {
-    position: "absolute",
   },
   wrapper: {
     flex: 0,
