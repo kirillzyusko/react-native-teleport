@@ -5,12 +5,14 @@ import LottieExample from "../../screens/Lottie";
 import GestureHandlerTouchableExample from "../../screens/Touchable";
 import RNTouchableExample from "../../screens/RNTouchable";
 import DynamicChildrenExample from "../../screens/DynamicChildren";
+import InstantRoot from "../../screens/InstantRoot";
 
 export type ExamplesStackParamList = {
   [ScreenNames.LOTTIE]: undefined;
   [ScreenNames.GESTURE_HANDLER_TOUCHABLE]: undefined;
   [ScreenNames.REACT_NATIVE_TOUCHABLE]: undefined;
   [ScreenNames.DYNAMIC_CHILDREN]: undefined;
+  [ScreenNames.INSTANT_ROOT]: undefined;
 };
 
 const Stack = createNativeStackNavigator<ExamplesStackParamList>();
@@ -27,6 +29,9 @@ const options = {
   },
   [ScreenNames.DYNAMIC_CHILDREN]: {
     title: "Dynamic children",
+  },
+  [ScreenNames.INSTANT_ROOT]: {
+    title: "Instant root",
   },
 };
 
@@ -51,6 +56,11 @@ const ExamplesStack = () => (
       component={DynamicChildrenExample}
       name={ScreenNames.DYNAMIC_CHILDREN}
       options={options[ScreenNames.DYNAMIC_CHILDREN]}
+    />
+    <Stack.Screen
+      component={InstantRoot}
+      name={ScreenNames.INSTANT_ROOT}
+      options={options[ScreenNames.INSTANT_ROOT]}
     />
   </Stack.Navigator>
 );
