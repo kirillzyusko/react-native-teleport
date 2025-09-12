@@ -99,11 +99,11 @@ const config: Config = {
           position: "left",
           label: "Guides",
         },
-        /*{
+        {
           to: "/docs/category/api-reference",
           label: "API",
           position: "left",
-        },*/
+        },
         { to: "/blog", label: "Blog", position: "left" },
         {
           type: "docsVersionDropdown",
@@ -129,8 +129,16 @@ const config: Config = {
           title: "Docs",
           items: [
             {
-              label: "Tutorial",
-              to: "/docs/intro",
+              label: "Guides",
+              to: "/docs/installation",
+            },
+            {
+              label: "Recipes",
+              to: "/docs/category/recipes",
+            },
+            {
+              label: "API",
+              to: "/docs/category/api-reference",
             },
           ],
         },
@@ -138,12 +146,8 @@ const config: Config = {
           title: "Community",
           items: [
             {
-              label: "Stack Overflow",
-              href: "https://stackoverflow.com/questions/tagged/docusaurus",
-            },
-            {
-              label: "Discord",
-              href: "https://discordapp.com/invite/docusaurus",
+              label: "GitHub discussions",
+              href: "https://github.com/kirillzyusko/react-native-keyboard-controller/discussions",
             },
             {
               label: "X",
@@ -165,7 +169,7 @@ const config: Config = {
           ],
         },
       ],
-      copyright: `Copyright © ${new Date().getFullYear()} Kirill Zyusko, Inc. Built with Docusaurus.`,
+      copyright: `Copyright © ${new Date().getFullYear()} Kirill Zyusko. Built with Docusaurus.`,
     },
     prism: {
       theme: prismThemes.github,
