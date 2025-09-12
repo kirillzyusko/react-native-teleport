@@ -99,11 +99,11 @@ const config: Config = {
           position: "left",
           label: "Guides",
         },
-        {
+        /*{
           to: "/docs/category/api-reference",
           label: "API",
           position: "left",
-        },
+        },*/
         { to: "/blog", label: "Blog", position: "left" },
         {
           type: "docsVersionDropdown",
