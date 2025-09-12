@@ -1,0 +1,8 @@
+{
+  "label": "Recipes",
+  "position": 4,
+  "link": {
+    "type": "generated-index",
+    "description": "Various tutorials to help you get the most out of the library."
+  }
+}

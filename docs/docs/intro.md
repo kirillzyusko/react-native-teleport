@@ -1,47 +1,25 @@
 ---
 sidebar_position: 1
+description: Intro into portal and teleport concepts
+keywords:
+  [
+    react-native-teleport,
+    react-native teleport,
+    react-native portal,
+    portal,
+    teleport,
+  ]
 ---
 
-# Tutorial Intro
+# Intro
 
-Let's discover **Docusaurus in less than 5 minutes**.
+## What is the portal?
 
-## Getting Started
+## Why another portal library for `react-native`?
 
-Get started by **creating a new site**.
+`react-native` [doesn't provide](https://github.com/facebook/react-native/issues/36273) a way to use `Portal`. You may be curious why another portal library for react-native is needed? We already have a plenty of choices, such as [@gorhom/portal](https://github.com/gorhom/react-native-portal), [react-gateway](https://github.com/cloudflare/react-gateway) etc.
 
-Or **try Docusaurus immediately** with **[docusaurus.new](https://docusaurus.new)**.
+However they all are JS-based solutions that stores React components in context. While this solution is great for simple cases, it has a few drawbacks:
 
-### What you'll need
-
-- [Node.js](https://nodejs.org/en/download/) version 18.0 or above:
-  - When installing Node.js, you are recommended to check all checkboxes related to dependencies.
-
-## Generate a new site
-
-Generate a new Docusaurus site using the **classic template**.
-
-The classic template will automatically be added to your project after you run the command:
-
-```bash
-npm init docusaurus@latest my-website classic
-```
-
-You can type this command into Command Prompt, Powershell, Terminal, or any other integrated terminal of your code editor.
-
-The command also installs all necessary dependencies you need to run Docusaurus.
-
-## Start your site
-
-Run the development server:
-
-```bash
-cd my-website
-npm run start
-```
-
-The `cd` command changes the directory you're working with. In order to work with your newly created Docusaurus site, you'll need to navigate the terminal there.
-
-The `npm run start` command builds your website locally and serves it through a development server, ready for you to view at http://localhost:3000/.
-
-Open `docs/intro.md` (this page) and edit some lines: the site **reloads automatically** and displays your changes.
+- components are not rendered in the react-tree where component actually rendered;
+- component may not get proper context values because views are literally rendered in a different
