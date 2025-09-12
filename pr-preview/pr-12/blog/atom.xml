@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8"?><?xml-stylesheet type="text/xsl" href="atom.xsl"?>
+<feed xmlns="http://www.w3.org/2005/Atom">
+    <id>https://kirillzyusko.github.io/react-native-teleport/pr-preview/pr-12/blog</id>
+    <title>Teleport Blog</title>
+    <updated>2025-10-02T00:00:00.000Z</updated>
+    <generator>https://github.com/jpmonette/feed</generator>
+    <link rel="alternate" href="https://kirillzyusko.github.io/react-native-teleport/pr-preview/pr-12/blog"/>
+    <subtitle>Teleport Blog</subtitle>
+    <icon>https://kirillzyusko.github.io/react-native-teleport/pr-preview/pr-12/img/favicon.ico</icon>
+    <entry>
+        <title type="html"><![CDATA[Meet teleport!]]></title>
+        <id>https://kirillzyusko.github.io/react-native-teleport/pr-preview/pr-12/blog/welcome</id>
+        <link href="https://kirillzyusko.github.io/react-native-teleport/pr-preview/pr-12/blog/welcome"/>
+        <updated>2025-10-02T00:00:00.000Z</updated>
+        <summary type="html"><![CDATA[Hello!]]></summary>
+        <content type="html"><![CDATA[<p>Hello!</p>
+<p>You may be curious why another portal library for react-native is needed?</p>
+<ul>
+<li>component stays in react-tree</li>
+<li>package uses native primitives to teleport views (i. e. <code>createPortal</code> on web etc.)</li>
+<li>as a result we already can teleport views preserving internal component state</li>
+<li>in native development portals are also widespread concepts, but they even offer more advanced features such as "mirroring"</li>
+<li>the ultimate goal not only build primitives for teleporting views, but also provide a set of patterns and ready libs to build complex UIs (context menus, various shared transitions)</li>
+</ul>]]></content>
+        <author>
+            <name>Kirill Zyusko</name>
+            <uri>https://github.com/kirillzyusko</uri>
+        </author>
+        <category label="teleport" term="teleport"/>
+        <category label="react-native" term="react-native"/>
+        <category label="portal" term="portal"/>
+    </entry>
+</feed>

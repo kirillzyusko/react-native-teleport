@@ -1,0 +1,166 @@
+# react-native-teleport
+
+> Documentation for react-native-teleport. Package that allows to teleport views across your component tree for seamless transitions and powerful UI patterns.
+
+
+## react-native-teleport
+
+
+### pr-preview
+
+
+#### pr-12
+
+Description will go into a meta tag in <head />
+
+- [Teleport](/index.md): Description will go into a meta tag in <head />
+- [Markdown page example](/markdown-page.md): You don't need React to write simple standalone pages.
+- [portal](/docs/api/portal.md)
+- [portal-host](/docs/api/portal-host.md)
+- [portal-provider](/docs/api/portal-provider.md)
+- [API Reference](/docs/category/api-reference.md): API reference containing information about all public methods and their signatures
+- [Guides](/docs/category/guides.md): Basic concepts and most useful topics to start quickly.
+- [Recipes](/docs/category/recipes.md): Various tutorials to help you get the most out of the library.
+- [portal](/docs/guides/portal.md)
+- [teleport](/docs/guides/teleport.md)
+- [Installation](/docs/installation.md): Guide dedicated to installation process
+- [Intro](/docs/intro.md): Intro into portal and teleport concepts
+- [index](/docs/recipes.md)
+
+
+---
+
+# Full Documentation Content
+
+# Markdown page example
+
+You don't need React to write simple standalone pages.
+
+
+---
+
+# portal
+
+
+---
+
+# portal-host
+
+
+---
+
+# portal-provider
+
+
+---
+
+## [📄️<!-- --> <!-- -->portal-host](/react-native-teleport/pr-preview/pr-12/docs/api/portal-host.md)
+
+
+---
+
+## [📄️<!-- --> <!-- -->portal](/react-native-teleport/pr-preview/pr-12/docs/guides/portal.md)
+
+
+---
+
+## [📄️<!-- --> <!-- -->index](/react-native-teleport/pr-preview/pr-12/docs/recipes.md)
+
+
+---
+
+# portal
+
+
+---
+
+# teleport
+
+
+---
+
+# Installation
+
+## Adding a library to the project[​](#adding-a-library-to-the-project "Direct link to Adding a library to the project")
+
+Install the `react-native-teleport` package in your React Native project.
+
+* YARN
+* NPM
+* EXPO
+
+```
+yarn add react-native-teleport
+```
+
+```
+npm install react-native-teleport --save
+```
+
+```
+npx expo install react-native-teleport
+```
+
+Only Expo Dev client compatible
+
+This library has native code, so it **does not work** with *Expo Go* but it's fully compatible with [custom dev client](https://docs.expo.dev/development/getting-started/).
+
+### Linking[​](#linking "Direct link to Linking")
+
+This package supports [autolinking](https://github.com/react-native-community/cli/blob/master/docs/autolinking.md).
+
+Pods update
+
+After adding the package don't forget to **re-install** `pods` and **re-assemble** `android` and `ios` applications, since this library contains native code.
+
+If you still experience issues like **package doesn't seem to be linked** try performing a fresh build to clear any outdated cache.
+
+## Adding provider[​](#adding-provider "Direct link to Adding provider")
+
+In order to use it you'll need to wrap your app with `PortalProvider` component.
+
+```
+import { PortalProvider } from "react-native-teleport";
+
+export default function App() {
+  return (
+    <PortalProvider>
+      {/* your main application code goes here */}
+    </PortalProvider>
+  );
+}
+```
+
+Congratulations! 🎉 You've just finished installation process. Go to the [next section](/react-native-teleport/pr-preview/pr-12/docs/guides/portal.md) to get more insights of what you can do using this library. 😎
+
+
+---
+
+# Intro
+
+## What is the portal?[​](#what-is-the-portal "Direct link to What is the portal?")
+
+## Why another portal library for `react-native`?[​](#why-another-portal-library-for-react-native "Direct link to why-another-portal-library-for-react-native")
+
+`react-native` [doesn't provide](https://github.com/facebook/react-native/issues/36273) a way to use `Portal`. You may be curious why another portal library for react-native is needed? We already have a plenty of choices, such as [@gorhom/portal](https://github.com/gorhom/react-native-portal), [react-gateway](https://github.com/cloudflare/react-gateway) etc.
+
+However they all are JS-based solutions that stores React components in context. While this solution is great for simple cases, it has a few drawbacks:
+
+* components are not rendered in the react-tree where component actually rendered;
+* component may not get proper context values because views are literally rendered in a different
+
+
+---
+
+# index
+
+
+---
+
+### Easy to Use
+
+Docusaurus was designed from the ground up to be easily installed and used to get your website up and running quickly.
+
+
+---
+

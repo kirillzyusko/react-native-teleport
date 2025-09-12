@@ -1,0 +1,28 @@
+# react-native-teleport
+
+> Documentation for react-native-teleport. Package that allows to teleport views across your component tree for seamless transitions and powerful UI patterns.
+
+
+## react-native-teleport
+
+
+### pr-preview
+
+
+#### pr-12
+
+Description will go into a meta tag in <head />
+
+- [Teleport](/index.md): Description will go into a meta tag in <head />
+- [Markdown page example](/markdown-page.md): You don't need React to write simple standalone pages.
+- [portal](/docs/api/portal.md)
+- [portal-host](/docs/api/portal-host.md)
+- [portal-provider](/docs/api/portal-provider.md)
+- [API Reference](/docs/category/api-reference.md): API reference containing information about all public methods and their signatures
+- [Guides](/docs/category/guides.md): Basic concepts and most useful topics to start quickly.
+- [Recipes](/docs/category/recipes.md): Various tutorials to help you get the most out of the library.
+- [portal](/docs/guides/portal.md)
+- [teleport](/docs/guides/teleport.md)
+- [Installation](/docs/installation.md): Guide dedicated to installation process
+- [Intro](/docs/intro.md): Intro into portal and teleport concepts
+- [index](/docs/recipes.md)
