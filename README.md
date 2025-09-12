@@ -8,6 +8,8 @@ Missing native portal implementation for react-native. Teleport views across you
 - ✨ Acts as portal and teleport (aka re-parenting)
 - ⚡ Native performance
 - 🔓 Escape any layout
+- ⚛️ Preserves react context
+- 🌲 Keeps react tree continuity
 - 🚀 Supports iOS, Android and Web
 - 📝 Declarative API
 - ✅ No private API usage
