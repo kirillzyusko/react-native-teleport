@@ -3,7 +3,7 @@
 Missing native portal implementation for react-native. Teleport views across your component tree for seamless transitions and powerful UI patterns.
 
 <div>
-  <img align="right" width="32%" src="./gifs/demo.png?raw=true">
+  <img align="right" width="38%" src="./gifs/demo.png?raw=true">
 </div>
 
 ### Key features
@@ -12,6 +12,8 @@ Missing native portal implementation for react-native. Teleport views across you
 - ✨ Acts as portal and teleport (aka re-parenting)
 - ⚡ Native performance
 - 🔓 Escape any layout
+- ⚛️ Preserves react context
+- 🌲 Keeps react tree continuity
 - 🚀 Supports iOS, Android and Web
 - 📝 Declarative API
 - ✅ No private API usage
