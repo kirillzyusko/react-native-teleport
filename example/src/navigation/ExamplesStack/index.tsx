@@ -6,6 +6,7 @@ import GestureHandlerTouchableExample from "../../screens/Touchable";
 import RNTouchableExample from "../../screens/RNTouchable";
 import DynamicChildrenExample from "../../screens/DynamicChildren";
 import InstantRoot from "../../screens/InstantRoot";
+import Messenger from "../../screens/Messenger";
 
 export type ExamplesStackParamList = {
   [ScreenNames.LOTTIE]: undefined;
@@ -13,6 +14,7 @@ export type ExamplesStackParamList = {
   [ScreenNames.REACT_NATIVE_TOUCHABLE]: undefined;
   [ScreenNames.DYNAMIC_CHILDREN]: undefined;
   [ScreenNames.INSTANT_ROOT]: undefined;
+  [ScreenNames.MESSENGER]: undefined;
 };
 
 const Stack = createNativeStackNavigator<ExamplesStackParamList>();
@@ -32,6 +34,9 @@ const options = {
   },
   [ScreenNames.INSTANT_ROOT]: {
     title: "Instant root",
+  },
+  [ScreenNames.MESSENGER]: {
+    title: "Messenger",
   },
 };
 
@@ -61,6 +66,11 @@ const ExamplesStack = () => (
       component={InstantRoot}
       name={ScreenNames.INSTANT_ROOT}
       options={options[ScreenNames.INSTANT_ROOT]}
+    />
+    <Stack.Screen
+      component={Messenger}
+      name={ScreenNames.MESSENGER}
+      options={options[ScreenNames.MESSENGER]}
     />
   </Stack.Navigator>
 );
