@@ -3,7 +3,7 @@
 Missing native portal implementation for react-native. Teleport views across your component tree for seamless transitions and powerful UI patterns.
 
 <div>
-  <img align="right" width="38%" src="./gifs/demo.png?raw=true">
+  <img align="right" width="34%" src="./gifs/demo.png?raw=true">
 </div>
 
 ### Key features
