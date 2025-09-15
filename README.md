@@ -2,12 +2,18 @@
 
 Missing native portal implementation for react-native. Teleport views across your component tree for seamless transitions and powerful UI patterns.
 
-## Key features
+<div>
+  <img align="right" width="34%" src="./gifs/demo.png?raw=true">
+</div>
+
+### Key features
 
 - 🕳️ Native view teleportation
 - ✨ Acts as portal and teleport (aka re-parenting)
 - ⚡ Native performance
 - 🔓 Escape any layout
+- ⚛️ Preserves react context
+- 🌲 Keeps react tree continuity
 - 🚀 Supports iOS, Android and Web
 - 📝 Declarative API
 - ✅ No private API usage
@@ -16,7 +22,7 @@ Missing native portal implementation for react-native. Teleport views across you
 - 🧬 Supports new architectures
 - 🪞 Mirror support (in future)
 
-## Installation
+### Installation
 
 ```sh
 npm install react-native-teleport
@@ -24,7 +30,7 @@ npm install react-native-teleport
 yarn add react-native-teleport
 ```
 
-## Usage
+### Usage
 
 First of all, you need to add `PortalProvider` to your root component - this is usually `App.tsx`:
 
@@ -52,10 +58,10 @@ export const App = () => (
 );
 ```
 
-## Contributing
+### Contributing
 
 See the [contributing guide](CONTRIBUTING.md) to learn how to contribute to the repository and the development workflow.
 
-## License
+### License
 
 MIT
