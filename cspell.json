@@ -37,7 +37,8 @@
     "Srcs",
     "Werror",
     "reparent",
-    "reparentable"
+    "reparentable",
+    "gifs"
   ],
   "ignorePaths": [
     "node_modules",
