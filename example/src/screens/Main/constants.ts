@@ -33,4 +33,10 @@ export const examples: Example[] = [
     info: ScreenNames.INSTANT_ROOT,
     icons: "⏱️",
   },
+  {
+    title: "Hooks",
+    testID: "hooks",
+    info: ScreenNames.HOOKS,
+    icons: "🎣",
+  },
 ];

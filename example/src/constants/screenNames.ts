@@ -4,6 +4,7 @@ export enum ScreenNames {
   REACT_NATIVE_TOUCHABLE = "RN_TOUCHABLE",
   DYNAMIC_CHILDREN = "DYNAMIC_CHILDREN",
   INSTANT_ROOT = "INSTANT_ROOT",
+  HOOKS = "HOOKS",
 }
 
 export enum StackNames {
