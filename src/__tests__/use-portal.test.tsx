@@ -1,4 +1,4 @@
-import { fireEvent, render, screen } from '@testing-library/react-native';
+import { act, fireEvent, render, screen, waitFor } from '@testing-library/react-native';
 
 import { Button, View, StyleSheet } from "react-native";
 import Portal from "../components/Portal";
@@ -6,6 +6,7 @@ import PortalHost from "../components/PortalHost";
 import { useState } from "react";
 import usePortal from "../hooks/usePortal";
 import PortalProvider from '../PortalProvider';
+import { debug } from '@testing-library/react-native/build/helpers/debug';
 
 function Hook() {
   const [_, setN] = useState(0);
@@ -63,5 +64,35 @@ describe("`usePortal` functional spec", () => {
     expect(screen.queryByTestId("portal-1")).toBeOnTheScreen();
     fireEvent.press(screen.getByText('Remove'));
     expect(screen.queryByTestId("portal-1")).not.toBeOnTheScreen();
+  })
+
+  it("re-renders shouldn't resurrect portal after imperative removal", () => {
+    render(<PortalProvider><Hook /></PortalProvider>);
+    expect(screen.queryByTestId("portal-1")).toBeOnTheScreen();
+    fireEvent.press(screen.getByText('Remove'));
+    expect(screen.queryByTestId("portal-1")).not.toBeOnTheScreen();
+    fireEvent.press(screen.getByText('Force re-render'));
+    expect(screen.queryByTestId("portal-1")).not.toBeOnTheScreen();
+  })
+
+  it("removal should be idempotent", () => {
+    render(<PortalProvider><Hook /></PortalProvider>);
+    expect(screen.queryByTestId("portal-1")).toBeOnTheScreen();
+    fireEvent.press(screen.getByText('Remove'));
+    expect(screen.queryByTestId("portal-1")).not.toBeOnTheScreen();
+    fireEvent.press(screen.getByText('Remove'));
+    expect(screen.queryByTestId("portal-1")).not.toBeOnTheScreen();
+  })
+
+  it("removal shouldn't prevent new portal from being added", async () => {
+    render(<PortalProvider><Hook /></PortalProvider>);
+    expect(screen.queryByTestId("portal-1")).toBeOnTheScreen();
+    expect(screen.queryByTestId("portal-2")).not.toBeOnTheScreen();
+    fireEvent.press(screen.getByText('Remove'));
+    expect(screen.queryByTestId("portal-1")).not.toBeOnTheScreen();
+    expect(screen.queryByTestId("portal-2")).not.toBeOnTheScreen();
+    fireEvent.press(screen.getByText('Show second portal'));
+    expect(screen.queryByTestId("portal-1")).not.toBeOnTheScreen();
+    expect(screen.queryByTestId("portal-2")).toBeOnTheScreen();
   })
 });
