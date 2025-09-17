@@ -11,18 +11,20 @@ const PortalComponent = ({ hostName, name, children }: PortalProps) => {
   const isRemoved = hostName && name ? state.removed[hostName]?.[name]?.[instanceId] : false;
 
   useEffect(() => {
-    if (hostName && name) {
-      dispatch({ type: "REGISTER_PORTAL", hostName, name, instanceId });
-
-      return () => {
-        dispatch({
-          type: "CLEAR_REMOVED_ON_UNMOUNT",
-          hostName,
-          name,
-          instanceId,
-        });
-      };
+    if (!hostName || !name) {
+      return;
     }
+
+    dispatch({ type: "REGISTER_PORTAL", hostName, name, instanceId });
+
+    return () => {
+      dispatch({
+        type: "CLEAR_REMOVED_ON_UNMOUNT",
+        hostName,
+        name,
+        instanceId,
+      });
+    };
   }, [dispatch, hostName, name, instanceId]);
 
   if (isRemoved) {
