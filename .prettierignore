@@ -12,9 +12,7 @@ vendor/
 example/android/build/
 example/android/app/build/
 example/ios/build/
-example/src/**/Lottie/*.json
+example/src/assets/lottie/*.json
 
 android/build/
 android/.cxx/
-
-tea.yaml

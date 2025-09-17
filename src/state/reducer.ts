@@ -1,10 +1,9 @@
 export type PortalState = {
-  removed: Record<string, Record<string, Record<string, boolean>>>; // hostName -> name -> internalInstanceId -> true if removed
+  removed: Record<string, Record<string, Record<string, boolean>>>;
 };
 
 export type Action =
   | { type: "REMOVE_PORTAL"; hostName: string; name: string }
-  | { type: "RESTORE_PORTAL"; hostName: string; name: string }
   | {
       type: "CLEAR_REMOVED_ON_UNMOUNT";
       hostName: string;
@@ -30,16 +29,12 @@ export const reducer = (state: PortalState, action: Action): PortalState => {
 
   switch (action.type) {
     case "REGISTER_PORTAL":
-      // Ensure instanceId is tracked (optional, for safety)
       if (!nameRemoved[action.instanceId]) {
-        nameRemoved[action.instanceId] = false; // Initialize as not removed
+        nameRemoved[action.instanceId] = false;
       }
       return cloned;
     case "REMOVE_PORTAL":
       Object.keys(nameRemoved).forEach((id) => (nameRemoved[id] = true));
-      return cloned;
-    case "RESTORE_PORTAL":
-      hostRemoved[action.name] = {};
       return cloned;
     case "CLEAR_REMOVED_ON_UNMOUNT":
       delete nameRemoved[action.instanceId];
