@@ -95,4 +95,15 @@ describe("`usePortal` functional spec", () => {
     expect(screen.queryByTestId("portal-1")).not.toBeOnTheScreen();
     expect(screen.queryByTestId("portal-2")).toBeOnTheScreen();
   })
+
+  it("removes multiple instances with the same name", () => {
+    render(<PortalProvider><Hook /></PortalProvider>);
+    fireEvent.press(screen.getByText('Show second portal'));
+    expect(screen.getByTestId('portal-1')).toBeOnTheScreen();
+    expect(screen.getByTestId('portal-2')).toBeOnTheScreen();
+
+    fireEvent.press(screen.getByText('Remove'));
+    expect(screen.queryByTestId('portal-1')).not.toBeOnTheScreen();
+    expect(screen.queryByTestId('portal-2')).not.toBeOnTheScreen();
+  });
 });
