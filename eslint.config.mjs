@@ -15,20 +15,19 @@ const compat = new FlatCompat({
 });
 
 export default defineConfig([
+  ...fixupConfigRules(compat.extends('@react-native', 'prettier')),
+  // Project-wide rules
   {
-    extends: fixupConfigRules(compat.extends('@react-native', 'prettier')),
     plugins: { prettier },
     rules: {
       'react/react-in-jsx-scope': 'off',
       'prettier/prettier': 'error',
     },
-    overrides: [
-      {
-        // Test files only
-        files: ['**/__tests__/**/*.[jt]s?(x)', '**/?(*.)+(spec|test).[jt]s?(x)'],
-        extends: ['plugin:testing-library/react'],
-      },
-    ],
+  },
+  // Tests-only config
+  {
+    files: ['**/__tests__/**/*.[jt]s?(x)', '**/?(*.)+(spec|test).[jt]s?(x)'],
+    extends: fixupConfigRules(compat.extends('plugin:testing-library/react')),
   },
   {
     ignores: ['node_modules/', 'lib/'],
