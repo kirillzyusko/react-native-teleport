@@ -33,7 +33,10 @@ export const PortalManagerProvider = ({
 
 export const usePortalManagerContext = () => {
   const context = useContext(PortalManagerContext);
-  if (!context)
+
+  if (!context) {
     throw new Error("usePortalContext must be used within PortalProvider");
+  }
+
   return context;
 };
