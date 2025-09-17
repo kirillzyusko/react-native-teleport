@@ -1,4 +1,4 @@
-import { memo, useEffect, type ReactNode } from "react";
+import { memo, useEffect } from "react";
 import { usePortalManagerContext } from "../contexts/PortalManager";
 import PortalView from "../views/Portal";
 import useId from "../hooks/useId";
@@ -6,21 +6,23 @@ import type { PortalProps } from "../types";
 
 const PortalComponent = ({ hostName, name, children }: PortalProps) => {
   const { state, dispatch } = usePortalManagerContext();
-  const instanceId = useId(); // Автоматически unique, e.g. ":r1:"
+  const instanceId = useId();
 
-  const isRemoved = state.removed[hostName]?.[name]?.[instanceId] ?? false;
-  console.log(98989, instanceId, state, hostName, name, { isRemoved });
+  const isRemoved = hostName && name ? state.removed[hostName]?.[name]?.[instanceId] : false;
+
   useEffect(() => {
-    dispatch({ type: "REGISTER_PORTAL", hostName, name, instanceId });
-    return () => {
-      // Cleanup: Сбрасываем только для этого internal instanceId
-      dispatch({
-        type: "CLEAR_REMOVED_ON_UNMOUNT",
-        hostName,
-        name,
-        instanceId,
-      });
-    };
+    if (hostName && name) {
+      dispatch({ type: "REGISTER_PORTAL", hostName, name, instanceId });
+
+      return () => {
+        dispatch({
+          type: "CLEAR_REMOVED_ON_UNMOUNT",
+          hostName,
+          name,
+          instanceId,
+        });
+      };
+    }
   }, [dispatch, hostName, name, instanceId]);
 
   if (isRemoved) {

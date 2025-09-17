@@ -1,10 +1,9 @@
 import { useState } from "react";
-import { View, StyleSheet, Button, TouchableOpacity } from "react-native";
+import { View, StyleSheet, Button } from "react-native";
 import { Portal, PortalHost, usePortal } from "react-native-teleport";
 
 export default function Hook() {
-  const [isPressed, setPressed] = useState(false);
-  const [shouldBeTeleported, setTeleported] = useState(false);
+  const [_, setN] = useState(0);
   const { removePortal } = usePortal("local");
 
   return (
@@ -14,18 +13,9 @@ export default function Hook() {
       </View>
       <View style={styles.container}>
         <Portal hostName={"local"} name="portal">
-          <TouchableOpacity onPress={() => setPressed(true)}>
-            <View style={styles.box} testID="touchable" />
-          </TouchableOpacity>
+          <View style={styles.box} testID="touchable" />
         </Portal>
-        <Button
-          title={shouldBeTeleported ? "Move back" : "Move to portal"}
-          onPress={() => setTeleported((t) => !t)}
-        />
-        <Button
-          title={isPressed ? "OK" : "NOT TOUCHED"}
-          onPress={() => setPressed(false)}
-        />
+        <Button title="Force re-render" onPress={() => setN((n) => n + 1)} />
         <Button title="Remove" onPress={() => removePortal("portal")} />
       </View>
     </>
