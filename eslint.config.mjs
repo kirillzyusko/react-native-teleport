@@ -1,10 +1,10 @@
-import { fixupConfigRules } from '@eslint/compat';
-import { FlatCompat } from '@eslint/eslintrc';
-import js from '@eslint/js';
-import prettier from 'eslint-plugin-prettier';
-import { defineConfig } from 'eslint/config';
-import path from 'node:path';
-import { fileURLToPath } from 'node:url';
+import { fixupConfigRules } from "@eslint/compat";
+import { FlatCompat } from "@eslint/eslintrc";
+import js from "@eslint/js";
+import prettier from "eslint-plugin-prettier";
+import { defineConfig } from "eslint/config";
+import path from "node:path";
+import { fileURLToPath } from "node:url";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -15,15 +15,21 @@ const compat = new FlatCompat({
 });
 
 export default defineConfig([
+  ...fixupConfigRules(compat.extends("@react-native", "prettier")),
+  // Project-wide rules
   {
-    extends: fixupConfigRules(compat.extends('@react-native', 'prettier')),
     plugins: { prettier },
     rules: {
-      'react/react-in-jsx-scope': 'off',
-      'prettier/prettier': 'error',
+      "react/react-in-jsx-scope": "off",
+      "prettier/prettier": "error",
     },
   },
+  // Tests-only config
   {
-    ignores: ['node_modules/', 'lib/'],
+    files: ["**/__tests__/**/*.[jt]s?(x)", "**/?(*.)+(spec|test).[jt]s?(x)"],
+    extends: fixupConfigRules(compat.extends("plugin:testing-library/react")),
+  },
+  {
+    ignores: ["node_modules/", "lib/"],
   },
 ]);

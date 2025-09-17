@@ -1,21 +1,18 @@
-import { createContext } from "react";
 import PortalHost from "./views/PortalHost";
 import NativePortalProvider from "./views/PortalProvider";
+import { PortalManagerProvider } from "./contexts/PortalManager";
 
 type PortalProviderProps = {
   children: React.ReactNode;
 };
-type PortalContextType = {};
-
-const PortalContext = createContext<PortalContextType>({});
 
 export default function PortalProvider({ children }: PortalProviderProps) {
   return (
     <NativePortalProvider>
-      <PortalContext.Provider value={{}}>
+      <PortalManagerProvider>
         {children}
         <PortalHost name="root" />
-      </PortalContext.Provider>
+      </PortalManagerProvider>
     </NativePortalProvider>
   );
 }

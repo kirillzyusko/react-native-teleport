@@ -6,6 +6,7 @@ export type PortalHostProps = {
   children: React.ReactNode;
 };
 export type PortalProps = {
+  name?: string;
   hostName?: string;
   children: React.ReactNode;
 };
