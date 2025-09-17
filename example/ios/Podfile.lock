@@ -2609,7 +2609,7 @@ PODS:
     - SocketRocket
     - Yoga
   - SocketRocket (0.7.1)
-  - Teleport (0.1.0):
+  - Teleport (0.2.0):
     - boost
     - DoubleConversion
     - fast_float
@@ -2964,7 +2964,7 @@ SPEC CHECKSUMS:
   RNScreens: 0bbf16c074ae6bb1058a7bf2d1ae017f4306797c
   RNWorklets: c3a39bbcdc44906af1ec1d1e0bc17f144c1e30da
   SocketRocket: d4aabe649be1e368d1318fdf28a022d714d65748
-  Teleport: 253103cff1ba17dfc1291485ab0e45606f51795a
+  Teleport: 4a3d660e0a716887f9fe5078cca76469a7583e80
   Yoga: b01392348aeea02064c21a2762a42893d82b60a7
 
 PODFILE CHECKSUM: fa8e39e99744a38fb613b9c3b11b26af576d7d44
