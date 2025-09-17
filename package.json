@@ -39,7 +39,8 @@
     "clean": "del-cli android/build example/android/build example/android/app/build example/ios/build lib",
     "prepare": "bob build > /dev/null 2>&1",
     "release": "release-it --only-version",
-    "lint-clang": "find ios/ -iname *.h -o -iname *.m -o -iname *.mm | grep -v -e Pods -e build | xargs clang-format -i -n --Werror"
+    "lint-clang": "find ios/ -iname *.h -o -iname *.m -o -iname *.mm | grep -v -e Pods -e build | xargs clang-format -i -n --Werror",
+    "format": "prettier '**/*' --ignore-unknown --write"
   },
   "keywords": [
     "react-native",

@@ -87,3 +87,5 @@ android/generated
 
 # React Native Nitro Modules
 nitrogen/
+
+coverage/

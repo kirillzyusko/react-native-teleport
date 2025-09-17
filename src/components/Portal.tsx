@@ -8,7 +8,8 @@ const PortalComponent = ({ hostName, name, children }: PortalProps) => {
   const { state, dispatch } = usePortalManagerContext();
   const instanceId = useId();
 
-  const isRemoved = hostName && name ? state.removed[hostName]?.[name]?.[instanceId] : false;
+  const isRemoved =
+    hostName && name ? state.removed[hostName]?.[name]?.[instanceId] : false;
 
   useEffect(() => {
     if (!hostName || !name) {

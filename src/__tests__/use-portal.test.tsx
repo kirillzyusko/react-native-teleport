@@ -1,11 +1,11 @@
-import { fireEvent, render, screen } from '@testing-library/react-native';
+import { fireEvent, render, screen } from "@testing-library/react-native";
 
 import { Button, View, StyleSheet } from "react-native";
 import Portal from "../components/Portal";
 import PortalHost from "../components/PortalHost";
 import { useState } from "react";
 import usePortal from "../hooks/usePortal";
-import PortalProvider from '../PortalProvider';
+import PortalProvider from "../PortalProvider";
 
 function Hook() {
   const [_, setN] = useState(0);
@@ -29,7 +29,9 @@ function Hook() {
         <Button title="Force re-render" onPress={() => setN((n) => n + 1)} />
         <Button title="Remove" onPress={() => removePortal("portal")} />
         <Button
-          title={shouldShowSecondPortal ? "Hide second portal" : "Show second portal"}
+          title={
+            shouldShowSecondPortal ? "Hide second portal" : "Show second portal"
+          }
           onPress={() => setShowSecondPortal((t) => !t)}
         />
       </View>
@@ -59,50 +61,70 @@ const styles = StyleSheet.create({
 
 describe("`usePortal` functional spec", () => {
   it("should remove portal when remove clicked", () => {
-    render(<PortalProvider><Hook /></PortalProvider>);
-    expect(screen.queryByTestId("portal-1")).toBeOnTheScreen();
-    fireEvent.press(screen.getByText('Remove'));
+    render(
+      <PortalProvider>
+        <Hook />
+      </PortalProvider>,
+    );
+    expect(screen.getByTestId("portal-1")).toBeOnTheScreen();
+    fireEvent.press(screen.getByText("Remove"));
     expect(screen.queryByTestId("portal-1")).not.toBeOnTheScreen();
-  })
+  });
 
   it("re-renders shouldn't resurrect portal after imperative removal", () => {
-    render(<PortalProvider><Hook /></PortalProvider>);
-    expect(screen.queryByTestId("portal-1")).toBeOnTheScreen();
-    fireEvent.press(screen.getByText('Remove'));
+    render(
+      <PortalProvider>
+        <Hook />
+      </PortalProvider>,
+    );
+    expect(screen.getByTestId("portal-1")).toBeOnTheScreen();
+    fireEvent.press(screen.getByText("Remove"));
     expect(screen.queryByTestId("portal-1")).not.toBeOnTheScreen();
-    fireEvent.press(screen.getByText('Force re-render'));
+    fireEvent.press(screen.getByText("Force re-render"));
     expect(screen.queryByTestId("portal-1")).not.toBeOnTheScreen();
-  })
+  });
 
   it("removal should be idempotent", () => {
-    render(<PortalProvider><Hook /></PortalProvider>);
-    expect(screen.queryByTestId("portal-1")).toBeOnTheScreen();
-    fireEvent.press(screen.getByText('Remove'));
+    render(
+      <PortalProvider>
+        <Hook />
+      </PortalProvider>,
+    );
+    expect(screen.getByTestId("portal-1")).toBeOnTheScreen();
+    fireEvent.press(screen.getByText("Remove"));
     expect(screen.queryByTestId("portal-1")).not.toBeOnTheScreen();
-    fireEvent.press(screen.getByText('Remove'));
+    fireEvent.press(screen.getByText("Remove"));
     expect(screen.queryByTestId("portal-1")).not.toBeOnTheScreen();
-  })
+  });
 
   it("removal shouldn't prevent new portal from being added", async () => {
-    render(<PortalProvider><Hook /></PortalProvider>);
-    expect(screen.queryByTestId("portal-1")).toBeOnTheScreen();
+    render(
+      <PortalProvider>
+        <Hook />
+      </PortalProvider>,
+    );
+    expect(screen.getByTestId("portal-1")).toBeOnTheScreen();
     expect(screen.queryByTestId("portal-2")).not.toBeOnTheScreen();
-    fireEvent.press(screen.getByText('Remove'));
+    fireEvent.press(screen.getByText("Remove"));
     expect(screen.queryByTestId("portal-1")).not.toBeOnTheScreen();
     expect(screen.queryByTestId("portal-2")).not.toBeOnTheScreen();
-    fireEvent.press(screen.getByText('Show second portal'));
+    fireEvent.press(screen.getByText("Show second portal"));
     expect(screen.queryByTestId("portal-1")).not.toBeOnTheScreen();
-    expect(screen.queryByTestId("portal-2")).toBeOnTheScreen();
-  })
+    expect(screen.getByTestId("portal-2")).toBeOnTheScreen();
+  });
 
   it("removes multiple instances with the same name", () => {
-    render(<PortalProvider><Hook /></PortalProvider>);
-    fireEvent.press(screen.getByText('Show second portal'));
-    expect(screen.getByTestId('portal-1')).toBeOnTheScreen();
-    expect(screen.getByTestId('portal-2')).toBeOnTheScreen();
+    render(
+      <PortalProvider>
+        <Hook />
+      </PortalProvider>,
+    );
+    fireEvent.press(screen.getByText("Show second portal"));
+    expect(screen.getByTestId("portal-1")).toBeOnTheScreen();
+    expect(screen.getByTestId("portal-2")).toBeOnTheScreen();
 
-    fireEvent.press(screen.getByText('Remove'));
-    expect(screen.queryByTestId('portal-1')).not.toBeOnTheScreen();
-    expect(screen.queryByTestId('portal-2')).not.toBeOnTheScreen();
+    fireEvent.press(screen.getByText("Remove"));
+    expect(screen.queryByTestId("portal-1")).not.toBeOnTheScreen();
+    expect(screen.queryByTestId("portal-2")).not.toBeOnTheScreen();
   });
 });
