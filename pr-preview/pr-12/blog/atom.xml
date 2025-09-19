@@ -20,7 +20,7 @@
 <li>package uses native primitives to teleport views (i. e. <code>createPortal</code> on web etc.)</li>
 <li>as a result we already can teleport views preserving internal component state</li>
 <li>in native development portals are also widespread concepts, but they even offer more advanced features such as "mirroring"</li>
-<li>the ultimate goal not only build primitives for teleporting views, but also provide a set of patterns and ready libs to build complex UIs (context menus, various shared transitions)</li>
+<li>the ultimate goal not only build primitives for teleportation views, but also provide a set of patterns and ready libs to build complex UIs (context menus, various shared transitions)</li>
 </ul>]]></content>
         <author>
             <name>Kirill Zyusko</name>
