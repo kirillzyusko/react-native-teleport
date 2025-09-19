@@ -43,7 +43,7 @@ Existing community libraries, such as [@gorhom/portal](https://github.com/gorhom
 
 ## Introducing `react-native-teleport`
 
-This library brings **true native portals** into React Native by teleporting views at the native layer (iOS/Android/web).  
+This library brings **true native portals** into React Native by teleportation views at the native layer (iOS/Android/web).  
 
 ✅ The component stays in the **original React tree**, preserving contexts and state.  
 ✅ The view is physically moved in the **native view hierarchy**, so layout, z-order, and performance behave like any other native view.  
