@@ -1,3 +1,33 @@
-### Easy to Use
+[Skip to main content](#__docusaurus_skipToContent_fallback)
 
-Docusaurus was designed from the ground up to be easily installed and used to get your website up and running quickly.
+[![Teleport Logo](/react-native-teleport/pr-preview/pr-12/img/logo.svg)![Teleport Logo](/react-native-teleport/pr-preview/pr-12/img/logo.svg)](/react-native-teleport/pr-preview/pr-12/.md)
+
+[**Teleport**](/react-native-teleport/pr-preview/pr-12/.md)[Guides](/react-native-teleport/pr-preview/pr-12/docs/intro.md)[API](/react-native-teleport/pr-preview/pr-12/docs/category/api-reference.md)[Blog](/react-native-teleport/pr-preview/pr-12/blog)[Next](/react-native-teleport/pr-preview/pr-12/docs/intro.md)
+
+[Example App](https://github.com/kirillzyusko/react-native-teleport/tree/main/example)[GitHub](https://github.com/kirillzyusko/react-native-teleport)
+
+![](/react-native-teleport/pr-preview/pr-12/assets/images/demo-65785a9f1211bc6992db0cca2993d621.png)
+
+# Teleport
+
+Missing native portal implementation for react-native
+
+[Get started](/react-native-teleport/pr-preview/pr-12/docs/intro.md)
+
+Docs
+
+* [Guides](/react-native-teleport/pr-preview/pr-12/docs/installation.md)
+* [Recipes](/react-native-teleport/pr-preview/pr-12/docs/category/recipes.md)
+* [API](/react-native-teleport/pr-preview/pr-12/docs/category/api-reference.md)
+
+Community
+
+* [GitHub discussions](https://github.com/kirillzyusko/react-native-keyboard-controller/discussions)
+* [X](https://x.com/ziusko)
+
+More
+
+* [Blog](/react-native-teleport/pr-preview/pr-12/blog)
+* [GitHub](https://github.com/kirillzyusko/react-native-teleport)
+
+Copyright © 2025 Kirill Zyusko. Built with Docusaurus.

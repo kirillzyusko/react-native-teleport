@@ -14,13 +14,16 @@
 Description will go into a meta tag in <head />
 
 - [Teleport](/index.md): Description will go into a meta tag in <head />
-- [Markdown page example](/markdown-page.md): You don't need React to write simple standalone pages.
-- [portal](/docs/api/portal.md)
-- [portal-host](/docs/api/portal-host.md)
-- [portal-provider](/docs/api/portal-provider.md)
+- [portal](/docs/api/components/portal.md)
+- [portal-host](/docs/api/components/portal-host.md)
+- [portal-provider](/docs/api/components/portal-provider.md)
+- [use-portal](/docs/api/hooks/use-portal.md)
+- [📚 Components](/docs/category/-components.md): A set of JS components that helps you to render components outside of current component
+- [🎣 Hooks](/docs/category/-hooks.md): React hooks provided by this library
 - [API Reference](/docs/category/api-reference.md): API reference containing information about all public methods and their signatures
 - [Guides](/docs/category/guides.md): Basic concepts and most useful topics to start quickly.
 - [Recipes](/docs/category/recipes.md): Various tutorials to help you get the most out of the library.
+- [Main concepts](/docs/guides/main-concepts.md): Portal
 - [portal](/docs/guides/portal.md)
 - [teleport](/docs/guides/teleport.md)
 - [Installation](/docs/installation.md): Guide dedicated to installation process
