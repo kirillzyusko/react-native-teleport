@@ -10,6 +10,20 @@
   overflow: hidden;
 }
 
+.landing {
+  background-color: var(--landing-background-color);
+}
+
+.title {
+  font-size: 3rem;
+  color: var(--landing-text-color);
+}
+
+.subtitle {
+  font-size: 1.5rem;
+  color: var(--landing-text-color);
+}
+
 @media screen and (max-width: 996px) {
   .heroBanner {
     padding: 2rem;
