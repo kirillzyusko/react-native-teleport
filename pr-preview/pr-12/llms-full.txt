@@ -14,18 +14,18 @@
 Description will go into a meta tag in <head />
 
 - [Teleport](/index.md): Description will go into a meta tag in <head />
-- [portal](/docs/api/components/portal.md)
-- [portal-host](/docs/api/components/portal-host.md)
-- [portal-provider](/docs/api/components/portal-provider.md)
-- [use-portal](/docs/api/hooks/use-portal.md)
+- [Portal](/docs/api/components/portal.md): A component that moves its children to a different place in the view hierarchy.
+- [PortalHost](/docs/api/components/portal-host.md): A component that acts as an anchor for the portals.
+- [PortalProvider](/docs/api/components/portal-provider.md): A component that should wrap your app.
+- [use-portal](/docs/api/hooks/use-portal.md): Hook that allows to manage portals.
 - [📚 Components](/docs/category/-components.md): A set of JS components that helps you to render components outside of current component
 - [🎣 Hooks](/docs/category/-hooks.md): React hooks provided by this library
 - [API Reference](/docs/category/api-reference.md): API reference containing information about all public methods and their signatures
 - [Guides](/docs/category/guides.md): Basic concepts and most useful topics to start quickly.
 - [Recipes](/docs/category/recipes.md): Various tutorials to help you get the most out of the library.
-- [Main concepts](/docs/guides/main-concepts.md): Portal
-- [portal](/docs/guides/portal.md)
-- [teleport](/docs/guides/teleport.md)
+- [Main concepts](/docs/guides/main-concepts.md): A quick tour in terminology and main concepts of this library.
+- [Portal](/docs/guides/portal.md): Portal helps you to render a component in a different place in the view hierarchy.
+- [Teleport](/docs/guides/teleport.md): Teleport helps you to re-use existing component and render it in a different part of tree without remounting and resetting the internal state.
 - [Installation](/docs/installation.md): Guide dedicated to installation process
 - [Intro](/docs/intro.md): Intro into portal and teleport concepts
 - [index](/docs/recipes.md)
@@ -35,17 +35,61 @@ Description will go into a meta tag in <head />
 
 # Full Documentation Content
 
-# portal
+# Portal
+
+## Props[​](#props "Direct link to Props")
+
+### `name`[​](#name "Direct link to name")
+
+The name of the portal. It's used to identify the portal in the context of the portal host.
+
+### `hostName`[​](#hostname "Direct link to hostname")
+
+The name of the portal host. It's used to identify the host where the content should be rendered.
+
+### `children`[​](#children "Direct link to children")
+
+The content that should be rendered in the portal.
+
+## Example[​](#example "Direct link to Example")
 
 
 ---
 
-# portal-host
+# PortalHost
+
+`PortalHost` is a component that acts as an anchor for the portals. You can define multiple portal hosts in your app and use them to render different portals. Each portal host has a unique name that you can use to identify a necessary one among the others.
+
+## Props[​](#props "Direct link to Props")
+
+### `name`[​](#name "Direct link to name")
+
+The name of the portal host. It's used to identify the host by `<Portal />` component.
+
+## Example[​](#example "Direct link to Example")
 
 
 ---
 
-# portal-provider
+# PortalProvider
+
+Wrap your app with this component to use the portal API.
+
+This component provides a context/registry for all Portals so that you can use imperative API, such as `usePortal` hook to manage Portals.
+
+## Example[​](#example "Direct link to Example")
+
+```
+import { PortalProvider } from "react-native-teleport";
+
+export default function App() {
+  return (
+    <PortalProvider>
+      {/* your main application code goes here */}
+    </PortalProvider>
+  );
+}
+```
 
 
 ---
@@ -55,12 +99,16 @@ Description will go into a meta tag in <head />
 
 ---
 
-## [📄️<!-- --> <!-- -->portal-host](/react-native-teleport/pr-preview/pr-12/docs/api/components/portal-host.md)
+## [📄️<!-- --> <!-- -->PortalProvider](/react-native-teleport/pr-preview/pr-12/docs/api/components/portal-provider.md)
+
+[A component that should wrap your app.](/react-native-teleport/pr-preview/pr-12/docs/api/components/portal-provider.md)
 
 
 ---
 
 ## [📄️<!-- --> <!-- -->use-portal](/react-native-teleport/pr-preview/pr-12/docs/api/hooks/use-portal.md)
+
+[Hook that allows to manage portals.](/react-native-teleport/pr-preview/pr-12/docs/api/hooks/use-portal.md)
 
 
 ---
@@ -74,7 +122,7 @@ Description will go into a meta tag in <head />
 
 ## [📄️<!-- --> <!-- -->Main concepts](/react-native-teleport/pr-preview/pr-12/docs/guides/main-concepts.md)
 
-[Portal](/react-native-teleport/pr-preview/pr-12/docs/guides/main-concepts.md)
+[A quick tour in terminology and main concepts of this library.](/react-native-teleport/pr-preview/pr-12/docs/guides/main-concepts.md)
 
 
 ---
@@ -86,19 +134,80 @@ Description will go into a meta tag in <head />
 
 # Main concepts
 
-## Portal[​](#portal "Direct link to Portal")
-
-## Teleport[​](#teleport "Direct link to Teleport")
+## Comparison[​](#comparison "Direct link to Comparison")
 
 
 ---
 
-# portal
+# Portal
+
+The **Portal** API allows you to render a component in a different place in the view hierarchy without unmounting it. This is useful when you need a view to visually “break out” of its parent container (for example: modals, toasts, floating UI, popovers).
+
+Unlike simple `zIndex` tricks, Portals actually move the native view to another container, which guarantees correct behavior across different platforms, stacking contexts, and clipping boundaries.
+
+## Why use Portal?[​](#why-use-portal "Direct link to Why use Portal?")
+
+* Escape parent clipping: Portals are not limited by `overflow: hidden` or scroll containers.
+* Native-level stacking: Works even where `zIndex` fails.
+* Cross-platform: Consistent on iOS, Android and web.
+* Dynamic UI: Great for modals, floating buttons, dropdowns, tooltips, and system-like overlays.
+
+// TODO: check example validity
+
+## Example[​](#example "Direct link to Example")
+
+```
+import { Portal, PortalHost } from "react-native-teleport";
+import { View, Text, Button } from "react-native";
+
+export default function App() {
+  const [visible, setVisible] = React.useState(false);
+
+  return (
+    <View style={{ flex: 1 }}>
+      <Button title="Open modal" onPress={() => setVisible(true)} />
+
+      {/* Place a PortalHost at the root of your app */}
+      <PortalHost name="root" />
+
+      {visible && (
+        <Portal host="root">
+          <View
+            style={{
+              position: "absolute",
+              top: 100,
+              left: 50,
+              width: 200,
+              height: 200,
+              backgroundColor: "white",
+              elevation: 10,
+              justifyContent: "center",
+              alignItems: "center",
+            }}
+          >
+            <Text>Hello from Portal!</Text>
+            <Button title="Close" onPress={() => setVisible(false)} />
+          </View>
+        </Portal>
+      )}
+    </View>
+  );
+}
+```
+
+## Best practices[​](#best-practices "Direct link to Best practices")
+
+* Always declare at least one `<PortalHost />` near your app root.
+* Use host names if you need multiple layers (e.g., modal, toast, tooltip).
+
+Teleportation
+
+⚡ Tip: If you need to move an existing view (without unmounting/remounting), check out Teleport (Reparenting).
 
 
 ---
 
-# teleport
+# Teleport
 
 
 ---
