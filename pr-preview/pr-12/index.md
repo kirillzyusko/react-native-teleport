@@ -6,7 +6,7 @@
 
 [Example App](https://github.com/kirillzyusko/react-native-teleport/tree/main/example)[GitHub](https://github.com/kirillzyusko/react-native-teleport)
 
-![](/react-native-teleport/pr-preview/pr-12/assets/images/demo-65785a9f1211bc6992db0cca2993d621.png)
+![](/react-native-teleport/pr-preview/pr-12/assets/images/teleport-65785a9f1211bc6992db0cca2993d621.png)
 
 # Teleport
 

@@ -1,6 +1,8 @@
 # Portal
 
-The **Portal** API allows you to render a component in a different place in the view hierarchy without unmounting it. This is useful when you need a view to visually “break out” of its parent container (for example: modals, toasts, floating UI, popovers).
+The **Portal** API allows you to render a component in a different place in the view hierarchy. This is useful when you need a view to visually “break out” of its parent container (for example: modals, toasts, floating UI, popovers).
+
+![Portal helps to render a new view in a different container](/react-native-teleport/pr-preview/pr-12/assets/images/portal-2b20b94e26669e61959d937697ed6dde.png)
 
 Unlike simple `zIndex` tricks, Portals actually move the native view to another container, which guarantees correct behavior across different platforms, stacking contexts, and clipping boundaries.
 
@@ -61,4 +63,4 @@ export default function App() {
 
 Teleportation
 
-⚡ Tip: If you need to move an existing view (without unmounting/remounting), check out Teleport (Reparenting).
+⚡ **Tip**: If you need to move an **existing** view (without unmounting/remounting), check out [Teleport](/react-native-teleport/pr-preview/pr-12/docs/guides/teleport.md) guide.
