@@ -88,8 +88,7 @@ const config: Config = {
   ],
 
   themeConfig: {
-    // Replace with your project's social card
-    image: "img/docusaurus-social-card.jpg",
+    image: "img/og-image.png",
     navbar: {
       title: "Teleport",
       logo: {
@@ -180,6 +179,15 @@ const config: Config = {
       darkTheme: prismThemes.dracula,
       additionalLanguages: ["java", "kotlin", "swift", "json", "diff", "bash"],
     },
+    metadata: [
+      {
+        name: "keywords",
+        content:
+          "react-native, portal, teleport, reparent, re-parent, re-parenting, reparentable",
+      },
+      { name: "og:image:width", content: "3456" },
+      { name: "og:image:height", content: "1582" },
+    ],
   } satisfies Preset.ThemeConfig,
 };
 
