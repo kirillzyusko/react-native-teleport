@@ -3,7 +3,7 @@ export type PortalProviderProps = {
 };
 export type PortalHostProps = {
   name: string;
-  children: React.ReactNode;
+  children?: React.ReactNode;
 };
 export type PortalProps = {
   name?: string;
