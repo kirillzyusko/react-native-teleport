@@ -3,9 +3,21 @@ import { usePortalManagerContext } from "../contexts/PortalManager";
 /**
  * The `usePortal` hook allows you to manage portals in imperative way.
  *
- * @category Hooks
- * @param hostName - `name` of the `<PortalHost />` component
+ * @category hooks
+ * @param `hostName` - `name` of the `<PortalHost />` component
  * @returns an object that helps to manipulate portals
+ * @example
+ * ```tsx
+ * import { usePortal } from "react-native-teleport";
+ * export default function App() {
+ *   const { removePortal } = usePortal("root");
+ *   return (
+ *     <View style={{ flex: 1 }}>
+ *       <Button title="Remove" onPress={() => removePortal("portal")} />
+ *     </View>
+ *   );
+ * }
+ * ```
  */
 export default function usePortal(hostName: string = "root") {
   const { dispatch } = usePortalManagerContext();
