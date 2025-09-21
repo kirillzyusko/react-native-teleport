@@ -1,0 +1,17 @@
+// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+
+exports[`portal rendering should render without errors 1`] = `
+<PortalProvider>
+  <PortalHost
+    name="app"
+  />
+  <View>
+    <Portal
+      hostName="app"
+      name="modal"
+    >
+      <View />
+    </Portal>
+  </View>
+</PortalProvider>
+`;

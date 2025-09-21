@@ -21,9 +21,8 @@ jest.mock("react-native-teleport", () =>
 Once you've set up mock - you can write your first test 😊. A sample of test case is shown below. For more test cases please see [this](https://github.com/kirillzyusko/react-native-teleport/tree/main/example/__tests__) link.
 
 ```tsx
-import { render, screen } from '@testing-library/react-native';
+import { render, screen } from "@testing-library/react-native";
 
-import React from "react";
 import { View } from "react-native";
 
 import { PortalProvider, PortalHost, Portal } from "react-native-teleport";
