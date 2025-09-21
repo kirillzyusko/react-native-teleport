@@ -29,11 +29,8 @@ export default defineConfig([
     files: ["**/__tests__/**/*.[jt]s?(x)", "**/?(*.)+(spec|test).[jt]s?(x)"],
     extends: fixupConfigRules(compat.extends("plugin:testing-library/react")),
   },
-    {
-    files: [
-      "example/jestSetup.js",
-      "jest/index.js",
-    ],
+  {
+    files: ["example/jestSetup.js", "jest/index.js"],
     languageOptions: {
       globals: {
         jest: "readonly",

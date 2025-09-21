@@ -65,7 +65,7 @@
   "bugs": {
     "url": "https://github.com/kirillzyusko/react-native-teleport/issues"
   },
-  "homepage": "https://github.com/kirillzyusko/react-native-teleport#readme",
+  "homepage": "https://kirillzyusko.github.io/react-native-teleport/",
   "publishConfig": {
     "registry": "https://registry.npmjs.org/"
   },

@@ -11,9 +11,7 @@ keywords: [react-native-teleport, jest, mock, testing]
 This library includes a built in mock for Jest. To use it, add the following code to the [jest setup](https://jestjs.io/docs/configuration#setupfiles-array) file:
 
 ```js
-jest.mock("react-native-teleport", () =>
-  require("react-native-teleport/jest"),
-);
+jest.mock("react-native-teleport", () => require("react-native-teleport/jest"));
 ```
 
 ## Test case example

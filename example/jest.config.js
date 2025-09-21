@@ -8,5 +8,5 @@ module.exports = {
   transformIgnorePatterns: [
     "node_modules/(?!(@react-native|react-native|react-native-teleport)/)",
   ],
-  moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx', 'json', 'node'],
+  moduleFileExtensions: ["ts", "tsx", "js", "jsx", "json", "node"],
 };
