@@ -27,7 +27,7 @@ Description will go into a meta tag in <head />
 - [Teleport](/docs/guides/teleport.md): Teleport helps you to re-use existing component and render it in a different part of tree without remounting and resetting the internal state.
 - [Installation](/docs/installation.md): Guide dedicated to installation process
 - [Intro](/docs/intro.md): Intro into portal and teleport concepts
-- [index](/docs/recipes.md)
+- [Jest testing guide](/docs/recipes/jest-testing-guide.md): A testing-guide showing how to write unit-tests using jest
 
 
 ---
@@ -144,7 +144,7 @@ export default function App() {
  */
 type usePortal = (hostName: string = 'root') => {
   /**
-   *   Remove portal from host container. Subsequent re-renders will not resurrect portal,
+   * Remove portal from host container. Subsequent re-renders will not resurrect portal,
    * but if you mount a new portal with the same name it will be shown (i. e. hook doesn't
    * prevent new portal from being added).
    * @param name - `name` of `<Portal />` component.
@@ -184,7 +184,9 @@ type usePortal = (hostName: string = 'root') => {
 
 ---
 
-## [📄️<!-- --> <!-- -->index](/react-native-teleport/pr-preview/pr-12/docs/recipes.md)
+## [📄️<!-- --> <!-- -->Jest testing guide](/react-native-teleport/pr-preview/pr-12/docs/recipes/jest-testing-guide.md)
+
+[A testing-guide showing how to write unit-tests using jest](/react-native-teleport/pr-preview/pr-12/docs/recipes/jest-testing-guide.md)
 
 
 ---
@@ -534,7 +536,50 @@ Ready to get started? 🚀 Head over to the [Installation](/react-native-telepor
 
 ---
 
-# index
+# Jest testing guide
+
+## Setting up a mock[​](#setting-up-a-mock "Direct link to Setting up a mock")
+
+This library includes a built in mock for Jest. To use it, add the following code to the [jest setup](https://jestjs.io/docs/configuration#setupfiles-array) file:
+
+```
+jest.mock("react-native-teleport", () =>
+  require("react-native-teleport/jest"),
+);
+```
+
+## Test case example[​](#test-case-example "Direct link to Test case example")
+
+Once you've set up mock - you can write your first test 😊. A sample of test case is shown below. For more test cases please see [this](https://github.com/kirillzyusko/react-native-teleport/tree/main/example/__tests__) link.
+
+```
+import { render, screen } from "@testing-library/react-native";
+
+import { View } from "react-native";
+
+import { PortalProvider, PortalHost, Portal } from "react-native-teleport";
+
+function TestComponent() {
+  return (
+    <PortalProvider>
+      <PortalHost name="app" />
+      <View>
+        <Portal hostName="app" name="modal">
+          <View />
+        </Portal>
+      </View>
+    </PortalProvider>
+  );
+}
+
+describe("portal rendering", () => {
+  it("should render without errors", () => {
+    render(<TestComponent />);
+
+    expect(screen.toJSON()).toMatchSnapshot();
+  });
+});
+```
 
 
 ---

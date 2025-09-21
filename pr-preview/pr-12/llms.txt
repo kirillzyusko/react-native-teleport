@@ -27,4 +27,4 @@ Description will go into a meta tag in <head />
 - [Teleport](/docs/guides/teleport.md): Teleport helps you to re-use existing component and render it in a different part of tree without remounting and resetting the internal state.
 - [Installation](/docs/installation.md): Guide dedicated to installation process
 - [Intro](/docs/intro.md): Intro into portal and teleport concepts
-- [index](/docs/recipes.md)
+- [Jest testing guide](/docs/recipes/jest-testing-guide.md): A testing-guide showing how to write unit-tests using jest
