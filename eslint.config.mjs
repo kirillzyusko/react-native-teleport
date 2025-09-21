@@ -35,7 +35,9 @@ export default defineConfig([
       "jest/index.js",
     ],
     languageOptions: {
-      globals: globals.jest,
+      globals: {
+        jest: "readonly",
+      },
     },
   },
   {
