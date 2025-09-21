@@ -150,7 +150,7 @@ const config: Config = {
           items: [
             {
               label: "GitHub discussions",
-              href: "https://github.com/kirillzyusko/react-native-keyboard-controller/discussions",
+              href: "https://github.com/kirillzyusko/react-native-teleport/discussions",
             },
             {
               label: "X",
