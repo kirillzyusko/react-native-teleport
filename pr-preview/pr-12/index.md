@@ -22,7 +22,7 @@ Docs
 
 Community
 
-* [GitHub discussions](https://github.com/kirillzyusko/react-native-keyboard-controller/discussions)
+* [GitHub discussions](https://github.com/kirillzyusko/react-native-teleport/discussions)
 * [X](https://x.com/ziusko)
 
 More
