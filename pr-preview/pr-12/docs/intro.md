@@ -12,8 +12,6 @@ Community libraries like [@gorhom/portal](https://github.com/gorhom/react-native
 
 ❌ Components are **re-parented in JS**, not in the actual native view tree.<br /><!-- -->❌ This can break or block access to **React Context** values (theme, navigation, i18n, etc.).<br /><!-- -->❌ Rendering is still bound to the JS layer, which can limit **performance** and **platform-native behaviors**.
 
-***
-
 ## Introducing `react-native-teleport`[​](#introducing-react-native-teleport "Direct link to introducing-react-native-teleport")
 
 This library brings **true native portals** to React Native:
