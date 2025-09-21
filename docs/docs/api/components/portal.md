@@ -2,12 +2,7 @@
 sidebar_position: 3
 description: A component that moves its children to a different place in the view hierarchy.
 keywords:
-  [
-    react-native-teleport,
-    react-native teleport,
-    react-native portal,
-    portal,
-  ]
+  [react-native-teleport, react-native teleport, react-native portal, portal]
 ---
 
 # Portal

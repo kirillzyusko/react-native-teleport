@@ -12,7 +12,7 @@ keywords:
     popover,
     tooltip,
     alert,
-    toast
+    toast,
   ]
 ---
 

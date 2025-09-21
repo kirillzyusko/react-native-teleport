@@ -45,7 +45,10 @@
     "zyusko",
     "kirill",
     "kirillzyusko",
-    "gorhom"
+    "gorhom",
+    "xcassets",
+    "KYGKY",
+    "pressable"
   ],
   "ignorePaths": [
     "node_modules",

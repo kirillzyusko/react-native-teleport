@@ -7,5 +7,7 @@ keywords:
     react-native teleport,
     react-native portal,
     usePortal,
+    removePortal,
+    remove portal,
   ]
 ---

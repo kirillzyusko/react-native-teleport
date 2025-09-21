@@ -16,3 +16,5 @@ example/src/assets/lottie/*.json
 
 android/build/
 android/.cxx/
+
+Images.xcassets/
