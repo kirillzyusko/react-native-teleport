@@ -30,6 +30,14 @@ export default defineConfig([
     extends: fixupConfigRules(compat.extends("plugin:testing-library/react")),
   },
   {
+    files: ["example/jestSetup.js", "jest/index.js"],
+    languageOptions: {
+      globals: {
+        jest: "readonly",
+      },
+    },
+  },
+  {
     ignores: ["node_modules/", "lib/"],
   },
 ]);

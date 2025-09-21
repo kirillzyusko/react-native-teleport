@@ -24,39 +24,12 @@ Missing native portal implementation for react-native. Teleport views across you
 
 ### Installation
 
-```sh
-npm install react-native-teleport
-# or
-yarn add react-native-teleport
-```
+Check out the [installation](https://kirillzyusko.github.io/react-native-teleport/docs/installation) guide.
 
-### Usage
+### Documentation
 
-First of all, you need to add `PortalProvider` to your root component - this is usually `App.tsx`:
-
-```tsx
-import {PortalProvider} from "react-native-teleport";
-
-export const App = () => (
-  <PortalProvider>
-    {/* your app goes here */}
-  </PortalProvider>
-);
-```
-
-Then wrap the content that you want to teleport with `Portal`:
-
-```tsx
-import {Portal} from "react-native-teleport";
-
-export const App = () => (
-  <Portal name="root">
-    <View style={{backgroundColor: "red"}}>
-      <Text>Hello, world!</Text>
-    </View>
-  </Portal>
-);
-```
+Full API reference and guides available at:
+[https://kirillzyusko.github.io/react-native-teleport](https://kirillzyusko.github.io/react-native-teleport)
 
 ### Contributing
 

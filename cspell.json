@@ -38,7 +38,17 @@
     "Werror",
     "reparent",
     "reparentable",
-    "gifs"
+    "gifs",
+    "Infima",
+    "llms",
+    "signalwire",
+    "zyusko",
+    "kirill",
+    "kirillzyusko",
+    "gorhom",
+    "xcassets",
+    "KYGKY",
+    "pressable"
   ],
   "ignorePaths": [
     "node_modules",

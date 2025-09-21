@@ -46,8 +46,11 @@ jobs:
       - name: Setup
         uses: ./.github/actions/setup
 
-      - name: Run unit tests
+      - name: Run lib unit tests
         run: yarn test --maxWorkers=2 --coverage
+
+      - name: Run example app unit tests (verify mocks)
+        run: yarn example test --maxWorkers=2 --coverage
 
   build-library:
     name: 🛠 Build package
