@@ -13,47 +13,44 @@ Unlike simple `zIndex` tricks, Portals actually move the native view to another 
 * Cross-platform: Consistent on iOS, Android and web.
 * Dynamic UI: Great for modals, floating buttons, dropdowns, tooltips, and system-like overlays.
 
-// TODO: check example validity
-
 ## Example[​](#example "Direct link to Example")
 
 ```
-import { Portal, PortalHost } from "react-native-teleport";
-import { View, Text, Button } from "react-native";
+import { useState } from "react";
+import { View, StyleSheet, Button } from "react-native";
+import { Portal } from "react-native-teleport";
 
-export default function App() {
-  const [visible, setVisible] = React.useState(false);
+export default function InstantRootExample() {
+  const [shouldBeTeleported, setTeleported] = useState(true);
 
   return (
-    <View style={{ flex: 1 }}>
-      <Button title="Open modal" onPress={() => setVisible(true)} />
-
-      {/* Place a PortalHost at the root of your app */}
-      <PortalHost name="root" />
-
-      {visible && (
-        <Portal host="root">
-          <View
-            style={{
-              position: "absolute",
-              top: 100,
-              left: 50,
-              width: 200,
-              height: 200,
-              backgroundColor: "white",
-              elevation: 10,
-              justifyContent: "center",
-              alignItems: "center",
-            }}
-          >
-            <Text>Hello from Portal!</Text>
-            <Button title="Close" onPress={() => setVisible(false)} />
-          </View>
+    <View style={styles.container}>
+      {shouldBeTeleported && (
+        <Portal hostName={"overlay"}>
+          <View style={styles.box} testID="touchable" />
         </Portal>
       )}
+      <Button
+        title={shouldBeTeleported ? "Hide" : "Show"}
+        onPress={() => setTeleported((t) => !t)}
+      />
     </View>
   );
 }
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  box: {
+    width: 160,
+    height: 160,
+    marginVertical: 20,
+    backgroundColor: "blue",
+  },
+});
 ```
 
 ## Best practices[​](#best-practices "Direct link to Best practices")
