@@ -9,3 +9,26 @@
 The name of the portal host. It's used to identify the host by `<Portal />` component.
 
 ## Example[​](#example "Direct link to Example")
+
+```
+import { StyleSheet, View } from "react-native";
+import { PortalHost, PortalProvider } from "react-native-teleport";
+import {
+  initialWindowMetrics,
+  SafeAreaProvider,
+} from "react-native-safe-area-context";
+import RootStack from "./navigation";
+
+export default function App() {
+  return (
+    <SafeAreaProvider initialMetrics={initialWindowMetrics}>
+      <PortalProvider>
+        <RootStack />
+        <View style={StyleSheet.absoluteFillObject} pointerEvents="box-none">
+          <PortalHost name="overlay" />
+        </View>
+      </PortalProvider>
+    </SafeAreaProvider>
+  );
+}
+```

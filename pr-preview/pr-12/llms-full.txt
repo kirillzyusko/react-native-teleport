@@ -68,6 +68,29 @@ The name of the portal host. It's used to identify the host by `<Portal />` comp
 
 ## Example[​](#example "Direct link to Example")
 
+```
+import { StyleSheet, View } from "react-native";
+import { PortalHost, PortalProvider } from "react-native-teleport";
+import {
+  initialWindowMetrics,
+  SafeAreaProvider,
+} from "react-native-safe-area-context";
+import RootStack from "./navigation";
+
+export default function App() {
+  return (
+    <SafeAreaProvider initialMetrics={initialWindowMetrics}>
+      <PortalProvider>
+        <RootStack />
+        <View style={StyleSheet.absoluteFillObject} pointerEvents="box-none">
+          <PortalHost name="overlay" />
+        </View>
+      </PortalProvider>
+    </SafeAreaProvider>
+  );
+}
+```
+
 
 ---
 
@@ -211,7 +234,169 @@ Teleportation
 
 # Teleport
 
+The **Teleport** concept allows you to move an **existing view** to a different place in the hierarchy **without unmounting or remounting** it. This means the component keeps its internal state (animations, scroll position, video progress, etc.) even after being visually moved. This pattern is also known as **re-parenting**.
+
 ![Teleport helps to move existing view between different layers without losing state](/react-native-teleport/pr-preview/pr-12/assets/images/teleport-65785a9f1211bc6992db0cca2993d621.png)
+
+## Example[​](#example "Direct link to Example")
+
+App.tsx
+
+```
+import { StyleSheet, View } from "react-native";
+import { PortalHost, PortalProvider } from "react-native-teleport";
+import {
+  initialWindowMetrics,
+  SafeAreaProvider,
+} from "react-native-safe-area-context";
+import { NavigationContainer } from "@react-navigation/native";
+import RootStack from "./navigation";
+import { GestureHandlerRootView } from "react-native-gesture-handler";
+
+export default function App() {
+  return (
+    <SafeAreaProvider initialMetrics={initialWindowMetrics}>
+      <GestureHandlerRootView style={styles.container}>
+        <PortalProvider>
+          {/* Deeply nested <Teleport /> component goes here */}
+          <View style={StyleSheet.absoluteFillObject} pointerEvents="box-none">
+            <PortalHost name="overlay" />
+          </View>
+        </PortalProvider>
+      </GestureHandlerRootView>
+    </SafeAreaProvider>
+  );
+}
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+  },
+});
+```
+
+Teleport.tsx
+
+```
+import LottieView from "lottie-react-native";
+import { useRef, useState } from "react";
+import {
+  View,
+  Text,
+  ScrollView,
+  TouchableWithoutFeedback,
+  StyleSheet,
+  Animated,
+  useAnimatedValue,
+  Easing,
+  Pressable,
+} from "react-native";
+import { BlurView } from "@react-native-community/blur";
+import { Portal } from "react-native-teleport";
+
+const messages = [
+  { text: "Hello, how are you", sender: true },
+  { text: "Hello, not too bad! You?", sender: false },
+  { text: "I'm fine, thanks", sender: true },
+  { text: "What is your plan for evening today?", sender: true },
+  { text: "I'm not sure yet... Any ideas?", sender: false },
+  { text: "Sure, let's go for a walk?", sender: true },
+];
+
+const Message = ({ sender, text }) => {
+  return (
+    <View
+      style={{
+        flexDirection: "row",
+        width: "100%",
+        justifyContent: sender ? "flex-end" : "flex-start",
+      }}
+    >
+      <Text
+        style={{
+          opacity: 1,
+          color: "black",
+          padding: 10,
+          backgroundColor: sender ? "#38f269" : "#38c7f2",
+          margin: 10,
+          borderRadius: 10,
+        }}
+      >
+        {text}
+      </Text>
+    </View>
+  );
+};
+
+export default function Messenger() {
+  const viewRef = useRef<View | null>(null);
+  const opacity = useRef(new Animated.Value(0)).current;
+  const [teleport, setTeleported] = useState(false);
+  const [style, setStyle] = useState(null);
+
+  const handleClick = () => {
+    Animated.timing(opacity, {
+      toValue: 1,
+      duration: 250,
+      easing: Easing.inOut(Easing.ease),
+      useNativeDriver: true,
+    }).start();
+    viewRef.current?.measureInWindow((x, y) => {
+      setTeleported(true);
+      setStyle({
+        paddingTop: y,
+      });
+    });
+  };
+
+  return (
+    <View style={{ flex: 1 }}>
+      <ScrollView>
+        {messages.map((item) => (
+          <Message key={item.text} {...item} />
+        ))}
+        <View
+          ref={viewRef}
+          style={{
+            width: "100%",
+            justifyContent: "flex-start",
+            flexDirection: "row",
+          }}
+        >
+          <Portal hostName={teleport ? "overlay" : undefined}>
+            <Pressable onPress={handleClick} style={style ?? {}}>
+              <LottieView
+                source={require("../../assets/lottie/bear.json")}
+                style={[{ width: 200, height: 200 }]}
+                autoPlay
+                loop
+              />
+            </Pressable>
+          </Portal>
+        </View>
+      </ScrollView>
+      <Animated.View
+        style={[StyleSheet.absoluteFillObject, { opacity: opacity }]}
+        pointerEvents="none"
+      >
+        <BlurView
+          style={StyleSheet.absoluteFillObject}
+          pointerEvents="none"
+          blurType="light"
+          blurAmount={16}
+        />
+      </Animated.View>
+    </View>
+  );
+}
+```
+
+## Why use Teleport?[​](#why-use-teleport "Direct link to Why use Teleport?")
+
+* **Preserve state**: No unmount/remount — animations, scroll, video, inputs remain intact.
+* **Build advanced transitions**: Implement shared-element–style transitions between screens.
+* **Escape container limits**: Move a view to an overlay while keeping its internal logic alive.
+* **Power complex UI**: Great for photo galleries, YouTube-like mini players, context menu transitions, app tours, off-screen pre-rendering, etc.
 
 
 ---
@@ -277,24 +462,13 @@ Congratulations! 🎉 You've just finished installation process. Go to the [next
 
 ## What is the portal?[​](#what-is-the-portal "Direct link to What is the portal?")
 
-A **Portal** is a React concept that lets you render a component in a different place in the UI tree, while keeping it logically connected to its parent.
+A **Portal** lets you render a component somewhere else in the UI tree, while keeping it logically inside its parent.<br /><!-- -->Typical use cases include **modals**, **tooltips**, **popovers**, and other overlays where the visual position differs from the React tree position.
 
-On the web, this is typically done with [`createPortal`](https://react.dev/reference/react-dom/createPortal).
+On the web this is done with [`createPortal`](https://react.dev/reference/react-dom/createPortal), but React Native has no built-in solution ([issue #36273](https://github.com/facebook/react-native/issues/36273)).
 
-Portals are commonly used for UI elements such as:
+## Existing solutions (and their limits)[​](#existing-solutions-and-their-limits "Direct link to Existing solutions (and their limits)")
 
-* Modals
-* Tooltips
-* Popovers
-* Floating views
-
-These are cases where the visual position of a component differs from its logical position in the React tree.
-
-***
-
-## Why another portal library for `react-native`?[​](#why-another-portal-library-for-react-native "Direct link to why-another-portal-library-for-react-native")
-
-React Native does **not yet provide** a built-in `Portal` implementation ([issue #36273](https://github.com/facebook/react-native/issues/36273)).<br /><!-- -->Existing community libraries, such as [@gorhom/portal](https://github.com/gorhom/react-native-portal) or [react-gateway](https://github.com/cloudflare/react-gateway), solve this with **JavaScript-based portals**. They work well for many scenarios but come with important trade-offs:
+Community libraries like [@gorhom/portal](https://github.com/gorhom/react-native-portal) or [react-gateway](https://github.com/cloudflare/react-gateway) emulate portals in **JavaScript**. They work, but:
 
 ❌ Components are **re-parented in JS**, not in the actual native view tree.<br /><!-- -->❌ This can break or block access to **React Context** values (theme, navigation, i18n, etc.).<br /><!-- -->❌ Rendering is still bound to the JS layer, which can limit **performance** and **platform-native behaviors**.
 
@@ -302,21 +476,29 @@ React Native does **not yet provide** a built-in `Portal` implementation ([issue
 
 ## Introducing `react-native-teleport`[​](#introducing-react-native-teleport "Direct link to introducing-react-native-teleport")
 
-This library brings **true native portals** into React Native by teleportation views at the native layer (iOS/Android/web).
+This library brings **true native portals** to React Native:
 
-✅ The component stays in the **original React tree**, preserving contexts and state.<br /><!-- -->✅ The view is physically moved in the **native view hierarchy**, so layout, z-order, and performance behave like any other native view.<br /><!-- -->✅ Works seamlessly across **iOS, Android, and Web**.
+✅ The component stays in the **original React tree** → contexts & state are preserved.<br /><!-- -->✅ The view is physically moved in the **native view hierarchy** → correct layout, z-order & performance.<br /><!-- -->✅ Works across **iOS, Android, and Web**.<br /><!-- -->✅ Supports not only portals but also **re-parenting (teleport)**: move an existing view without unmounting it.
 
 You can think of it as:
 
 > **"Teleport your view in native space, without breaking React logic."**
 
-## Why native portals matter[​](#why-native-portals-matter "Direct link to Why native portals matter")
+## Comparison[​](#comparison "Direct link to Comparison")
 
-In native development, portals are widely used to implement flexible UI patterns. Bringing them to React Native fills a long-standing gap:
+|                                                         | `react-native-teleport` | `@gorhom/portal` |
+| ------------------------------------------------------- | ----------------------- | ---------------- |
+| Render local component in a different place in the tree | ✅                      | ✅               |
+| Support multiple hosts/portals                          | ✅                      | ✅               |
+| Native implementation                                   | ✅                      | ❌               |
+| Keeps React tree continuity                             | ✅                      | ❌               |
+| Preserves React context                                 | ✅                      | ❌               |
+| Move views without losing state (teleport)              | ✅                      | ❌               |
+| Mirroring 1                                             | 🟠 2                    | ❌               |
 
-* **Re-parenting without losing state** → teleport a view while keeping its internal state intact.
-* **Mirroring support** → create a live copy of a view elsewhere in the tree (similar to a real-time snapshot).
-* **Powerful composition** → enable UI patterns that were previously difficult or impossible with JS-only portals.
+> 1 create a live copy of a view elsewhere in the tree (similar to a real-time snapshot).
+
+> 2 Is planned to be added in the future
 
 ***
 
