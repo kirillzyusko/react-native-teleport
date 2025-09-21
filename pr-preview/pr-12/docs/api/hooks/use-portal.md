@@ -24,7 +24,7 @@ export default function App() {
 /**
  * @param hostName - `name` of the `<PortalHost />` component
  */
-type usePortal = (hostName: string = 'root') => {
+type usePortal = (hostName: string = "root") => {
   /**
    * Remove portal from host container. Subsequent re-renders will not resurrect portal,
    * but if you mount a new portal with the same name it will be shown (i. e. hook doesn't

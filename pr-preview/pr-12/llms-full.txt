@@ -180,7 +180,7 @@ export default function App() {
 /**
  * @param hostName - `name` of the `<PortalHost />` component
  */
-type usePortal = (hostName: string = 'root') => {
+type usePortal = (hostName: string = "root") => {
   /**
    * Remove portal from host container. Subsequent re-renders will not resurrect portal,
    * but if you mount a new portal with the same name it will be shown (i. e. hook doesn't
@@ -578,9 +578,7 @@ Ready to get started? 🚀 Head over to the [Installation](/react-native-telepor
 This library includes a built in mock for Jest. To use it, add the following code to the [jest setup](https://jestjs.io/docs/configuration#setupfiles-array) file:
 
 ```
-jest.mock("react-native-teleport", () =>
-  require("react-native-teleport/jest"),
-);
+jest.mock("react-native-teleport", () => require("react-native-teleport/jest"));
 ```
 
 ## Test case example[​](#test-case-example "Direct link to Test case example")

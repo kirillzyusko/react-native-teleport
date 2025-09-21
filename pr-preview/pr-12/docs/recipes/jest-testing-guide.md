@@ -5,9 +5,7 @@
 This library includes a built in mock for Jest. To use it, add the following code to the [jest setup](https://jestjs.io/docs/configuration#setupfiles-array) file:
 
 ```
-jest.mock("react-native-teleport", () =>
-  require("react-native-teleport/jest"),
-);
+jest.mock("react-native-teleport", () => require("react-native-teleport/jest"));
 ```
 
 ## Test case example[​](#test-case-example "Direct link to Test case example")
