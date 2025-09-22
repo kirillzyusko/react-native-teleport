@@ -187,6 +187,7 @@ const config: Config = {
       },
       { name: "og:image:width", content: "3456" },
       { name: "og:image:height", content: "1582" },
+      { name: "algolia-site-verification", content: "D66C59136BD78E50" },
     ],
   } satisfies Preset.ThemeConfig,
 };
