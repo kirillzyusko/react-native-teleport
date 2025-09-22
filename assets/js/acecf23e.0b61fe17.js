@@ -1,0 +1,1 @@
+"use strict";(self.webpackChunkreact_native_teleport_docs=self.webpackChunkreact_native_teleport_docs||[]).push([[1903],{1912:e=>{e.exports=JSON.parse('{"blogBasePath":"/react-native-teleport/blog","blogTitle":"Blog","authorsListPath":"/react-native-teleport/blog/authors"}')}}]);

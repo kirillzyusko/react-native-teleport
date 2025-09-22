@@ -9,6 +9,10 @@ Description will go into a meta tag in <head />
 
 - [Teleport](/index.md): Description will go into a meta tag in <head />
 
+### search
+
+- [Search the documentation](/search.md)
+
 ### docs
 
 
