@@ -187,8 +187,16 @@ const config: Config = {
       },
       { name: "og:image:width", content: "3456" },
       { name: "og:image:height", content: "1582" },
-      { name: "algolia-site-verification", content: "D66C59136BD78E50" },
     ],
+    algolia: {
+      appId: "XYVIEPDGBE",
+      apiKey: "f116abc1c6fdbdab99c0570075193f63",
+      indexName: "react-native-teleport",
+      contextualSearch: false,
+      searchParameters: {},
+      searchPagePath: "search",
+      insights: true,
+    },
   } satisfies Preset.ThemeConfig,
 };
 
