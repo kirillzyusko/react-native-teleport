@@ -24,7 +24,7 @@ Missing native portal implementation for react-native. Teleport views across you
 
 ### Installation
 
-Check out the [installation](https://kirillzyusko.github.io/react-native-teleport/docs/installation) guide.
+Check out the [installation](https://kirillzyusko.github.io/react-native-teleport/docs/installation) section of the docs for detailed setup instructions.
 
 ### Documentation
 
