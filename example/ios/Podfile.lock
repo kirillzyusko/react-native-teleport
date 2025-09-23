@@ -9,7 +9,7 @@ PODS:
     - hermes-engine/Pre-built (= 0.81.0)
   - hermes-engine/Pre-built (0.81.0)
   - lottie-ios (4.5.0)
-  - lottie-react-native (7.3.3):
+  - lottie-react-native (7.3.4):
     - boost
     - DoubleConversion
     - fast_float
@@ -2519,7 +2519,7 @@ PODS:
     - ReactCommon/turbomodule/core
     - SocketRocket
     - Yoga
-  - RNWorklets (0.5.0):
+  - RNWorklets (0.5.1):
     - boost
     - DoubleConversion
     - fast_float
@@ -2546,10 +2546,10 @@ PODS:
     - ReactCodegen
     - ReactCommon/turbomodule/bridging
     - ReactCommon/turbomodule/core
-    - RNWorklets/worklets (= 0.5.0)
+    - RNWorklets/worklets (= 0.5.1)
     - SocketRocket
     - Yoga
-  - RNWorklets/worklets (0.5.0):
+  - RNWorklets/worklets (0.5.1):
     - boost
     - DoubleConversion
     - fast_float
@@ -2576,10 +2576,10 @@ PODS:
     - ReactCodegen
     - ReactCommon/turbomodule/bridging
     - ReactCommon/turbomodule/core
-    - RNWorklets/worklets/apple (= 0.5.0)
+    - RNWorklets/worklets/apple (= 0.5.1)
     - SocketRocket
     - Yoga
-  - RNWorklets/worklets/apple (0.5.0):
+  - RNWorklets/worklets/apple (0.5.1):
     - boost
     - DoubleConversion
     - fast_float
@@ -2609,7 +2609,7 @@ PODS:
     - SocketRocket
     - Yoga
   - SocketRocket (0.7.1)
-  - Teleport (0.2.0):
+  - Teleport (0.3.0):
     - boost
     - DoubleConversion
     - fast_float
@@ -2894,7 +2894,7 @@ SPEC CHECKSUMS:
   glog: 5683914934d5b6e4240e497e0f4a3b42d1854183
   hermes-engine: e7491a2038f2618c8cd444ed411a6deb350a3742
   lottie-ios: a881093fab623c467d3bce374367755c272bdd59
-  lottie-react-native: b748fd165cbce7475372fac5fb3f4f4a7142ce9e
+  lottie-react-native: 86fa7488b1476563f41071244aa73d5b738faf19
   RCT-Folly: 846fda9475e61ec7bcbf8a3fe81edfcaeb090669
   RCTDeprecation: 0735ab4f6b3ec93a7f98187b5da74d7916e2cf4c
   RCTRequired: 8fcc7801bfc433072287b0f24a662e2816e89d0c
@@ -2962,9 +2962,9 @@ SPEC CHECKSUMS:
   RNGestureHandler: 3a73f098d74712952870e948b3d9cf7b6cae9961
   RNReanimated: 9de34f0313c4177a34c079ca9fce6f1f278bff24
   RNScreens: 0bbf16c074ae6bb1058a7bf2d1ae017f4306797c
-  RNWorklets: c3a39bbcdc44906af1ec1d1e0bc17f144c1e30da
+  RNWorklets: ad0606bee2a8103c14adb412149789c60b72bfb2
   SocketRocket: d4aabe649be1e368d1318fdf28a022d714d65748
-  Teleport: 4a3d660e0a716887f9fe5078cca76469a7583e80
+  Teleport: f0fa0b3615a039675e2d6f593e88cb78ba9e39b1
   Yoga: b01392348aeea02064c21a2762a42893d82b60a7
 
 PODFILE CHECKSUM: fa8e39e99744a38fb613b9c3b11b26af576d7d44

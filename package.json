@@ -1,6 +1,6 @@
 {
   "name": "react-native-teleport",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "description": "Missing native portal implementation for react-native",
   "main": "./lib/module/index.js",
   "types": "./lib/typescript/src/index.d.ts",
