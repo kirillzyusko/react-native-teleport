@@ -1,0 +1,1 @@
+"use strict";(self.webpackChunkreact_native_teleport_docs=self.webpackChunkreact_native_teleport_docs||[]).push([[7472],{5513:e=>{e.exports=JSON.parse('{"title":"Recent posts","items":[{"title":"Meet teleport!","permalink":"/react-native-teleport/pr-preview/pr-22/blog/welcome","unlisted":false,"date":"2025-10-02T00:00:00.000Z"}]}')}}]);
