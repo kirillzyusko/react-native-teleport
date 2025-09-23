@@ -5,9 +5,9 @@
 
 ## react-native-teleport
 
-Description will go into a meta tag in <head />
+Teleport views across your component tree for seamless transitions and powerful UI patterns
 
-- [Teleport](/index.md): Description will go into a meta tag in <head />
+- [Teleport](/index.md): Teleport views across your component tree for seamless transitions and powerful UI patterns
 
 ### search
 
