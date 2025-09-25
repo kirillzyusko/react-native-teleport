@@ -20,6 +20,10 @@ keywords:
 
 The name of the portal host. It's used to identify the host by `<Portal />` component.
 
+### `style`
+
+The style of the portal host. Accepts [ViewStyle](https://reactnative.dev/docs/view#style) props.
+
 ## Example
 
 ```tsx
