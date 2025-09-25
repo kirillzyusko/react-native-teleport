@@ -5,6 +5,7 @@ export enum ScreenNames {
   DYNAMIC_CHILDREN = "DYNAMIC_CHILDREN",
   INSTANT_ROOT = "INSTANT_ROOT",
   HOOKS = "HOOKS",
+  FLEXIBLE_STYLES = "FLEXIBLE_STYLES",
 }
 
 export enum StackNames {

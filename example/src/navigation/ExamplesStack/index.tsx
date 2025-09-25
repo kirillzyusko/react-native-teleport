@@ -7,6 +7,7 @@ import RNTouchableExample from "../../screens/RNTouchable";
 import DynamicChildrenExample from "../../screens/DynamicChildren";
 import InstantRoot from "../../screens/InstantRoot";
 import Hook from "../../screens/Hook/Hook";
+import FlexibleStyles from "../../screens/FlexibleStyles";
 
 export type ExamplesStackParamList = {
   [ScreenNames.LOTTIE]: undefined;
@@ -15,6 +16,7 @@ export type ExamplesStackParamList = {
   [ScreenNames.DYNAMIC_CHILDREN]: undefined;
   [ScreenNames.INSTANT_ROOT]: undefined;
   [ScreenNames.HOOKS]: undefined;
+  [ScreenNames.FLEXIBLE_STYLES]: undefined;
 };
 
 const Stack = createNativeStackNavigator<ExamplesStackParamList>();
@@ -37,6 +39,9 @@ const options = {
   },
   [ScreenNames.HOOKS]: {
     title: "Hooks",
+  },
+  [ScreenNames.FLEXIBLE_STYLES]: {
+    title: "Flexible styles",
   },
 };
 
@@ -71,6 +76,11 @@ const ExamplesStack = () => (
       component={Hook}
       name={ScreenNames.HOOKS}
       options={options[ScreenNames.HOOKS]}
+    />
+    <Stack.Screen
+      component={FlexibleStyles}
+      name={ScreenNames.FLEXIBLE_STYLES}
+      options={options[ScreenNames.FLEXIBLE_STYLES]}
     />
   </Stack.Navigator>
 );
