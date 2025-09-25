@@ -10,6 +10,10 @@ The name of the portal. It's used to identify the portal in the context of the p
 
 The name of the portal host. It's used to identify the host where the content should be rendered.
 
+### `style`[​](#style "Direct link to style")
+
+The style of the portal. Accepts [ViewStyle](https://reactnative.dev/docs/view#style) props.
+
 ### `children`[​](#children "Direct link to children")
 
 The content that should be rendered in the portal.

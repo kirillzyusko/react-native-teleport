@@ -8,6 +8,10 @@
 
 The name of the portal host. It's used to identify the host by `<Portal />` component.
 
+### `style`[​](#style "Direct link to style")
+
+The style of the portal host. Accepts [ViewStyle](https://reactnative.dev/docs/view#style) props.
+
 ## Example[​](#example "Direct link to Example")
 
 ```
