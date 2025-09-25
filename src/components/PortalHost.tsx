@@ -24,8 +24,12 @@ import PortalHost from "../views/PortalHost";
  * }
  * ```
  */
-const PortalHostComponent = ({ name, children }: PortalHostProps) => {
-  return <PortalHost name={name}>{children}</PortalHost>;
+const PortalHostComponent = ({ name, children, style }: PortalHostProps) => {
+  return (
+    <PortalHost name={name} style={style}>
+      {children}
+    </PortalHost>
+  );
 };
 
 export default PortalHostComponent;
