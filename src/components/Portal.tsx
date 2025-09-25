@@ -48,7 +48,7 @@ import type { PortalProps } from "../types";
  * });
  * ```
  */
-const PortalComponent = ({ hostName, name, children }: PortalProps) => {
+const PortalComponent = ({ hostName, name, style, children }: PortalProps) => {
   const { state, dispatch } = usePortalManagerContext();
   const instanceId = useId();
 
@@ -77,7 +77,7 @@ const PortalComponent = ({ hostName, name, children }: PortalProps) => {
   }
 
   return (
-    <PortalView hostName={hostName} name={name}>
+    <PortalView hostName={hostName} name={name} style={style}>
       {children}
     </PortalView>
   );

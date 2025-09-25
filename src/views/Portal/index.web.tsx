@@ -5,7 +5,7 @@ import { createPortal } from "react-dom";
 import { usePortalRegistryContext } from "../../contexts/PortalRegistry";
 import type { PortalProps } from "../../types";
 
-export default function Portal({ hostName, children }: PortalProps) {
+export default function Portal({ hostName, children, style }: PortalProps) {
   const { getHost } = usePortalRegistryContext();
   const elRef = useRef<HTMLDivElement | null>(null);
   if (!elRef.current) {
@@ -13,6 +13,12 @@ export default function Portal({ hostName, children }: PortalProps) {
   }
 
   const sentinelRef = useRef<HTMLDivElement>(null);
+
+  useLayoutEffect(() => {
+    if (elRef.current && style) {
+      Object.assign(elRef.current.style, style);
+    }
+  }, [style]);
 
   useLayoutEffect(() => {
     const el = elRef.current;
@@ -41,7 +47,7 @@ export default function Portal({ hostName, children }: PortalProps) {
 
   return (
     <>
-      {createPortal(children, elRef.current)}
+      {elRef.current ? createPortal(children, elRef.current) : null}
       {/* Invisible sentinel for local position */}
       <div ref={sentinelRef} style={styles.anchor} />
     </>

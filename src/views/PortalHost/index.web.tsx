@@ -11,7 +11,17 @@ function PortalHost({ name, children }: PortalHostProps) {
     };
   }, [name, setHost]);
 
-  return <div ref={(ref) => setHost(name, ref)}>{children}</div>;
+  return (
+    <div style={styles.anchor} ref={(ref) => setHost(name, ref)}>
+      {children}
+    </div>
+  );
 }
+
+const styles = {
+  anchor: {
+    display: "contents",
+  },
+};
 
 export default memo(PortalHost);
