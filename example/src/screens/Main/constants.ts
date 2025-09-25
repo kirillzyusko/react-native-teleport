@@ -39,4 +39,10 @@ export const examples: Example[] = [
     info: ScreenNames.HOOKS,
     icons: "🎣",
   },
+  {
+    title: "Flexible styles",
+    testID: "flexible_styles",
+    info: ScreenNames.FLEXIBLE_STYLES,
+    icons: "💪",
+  },
 ];

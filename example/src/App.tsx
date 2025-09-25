@@ -1,5 +1,6 @@
 import { StyleSheet, View } from "react-native";
 import { PortalHost, PortalProvider } from "react-native-teleport";
+import { PortalProvider as GorhomPortalProvider } from "@gorhom/portal";
 import {
   initialWindowMetrics,
   SafeAreaProvider,
@@ -12,14 +13,19 @@ export default function App() {
   return (
     <SafeAreaProvider initialMetrics={initialWindowMetrics}>
       <GestureHandlerRootView style={styles.container}>
-        <PortalProvider>
-          <NavigationContainer>
-            <RootStack />
-          </NavigationContainer>
-          <View style={StyleSheet.absoluteFillObject} pointerEvents="box-none">
-            <PortalHost name="overlay" />
-          </View>
-        </PortalProvider>
+        <GorhomPortalProvider>
+          <PortalProvider>
+            <NavigationContainer>
+              <RootStack />
+            </NavigationContainer>
+            <View
+              style={StyleSheet.absoluteFillObject}
+              pointerEvents="box-none"
+            >
+              <PortalHost name="overlay" />
+            </View>
+          </PortalProvider>
+        </GorhomPortalProvider>
       </GestureHandlerRootView>
     </SafeAreaProvider>
   );
