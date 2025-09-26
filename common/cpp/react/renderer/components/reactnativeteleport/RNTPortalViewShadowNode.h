@@ -1,24 +1,30 @@
 #pragma once
 
 #include "RNTPortalViewState.h"
+#include "PortalShadowRegistry.h"
 
 #include <react/renderer/components/TeleportViewSpec/EventEmitters.h>
 #include <react/renderer/components/TeleportViewSpec/Props.h>
 #include <react/renderer/components/view/ConcreteViewShadowNode.h>
+#include <react/renderer/core/LayoutContext.h>
 #include <jsi/jsi.h>
 
-namespace facebook::react
-{
+namespace facebook::react {
 
-  JSI_EXPORT extern const char PortalViewComponentName[];
+JSI_EXPORT extern const char PortalViewComponentName[];
 
-  /*
-   * `ShadowNode` for <PortalView> component.
-   */
-  using PortalViewShadowNode = ConcreteViewShadowNode<
+/*
+ * `ShadowNode` for <PortalView> component.
+ */
+class PortalViewShadowNode final : public ConcreteViewShadowNode<
       PortalViewComponentName,
       PortalViewProps,
       PortalViewEventEmitter,
-      PortalViewState>;
+      PortalViewState>, public std::enable_shared_from_this<PortalViewShadowNode> {
+ public:
+  using ConcreteViewShadowNode::ConcreteViewShadowNode;
+
+  void layout(LayoutContext layoutContext) override;
+};
 
 } // namespace facebook::react
