@@ -24,6 +24,7 @@ class PortalViewShadowNode final : public ConcreteViewShadowNode<
  public:
   using ConcreteViewShadowNode::ConcreteViewShadowNode;
 
+  void appendChild(const std::shared_ptr<const ShadowNode> &child) override;
   void layout(LayoutContext layoutContext) override;
 };
 

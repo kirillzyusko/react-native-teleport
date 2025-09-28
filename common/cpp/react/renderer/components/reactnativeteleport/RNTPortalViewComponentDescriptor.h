@@ -35,6 +35,15 @@ class PortalViewComponentDescriptor final
       auto& layoutableHostShadowNode =
               static_cast<YogaLayoutableShadowNode&>(*rawHostPtr);
       
+      auto *concretePtr = static_cast<YogaLayoutableShadowNode*>(&shadowNode);
+      std::shared_ptr<YogaLayoutableShadowNode> layoutableShared(
+           concretePtr,
+           [](YogaLayoutableShadowNode*) {
+             /* no-op deleter: do nothing on destruction */
+           });
+      
+      
+      
       // print size of layoutableHostShadowNode
       printf("  host size: %f x %f\n",
               layoutableHostShadowNode.getLayoutMetrics().frame.size.width,
