@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Button, View } from "react-native";
+import { Button, TouchableOpacity, View } from "react-native";
 import { Portal, PortalHost } from "react-native-teleport";
 import {
   Portal as GorhomPortal,
@@ -38,16 +38,25 @@ export default function FlexibleStyles() {
       </View>
       <View style={{ flex: 1, backgroundColor: "blue" }}>
         <View style={{ width: 50, height: 50 }}>
-          <Portal hostName={destination} style={{ flex: 1 }}>
-            <View
+          <Portal hostName={destination} style={{ flex: 0.5 }}>
+            <TouchableOpacity
               style={{
                 flex: 1,
                 width: "100%",
                 height: "100%",
-                backgroundColor: "yellow",
+                backgroundColor: "pink",
               }}
-              testID="teleport"
-            />
+            >
+              <View
+                style={{
+                  flex: 1,
+                  width: "100%",
+                  height: "100%",
+                  backgroundColor: "yellow",
+                }}
+                testID="teleport"
+              />
+            </TouchableOpacity>
           </Portal>
         </View>
       </View>
@@ -55,7 +64,10 @@ export default function FlexibleStyles() {
         style={{ position: "absolute", top: 0, bottom: 0, left: 0, right: 0 }}
         pointerEvents="none"
       >
-        <PortalHost name="overlay" />
+        <PortalHost
+          name="overlay"
+          style={{ flex: 1, backgroundColor: "#FF000020" }}
+        />
       </View>
       <View
         style={{ position: "absolute", top: 0, bottom: 0, left: 0, right: 0 }}
