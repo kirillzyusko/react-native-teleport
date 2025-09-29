@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?><?xml-stylesheet type="text/xsl" href="atom.xsl"?>
+<feed xmlns="http://www.w3.org/2005/Atom">
+    <id>https://kirillzyusko.github.io/react-native-teleport/pr-preview/pr-29/blog</id>
+    <title>Teleport Blog</title>
+    <updated>2025-10-02T00:00:00.000Z</updated>
+    <generator>https://github.com/jpmonette/feed</generator>
+    <link rel="alternate" href="https://kirillzyusko.github.io/react-native-teleport/pr-preview/pr-29/blog"/>
+    <subtitle>Teleport Blog</subtitle>
+    <icon>https://kirillzyusko.github.io/react-native-teleport/pr-preview/pr-29/img/favicon.ico</icon>
+    <entry>
+        <title type="html"><![CDATA[Meet teleport!]]></title>
+        <id>https://kirillzyusko.github.io/react-native-teleport/pr-preview/pr-29/blog/welcome</id>
+        <link href="https://kirillzyusko.github.io/react-native-teleport/pr-preview/pr-29/blog/welcome"/>
+        <updated>2025-10-02T00:00:00.000Z</updated>
+        <summary type="html"><![CDATA[TODO: write when lib will be stable]]></summary>
+        <content type="html"><![CDATA[<p>TODO: write when lib will be stable</p>]]></content>
+        <author>
+            <name>Kirill Zyusko</name>
+            <uri>https://github.com/kirillzyusko</uri>
+        </author>
+        <category label="teleport" term="teleport"/>
+        <category label="react-native" term="react-native"/>
+        <category label="portal" term="portal"/>
+    </entry>
+</feed>
