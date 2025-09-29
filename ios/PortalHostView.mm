@@ -8,7 +8,7 @@
 #import "PortalHostView.h"
 #import "PortalRegistry.h"
 
-#import <react/renderer/components/reactnativeteleport/RNTPortalHostViewComponentDescriptor.h>
+#import <react/renderer/components/TeleportViewSpec/RNTPortalHostViewComponentDescriptor.h>
 #import <react/renderer/components/TeleportViewSpec/EventEmitters.h>
 #import <react/renderer/components/TeleportViewSpec/Props.h>
 #import <react/renderer/components/TeleportViewSpec/RCTComponentViewHelpers.h>
