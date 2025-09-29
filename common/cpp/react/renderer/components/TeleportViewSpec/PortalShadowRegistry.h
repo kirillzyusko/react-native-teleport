@@ -7,7 +7,7 @@
 
 #include <react/renderer/core/ShadowNode.h>
 
-#import "RNTPortalHostViewShadowNode.h"
+#include "RNTPortalHostViewShadowNode.h"
 
 namespace facebook::react {
 
