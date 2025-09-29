@@ -2636,6 +2636,35 @@ PODS:
     - ReactCommon/turbomodule/bridging
     - ReactCommon/turbomodule/core
     - SocketRocket
+    - Teleport/common (= 0.3.0)
+    - Yoga
+  - Teleport/common (0.3.0):
+    - boost
+    - DoubleConversion
+    - fast_float
+    - fmt
+    - glog
+    - hermes-engine
+    - RCT-Folly
+    - RCT-Folly/Fabric
+    - RCTRequired
+    - RCTTypeSafety
+    - React-Core
+    - React-debug
+    - React-Fabric
+    - React-featureflags
+    - React-graphics
+    - React-ImageManager
+    - React-jsi
+    - React-NativeModulesApple
+    - React-RCTFabric
+    - React-renderercss
+    - React-rendererdebug
+    - React-utils
+    - ReactCodegen
+    - ReactCommon/turbomodule/bridging
+    - ReactCommon/turbomodule/core
+    - SocketRocket
     - Yoga
   - Yoga (0.0.0)
 
@@ -2964,7 +2993,7 @@ SPEC CHECKSUMS:
   RNScreens: 0bbf16c074ae6bb1058a7bf2d1ae017f4306797c
   RNWorklets: ad0606bee2a8103c14adb412149789c60b72bfb2
   SocketRocket: d4aabe649be1e368d1318fdf28a022d714d65748
-  Teleport: f0fa0b3615a039675e2d6f593e88cb78ba9e39b1
+  Teleport: 3a5e5dce479eb958960e3fff6f51b6535af3d75a
   Yoga: b01392348aeea02064c21a2762a42893d82b60a7
 
 PODFILE CHECKSUM: fa8e39e99744a38fb613b9c3b11b26af576d7d44

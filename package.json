@@ -18,6 +18,7 @@
     "android",
     "ios",
     "cpp",
+    "common",
     "*.podspec",
     "react-native.config.js",
     "jest",

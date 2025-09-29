@@ -4,4 +4,6 @@ interface NativeProps extends ViewProps {
   name?: string;
 }
 
-export default codegenNativeComponent<NativeProps>("PortalHostView");
+export default codegenNativeComponent<NativeProps>("PortalHostView", {
+  interfaceOnly: true,
+});
