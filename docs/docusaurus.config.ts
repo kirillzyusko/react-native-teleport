@@ -13,6 +13,9 @@ const config: Config = {
   tagline: "Missing native portal implementation for react-native",
   favicon: "img/favicon.ico",
 
+  // Runs animations on page change
+  clientModules: ["./src/modules/page-transitions.ts"],
+
   // Future flags, see https://docusaurus.io/docs/api/docusaurus-config#future
   future: {
     v4: true, // Improve compatibility with the upcoming Docusaurus v4
