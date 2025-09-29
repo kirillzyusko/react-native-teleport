@@ -4,7 +4,7 @@ module.exports = {
       android: {
         componentDescriptors: [
           "PortalViewComponentDescriptor",
-          "PortalHostComponentDescriptor",
+          "PortalHostViewComponentDescriptor",
         ],
         cmakeListsPath: "../android/src/main/jni/CMakeLists.txt",
       },
