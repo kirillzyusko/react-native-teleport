@@ -7,8 +7,9 @@
 #include <react/renderer/components/TeleportViewSpec/RNTPortalHostViewComponentDescriptor.h>
 #include <react/renderer/components/TeleportViewSpec/RNTPortalViewComponentDescriptor.h>
 
-namespace facebook::react
-{
+#include <memory>
+
+namespace facebook::react {
 
   void TeleportViewSpec_registerComponentDescriptorsFromCodegen(
       std::shared_ptr<const ComponentDescriptorProviderRegistry> registry);

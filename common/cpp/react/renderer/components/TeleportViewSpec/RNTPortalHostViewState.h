@@ -4,18 +4,15 @@
 #include <folly/dynamic.h>
 #endif
 
-namespace facebook::react
-{
+namespace facebook::react {
 
-  class PortalHostViewState
-  {
-  public:
+  class PortalHostViewState {
+   public:
     PortalHostViewState() = default;
 
 #ifdef ANDROID
     PortalHostViewState(PortalHostViewState const &previousState, folly::dynamic data) {}
-    folly::dynamic getDynamic() const
-    {
+    folly::dynamic getDynamic() const {
       return {};
     }
 #endif

@@ -1,7 +1,6 @@
 #include "RNTPortalHostViewShadowNode.h"
 
-namespace facebook::react
-{
+namespace facebook::react {
 
   extern const char PortalHostViewComponentName[] = "PortalHostView";
 

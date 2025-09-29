@@ -7,8 +7,7 @@
 #include <react/renderer/components/view/ConcreteViewShadowNode.h>
 #include <jsi/jsi.h>
 
-namespace facebook::react
-{
+namespace facebook::react {
 
   JSI_EXPORT extern const char PortalViewComponentName[];
 
