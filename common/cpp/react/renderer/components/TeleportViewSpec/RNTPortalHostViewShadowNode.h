@@ -7,17 +7,22 @@
 #include <react/renderer/components/view/ConcreteViewShadowNode.h>
 #include <jsi/jsi.h>
 
+#include <memory>
+
 namespace facebook::react {
 
-  JSI_EXPORT extern const char PortalHostViewComponentName[];
+JSI_EXPORT extern const char PortalHostViewComponentName[];
 
-  /*
-   * `ShadowNode` for <PortalHostView> component.
-   */
-  using PortalHostViewShadowNode = ConcreteViewShadowNode<
+/*
+ * `ShadowNode` for <PortalHostView> component.
+ */
+class PortalHostViewShadowNode : public ConcreteViewShadowNode<
       PortalHostViewComponentName,
       PortalHostViewProps,
       PortalHostViewEventEmitter,
-      PortalHostViewState>;
+      PortalHostViewState>, public std::enable_shared_from_this<PortalHostViewShadowNode> {
+ public:
+  using ConcreteViewShadowNode::ConcreteViewShadowNode;
+};
 
 } // namespace facebook::react
