@@ -49,7 +49,22 @@
     "xcassets",
     "KYGKY",
     "pressable",
-    "XYVIEPDGBE"
+    "XYVIEPDGBE",
+    "fexceptions",
+    "frtti",
+    "Wpedantic",
+    "reactnative",
+    "fbjni",
+    "glog",
+    "rncore",
+    "nativemodule",
+    "mapbuffer",
+    "componentregistry",
+    "turbomodulejsijni",
+    "DLOG",
+    "subspec",
+    "xcconfig",
+    "SRCROOT"
   ],
   "ignorePaths": [
     "node_modules",
