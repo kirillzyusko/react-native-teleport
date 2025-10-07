@@ -29,4 +29,26 @@ std::shared_ptr<PortalHostViewShadowNode> PortalShadowRegistry::getHost(const st
   return nullptr;
 }
 
+void PortalShadowRegistry::registerPortal(const std::string& hostName, std::shared_ptr<PortalViewShadowNode> portalNode) {
+  if (hostName.empty()) return;
+
+  std::lock_guard<std::mutex> lock(mutex_);
+  portals_[hostName] = portalNode;
+}
+
+std::shared_ptr<PortalViewShadowNode> PortalShadowRegistry::getPortal(const std::string& hostName) const {
+  if (hostName.empty()) return nullptr;
+
+  std::lock_guard<std::mutex> lock(mutex_);
+  auto it = portals_.find(hostName);
+  if (it != portals_.end()) {
+    auto shared = it->second.lock();
+    if (shared) {
+      return shared;
+    }
+    portals_.erase(it);
+  }
+  return nullptr;
+}
+
 } // namespace facebook::react

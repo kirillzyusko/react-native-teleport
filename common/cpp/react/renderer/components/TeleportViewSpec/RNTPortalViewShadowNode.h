@@ -1,7 +1,6 @@
 #pragma once
 
 #include "RNTPortalViewState.h"
-#include "PortalShadowRegistry.h"
 
 #include <react/renderer/components/TeleportViewSpec/EventEmitters.h>
 #include <react/renderer/components/TeleportViewSpec/Props.h>
@@ -29,4 +28,3 @@ class PortalViewShadowNode final : public ConcreteViewShadowNode<
 };
 
 } // namespace facebook::react
-#include "RNTPortalViewShadowNode.h"

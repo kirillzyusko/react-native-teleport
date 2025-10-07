@@ -23,6 +23,8 @@ class PortalHostViewShadowNode : public ConcreteViewShadowNode<
       PortalHostViewState>, public std::enable_shared_from_this<PortalHostViewShadowNode> {
  public:
   using ConcreteViewShadowNode::ConcreteViewShadowNode;
+        
+  void appendChild(const std::shared_ptr<const ShadowNode> &child) override;
 };
 
 } // namespace facebook::react
