@@ -1,6 +1,7 @@
 #pragma once
 
 #include "RNTPortalViewShadowNode.h"
+#include "PortalShadowRegistry.h"
 
 #include <react/debug/react_native_assert.h>
 #include <react/renderer/components/TeleportViewSpec/Props.h>
@@ -15,6 +16,16 @@ class PortalViewComponentDescriptor final
   void adopt(ShadowNode &shadowNode) const override {
     react_native_assert(dynamic_cast<PortalViewShadowNode *>(&shadowNode));
 
+    // MARK: Register portal
+    auto& portalShadowNode = static_cast<PortalViewShadowNode&>(shadowNode);
+    auto name = std::static_pointer_cast<const PortalViewProps>(portalShadowNode.getProps())->hostName;
+
+    if (!name.empty()) {
+      auto sharedHost = portalShadowNode.shared_from_this();
+      PortalShadowRegistry::shared().registerPortal(name, sharedHost);
+    }
+    
+    
     auto& layoutablePortalShadowNode =
             static_cast<YogaLayoutableShadowNode&>(shadowNode);
     // layoutablePortalShadowNode.setSize(Size{
@@ -30,6 +41,9 @@ class PortalViewComponentDescriptor final
 
     if (!hostName.empty()) {
       std::shared_ptr<PortalHostViewShadowNode> host = PortalShadowRegistry::shared().getHost(hostName);
+      
+      host->dirtyLayout();
+      
       // printf("  host=%p\n", host.get());
       auto *rawHostPtr = host.get();
       auto& layoutableHostShadowNode =
@@ -48,10 +62,10 @@ class PortalViewComponentDescriptor final
       printf("  host size: %f x %f\n",
               layoutableHostShadowNode.getLayoutMetrics().frame.size.width,
               layoutableHostShadowNode.getLayoutMetrics().frame.size.height);
-      layoutablePortalShadowNode.setSize(Size{
+      /*layoutablePortalShadowNode.setSize(Size{
               .width = layoutableHostShadowNode.getLayoutMetrics().frame.size.width,
               .height = layoutableHostShadowNode.getLayoutMetrics().frame.size.height});
-      layoutablePortalShadowNode.setPositionType(YGPositionTypeAbsolute);
+      layoutablePortalShadowNode.setPositionType(YGPositionTypeAbsolute);*/
     }
 
     ConcreteComponentDescriptor::adopt(shadowNode);
