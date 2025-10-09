@@ -89,8 +89,8 @@ const ExamplesStack = () => (
     />
     <Stack.Screen
       component={BottomSheet}
-      name={ScreenNames.FLEXIBLE_STYLES}
-      options={options[ScreenNames.FLEXIBLE_STYLES]}
+      name={ScreenNames.BOTTOM_SHEET}
+      options={options[ScreenNames.BOTTOM_SHEET]}
     />
   </Stack.Navigator>
 );
