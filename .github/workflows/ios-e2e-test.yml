@@ -1,0 +1,138 @@
+name: 🍏 Test iOS
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - ".github/workflows/ios-e2e-test.yml"
+      - "package.json"
+      - "yarn.lock"
+      - "Teleport.podspec"
+      - "ios/**"
+      - "example/**"
+      - "e2e/**"
+      - "src/**"
+  pull_request:
+    branches:
+      - main
+    paths:
+      - ".github/workflows/ios-e2e-test.yml"
+      - "package.json"
+      - "yarn.lock"
+      - "Teleport.podspec"
+      - "ios/**"
+      - "example/**"
+      - "e2e/**"
+      - "src/**"
+
+jobs:
+  build-ios:
+    name: 🏗️ Build E2E ipa
+    runs-on: macos-15
+    defaults:
+      run:
+        working-directory: example/ios
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: maxim-lobanov/setup-xcode@v1
+        with:
+          xcode-version: "16.3"
+
+      - name: Setup
+        uses: ./.github/actions/setup
+
+      - name: Install Ccache
+        uses: hendrikmuhs/ccache-action@v1.2
+        with:
+          max-size: 1.5G
+          key: ${{ runner.os }}-ccache-example-ios
+          create-symlink: true
+      - name: Setup ccache behavior
+        run: |
+          echo "CCACHE_SLOPPINESS=clang_index_store,file_stat_matches,include_file_ctime,include_file_mtime,ivfsoverlay,pch_defines,modules,system_headers,time_macros" >> $GITHUB_ENV
+          echo "CCACHE_FILECLONE=true" >> $GITHUB_ENV
+          echo "CCACHE_DEPEND=true" >> $GITHUB_ENV
+          echo "CCACHE_INODECACHE=true" >> $GITHUB_ENV
+      - name: Setup Ruby (bundle)
+        uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: 2.7.6
+          bundler-cache: true
+          working-directory: example/ios
+
+      - name: Restore Pods cache
+        uses: actions/cache@v4
+        with:
+          path: |
+            example/ios/Pods
+            ~/Library/Caches/CocoaPods
+            ~/.cocoapods
+          key: ${{ runner.os }}-pods-${{ hashFiles('**/Podfile.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-pods-
+      - name: Install Pods
+        run: export USE_CCACHE=1 && pod install || pod update --repo-update
+      - name: Install xcpretty
+        run: gem install xcpretty
+      - name: Build App
+        run: "set -o pipefail && xcodebuild \
+          CC=clang CPLUSPLUS=clang++ LD=clang LDPLUSPLUS=clang++ \
+          -derivedDataPath build -UseModernBuildSystem=YES \
+          -workspace TeleportExample.xcworkspace \
+          -scheme TeleportExample \
+          -sdk iphonesimulator \
+          -configuration Release \
+          -destination 'platform=iOS Simulator,name=iPhone 16 Pro,OS=18.4' \
+          build \
+          CODE_SIGNING_ALLOWED=NO | xcpretty"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ios-e2e-ipa
+          path: example/ios/build/Build/Products/Release-iphonesimulator/TeleportExample.app/**
+
+  e2e-test:
+    name: ⚙️ Automated test cases (iOS-${{ matrix.devices.ios }})
+    runs-on: macos-${{ matrix.devices.macos }}
+    timeout-minutes: 90
+    concurrency:
+      group: ios-e2e-${{ matrix.devices.ios }}-${{ github.ref }}
+      cancel-in-progress: true
+    strategy:
+      matrix:
+        devices: [{ ios: 18, xcode: "16.0", macos: 15 }]
+    needs: build-ios
+    steps:
+      - uses: actions/checkout@v4
+      - name: Download a single artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: ios-e2e-ipa
+          path: example/ios/build/Build/Products/Release-iphonesimulator/TeleportExample.app/
+      - name: Install Maestro CLI
+        run: |
+          brew tap mobile-dev-inc/tap
+          brew install maestro
+      - name: Prepare snapshot engine
+        run: cd e2e && npm install
+
+      - name: Install app on simulator
+        run: |
+          UDID=$(xcrun simctl list devices | grep "iPhone 16 Pro (" | grep -oE "[0-9A-F-]{36}" | head -n 1)
+          open -a Simulator --args -CurrentDeviceUDID $UDID
+          xcrun simctl bootstatus "$UDID"
+          osascript -e 'tell application "Simulator" to activate'
+          xcrun simctl install "$UDID" example/ios/build/Build/Products/Release-iphonesimulator/TeleportExample.app
+      - name: Run E2E tests
+        run: |
+          node e2e/snapshot-engine.js &
+          SERVER_PID=$!
+          export MAESTRO_DRIVER_STARTUP_TIMEOUT=600000
+          maestro --platform ios test -e DEVICE="iPhone 16 Pro" e2e/flows/* --format html ./e2e/reports/debug --debug-output ./e2e/reports/debug --flatten-debug-output
+          kill $SERVER_PID
+      - name: Upload test report
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          path: ./e2e/reports
+          name: e2e-report-ios
