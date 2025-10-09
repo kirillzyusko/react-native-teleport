@@ -3,6 +3,7 @@ import { TouchableOpacity, View, Text, StyleSheet } from "react-native";
 import { Portal } from "react-native-teleport";
 import BottomSheetContainer from "./sheet";
 import { SafeAreaView } from "react-native-safe-area-context";
+import Slider from "./slider";
 
 export default function BottomSheet() {
   const [isVisible, setVisible] = useState(false);
@@ -24,6 +25,7 @@ export default function BottomSheet() {
                     <TouchableOpacity onPress={() => setVisible(false)}>
                       <Text>Close</Text>
                     </TouchableOpacity>
+                    <Slider />
                     <Text style={styles.title}>Sheet</Text>
                   </SafeAreaView>
                 </BottomSheetContainer>
