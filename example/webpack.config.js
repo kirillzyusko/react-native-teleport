@@ -96,10 +96,7 @@ module.exports = {
     new webpack.DefinePlugin({
       __DEV__: JSON.stringify(true),
     }),
-    new webpack.DefinePlugin({
-      "process.env": JSON.stringify({
-        NODE_ENV: process.env.NODE_ENV || "development",
-      }),
-    }),
+    new webpack.EnvironmentPlugin({ JEST_WORKER_ID: null }),
+    new webpack.DefinePlugin({ process: { env: {} } }),
   ],
 };
