@@ -8,6 +8,7 @@ import DynamicChildrenExample from "../../screens/DynamicChildren";
 import InstantRoot from "../../screens/InstantRoot";
 import Hook from "../../screens/Hook/Hook";
 import FlexibleStyles from "../../screens/FlexibleStyles";
+import BottomSheet from "../../screens/BottomSheet";
 
 export type ExamplesStackParamList = {
   [ScreenNames.LOTTIE]: undefined;
@@ -17,6 +18,7 @@ export type ExamplesStackParamList = {
   [ScreenNames.INSTANT_ROOT]: undefined;
   [ScreenNames.HOOKS]: undefined;
   [ScreenNames.FLEXIBLE_STYLES]: undefined;
+  [ScreenNames.BOTTOM_SHEET]: undefined;
 };
 
 const Stack = createNativeStackNavigator<ExamplesStackParamList>();
@@ -42,6 +44,9 @@ const options = {
   },
   [ScreenNames.FLEXIBLE_STYLES]: {
     title: "Flexible styles",
+  },
+  [ScreenNames.BOTTOM_SHEET]: {
+    title: "Bottom sheet"
   },
 };
 
@@ -81,6 +86,11 @@ const ExamplesStack = () => (
       component={FlexibleStyles}
       name={ScreenNames.FLEXIBLE_STYLES}
       options={options[ScreenNames.FLEXIBLE_STYLES]}
+    />
+    <Stack.Screen
+      component={BottomSheet}
+      name={ScreenNames.BOTTOM_SHEET}
+      options={options[ScreenNames.BOTTOM_SHEET]}
     />
   </Stack.Navigator>
 );
