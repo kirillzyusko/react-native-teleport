@@ -10,6 +10,8 @@
 #include <react/renderer/uimanager/UIManager.h>
 #include <react/renderer/uimanager/UIManagerCommitHook.h>
 
+#include "PortalShadowRegistry.h"
+
 using namespace facebook::react;
 
 namespace teleport {
