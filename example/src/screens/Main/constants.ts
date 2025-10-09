@@ -45,4 +45,10 @@ export const examples: Example[] = [
     info: ScreenNames.FLEXIBLE_STYLES,
     icons: "💪",
   },
+  {
+    title: "Bottom sheet",
+    testID: "bottom_sheet",
+    info: ScreenNames.BOTTOM_SHEET,
+    icons: "📱",
+  },
 ];
