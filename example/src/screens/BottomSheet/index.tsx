@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { TouchableOpacity, View, Text } from "react-native";
+import { TouchableOpacity, View, Text, StyleSheet } from "react-native";
 import { Portal } from "react-native-teleport";
 import BottomSheetContainer from "./sheet";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -9,32 +9,58 @@ export default function BottomSheet() {
 
   return (
     <>
-      <View style={{ flex: 1 }}>
-        <View style={{ flex: 2 }} />
-        <View style={{ flex: 1 }}>
-          <View style={{ height: 50, flexDirection: "row" }}>
-            <View style={{ flex: 1, backgroundColor: "black" }} />
+      <View style={styles.flex1}>
+        <View style={styles.flex2} />
+        <View style={styles.flex1}>
+          <View style={styles.row}>
+            <View style={styles.column} />
             <TouchableOpacity
               onPress={() => setVisible(true)}
-              style={{ flex: 1, backgroundColor: "#3c3c3c" }}
-            />
-            <View style={{ flex: 1, backgroundColor: "black" }} />
-            <Portal hostName="root">
-              <BottomSheetContainer visible={isVisible}>
-                <SafeAreaView
-                  edges={["bottom"]}
-                  style={{ padding: 16, backgroundColor: "green" }}
-                >
-                  <TouchableOpacity onPress={() => setVisible(false)}>
-                    <Text>Close</Text>
-                  </TouchableOpacity>
-                  <Text style={{ fontSize: 22 }}>Sheet</Text>
-                </SafeAreaView>
-              </BottomSheetContainer>
-            </Portal>
+              style={styles.button}
+            >
+              <Portal hostName="root">
+                <BottomSheetContainer visible={isVisible}>
+                  <SafeAreaView edges={["bottom"]} style={styles.bottomSheet}>
+                    <TouchableOpacity onPress={() => setVisible(false)}>
+                      <Text>Close</Text>
+                    </TouchableOpacity>
+                    <Text style={styles.title}>Sheet</Text>
+                  </SafeAreaView>
+                </BottomSheetContainer>
+              </Portal>
+            </TouchableOpacity>
+            <View style={styles.column} />
           </View>
         </View>
       </View>
     </>
   );
 }
+
+const styles = StyleSheet.create({
+  flex1: {
+    flex: 1,
+  },
+  flex2: {
+    flex: 2,
+  },
+  column: {
+    flex: 1,
+    backgroundColor: "black",
+  },
+  row: {
+    height: 50,
+    flexDirection: "row",
+  },
+  button: {
+    width: 20,
+    backgroundColor: "#3c3c3c",
+  },
+  bottomSheet: {
+    padding: 16,
+    backgroundColor: "green",
+  },
+  title: {
+    fontSize: 32,
+  },
+});
