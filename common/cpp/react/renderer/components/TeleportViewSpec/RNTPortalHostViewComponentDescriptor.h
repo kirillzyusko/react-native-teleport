@@ -25,12 +25,12 @@ class PortalHostViewComponentDescriptor final
       PortalShadowRegistry::shared().registerHost(name, sharedHost);
     }
 
-    std::shared_ptr<PortalViewShadowNode> portal = PortalShadowRegistry::shared().getPortal(name);
-    printf("%p %s", portal.get(), name.c_str());
-    if (portal.get() != nullptr) {
+    // std::shared_ptr<PortalViewShadowNode> portal = PortalShadowRegistry::shared().getPortal(name);
+    // printf("%p %s", portal.get(), name.c_str());
+    // if (portal.get() != nullptr) {
       // triggers a crash
       // shadowNode.appendChild(portal);
-    }
+    // }
 
     printf("portalidze adopt\n");
 
