@@ -4,6 +4,7 @@ const HtmlWebpackPlugin = require("html-webpack-plugin");
 const appDirectory = path.resolve(__dirname);
 const { presets, plugins } = require(`${appDirectory}/babel.config.js`);
 const compileNodeModules = [
+  "react-native-worklets",
   "react-native-reanimated",
   "react-native-gesture-handler",
   "react-native-screens",
@@ -94,6 +95,11 @@ module.exports = {
     new webpack.HotModuleReplacementPlugin(),
     new webpack.DefinePlugin({
       __DEV__: JSON.stringify(true),
+    }),
+    new webpack.DefinePlugin({
+      "process.env": JSON.stringify({
+        NODE_ENV: process.env.NODE_ENV || "development",
+      }),
     }),
   ],
 };

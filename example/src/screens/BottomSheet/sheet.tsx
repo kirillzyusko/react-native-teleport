@@ -12,14 +12,11 @@ type BottomSheetContainerProps = {
   children: React.ReactNode;
   visible: boolean;
   backdrop?: boolean;
-  onFinishedTransition?: (open: boolean) => void;
 };
 
 export function BottomSheetContainer({
   visible,
   children,
-  onFinishedTransition,
-  backdrop = true,
 }: BottomSheetContainerProps) {
   const [shown, setShown] = useState(visible);
   const progress = useSharedValue(0);
@@ -43,14 +40,10 @@ export function BottomSheetContainer({
         },
         () => {
           runOnJS(setShown)(visible);
-
-          if (onFinishedTransition) {
-            runOnJS(onFinishedTransition)(visible);
-          }
         },
       ),
     );
-  }, [visible, progress, onFinishedTransition]);
+  }, [visible, progress]);
 
   const style = useAnimatedStyle(
     () => ({
@@ -71,9 +64,7 @@ export function BottomSheetContainer({
 
   return (
     <>
-      {visible && backdrop && (
-        <Reanimated.View style={[styles.scrim, scrimStyle]} />
-      )}
+      {visible && <Reanimated.View style={[styles.scrim, scrimStyle]} />}
       <Reanimated.View style={[styles.container, style]}>
         <View onLayout={onLayout}>{children}</View>
       </Reanimated.View>
