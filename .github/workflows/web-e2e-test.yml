@@ -54,6 +54,8 @@ jobs:
         with:
           name: web-e2e-app
           path: example/dist/
+      - name: Setup
+        uses: ./.github/actions/setup
       - name: Start static server
         run: |
           cd example
