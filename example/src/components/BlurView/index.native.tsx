@@ -1,5 +1,5 @@
 import { BlurView } from "@react-native-community/blur";
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Animated, Easing, StyleSheet } from "react-native";
 
 type BlurViewProps = {
@@ -7,15 +7,21 @@ type BlurViewProps = {
 };
 
 const AnimatedBlurView = ({ visible }: BlurViewProps) => {
+  const [blurred, setBlurred] = useState(visible);
   const opacity = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
+    if (visible) {
+      setBlurred(true);
+    }
     Animated.timing(opacity, {
       toValue: visible ? 1 : 0,
       duration: 250,
       easing: Easing.inOut(Easing.ease),
       useNativeDriver: true,
-    }).start();
+    }).start(() => {
+      setBlurred(visible);
+    });
   }, [opacity, visible]);
 
   return (
@@ -23,12 +29,14 @@ const AnimatedBlurView = ({ visible }: BlurViewProps) => {
       style={[StyleSheet.absoluteFillObject, { opacity: opacity }]}
       pointerEvents="none"
     >
-      <BlurView
-        style={StyleSheet.absoluteFillObject}
-        pointerEvents="none"
-        blurType="light"
-        blurAmount={16}
-      />
+      {blurred && (
+        <BlurView
+          style={StyleSheet.absoluteFillObject}
+          overlayColor={"#00000000"}
+          blurType="light"
+          blurAmount={16}
+        />
+      )}
     </Animated.View>
   );
 };
