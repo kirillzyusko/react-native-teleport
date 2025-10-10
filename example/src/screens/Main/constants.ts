@@ -51,4 +51,10 @@ export const examples: Example[] = [
     info: ScreenNames.BOTTOM_SHEET,
     icons: "📱",
   },
+  {
+    title: "Messenger",
+    testID: "messenger",
+    info: ScreenNames.MESSENGER,
+    icons: "💬",
+  },
 ];

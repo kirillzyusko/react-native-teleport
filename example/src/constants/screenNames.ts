@@ -7,6 +7,7 @@ export enum ScreenNames {
   HOOKS = "HOOKS",
   FLEXIBLE_STYLES = "FLEXIBLE_STYLES",
   BOTTOM_SHEET = "BOTTOM_SHEET",
+  MESSENGER = "MESSENGER",
 }
 
 export enum StackNames {

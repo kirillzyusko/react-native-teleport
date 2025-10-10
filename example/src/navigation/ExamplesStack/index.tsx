@@ -9,6 +9,7 @@ import InstantRoot from "../../screens/InstantRoot";
 import Hook from "../../screens/Hook/Hook";
 import FlexibleStyles from "../../screens/FlexibleStyles";
 import BottomSheet from "../../screens/BottomSheet";
+import Messenger from "../../screens/Messenger";
 
 export type ExamplesStackParamList = {
   [ScreenNames.LOTTIE]: undefined;
@@ -19,6 +20,7 @@ export type ExamplesStackParamList = {
   [ScreenNames.HOOKS]: undefined;
   [ScreenNames.FLEXIBLE_STYLES]: undefined;
   [ScreenNames.BOTTOM_SHEET]: undefined;
+  [ScreenNames.MESSENGER]: undefined;
 };
 
 const Stack = createNativeStackNavigator<ExamplesStackParamList>();
@@ -47,6 +49,9 @@ const options = {
   },
   [ScreenNames.BOTTOM_SHEET]: {
     title: "Bottom sheet",
+  },
+  [ScreenNames.MESSENGER]: {
+    title: "Messenger",
   },
 };
 
@@ -91,6 +96,11 @@ const ExamplesStack = () => (
       component={BottomSheet}
       name={ScreenNames.BOTTOM_SHEET}
       options={options[ScreenNames.BOTTOM_SHEET]}
+    />
+    <Stack.Screen
+      component={Messenger}
+      name={ScreenNames.MESSENGER}
+      options={options[ScreenNames.MESSENGER]}
     />
   </Stack.Navigator>
 );
