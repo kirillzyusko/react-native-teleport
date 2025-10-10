@@ -1,16 +1,6 @@
 import LottieView from "lottie-react-native";
 import { useRef, useState } from "react";
-import {
-  View,
-  Text,
-  ScrollView,
-  TouchableWithoutFeedback,
-  StyleSheet,
-  Animated,
-  useAnimatedValue,
-  Easing,
-  Pressable,
-} from "react-native";
+import { View, Text, ScrollView, Pressable } from "react-native";
 import BlurView from "../../components/BlurView";
 import { Portal } from "react-native-teleport";
 
@@ -23,7 +13,12 @@ const messages = [
   { text: "Sure, let's go for a walk?", sender: true },
 ];
 
-const Message = ({ sender, text }) => {
+type MessageProps = {
+  sender: boolean;
+  text: string;
+};
+
+const Message = ({ sender, text }: MessageProps) => {
   return (
     <View
       style={{
@@ -49,20 +44,23 @@ const Message = ({ sender, text }) => {
 };
 
 export default function Messenger() {
-  const viewRef = useRef<View | null>(null);
-  const opacity = useRef(new Animated.Value(0)).current;
+  const viewRef = useRef<View>(null);
   const [teleport, setTeleported] = useState(false);
-  const [style, setStyle] = useState(null);
+  const [style, setStyle] = useState({ paddingTop: 0 });
+  const [blur, setBlur] = useState(false);
 
   const handleClick = () => {
-    Animated.timing(opacity, {
-      toValue: 1,
-      duration: 250,
-      easing: Easing.inOut(Easing.ease),
-      useNativeDriver: true,
-    }).start();
+    if (blur) {
+      setBlur(false);
+      setTimeout(() => {
+        // after blur animation finish
+        setTeleported(false);
+        setStyle({ paddingTop: 0 });
+      }, 500);
+      return;
+    }
+    setBlur(true);
     viewRef.current?.measureInWindow((x, y) => {
-      console.log(x, y);
       setTeleported(true);
       setStyle({
         paddingTop: y,
@@ -85,28 +83,20 @@ export default function Messenger() {
           }}
         >
           <Portal hostName={teleport ? "overlay" : undefined}>
-            <Pressable onPress={handleClick} style={style ?? {}}>
-              <LottieView
-                source={require("../../assets/lottie/bear.json")}
-                style={[{ width: 200, height: 200 }]}
-                autoPlay
-                loop
-              />
+            <Pressable onPress={handleClick} style={style}>
+              <View style={{ width: 200, height: 200 }}>
+                <LottieView
+                  source={require("../../assets/lottie/bear.json")}
+                  style={{ width: 200, height: 200 }}
+                  autoPlay
+                  loop
+                />
+              </View>
             </Pressable>
           </Portal>
         </View>
       </ScrollView>
-      <Animated.View
-        style={[StyleSheet.absoluteFillObject, { opacity: opacity }]}
-        pointerEvents="none"
-      >
-        <BlurView
-          style={StyleSheet.absoluteFillObject}
-          pointerEvents="none"
-          blurType="light"
-          blurAmount={16}
-        />
-      </Animated.View>
+      <BlurView visible={blur} />
     </View>
   );
 }
