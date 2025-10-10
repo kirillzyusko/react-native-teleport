@@ -6,6 +6,7 @@ export enum ScreenNames {
   INSTANT_ROOT = "INSTANT_ROOT",
   HOOKS = "HOOKS",
   FLEXIBLE_STYLES = "FLEXIBLE_STYLES",
+  BOTTOM_SHEET = "BOTTOM_SHEET",
 }
 
 export enum StackNames {

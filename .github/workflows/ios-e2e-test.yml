@@ -54,7 +54,6 @@ jobs:
           echo "CCACHE_FILECLONE=true" >> $GITHUB_ENV
           echo "CCACHE_DEPEND=true" >> $GITHUB_ENV
           echo "CCACHE_INODECACHE=true" >> $GITHUB_ENV
-
       - name: Setup Ruby (bundle)
         uses: ruby/setup-ruby@v1
         with:
@@ -114,7 +113,6 @@ jobs:
         run: |
           brew tap mobile-dev-inc/tap
           brew install maestro
-
       - name: Prepare snapshot engine
         run: cd e2e && npm install
 
@@ -132,7 +130,6 @@ jobs:
           export MAESTRO_DRIVER_STARTUP_TIMEOUT=600000
           maestro --platform ios test -e DEVICE="iPhone 16 Pro" e2e/flows/* --format html ./e2e/reports/debug --debug-output ./e2e/reports/debug --flatten-debug-output
           kill $SERVER_PID
-
       - name: Upload test report
         if: failure()
         uses: actions/upload-artifact@v4

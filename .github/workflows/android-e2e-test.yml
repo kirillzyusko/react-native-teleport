@@ -50,7 +50,6 @@ jobs:
           key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
           restore-keys: |
             ${{ runner.os }}-gradle-
-
       - name: Set app active arch
         run: sed -i.bak 's/reactNativeArchitectures=.*/reactNativeArchitectures=x86_64/' example/android/gradle.properties
       - name: Run Gradle Build for example/android/
@@ -127,7 +126,6 @@ jobs:
         run: |
           echo "===== FULL server.log ====="
           cat server.log || true
-
       - name: Kill snapshot engine
         if: always()
         shell: bash
