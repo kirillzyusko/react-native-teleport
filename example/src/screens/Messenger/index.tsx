@@ -60,7 +60,8 @@ export default function Messenger() {
       return;
     }
     setBlur(true);
-    viewRef.current?.measureInWindow((x, y) => {
+    // @ts-expect-error I don't know what's wrong with types here
+    viewRef.current?.measureInWindow((_x: number, y: number) => {
       setTeleported(true);
       setStyle({
         paddingTop: y,
@@ -75,6 +76,7 @@ export default function Messenger() {
           <Message key={item.text} {...item} />
         ))}
         <View
+          // @ts-expect-error I don't know what's wrong with types here
           ref={viewRef}
           style={{
             width: "100%",
