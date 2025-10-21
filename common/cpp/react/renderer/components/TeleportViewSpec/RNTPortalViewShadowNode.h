@@ -14,10 +14,13 @@ namespace facebook::react {
   /*
    * `ShadowNode` for <PortalView> component.
    */
-  using PortalViewShadowNode = ConcreteViewShadowNode<
+  class PortalViewShadowNode : public ConcreteViewShadowNode<
       PortalViewComponentName,
       PortalViewProps,
       PortalViewEventEmitter,
-      PortalViewState>;
+      PortalViewState> {
+   public:
+    using ConcreteViewShadowNode::ConcreteViewShadowNode;
+  };
 
 } // namespace facebook::react
