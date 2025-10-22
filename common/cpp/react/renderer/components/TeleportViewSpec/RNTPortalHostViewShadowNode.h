@@ -19,7 +19,7 @@ namespace facebook::react {
                                        PortalHostViewProps,
                                        PortalHostViewEventEmitter,
                                        PortalHostViewState> {
-  public:
+   public:
     using ConcreteViewShadowNode::ConcreteViewShadowNode;
   };
 

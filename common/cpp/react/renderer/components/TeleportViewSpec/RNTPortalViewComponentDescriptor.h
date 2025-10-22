@@ -12,7 +12,7 @@ namespace facebook::react {
 
   class PortalViewComponentDescriptor final
       : public ConcreteComponentDescriptor<PortalViewShadowNode> {
-  public:
+   public:
     using ConcreteComponentDescriptor::ConcreteComponentDescriptor;
 
     void adopt(ShadowNode &shadowNode) const override {
