@@ -2,6 +2,10 @@
 
 ## Adding a library to the project[​](#adding-a-library-to-the-project "Direct link to Adding a library to the project")
 
+New Architecture only
+
+This library is compatible **only** with the **new (Fabric)** architecture.
+
 Install the `react-native-teleport` package in your React Native project.
 
 * YARN
