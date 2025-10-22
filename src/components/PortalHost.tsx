@@ -26,16 +26,10 @@ import PortalHost from "../views/PortalHost";
  */
 const PortalHostComponent = ({ name, children }: PortalHostProps) => {
   return (
-    <PortalHost name={name} style={styles.container} pointerEvents="box-none">
+    <PortalHost name={name}>
       {children}
     </PortalHost>
   );
-};
-
-const styles = {
-  container: {
-    flex: 1,
-  },
 };
 
 export default PortalHostComponent;
