@@ -1,5 +1,7 @@
 #include "PortalShadowRegistry.h"
 
+#include <string>
+
 namespace facebook::react {
 
   void PortalShadowRegistry::registerHost(

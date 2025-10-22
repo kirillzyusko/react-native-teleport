@@ -22,9 +22,10 @@ namespace facebook::react {
 
       // Register this host in the portal shadow registry
       if (!props.name.empty()) {
+        const auto &layoutableNode = static_cast<const LayoutableShadowNode &>(portalHostViewShadowNode);
         PortalShadowRegistry::getInstance().registerHost(
             props.name,
-            &static_cast<const LayoutableShadowNode &>(portalHostViewShadowNode));
+            &layoutableNode);
       }
 
       ConcreteComponentDescriptor::adopt(shadowNode);
