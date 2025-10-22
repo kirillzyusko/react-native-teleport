@@ -35,13 +35,16 @@ namespace facebook::react {
             // Get the host's layout metrics
             auto hostLayoutMetrics = yogaHost->getLayoutMetrics();
 
-            // Make the portal view take the full size of the host
-            // This allows children with flex: 1 to properly expand
-            yogaPortal.setSize(Size{
+            if (hostLayoutMetrics.frame.size.width > 0) {
+              // Make the portal view take the full size of the host
+              // This allows children with `flex` to properly expand
+              yogaPortal.setSize(Size{
                 .width = hostLayoutMetrics.frame.size.width,
                 .height = hostLayoutMetrics.frame.size.height});
+            }
 
             // Set position to absolute so it doesn't affect host's layout
+            // and "removes" a view from its current node (to match web spec)
             yogaPortal.setPositionType(YGPositionTypeAbsolute);
           }
         }
