@@ -5,16 +5,13 @@
 #include <mutex>
 #include <memory>
 
-namespace facebook::react
-{
+namespace facebook::react {
 
   class LayoutableShadowNode;
 
-  class PortalShadowRegistry
-  {
+  class PortalShadowRegistry {
   public:
-    static PortalShadowRegistry &getInstance()
-    {
+    static PortalShadowRegistry &getInstance() {
       static PortalShadowRegistry instance;
       return instance;
     }

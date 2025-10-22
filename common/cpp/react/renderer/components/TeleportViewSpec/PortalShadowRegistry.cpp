@@ -1,29 +1,24 @@
 #include "PortalShadowRegistry.h"
 
-namespace facebook::react
-{
+namespace facebook::react {
 
   void PortalShadowRegistry::registerHost(
       const std::string &name,
-      const LayoutableShadowNode *host)
-  {
+      const LayoutableShadowNode *host) {
     std::lock_guard<std::mutex> lock(mutex_);
     hosts_[name] = host;
   }
 
-  void PortalShadowRegistry::unregisterHost(const std::string &name)
-  {
+  void PortalShadowRegistry::unregisterHost(const std::string &name) {
     std::lock_guard<std::mutex> lock(mutex_);
     hosts_.erase(name);
   }
 
   const LayoutableShadowNode *PortalShadowRegistry::getHost(
-      const std::string &name) const
-  {
+      const std::string &name) const {
     std::lock_guard<std::mutex> lock(mutex_);
     auto it = hosts_.find(name);
-    if (it != hosts_.end())
-    {
+    if (it != hosts_.end()) {
       return it->second;
     }
     return nullptr;
