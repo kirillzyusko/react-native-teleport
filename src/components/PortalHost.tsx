@@ -1,3 +1,5 @@
+import { StyleSheet } from "react-native";
+
 import type { PortalHostProps } from "../types";
 import PortalHost from "../views/PortalHost";
 
@@ -24,12 +26,18 @@ import PortalHost from "../views/PortalHost";
  * }
  * ```
  */
-const PortalHostComponent = ({ name, children, style }: PortalHostProps) => {
+const PortalHostComponent = ({ name, children }: PortalHostProps) => {
   return (
-    <PortalHost name={name} style={style}>
+    <PortalHost name={name} style={styles.container} pointerEvents="box-none">
       {children}
     </PortalHost>
   );
 };
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+  },
+});
 
 export default PortalHostComponent;
