@@ -36,6 +36,7 @@ RootShadowNode::Unshared TeleportCommitHook::shadowTreeWillCommit(
     ShadowTree const &shadowTree,
     RootShadowNode::Shared const &oldRootShadowNode,
     RootShadowNode::Unshared const &newRootShadowNode) noexcept {
+      return newRootShadowNode;
   auto rootNode = newRootShadowNode;
   auto &registry = PortalShadowRegistry::shared();
   auto hostNames = registry.getActiveHostNames();

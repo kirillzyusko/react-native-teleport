@@ -42,7 +42,7 @@ class PortalViewComponentDescriptor final
     if (!hostName.empty()) {
       std::shared_ptr<PortalHostViewShadowNode> host = PortalShadowRegistry::shared().getHost(hostName);
       
-      host->dirtyLayout();
+      // host->dirtyLayout();
       
       // printf("  host=%p\n", host.get());
       auto *rawHostPtr = host.get();
@@ -55,17 +55,23 @@ class PortalViewComponentDescriptor final
            [](YogaLayoutableShadowNode*) {
              /* no-op deleter: do nothing on destruction */
            });
+      
+      auto flexGrowOpt = props->yogaStyle.flexGrow();
+      float flexValue = flexGrowOpt.isUndefined() ? 0.0f : flexGrowOpt.unwrap();
+      
+      // YGValue flexValue = props->yogaStyle.flexGrow();
 
+      // layoutableHostShadowNode.appendYogaChild(layoutablePortalShadowNode);
 
-
-      // print size of layoutableHostShadowNode
+      // print size of layoutableHostShadowNodxe
       printf("  host size: %f x %f\n",
               layoutableHostShadowNode.getLayoutMetrics().frame.size.width,
               layoutableHostShadowNode.getLayoutMetrics().frame.size.height);
-      /*layoutablePortalShadowNode.setSize(Size{
+      layoutablePortalShadowNode.setSize(Size{
               .width = layoutableHostShadowNode.getLayoutMetrics().frame.size.width,
               .height = layoutableHostShadowNode.getLayoutMetrics().frame.size.height});
-      layoutablePortalShadowNode.setPositionType(YGPositionTypeAbsolute);*/
+       // escape container size layout limitation
+       layoutablePortalShadowNode.setPositionType(YGPositionTypeAbsolute);
     }
 
     ConcreteComponentDescriptor::adopt(shadowNode);
