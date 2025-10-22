@@ -1,5 +1,3 @@
-import { StyleSheet } from "react-native";
-
 import type { PortalHostProps } from "../types";
 import PortalHost from "../views/PortalHost";
 
@@ -34,10 +32,10 @@ const PortalHostComponent = ({ name, children }: PortalHostProps) => {
   );
 };
 
-const styles = StyleSheet.create({
+const styles = {
   container: {
     flex: 1,
   },
-});
+};
 
 export default PortalHostComponent;
