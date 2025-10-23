@@ -57,4 +57,10 @@ export const examples: Example[] = [
     info: ScreenNames.MESSENGER,
     icons: "💬",
   },
+  {
+    title: "Portal Before Host",
+    testID: "portal_before_host",
+    info: ScreenNames.PORTAL_BEFORE_HOST,
+    icons: "🔄",
+  },
 ];

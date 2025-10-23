@@ -8,6 +8,7 @@ export enum ScreenNames {
   FLEXIBLE_STYLES = "FLEXIBLE_STYLES",
   BOTTOM_SHEET = "BOTTOM_SHEET",
   MESSENGER = "MESSENGER",
+  PORTAL_BEFORE_HOST = "PORTAL_BEFORE_HOST",
 }
 
 export enum StackNames {
