@@ -40,9 +40,9 @@ namespace facebook::react {
             if (hostLayoutMetrics.frame.size.width > 0) {
               // Make the portal view take the full size of the host
               // This allows children with `flex` to properly expand
-              yogaPortal.setSize(Size{
+              /*yogaPortal.setSize(Size{
                 .width = hostLayoutMetrics.frame.size.width,
-                .height = hostLayoutMetrics.frame.size.height});
+                .height = hostLayoutMetrics.frame.size.height});*/
             }
 
             // Set position to absolute so it doesn't affect host's layout
