@@ -1,13 +1,13 @@
 #pragma once
 
+#include <react/renderer/core/LayoutableShadowNode.h>
+
 #include <string>
 #include <unordered_map>
 #include <mutex>
 #include <memory>
 
 namespace facebook::react {
-
-  class LayoutableShadowNode;
 
   class PortalShadowRegistry {
    public:

@@ -27,16 +27,16 @@ namespace facebook::react {
             PortalShadowRegistry::getInstance().getHost(props.hostName);
 
         if (host) {
-          // Cast to YogaLayoutableShadowNode to access yoga-specific methods
           auto &yogaPortal = static_cast<YogaLayoutableShadowNode &>(portalViewShadowNode);
 
-          // Set position to absolute so the portal doesn't affect host's layout flow
+          // Set position to absolute because:
+          // - when the view is teleported, we need to "free" its original space
+          // - we need to stretch the view beyond the parent layout constraints
           yogaPortal.setPositionType(YGPositionTypeAbsolute);
 
-          // Get the host's current layout size
           auto hostLayoutMetrics = host->getLayoutMetrics();
 
-          // Conditionally set dimensions: only set width if > 0, only set height if > 0
+          // Update view dimensions
           portalViewShadowNode.setDimensionsFromHost(hostLayoutMetrics.frame.size);
         }
       }
