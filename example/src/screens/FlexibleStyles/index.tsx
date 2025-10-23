@@ -12,7 +12,7 @@ export default function FlexibleStyles() {
 
   return (
     <View style={{ flex: 1 }}>
-      <Button title="Overlay" onPress={() => setDestination("overlay")} />
+      <Button title="Overlay" onPress={() => setDestination("flex")} />
       <Button title="Back" onPress={() => setDestination(undefined)} />
       <Button
         title="Gorhom Overlay"
@@ -55,7 +55,7 @@ export default function FlexibleStyles() {
         style={{ position: "absolute", top: 0, bottom: 0, left: 0, right: 0 }}
         pointerEvents="none"
       >
-        <PortalHost name="overlay" style={{ flex: 1 }} />
+        <PortalHost name="flex" style={{ flex: 1 }} />
       </View>
       <View
         style={{ position: "absolute", top: 0, bottom: 0, left: 0, right: 0 }}
