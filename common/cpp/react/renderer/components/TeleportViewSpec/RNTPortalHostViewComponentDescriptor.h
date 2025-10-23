@@ -1,6 +1,7 @@
 #pragma once
 
 #include "RNTPortalHostViewShadowNode.h"
+#include "PortalShadowRegistry.h"
 
 #include <react/debug/react_native_assert.h>
 #include <react/renderer/components/TeleportViewSpec/Props.h>
@@ -12,8 +13,21 @@ namespace facebook::react {
       : public ConcreteComponentDescriptor<PortalHostViewShadowNode> {
    public:
     using ConcreteComponentDescriptor::ConcreteComponentDescriptor;
+
     void adopt(ShadowNode &shadowNode) const override {
       react_native_assert(dynamic_cast<PortalHostViewShadowNode *>(&shadowNode));
+
+      auto &portalHostViewShadowNode = static_cast<PortalHostViewShadowNode &>(shadowNode);
+      auto &props = static_cast<const PortalHostViewProps &>(*portalHostViewShadowNode.getProps());
+
+      // Register this host in the portal shadow registry
+      if (!props.name.empty()) {
+        const auto &layoutableNode = static_cast<const LayoutableShadowNode &>(portalHostViewShadowNode);
+        PortalShadowRegistry::getInstance().registerHost(
+            props.name,
+            &layoutableNode);
+      }
+
       ConcreteComponentDescriptor::adopt(shadowNode);
     }
   };

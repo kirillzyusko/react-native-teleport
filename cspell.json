@@ -64,7 +64,8 @@
     "DLOG",
     "subspec",
     "xcconfig",
-    "SRCROOT"
+    "SRCROOT",
+    "Layoutable"
   ],
   "ignorePaths": [
     "node_modules",
