@@ -45,6 +45,7 @@ const Message = ({ sender, text }: MessageProps) => {
 
 export default function Messenger() {
   const viewRef = useRef<View>(null);
+  const timeoutId = useRef<number>(undefined);
   const [teleport, setTeleported] = useState(false);
   const [style, setStyle] = useState({ paddingTop: 0 });
   const [blur, setBlur] = useState(false);
@@ -52,13 +53,14 @@ export default function Messenger() {
   const handleClick = () => {
     if (blur) {
       setBlur(false);
-      setTimeout(() => {
+      timeoutId.current = setTimeout(() => {
         // after blur animation finish
         setTeleported(false);
         setStyle({ paddingTop: 0 });
       }, 500);
       return;
     }
+    clearTimeout(timeoutId.current);
     setBlur(true);
     // @ts-expect-error I don't know what's wrong with types here
     viewRef.current?.measureInWindow((_x: number, y: number) => {

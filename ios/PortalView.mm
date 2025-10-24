@@ -50,7 +50,6 @@ using namespace facebook::react;
 
 - (void)updateProps:(Props::Shared const &)props oldProps:(Props::Shared const &)oldProps
 {
-  const auto &oldViewProps = *std::static_pointer_cast<PortalViewProps const>(_props);
   const auto &newViewProps = *std::static_pointer_cast<PortalViewProps const>(props);
 
   std::string newHostStr = newViewProps.hostName;
@@ -58,7 +57,6 @@ using namespace facebook::react;
       newHostStr.empty() ? nil : [NSString stringWithUTF8String:newHostStr.c_str()];
 
   std::string newNameStr = newViewProps.name;
-  NSString *newName = newNameStr.empty() ? nil : [NSString stringWithUTF8String:newNameStr.c_str()];
 
   if (![self.hostName isEqualToString:newHostName]) {
     self.hostName = newHostName;
