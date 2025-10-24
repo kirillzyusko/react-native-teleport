@@ -9,6 +9,7 @@ on:
       - "example/**"
       - "e2e/**"
       - "src/**"
+      - "common/**"
   push:
     branches:
       - main

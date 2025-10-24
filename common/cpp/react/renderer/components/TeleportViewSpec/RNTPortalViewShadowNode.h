@@ -30,14 +30,14 @@ namespace facebook::react {
       if (hostSize.width > 0) {
         yogaNode_.style().setDimension(
             yoga::Dimension::Width,
-            yoga::StyleSizeLength::points(hostSize.width));
+            yoga::StyleLength::points(hostSize.width));
       }
 
       // Only set height if host has height
       if (hostSize.height > 0) {
         yogaNode_.style().setDimension(
             yoga::Dimension::Height,
-            yoga::StyleSizeLength::points(hostSize.height));
+            yoga::StyleLength::points(hostSize.height));
       }
     }
   };
