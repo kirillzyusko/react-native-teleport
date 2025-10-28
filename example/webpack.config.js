@@ -55,6 +55,13 @@ const imageLoaderConfiguration = {
     },
   },
 };
+const videoLoaderConfiguration = {
+  test: /\.(mp4|mov|webm)$/,
+  type: "asset/resource",
+  generator: {
+    filename: "media/[name][ext]",
+  },
+};
 
 module.exports = {
   ignoreWarnings: [
@@ -86,6 +93,7 @@ module.exports = {
       babelLoaderConfiguration,
       imageLoaderConfiguration,
       svgLoaderConfiguration,
+      videoLoaderConfiguration,
     ],
   },
   plugins: [
