@@ -11,30 +11,59 @@ class PortalView(
   context: Context,
 ) : ReactViewGroup(context) {
   private var hostName: String? = null
+  private var isPendingHostAvailability = false
+
+  private fun moveChildrenToTarget(
+    source: ViewGroup,
+    target: ViewGroup,
+  ) {
+    val children = mutableListOf<View>()
+    val count = source.childCount
+    for (i in count - 1 downTo 0) {
+      val child = source.getChildAt(i) ?: continue
+      children.add(0, child)
+      source.removeViewAt(i)
+    }
+
+    for (child in children) {
+      target.addView(child)
+    }
+  }
 
   fun setHostName(name: String?) {
-    val children = mutableListOf<View>()
-    val count = childCount
-    for (i in count - 1 downTo 0) {
-      val child = getChildAt(i) ?: continue
-      children.add(0, child)
-      removeViewAt(i)
+    // Unregister from previous host if pending
+    if (isPendingHostAvailability && hostName != null) {
+      PortalRegistry.unregisterPendingPortal(hostName!!, this)
+      isPendingHostAvailability = false
     }
 
     hostName = name
 
     val target: ViewGroup =
       if (hostName != null) {
-        PortalRegistry.getHost(hostName) ?: this
+        val host = PortalRegistry.getHost(hostName)
+        if (host != null) {
+          host
+        } else {
+          // Host not available yet, register as pending
+          PortalRegistry.registerPendingPortal(hostName!!, this)
+          isPendingHostAvailability = true
+          this
+        }
       } else {
         this
       }
 
-    for (child in children) {
-      target.addView(child)
-    }
+    moveChildrenToTarget(source = this, target = target)
+  }
 
-    requestLayout()
+  internal fun onHostAvailable() {
+    isPendingHostAvailability = false
+
+    val host = PortalRegistry.getHost(hostName)
+    if (host != null) {
+      moveChildrenToTarget(source = this, target = host)
+    }
   }
 
   private fun isTeleported(): Boolean = hostName != null && PortalRegistry.getHost(hostName) != null
@@ -101,6 +130,16 @@ class PortalView(
       super.addChildrenForAccessibility(outChildren)
     }
     // When teleported, do nothing—children are handled by the host's accessibility tree
+  }
+  // endregion
+
+  // region Lifecycle
+  override fun onDetachedFromWindow() {
+    super.onDetachedFromWindow()
+    if (isPendingHostAvailability && hostName != null) {
+      PortalRegistry.unregisterPendingPortal(hostName!!, this)
+      isPendingHostAvailability = false
+    }
   }
   // endregion
 }
