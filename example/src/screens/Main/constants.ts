@@ -57,4 +57,10 @@ export const examples: Example[] = [
     info: ScreenNames.PORTAL_BEFORE_HOST,
     icons: "🔄",
   },
+  {
+    title: "Instagram Reels",
+    testID: "reels",
+    info: ScreenNames.INSTAGRAM_FEED,
+    icons: "🎞",
+  },
 ];
