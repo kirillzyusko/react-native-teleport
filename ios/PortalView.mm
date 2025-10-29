@@ -23,6 +23,7 @@ using namespace facebook::react;
 
 @property (nonatomic, strong) NSString *hostName;
 @property (nonatomic, strong) UIView *targetView;
+@property (nonatomic, assign) BOOL isPendingHostAvailability;
 
 @end
 
@@ -48,6 +49,18 @@ using namespace facebook::react;
   return self;
 }
 
+- (void)moveChildrenToTarget:(UIView *)source target:(UIView *)target
+{
+  NSArray<UIView *> *children = [source.subviews copy];
+  for (UIView *child in children) {
+    [child removeFromSuperview];
+  }
+  NSInteger i = 0;
+  for (UIView *child in children) {
+    [target insertSubview:child atIndex:i++];
+  }
+}
+
 - (void)updateProps:(Props::Shared const &)props oldProps:(Props::Shared const &)oldProps
 {
   const auto &newViewProps = *std::static_pointer_cast<PortalViewProps const>(props);
@@ -59,6 +72,12 @@ using namespace facebook::react;
   std::string newNameStr = newViewProps.name;
 
   if (![self.hostName isEqualToString:newHostName]) {
+    // Unregister from previous host if pending
+    if (self.isPendingHostAvailability && self.hostName) {
+      [[PortalRegistry sharedInstance] unregisterPendingPortal:self withHostName:self.hostName];
+      self.isPendingHostAvailability = NO;
+    }
+
     self.hostName = newHostName;
 
     PortalHostView *hostView = nil;
@@ -67,22 +86,23 @@ using namespace facebook::react;
     }
 
     UIView *newTarget = self.contentView;
-    if (hostView) {
-      newTarget = (UIView *)hostView;
+    if (self.hostName) {
+      if (hostView) {
+        // Host is available, use it
+        newTarget = (UIView *)hostView;
+      } else {
+        // Host not available yet, register as pending
+        [[PortalRegistry sharedInstance] registerPendingPortal:self withHostName:self.hostName];
+        self.isPendingHostAvailability = YES;
+        newTarget = self.contentView;
+      }
     }
 
     if (newTarget != self.targetView) {
       UIView *oldTarget = self.targetView;
       self.targetView = newTarget;
 
-      NSArray<UIView *> *children = [oldTarget.subviews copy];
-      for (UIView *child in children) {
-        [child removeFromSuperview];
-      }
-      NSInteger i = 0;
-      for (UIView *child in children) {
-        [newTarget insertSubview:child atIndex:i++];
-      }
+      [self moveChildrenToTarget:oldTarget target:newTarget];
     }
   }
 
@@ -99,6 +119,27 @@ using namespace facebook::react;
                             index:(NSInteger)index
 {
   [childComponentView removeFromSuperview];
+}
+
+- (void)onHostAvailable
+{
+  self.isPendingHostAvailability = NO;
+
+  PortalHostView *hostView = [[PortalRegistry sharedInstance] getHostWithName:self.hostName];
+  if (hostView) {
+    [self moveChildrenToTarget:self.contentView target:(UIView *)hostView];
+    self.targetView = (UIView *)hostView;
+  }
+}
+
+- (void)prepareForRecycle
+{
+  [super prepareForRecycle];
+  
+  if (self.isPendingHostAvailability && self.hostName) {
+    [[PortalRegistry sharedInstance] unregisterPendingPortal:self withHostName:self.hostName];
+    self.isPendingHostAvailability = NO;
+  }
 }
 
 // MARK: touch handling
