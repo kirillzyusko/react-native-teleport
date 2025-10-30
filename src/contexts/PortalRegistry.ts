@@ -1,8 +1,10 @@
 import { createContext, useContext } from "react";
 
 type PortalRegistryContextType = {
-  setHost: (name: string, node: HTMLElement | null) => void;
+  registerHost: (name: string, node: HTMLElement | null) => void;
   getHost: (name: string) => HTMLElement | null;
+  registerPendingPortal: (name: string, callback: () => void) => void;
+  unregisterPendingPortal: (name: string, callback: () => void) => void;
 };
 
 export const PortalRegistryContext =

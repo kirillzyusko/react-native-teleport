@@ -1,7 +1,6 @@
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
 
 import { ScreenNames } from "../../constants/screenNames";
-import LottieExample from "../../screens/Lottie";
 import GestureHandlerTouchableExample from "../../screens/Touchable";
 import RNTouchableExample from "../../screens/RNTouchable";
 import DynamicChildrenExample from "../../screens/DynamicChildren";
@@ -10,9 +9,9 @@ import Hook from "../../screens/Hook/Hook";
 import FlexibleStyles from "../../screens/FlexibleStyles";
 import BottomSheet from "../../screens/BottomSheet";
 import Messenger from "../../screens/Messenger";
+import PortalBeforeHost from "../../screens/PortalBeforeHost";
 
 export type ExamplesStackParamList = {
-  [ScreenNames.LOTTIE]: undefined;
   [ScreenNames.GESTURE_HANDLER_TOUCHABLE]: undefined;
   [ScreenNames.REACT_NATIVE_TOUCHABLE]: undefined;
   [ScreenNames.DYNAMIC_CHILDREN]: undefined;
@@ -21,14 +20,12 @@ export type ExamplesStackParamList = {
   [ScreenNames.FLEXIBLE_STYLES]: undefined;
   [ScreenNames.BOTTOM_SHEET]: undefined;
   [ScreenNames.MESSENGER]: undefined;
+  [ScreenNames.PORTAL_BEFORE_HOST]: undefined;
 };
 
 const Stack = createNativeStackNavigator<ExamplesStackParamList>();
 
 const options = {
-  [ScreenNames.LOTTIE]: {
-    title: "Lottie animation",
-  },
   [ScreenNames.GESTURE_HANDLER_TOUCHABLE]: {
     title: "GestureHandler Touchable",
   },
@@ -53,15 +50,13 @@ const options = {
   [ScreenNames.MESSENGER]: {
     title: "Messenger",
   },
+  [ScreenNames.PORTAL_BEFORE_HOST]: {
+    title: "Portal Before Host",
+  },
 };
 
 const ExamplesStack = () => (
   <Stack.Navigator>
-    <Stack.Screen
-      component={LottieExample}
-      name={ScreenNames.LOTTIE}
-      options={options[ScreenNames.LOTTIE]}
-    />
     <Stack.Screen
       component={GestureHandlerTouchableExample}
       name={ScreenNames.GESTURE_HANDLER_TOUCHABLE}
@@ -101,6 +96,11 @@ const ExamplesStack = () => (
       component={Messenger}
       name={ScreenNames.MESSENGER}
       options={options[ScreenNames.MESSENGER]}
+    />
+    <Stack.Screen
+      component={PortalBeforeHost}
+      name={ScreenNames.PORTAL_BEFORE_HOST}
+      options={options[ScreenNames.PORTAL_BEFORE_HOST]}
     />
   </Stack.Navigator>
 );

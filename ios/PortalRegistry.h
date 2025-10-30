@@ -11,6 +11,7 @@
 NS_ASSUME_NONNULL_BEGIN
 
 @class PortalHostView;
+@class PortalView;
 
 @interface PortalRegistry : NSObject
 
@@ -19,6 +20,9 @@ NS_ASSUME_NONNULL_BEGIN
 - (void)registerHost:(PortalHostView *)host withName:(NSString *)name;
 - (void)unregisterHostWithName:(NSString *)name;
 - (nullable PortalHostView *)getHostWithName:(NSString *)name;
+
+- (void)registerPendingPortal:(PortalView *)portal withHostName:(NSString *)hostName;
+- (void)unregisterPendingPortal:(PortalView *)portal withHostName:(NSString *)hostName;
 
 @end
 

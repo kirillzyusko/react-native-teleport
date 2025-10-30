@@ -3,16 +3,16 @@ import { usePortalRegistryContext } from "../../contexts/PortalRegistry";
 import type { PortalHostProps } from "../../types";
 
 function PortalHost({ name, children }: PortalHostProps) {
-  const { setHost } = usePortalRegistryContext();
+  const { registerHost } = usePortalRegistryContext();
 
   useEffect(() => {
     return () => {
-      setHost(name, null);
+      registerHost(name, null);
     };
-  }, [name, setHost]);
+  }, [name, registerHost]);
 
   return (
-    <div style={styles.anchor} ref={(ref) => setHost(name, ref)}>
+    <div style={styles.anchor} ref={(ref) => registerHost(name, ref)}>
       {children}
     </div>
   );

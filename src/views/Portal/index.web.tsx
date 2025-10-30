@@ -1,18 +1,20 @@
 /// <reference lib="dom" />
 
-import { useRef, useLayoutEffect } from "react";
+import { useRef, useLayoutEffect, useCallback } from "react";
 import { createPortal } from "react-dom";
 import { usePortalRegistryContext } from "../../contexts/PortalRegistry";
 import type { PortalProps } from "../../types";
 
 export default function Portal({ hostName, children, style }: PortalProps) {
-  const { getHost } = usePortalRegistryContext();
+  const { getHost, registerPendingPortal, unregisterPendingPortal } =
+    usePortalRegistryContext();
   const elRef = useRef<HTMLDivElement | null>(null);
   if (!elRef.current) {
     elRef.current = document.createElement("div");
   }
 
   const sentinelRef = useRef<HTMLDivElement>(null);
+  const isWaitingForHostRef = useRef(false);
 
   useLayoutEffect(() => {
     if (elRef.current && style) {
@@ -20,30 +22,54 @@ export default function Portal({ hostName, children, style }: PortalProps) {
     }
   }, [style]);
 
-  useLayoutEffect(() => {
+  const teleportToHost = useCallback(() => {
     const el = elRef.current;
     if (!el) return;
 
-    let target: Node | null = null;
+    if (el.parentNode) {
+      el.parentNode.removeChild(el);
+    }
+
     const hostNode = hostName ? getHost(hostName) : null;
 
     if (hostNode) {
-      // Teleport: Append to host (use appendChild for end positioning; adjust if specific index needed)
+      // teleport view to the host
       hostNode.appendChild(el);
-      target = hostNode;
+      isWaitingForHostRef.current = false;
     } else if (sentinelRef.current && sentinelRef.current.parentNode) {
-      // Local: Insert before sentinel to render at Portal's position in the tree
+      // keep view locally
       sentinelRef.current.parentNode.insertBefore(el, sentinelRef.current);
-      target = sentinelRef.current.parentNode;
+    }
+  }, [hostName, getHost]);
+
+  useLayoutEffect(() => {
+    const hostNode = hostName ? getHost(hostName) : null;
+
+    if (isWaitingForHostRef.current && hostName) {
+      unregisterPendingPortal(hostName, teleportToHost);
+      isWaitingForHostRef.current = false;
+    }
+
+    teleportToHost();
+
+    if (hostName && !hostNode) {
+      registerPendingPortal(hostName, teleportToHost);
+      isWaitingForHostRef.current = true;
     }
 
     return () => {
-      // Cleanup: Remove el from current parent to avoid leaks/duplicates
-      if (el.parentNode === target) {
-        target?.removeChild(el);
+      if (isWaitingForHostRef.current && hostName) {
+        unregisterPendingPortal(hostName, teleportToHost);
+        isWaitingForHostRef.current = false;
       }
     };
-  }, [hostName, getHost]);
+  }, [
+    hostName,
+    getHost,
+    registerPendingPortal,
+    unregisterPendingPortal,
+    teleportToHost,
+  ]);
 
   return (
     <>

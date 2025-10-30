@@ -14,6 +14,9 @@
 NS_ASSUME_NONNULL_BEGIN
 
 @interface PortalView : RCTViewComponentView
+
+- (void)onHostAvailable;
+
 @end
 
 NS_ASSUME_NONNULL_END

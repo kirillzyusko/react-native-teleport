@@ -4,12 +4,6 @@ import type { Example } from "./types";
 
 export const examples: Example[] = [
   {
-    title: "Lottie",
-    testID: "lottie",
-    info: ScreenNames.LOTTIE,
-    icons: "⚠️ 🎞",
-  },
-  {
     title: "GestureHandler Touchable",
     testID: "gesture_handler_touchable",
     info: ScreenNames.GESTURE_HANDLER_TOUCHABLE,
@@ -56,5 +50,11 @@ export const examples: Example[] = [
     testID: "messenger",
     info: ScreenNames.MESSENGER,
     icons: "💬",
+  },
+  {
+    title: "Portal Before Host",
+    testID: "portal_before_host",
+    info: ScreenNames.PORTAL_BEFORE_HOST,
+    icons: "🔄",
   },
 ];

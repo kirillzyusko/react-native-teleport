@@ -12,15 +12,15 @@ class PortalHostView(
   fun setName(newName: String?) {
     if (name == newName) return
 
-    name?.let { PortalRegistry.unregister(it) }
+    name?.let { PortalRegistry.unregisterHost(it) }
     name = newName
-    newName?.let { PortalRegistry.register(it, this) }
+    newName?.let { PortalRegistry.registerHost(it, this) }
   }
 
   // region Lifecycle
   override fun onDetachedFromWindow() {
     super.onDetachedFromWindow()
-    name?.let { PortalRegistry.unregister(it) }
+    name?.let { PortalRegistry.unregisterHost(it) }
   }
   // endregion
 }
