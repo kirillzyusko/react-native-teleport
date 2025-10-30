@@ -13,28 +13,20 @@ class PortalView(
   private var hostName: String? = null
   private var isWaitingForHost = false
 
-  private fun moveChildrenToTarget(
-    source: ViewGroup,
-    target: ViewGroup,
-  ) {
-    val children = mutableListOf<View>()
-    val count = source.childCount
-    for (i in count - 1 downTo 0) {
-      val child = source.getChildAt(i) ?: continue
-      children.add(0, child)
-      source.removeViewAt(i)
-    }
-
-    for (child in children) {
-      target.addView(child)
-    }
-  }
-
   fun setHostName(name: String?) {
     // Unregister from previous host if pending
     if (isWaitingForHost && hostName != null) {
       PortalRegistry.unregisterPendingPortal(hostName!!, this)
       isWaitingForHost = false
+    }
+
+    // Gather children BEFORE updating hostName, since getChildCount() and getChildAt() depend on it
+    val children = mutableListOf<View>()
+    val count = childCount
+    for (i in count - 1 downTo 0) {
+      val child = getChildAt(i) ?: continue
+      children.add(0, child)
+      removeViewAt(i)
     }
 
     hostName = name
@@ -54,7 +46,10 @@ class PortalView(
         this
       }
 
-    moveChildrenToTarget(source = this, target = target)
+    // Add children to target
+    for (child in children) {
+      target.addView(child)
+    }
 
     requestLayout()
   }
@@ -64,7 +59,18 @@ class PortalView(
 
     val host = PortalRegistry.getHost(hostName)
     if (host != null) {
-      moveChildrenToTarget(source = this, target = host)
+      // Use super methods to get actual children from this view, not from the host
+      val children = mutableListOf<View>()
+      val count = super.getChildCount()
+      for (i in count - 1 downTo 0) {
+        val child = super.getChildAt(i) ?: continue
+        children.add(0, child)
+        super.removeViewAt(i)
+      }
+
+      for (child in children) {
+        host.addView(child)
+      }
     }
 
     requestLayout()
