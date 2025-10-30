@@ -6,7 +6,7 @@ export default function PortalProvider({ children }: PortalProviderProps) {
   const hostsRef = useRef<Map<string, HTMLElement>>(new Map());
   const pendingPortalsRef = useRef<Map<string, Set<() => void>>>(new Map());
 
-  const setHost = useCallback((name: string, node: HTMLElement | null) => {
+  const registerHost = useCallback((name: string, node: HTMLElement | null) => {
     if (node) {
       hostsRef.current.set(name, node);
 
@@ -50,12 +50,12 @@ export default function PortalProvider({ children }: PortalProviderProps) {
 
   const value = useMemo(
     () => ({
-      setHost,
+      registerHost,
       getHost,
       registerPendingPortal,
       unregisterPendingPortal,
     }),
-    [setHost, getHost, registerPendingPortal, unregisterPendingPortal],
+    [registerHost, getHost, registerPendingPortal, unregisterPendingPortal],
   );
 
   return (
