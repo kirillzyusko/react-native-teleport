@@ -55,6 +55,8 @@ class PortalView(
       }
 
     moveChildrenToTarget(source = this, target = target)
+
+    requestLayout()
   }
 
   internal fun onHostAvailable() {
@@ -64,6 +66,8 @@ class PortalView(
     if (host != null) {
       moveChildrenToTarget(source = this, target = host)
     }
+
+    requestLayout()
   }
 
   private fun isTeleported(): Boolean = hostName != null && PortalRegistry.getHost(hostName) != null
