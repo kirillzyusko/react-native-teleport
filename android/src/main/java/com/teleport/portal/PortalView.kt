@@ -15,8 +15,8 @@ class PortalView(
 
   fun setHostName(name: String?) {
     // Unregister from previous host if pending
-    if (isWaitingForHost && hostName != null) {
-      PortalRegistry.unregisterPendingPortal(hostName!!, this)
+    if (isWaitingForHost) {
+      hostName?.let { PortalRegistry.unregisterPendingPortal(it, this) }
       isWaitingForHost = false
     }
 
@@ -32,19 +32,17 @@ class PortalView(
     hostName = name
 
     val target: ViewGroup =
-      if (hostName != null) {
-        val host = PortalRegistry.getHost(hostName)
+      hostName?.let { hostNameValue ->
+        val host = PortalRegistry.getHost(hostNameValue)
         if (host != null) {
           host
         } else {
           // Host not available yet, register as pending
-          PortalRegistry.registerPendingPortal(hostName!!, this)
+          PortalRegistry.registerPendingPortal(hostNameValue, this)
           isWaitingForHost = true
           this
         }
-      } else {
-        this
-      }
+      } ?: this
 
     // Add children to target
     for (child in children) {
@@ -142,8 +140,8 @@ class PortalView(
   // region Lifecycle
   override fun onDetachedFromWindow() {
     super.onDetachedFromWindow()
-    if (isWaitingForHost && hostName != null) {
-      PortalRegistry.unregisterPendingPortal(hostName!!, this)
+    if (isWaitingForHost) {
+      hostName?.let { PortalRegistry.unregisterPendingPortal(it, this) }
       isWaitingForHost = false
     }
   }
