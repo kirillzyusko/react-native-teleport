@@ -6,6 +6,7 @@ import {
   View,
   Text,
   type ScrollEvent,
+  Image,
 } from "react-native";
 import { Portal } from "react-native-teleport";
 import Video from "react-native-video";
@@ -76,22 +77,36 @@ const Post = ({ post, active }: PostProps) => {
                 transform: [{ translateY: translateY }],
               }}
             >
-              <Video
-                source={{ uri: post.video }}
-                style={[
-                  {
-                    height: CARD_HEIGHT - 100,
+              {post.video && (
+                <Video
+                  source={{ uri: post.video }}
+                  style={[
+                    {
+                      height: VIDEO_HEIGHT,
+                      width: SCREEN_WIDTH,
+                      aspectRatio: ASPECT_RATION,
+                      position: "relative",
+                    },
+                    { top: y },
+                  ]}
+                  repeat
+                  paused={!active}
+                  controls={false}
+                  resizeMode="cover"
+                />
+              )}
+              {post.photo && (
+                <Image
+                  source={{ uri: post.photo }}
+                  style={{
+                    height: VIDEO_HEIGHT,
                     width: SCREEN_WIDTH,
                     aspectRatio: ASPECT_RATION,
                     position: "relative",
-                  },
-                  { top: y },
-                ]}
-                repeat
-                paused={!active}
-                controls={false}
-                resizeMode="cover"
-              />
+                    top: y,
+                  }}
+                />
+              )}
             </Animated.View>
           </Portal>
         </View>
@@ -115,6 +130,13 @@ const Post = ({ post, active }: PostProps) => {
           </View>
           <FontAwesome6 name="bookmark" size={24} />
         </View>
+        <View style={{ paddingTop: 8, flexDirection: "row" }}>
+          <Text style={{ fontWeight: "700", paddingRight: 4 }}>
+            {post.author}
+          </Text>
+          <Text style={{ fontWeight: "400" }}>{post.text}</Text>
+        </View>
+        <Text style={{ paddingTop: 4, color: "#5c5c5c" }}>{post.date}</Text>
       </View>
     </View>
   );
