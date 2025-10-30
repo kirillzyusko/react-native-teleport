@@ -72,7 +72,6 @@ using namespace facebook::react;
   std::string newNameStr = newViewProps.name;
 
   if (![self.hostName isEqualToString:newHostName]) {
-    // Unregister from previous host if pending
     if (self.isWaitingForHost && self.hostName) {
       [[PortalRegistry sharedInstance] unregisterPendingPortal:self withHostName:self.hostName];
       self.isWaitingForHost = NO;
@@ -88,10 +87,8 @@ using namespace facebook::react;
     UIView *newTarget = self.contentView;
     if (self.hostName) {
       if (hostView) {
-        // Host is available, use it
         newTarget = (UIView *)hostView;
       } else {
-        // Host not available yet, register as pending
         [[PortalRegistry sharedInstance] registerPendingPortal:self withHostName:self.hostName];
         self.isWaitingForHost = YES;
         newTarget = self.contentView;

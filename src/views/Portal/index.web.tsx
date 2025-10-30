@@ -62,7 +62,6 @@ export default function Portal({ hostName, children, style }: PortalProps) {
     }
 
     return () => {
-      // Cleanup: unregister if still waiting
       if (isWaitingForHostRef.current && hostName) {
         unregisterPendingPortal(hostName, teleportToHost);
         isWaitingForHostRef.current = false;

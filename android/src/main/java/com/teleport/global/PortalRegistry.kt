@@ -14,7 +14,6 @@ object PortalRegistry {
   ) {
     hosts[name] = WeakReference(view)
 
-    // Notify all pending portals that their host is now available
     pendingPortals[name]?.let { portals ->
       val iterator = portals.iterator()
       while (iterator.hasNext()) {

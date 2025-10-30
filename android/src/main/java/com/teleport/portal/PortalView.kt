@@ -14,7 +14,6 @@ class PortalView(
   private var isWaitingForHost = false
 
   fun setHostName(name: String?) {
-    // Unregister from previous host if pending
     if (isWaitingForHost) {
       hostName?.let { PortalRegistry.unregisterPendingPortal(it, this) }
       isWaitingForHost = false
@@ -37,7 +36,6 @@ class PortalView(
         if (host != null) {
           host
         } else {
-          // Host not available yet, register as pending
           PortalRegistry.registerPendingPortal(hostNameValue, this)
           isWaitingForHost = true
           this

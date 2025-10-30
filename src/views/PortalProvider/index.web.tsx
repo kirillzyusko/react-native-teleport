@@ -10,7 +10,6 @@ export default function PortalProvider({ children }: PortalProviderProps) {
     if (node) {
       hostsRef.current.set(name, node);
 
-      // Notify all pending portals that their host is now available
       const callbacks = pendingPortalsRef.current.get(name);
       if (callbacks) {
         callbacks.forEach((callback) => callback());
@@ -20,12 +19,10 @@ export default function PortalProvider({ children }: PortalProviderProps) {
       hostsRef.current.delete(name);
     }
   }, []);
-
   const getHost = useCallback(
     (name: string) => hostsRef.current.get(name) ?? null,
     [],
   );
-
   const registerPendingPortal = useCallback(
     (name: string, callback: () => void) => {
       const callbacks = pendingPortalsRef.current.get(name) ?? new Set();
@@ -34,7 +31,6 @@ export default function PortalProvider({ children }: PortalProviderProps) {
     },
     [],
   );
-
   const unregisterPendingPortal = useCallback(
     (name: string, callback: () => void) => {
       const callbacks = pendingPortalsRef.current.get(name);

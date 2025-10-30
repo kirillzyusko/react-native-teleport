@@ -43,7 +43,6 @@
   if (name) {
     [self.hosts setObject:host forKey:name];
 
-    // Notify all pending portals that their host is now available
     NSPointerArray *portals = self.pendingPortals[name];
     if (portals) {
       // Compact the array to remove nil entries
