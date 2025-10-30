@@ -23,7 +23,7 @@ using namespace facebook::react;
 
 @property (nonatomic, strong) NSString *hostName;
 @property (nonatomic, strong) UIView *targetView;
-@property (nonatomic, assign) BOOL isPendingHostAvailability;
+@property (nonatomic, assign) BOOL isWaitingForHost;
 
 @end
 
@@ -73,9 +73,9 @@ using namespace facebook::react;
 
   if (![self.hostName isEqualToString:newHostName]) {
     // Unregister from previous host if pending
-    if (self.isPendingHostAvailability && self.hostName) {
+    if (self.isWaitingForHost && self.hostName) {
       [[PortalRegistry sharedInstance] unregisterPendingPortal:self withHostName:self.hostName];
-      self.isPendingHostAvailability = NO;
+      self.isWaitingForHost = NO;
     }
 
     self.hostName = newHostName;
@@ -93,7 +93,7 @@ using namespace facebook::react;
       } else {
         // Host not available yet, register as pending
         [[PortalRegistry sharedInstance] registerPendingPortal:self withHostName:self.hostName];
-        self.isPendingHostAvailability = YES;
+        self.isWaitingForHost = YES;
         newTarget = self.contentView;
       }
     }
@@ -123,7 +123,7 @@ using namespace facebook::react;
 
 - (void)onHostAvailable
 {
-  self.isPendingHostAvailability = NO;
+  self.isWaitingForHost = NO;
 
   PortalHostView *hostView = [[PortalRegistry sharedInstance] getHostWithName:self.hostName];
   if (hostView) {
@@ -136,9 +136,9 @@ using namespace facebook::react;
 {
   [super prepareForRecycle];
   
-  if (self.isPendingHostAvailability && self.hostName) {
+  if (self.isWaitingForHost && self.hostName) {
     [[PortalRegistry sharedInstance] unregisterPendingPortal:self withHostName:self.hostName];
-    self.isPendingHostAvailability = NO;
+    self.isWaitingForHost = NO;
   }
 }
 

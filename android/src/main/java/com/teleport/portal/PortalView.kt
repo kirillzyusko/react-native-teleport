@@ -11,7 +11,7 @@ class PortalView(
   context: Context,
 ) : ReactViewGroup(context) {
   private var hostName: String? = null
-  private var isPendingHostAvailability = false
+  private var isWaitingForHost = false
 
   private fun moveChildrenToTarget(
     source: ViewGroup,
@@ -32,9 +32,9 @@ class PortalView(
 
   fun setHostName(name: String?) {
     // Unregister from previous host if pending
-    if (isPendingHostAvailability && hostName != null) {
+    if (isWaitingForHost && hostName != null) {
       PortalRegistry.unregisterPendingPortal(hostName!!, this)
-      isPendingHostAvailability = false
+      isWaitingForHost = false
     }
 
     hostName = name
@@ -47,7 +47,7 @@ class PortalView(
         } else {
           // Host not available yet, register as pending
           PortalRegistry.registerPendingPortal(hostName!!, this)
-          isPendingHostAvailability = true
+          isWaitingForHost = true
           this
         }
       } else {
@@ -58,7 +58,7 @@ class PortalView(
   }
 
   internal fun onHostAvailable() {
-    isPendingHostAvailability = false
+    isWaitingForHost = false
 
     val host = PortalRegistry.getHost(hostName)
     if (host != null) {
@@ -136,9 +136,9 @@ class PortalView(
   // region Lifecycle
   override fun onDetachedFromWindow() {
     super.onDetachedFromWindow()
-    if (isPendingHostAvailability && hostName != null) {
+    if (isWaitingForHost && hostName != null) {
       PortalRegistry.unregisterPendingPortal(hostName!!, this)
-      isPendingHostAvailability = false
+      isWaitingForHost = false
     }
   }
   // endregion
