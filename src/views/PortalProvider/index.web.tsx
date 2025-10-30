@@ -4,20 +4,59 @@ import type { PortalProviderProps } from "../../types";
 
 export default function PortalProvider({ children }: PortalProviderProps) {
   const hostsRef = useRef<Map<string, HTMLElement>>(new Map());
+  const pendingPortalsRef = useRef<Map<string, Set<() => void>>>(new Map());
 
   const setHost = useCallback((name: string, node: HTMLElement | null) => {
     if (node) {
       hostsRef.current.set(name, node);
+
+      // Notify all pending portals that their host is now available
+      const callbacks = pendingPortalsRef.current.get(name);
+      if (callbacks) {
+        callbacks.forEach((callback) => callback());
+        pendingPortalsRef.current.delete(name);
+      }
     } else {
       hostsRef.current.delete(name);
     }
   }, []);
+
   const getHost = useCallback(
     (name: string) => hostsRef.current.get(name) ?? null,
     [],
   );
 
-  const value = useMemo(() => ({ setHost, getHost }), [setHost, getHost]);
+  const registerPendingPortal = useCallback(
+    (name: string, callback: () => void) => {
+      const callbacks = pendingPortalsRef.current.get(name) ?? new Set();
+      callbacks.add(callback);
+      pendingPortalsRef.current.set(name, callbacks);
+    },
+    [],
+  );
+
+  const unregisterPendingPortal = useCallback(
+    (name: string, callback: () => void) => {
+      const callbacks = pendingPortalsRef.current.get(name);
+      if (callbacks) {
+        callbacks.delete(callback);
+        if (callbacks.size === 0) {
+          pendingPortalsRef.current.delete(name);
+        }
+      }
+    },
+    [],
+  );
+
+  const value = useMemo(
+    () => ({
+      setHost,
+      getHost,
+      registerPendingPortal,
+      unregisterPendingPortal,
+    }),
+    [setHost, getHost, registerPendingPortal, unregisterPendingPortal],
+  );
 
   return (
     <PortalRegistryContext.Provider value={value}>
