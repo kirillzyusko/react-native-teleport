@@ -135,7 +135,7 @@ using namespace facebook::react;
 - (void)prepareForRecycle
 {
   [super prepareForRecycle];
-  
+
   if (self.isWaitingForHost && self.hostName) {
     [[PortalRegistry sharedInstance] unregisterPendingPortal:self withHostName:self.hostName];
     self.isWaitingForHost = NO;

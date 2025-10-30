@@ -42,20 +42,20 @@
 {
   if (name) {
     [self.hosts setObject:host forKey:name];
-    
+
     // Notify all pending portals that their host is now available
     NSPointerArray *portals = self.pendingPortals[name];
     if (portals) {
       // Compact the array to remove nil entries
       [portals compact];
-      
+
       for (NSUInteger i = 0; i < portals.count; i++) {
         PortalView *portal = (__bridge PortalView *)[portals pointerAtIndex:i];
         if (portal) {
           [portal onHostAvailable];
         }
       }
-      
+
       [self.pendingPortals removeObjectForKey:name];
     }
   }
@@ -80,13 +80,13 @@
   if (!hostName || !portal) {
     return;
   }
-  
+
   NSPointerArray *portals = self.pendingPortals[hostName];
   if (!portals) {
     portals = [NSPointerArray weakObjectsPointerArray];
     self.pendingPortals[hostName] = portals;
   }
-  
+
   [portals addPointer:(__bridge void *)portal];
 }
 
@@ -95,12 +95,12 @@
   if (!hostName || !portal) {
     return;
   }
-  
+
   NSPointerArray *portals = self.pendingPortals[hostName];
   if (!portals) {
     return;
   }
-  
+
   // Remove the portal from the array
   for (NSUInteger i = 0; i < portals.count; i++) {
     PortalView *existingPortal = (__bridge PortalView *)[portals pointerAtIndex:i];
@@ -109,7 +109,7 @@
       break;
     }
   }
-  
+
   // Clean up if no more portals
   [portals compact];
   if (portals.count == 0) {
