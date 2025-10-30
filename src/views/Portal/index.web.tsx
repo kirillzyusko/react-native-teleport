@@ -26,7 +26,6 @@ export default function Portal({ hostName, children, style }: PortalProps) {
     const el = elRef.current;
     if (!el) return;
 
-    // Remove from current parent first
     if (el.parentNode) {
       el.parentNode.removeChild(el);
     }
@@ -34,11 +33,11 @@ export default function Portal({ hostName, children, style }: PortalProps) {
     const hostNode = hostName ? getHost(hostName) : null;
 
     if (hostNode) {
-      // Teleport: Append to host
+      // teleport view to the host
       hostNode.appendChild(el);
       isWaitingForHostRef.current = false;
     } else if (sentinelRef.current && sentinelRef.current.parentNode) {
-      // Local: Insert before sentinel to render at Portal's position in the tree
+      // keep view locally
       sentinelRef.current.parentNode.insertBefore(el, sentinelRef.current);
     }
   }, [hostName, getHost]);
@@ -46,16 +45,13 @@ export default function Portal({ hostName, children, style }: PortalProps) {
   useLayoutEffect(() => {
     const hostNode = hostName ? getHost(hostName) : null;
 
-    // Unregister from previous pending state if needed
     if (isWaitingForHostRef.current && hostName) {
       unregisterPendingPortal(hostName, teleportToHost);
       isWaitingForHostRef.current = false;
     }
 
-    // Perform initial teleportation
     teleportToHost();
 
-    // If host not available yet, register as pending
     if (hostName && !hostNode) {
       registerPendingPortal(hostName, teleportToHost);
       isWaitingForHostRef.current = true;

@@ -42,7 +42,6 @@ class PortalView(
         }
       } ?: this
 
-    // Add children to target
     for (child in children) {
       target.addView(child)
     }
