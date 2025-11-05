@@ -18,12 +18,7 @@ export default function App() {
             <NavigationContainer>
               <RootStack />
             </NavigationContainer>
-            <View
-              style={StyleSheet.absoluteFillObject}
-              pointerEvents="box-none"
-            >
-              <PortalHost name="overlay" />
-            </View>
+            <PortalHost name="overlay" style={StyleSheet.absoluteFillObject} />
           </PortalProvider>
         </GorhomPortalProvider>
       </GestureHandlerRootView>
