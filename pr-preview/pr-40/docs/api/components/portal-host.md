@@ -2,6 +2,10 @@
 
 `PortalHost` is a component that acts as an anchor for the portals. You can define multiple portal hosts in your app and use them to render different portals. Each portal host has a unique name that you can use to identify a necessary one among the others.
 
+View dimensions
+
+`PortalHost` is just another view, so make sure that you set the correct dimensions for it. Otherwise, the portal ***may*** not be rendered correctly, especially if `Portal` relies on a flex layout and host has zero (i. e. `0x0`) dimensions.
+
 ## Props[​](#props "Direct link to Props")
 
 ### `name`[​](#name "Direct link to name")
