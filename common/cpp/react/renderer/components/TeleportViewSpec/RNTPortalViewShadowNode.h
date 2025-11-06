@@ -24,7 +24,7 @@ namespace facebook::react {
 
     // Helper method to conditionally set dimensions from host
     void setDimensionsFromHost(Size hostSize) const {
-      printf("HostSize:: width - %f height - %f\n", hostSize.width, hostSize.height);
+      // printf("HostSize:: width - %f height - %f\n", hostSize.width, hostSize.height);
 
       setSize(Size(hostSize.width, hostSize.height));
     }
