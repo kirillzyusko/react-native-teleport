@@ -45,10 +45,8 @@ export default function App() {
     <SafeAreaProvider initialMetrics={initialWindowMetrics}>
       <GestureHandlerRootView style={styles.container}>
         <PortalProvider>
-          {/* Deeply nested <Teleport /> component goes here */}
-          <View style={StyleSheet.absoluteFillObject} pointerEvents="box-none">
-            <PortalHost name="overlay" />
-          </View>
+          <>{/* Deeply nested <Teleport /> component goes here */}</>
+          <PortalHost style={StyleSheet.absoluteFillObject} name="overlay" />
         </PortalProvider>
       </GestureHandlerRootView>
     </SafeAreaProvider>

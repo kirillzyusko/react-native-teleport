@@ -40,9 +40,7 @@ export default function App() {
     <SafeAreaProvider initialMetrics={initialWindowMetrics}>
       <PortalProvider>
         <RootStack />
-        <View style={StyleSheet.absoluteFillObject} pointerEvents="box-none">
-          <PortalHost name="overlay" />
-        </View>
+        <PortalHost style={StyleSheet.absoluteFillObject} name="overlay" />
       </PortalProvider>
     </SafeAreaProvider>
   );
