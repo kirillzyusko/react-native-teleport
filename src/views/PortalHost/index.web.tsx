@@ -2,7 +2,7 @@ import { memo, useEffect } from "react";
 import { usePortalRegistryContext } from "../../contexts/PortalRegistry";
 import type { PortalHostProps } from "../../types";
 
-function PortalHost({ name, children }: PortalHostProps) {
+function PortalHost({ name, children, style }: PortalHostProps) {
   const { registerHost } = usePortalRegistryContext();
 
   useEffect(() => {
@@ -12,16 +12,13 @@ function PortalHost({ name, children }: PortalHostProps) {
   }, [name, registerHost]);
 
   return (
-    <div style={styles.anchor} ref={(ref) => registerHost(name, ref)}>
+    <div
+      style={{ ...style, pointerEvents: "none" } as React.CSSProperties}
+      ref={(ref) => registerHost(name, ref)}
+    >
       {children}
     </div>
   );
 }
-
-const styles = {
-  anchor: {
-    display: "contents",
-  },
-};
 
 export default memo(PortalHost);
