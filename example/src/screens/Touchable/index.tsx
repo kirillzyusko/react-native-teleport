@@ -29,9 +29,7 @@ export default function GestureHandlerTouchableExample() {
           onPress={() => setPressed(false)}
         />
       </View>
-      <View style={styles.absolute}>
-        <PortalHost name="local" />
-      </View>
+      <PortalHost name="local" style={StyleSheet.absoluteFillObject} />
     </>
   );
 }
@@ -47,9 +45,6 @@ const styles = StyleSheet.create({
     height: 160,
     marginVertical: 20,
     backgroundColor: "blue",
-  },
-  absolute: {
-    position: "absolute",
   },
   wrapper: {
     flex: 0,

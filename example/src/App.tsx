@@ -1,4 +1,4 @@
-import { StyleSheet, View } from "react-native";
+import { StyleSheet } from "react-native";
 import { PortalHost, PortalProvider } from "react-native-teleport";
 import { PortalProvider as GorhomPortalProvider } from "@gorhom/portal";
 import {
@@ -18,12 +18,7 @@ export default function App() {
             <NavigationContainer>
               <RootStack />
             </NavigationContainer>
-            <View
-              style={StyleSheet.absoluteFillObject}
-              pointerEvents="box-none"
-            >
-              <PortalHost name="overlay" />
-            </View>
+            <PortalHost name="overlay" style={StyleSheet.absoluteFillObject} />
           </PortalProvider>
         </GorhomPortalProvider>
       </GestureHandlerRootView>

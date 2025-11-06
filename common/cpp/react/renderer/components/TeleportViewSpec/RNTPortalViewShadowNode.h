@@ -26,19 +26,7 @@ namespace facebook::react {
     void setDimensionsFromHost(Size hostSize) const {
       // printf("HostSize:: width - %f height - %f\n", hostSize.width, hostSize.height);
 
-      // Only set width if host has width
-      if (hostSize.width > 0) {
-        yogaNode_.style().setDimension(
-            yoga::Dimension::Width,
-            yoga::StyleSizeLength::points(hostSize.width));
-      }
-
-      // Only set height if host has height
-      if (hostSize.height > 0) {
-        yogaNode_.style().setDimension(
-            yoga::Dimension::Height,
-            yoga::StyleSizeLength::points(hostSize.height));
-      }
+      setSize(Size(hostSize.width, hostSize.height));
     }
   };
 

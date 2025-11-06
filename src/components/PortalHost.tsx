@@ -16,9 +16,7 @@ import PortalHost from "../views/PortalHost";
  * export default function App() {
  *   return (
  *     <PortalProvider>
- *       <View style={StyleSheet.absoluteFillObject} pointerEvents="box-none">
- *         <PortalHost name="overlay" />
- *       </View>
+ *        <PortalHost style={StyleSheet.absoluteFillObject} name="overlay" />
  *     </PortalProvider>
  *   );
  * }
@@ -26,7 +24,7 @@ import PortalHost from "../views/PortalHost";
  */
 const PortalHostComponent = ({ name, children, style }: PortalHostProps) => {
   return (
-    <PortalHost name={name} style={style}>
+    <PortalHost name={name} style={style} pointerEvents="box-none">
       {children}
     </PortalHost>
   );
