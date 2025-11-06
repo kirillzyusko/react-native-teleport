@@ -26,12 +26,7 @@ import PortalHost from "../views/PortalHost";
  */
 const PortalHostComponent = ({ name, children, style }: PortalHostProps) => {
   return (
-    <PortalHost
-      name={name}
-      style={style}
-      // TODO: set on native side?
-      pointerEvents="box-none"
-    >
+    <PortalHost name={name} style={style} pointerEvents="box-none">
       {children}
     </PortalHost>
   );
