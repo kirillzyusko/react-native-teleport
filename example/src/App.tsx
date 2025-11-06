@@ -1,4 +1,4 @@
-import { StyleSheet, View } from "react-native";
+import { StyleSheet } from "react-native";
 import { PortalHost, PortalProvider } from "react-native-teleport";
 import { PortalProvider as GorhomPortalProvider } from "@gorhom/portal";
 import {
