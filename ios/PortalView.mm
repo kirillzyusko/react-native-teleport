@@ -159,6 +159,12 @@ using namespace facebook::react;
     // of the hit view will return YES from -pointInside:withEvent:). See:
     //  - https://developer.apple.com/library/ios/qa/qa2013/qa1812.html
     for (UIView *subview in [_targetView.subviews reverseObjectEnumerator]) {
+      // Prevent circular hit-testing by checking if we're in the subview's hierarchy
+      if ([self isDescendantOfView:subview]) {
+        // Skip views that contain us to prevent cycles
+        continue;
+      }
+
       CGPoint convertedPoint = [subview convertPoint:point fromView:self];
       hitSubview = [subview hitTest:convertedPoint withEvent:event];
       if (hitSubview != nil) {
