@@ -2637,7 +2637,7 @@ PODS:
     - SocketRocket
     - Yoga
   - SocketRocket (0.7.1)
-  - Teleport (0.5.0):
+  - Teleport (0.5.1):
     - boost
     - DoubleConversion
     - fast_float
@@ -2664,9 +2664,9 @@ PODS:
     - ReactCommon/turbomodule/bridging
     - ReactCommon/turbomodule/core
     - SocketRocket
-    - Teleport/common (= 0.5.0)
+    - Teleport/common (= 0.5.1)
     - Yoga
-  - Teleport/common (0.5.0):
+  - Teleport/common (0.5.1):
     - boost
     - DoubleConversion
     - fast_float
@@ -3025,7 +3025,7 @@ SPEC CHECKSUMS:
   RNScreens: 0bbf16c074ae6bb1058a7bf2d1ae017f4306797c
   RNWorklets: ab618bf7d1c7fd2cb793b9f0f39c3e29274b3ebf
   SocketRocket: d4aabe649be1e368d1318fdf28a022d714d65748
-  Teleport: f7bef37765ff37b2e50a55718ac05111500375fe
+  Teleport: 58ac235ecfabf255bc5c0fa76ad80a78f6d1d0d0
   Yoga: b01392348aeea02064c21a2762a42893d82b60a7
 
 PODFILE CHECKSUM: fa8e39e99744a38fb613b9c3b11b26af576d7d44
