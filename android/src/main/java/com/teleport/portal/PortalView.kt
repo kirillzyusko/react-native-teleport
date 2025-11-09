@@ -70,20 +70,6 @@ class PortalView(
   private fun isTeleported(): Boolean = hostName != null && PortalRegistry.getHost(hostName) != null
 
   // region Children management
-  override fun getChildCount(): Int =
-    if (isTeleported()) {
-      PortalRegistry.getHost(hostName)?.childCount ?: 0
-    } else {
-      super.getChildCount()
-    }
-
-  override fun getChildAt(index: Int): View? =
-    if (isTeleported()) {
-      PortalRegistry.getHost(hostName)?.getChildAt(index)
-    } else {
-      super.getChildAt(index)
-    }
-
   override fun addView(
     child: View,
     index: Int,
@@ -98,7 +84,7 @@ class PortalView(
   override fun addView(
     child: View,
     index: Int,
-    params: ViewGroup.LayoutParams,
+    params: LayoutParams,
   ) {
     if (isTeleported()) {
       PortalRegistry.getHost(hostName)?.addView(child, index, params) ?: super.addView(child, index, params)
