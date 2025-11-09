@@ -16,24 +16,25 @@ class PortalView(
 
   fun setHostName(name: String?) {
     // Gather current children (logical if teleported, physical otherwise)
-    val children: List<View> = if (isTeleported()) {
-      val oldHost = hostName?.let { PortalRegistry.getHost(it) }
-      val temp = ownChildren.toList()
-      for (child in temp) {
-        oldHost?.removeView(child)
+    val children: List<View> =
+      if (isTeleported()) {
+        val oldHost = hostName?.let { PortalRegistry.getHost(it) }
+        val temp = ownChildren.toList()
+        for (child in temp) {
+          oldHost?.removeView(child)
+        }
+        ownChildren.clear()
+        temp
+      } else {
+        val temp = mutableListOf<View>()
+        val count = super.getChildCount()
+        for (i in count - 1 downTo 0) {
+          val child = super.getChildAt(i) ?: continue
+          temp.add(0, child)
+          super.removeViewAt(i)
+        }
+        temp
       }
-      ownChildren.clear()
-      temp
-    } else {
-      val temp = mutableListOf<View>()
-      val count = super.getChildCount()
-      for (i in count - 1 downTo 0) {
-        val child = super.getChildAt(i) ?: continue
-        temp.add(0, child)
-        super.removeViewAt(i)
-      }
-      temp
-    }
 
     if (isWaitingForHost) {
       hostName?.let { PortalRegistry.unregisterPendingPortal(it, this) }
@@ -42,21 +43,22 @@ class PortalView(
 
     hostName = name
 
-    val target: ViewGroup = hostName?.let { hostNameValue ->
-      val host = PortalRegistry.getHost(hostNameValue)
-      if (host != null) {
-        host
-      } else {
-        PortalRegistry.registerPendingPortal(hostNameValue, this)
-        isWaitingForHost = true
-        this
-      }
-    } ?: this
+    val target: ViewGroup =
+      hostName?.let { hostNameValue ->
+        val host = PortalRegistry.getHost(hostNameValue)
+        if (host != null) {
+          host
+        } else {
+          PortalRegistry.registerPendingPortal(hostNameValue, this)
+          isWaitingForHost = true
+          this
+        }
+      } ?: this
 
     // Add children to new target
     for (i in children.indices) {
       val child = children[i]
-      target.addView(child, if (target == this) i else -1)  // Append if to host, preserve index if to self
+      target.addView(child, if (target == this) i else -1) // Append if to host, preserve index if to self
     }
 
     // Track own children if teleported
