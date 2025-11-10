@@ -36,10 +36,10 @@ class PortalView(
         }
       } ?: this
 
-    // Add children to new target
     for (i in children.indices) {
       val child = children[i]
-      target.addView(child, if (target == this) i else -1) // Append if to host, preserve index if to self
+      // Append if to host, preserve index if to self
+      target.addView(child, if (target == this) i else -1)
     }
 
     // Track own children if teleported
