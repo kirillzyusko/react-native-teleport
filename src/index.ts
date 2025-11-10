@@ -1,4 +1,4 @@
-import TeleportModule from "./specs/NativeTeleport";
+import TeleportModule from "./modules/teleport";
 
 TeleportModule?.install();
 
