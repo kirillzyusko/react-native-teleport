@@ -12,6 +12,7 @@ on:
       - "example/**"
       - "e2e/**"
       - "src/**"
+      - "common/**"
   pull_request:
     branches:
       - main

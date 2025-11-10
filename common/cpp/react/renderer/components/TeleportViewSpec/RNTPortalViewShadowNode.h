@@ -26,7 +26,9 @@ namespace facebook::react {
     void setDimensionsFromHost(Size hostSize) const {
       // printf("HostSize:: width - %f height - %f\n", hostSize.width, hostSize.height);
 
-      setSize(Size(hostSize.width, hostSize.height));
+      if (hostSize.width != 0 && hostSize.height != 0) {
+        setSize(Size(hostSize.width, hostSize.height));
+      }
     }
   };
 
