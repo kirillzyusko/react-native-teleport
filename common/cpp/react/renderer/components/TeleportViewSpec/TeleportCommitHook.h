@@ -16,7 +16,7 @@ using namespace facebook::react;
 namespace teleport {
 
 class TeleportCommitHook : public UIManagerCommitHook {
-public:
+ public:
   TeleportCommitHook(const std::shared_ptr<UIManager> &uiManager);
 
   ~TeleportCommitHook() noexcept override;
@@ -31,7 +31,7 @@ public:
       RootShadowNode::Unshared const &newRootShadowNode)
     noexcept override;
     
-private:
+ private:
   std::shared_ptr<UIManager> uiManager_;
 };
 

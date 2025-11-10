@@ -8,12 +8,10 @@
 #include <mutex>
 #include <memory>
 
-namespace facebook::react
-{
+namespace facebook::react {
 
-  class PortalShadowRegistry
-  {
-  public:
+  class PortalShadowRegistry {
+   public:
     static PortalShadowRegistry &getInstance();
 
     void registerHost(const std::string &name, const LayoutableShadowNode *host);
@@ -25,7 +23,7 @@ namespace facebook::react
     void unregisterPortal(const ShadowNodeFamily *family);
     std::unordered_set<const ShadowNodeFamily *> getPortalFamilies() const;
 
-  private:
+   private:
     PortalShadowRegistry() = default;
     mutable std::mutex mutex_;
     std::unordered_map<std::string, const LayoutableShadowNode *> hosts_;

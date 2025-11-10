@@ -11,37 +11,30 @@
 
 using namespace facebook::react;
 
-namespace teleport
-{
+namespace teleport {
 
-  TeleportCommitHook::TeleportCommitHook(const std::shared_ptr<UIManager> &uiManager) : uiManager_(uiManager)
-  {
+  TeleportCommitHook::TeleportCommitHook(const std::shared_ptr<UIManager> &uiManager) : uiManager_(uiManager) {
     uiManager_->registerCommitHook(*this);
   }
 
-  TeleportCommitHook::~TeleportCommitHook() noexcept
-  {
+  TeleportCommitHook::~TeleportCommitHook() noexcept {
     uiManager_->unregisterCommitHook(*this);
   }
 
   RootShadowNode::Unshared TeleportCommitHook::shadowTreeWillCommit(
       ShadowTree const &,
       RootShadowNode::Shared const &oldRootShadowNode,
-      RootShadowNode::Unshared const &newRootShadowNode) noexcept
-  {
-    // Start with the new root
+      RootShadowNode::Unshared const &newRootShadowNode) noexcept {
     auto rootNode = newRootShadowNode;
 
     // Get all registered portal families
     auto portalFamilies = PortalShadowRegistry::getInstance().getPortalFamilies();
 
     // Iterate over each portal that needs size/position adjustment
-    for (const auto family : portalFamilies)
-    {
+    for (const auto family : portalFamilies) {
       auto newRoot = rootNode->cloneTree(
           *family,
-          [](ShadowNode const &oldShadowNode)
-          {
+          [](ShadowNode const &oldShadowNode) {
             // Clone the node
             auto clone = oldShadowNode.clone({});
 
@@ -50,12 +43,10 @@ namespace teleport
             auto &props = static_cast<const PortalViewProps &>(*clone->getProps());
 
             // If this portal has a hostName, apply size and position
-            if (!props.hostName.empty())
-            {
+            if (!props.hostName.empty()) {
               auto host = PortalShadowRegistry::getInstance().getHost(props.hostName);
 
-              if (host)
-              {
+              if (host) {
                 auto hostLayoutMetrics = host->getLayoutMetrics();
                 auto hostSize = hostLayoutMetrics.frame.size;
 
@@ -68,9 +59,7 @@ namespace teleport
                 layoutableNode->setPositionType(YGPositionTypeAbsolute);
 
                 // Only apply if host has valid (non-zero) size
-                if (hostSize.width > 0 && hostSize.height > 0)
-                {
-                  // Set size to match the host
+                if (hostSize.width > 0 && hostSize.height > 0) {
                   layoutableNode->setSize(hostSize);
                 }
               }
@@ -79,8 +68,7 @@ namespace teleport
             return clone;
           });
 
-      if (newRoot)
-      {
+      if (newRoot) {
         rootNode = std::static_pointer_cast<RootShadowNode>(newRoot);
       }
     }
