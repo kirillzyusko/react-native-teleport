@@ -15,26 +15,7 @@ class PortalView(
   private val ownChildren: MutableList<View> = ArrayList()
 
   fun setHostName(name: String?) {
-    // Gather current children (logical if teleported, physical otherwise)
-    val children: List<View> =
-      if (isTeleported()) {
-        val oldHost = hostName?.let { PortalRegistry.getHost(it) }
-        val temp = ownChildren.toList()
-        for (child in temp) {
-          oldHost?.removeView(child)
-        }
-        ownChildren.clear()
-        temp
-      } else {
-        val temp = mutableListOf<View>()
-        val count = super.getChildCount()
-        for (i in count - 1 downTo 0) {
-          val child = super.getChildAt(i) ?: continue
-          temp.add(0, child)
-          super.removeViewAt(i)
-        }
-        temp
-      }
+    val children = extractChildren()
 
     if (isWaitingForHost) {
       hostName?.let { PortalRegistry.unregisterPendingPortal(it, this) }
@@ -73,13 +54,7 @@ class PortalView(
     val host = PortalRegistry.getHost(hostName)
     if (host != null) {
       // Gather from self (physical, since waiting)
-      val children = mutableListOf<View>()
-      val count = super.getChildCount()
-      for (i in count - 1 downTo 0) {
-        val child = super.getChildAt(i) ?: continue
-        children.add(0, child)
-        super.removeViewAt(i)
-      }
+      val children = extractPhysicalChildren()
 
       for (child in children) {
         host.addView(child)
@@ -89,6 +64,41 @@ class PortalView(
   }
 
   private fun isTeleported(): Boolean = hostName != null && PortalRegistry.getHost(hostName) != null
+
+  private fun extractPhysicalChildren(): List<View> {
+    val children = mutableListOf<View>()
+    val count = super.getChildCount()
+    for (i in count - 1 downTo 0) {
+      val child = super.getChildAt(i) ?: continue
+      children.add(0, child)
+      super.removeViewAt(i)
+    }
+
+    return children
+  }
+
+  private fun extractTeleportedChildren(): List<View> {
+    val oldHost = hostName?.let { PortalRegistry.getHost(it) }
+    val temp = ownChildren.toList()
+    for (child in temp) {
+      oldHost?.removeView(child)
+    }
+    ownChildren.clear()
+
+    return temp
+  }
+
+  private fun extractChildren(): List<View> {
+    // Gather current children (logical if teleported, physical otherwise)
+    val children: List<View> =
+      if (isTeleported()) {
+        extractTeleportedChildren()
+      } else {
+        extractPhysicalChildren()
+      }
+
+    return children
+  }
 
   // region Children management
   override fun getChildCount(): Int =
@@ -177,7 +187,6 @@ class PortalView(
       val host = PortalRegistry.getHost(hostName)
       for (child in ownChildren) {
         host?.removeView(child)
-        // Optionally add back to self if needed: addView(child)
       }
       ownChildren.clear()
     }
