@@ -12,20 +12,14 @@ class PortalView(
 ) : ReactViewGroup(context) {
   private var hostName: String? = null
   private var isWaitingForHost = false
+  private val ownChildren: MutableList<View> = ArrayList()
 
   fun setHostName(name: String?) {
+    val children = extractChildren()
+
     if (isWaitingForHost) {
       hostName?.let { PortalRegistry.unregisterPendingPortal(it, this) }
       isWaitingForHost = false
-    }
-
-    // Gather children BEFORE updating hostName, since getChildCount() and getChildAt() depend on it
-    val children = mutableListOf<View>()
-    val count = childCount
-    for (i in count - 1 downTo 0) {
-      val child = getChildAt(i) ?: continue
-      children.add(0, child)
-      removeViewAt(i)
     }
 
     hostName = name
@@ -42,8 +36,15 @@ class PortalView(
         }
       } ?: this
 
-    for (child in children) {
-      target.addView(child)
+    for (i in children.indices) {
+      val child = children[i]
+      // Append if to host, preserve index if to self
+      target.addView(child, if (target == this) i else -1)
+    }
+
+    // Track own children if teleported
+    if (target != this) {
+      ownChildren.addAll(children)
     }
   }
 
@@ -52,34 +53,64 @@ class PortalView(
 
     val host = PortalRegistry.getHost(hostName)
     if (host != null) {
-      // Use super methods to get actual children from this view, not from the host
-      val children = mutableListOf<View>()
-      val count = super.getChildCount()
-      for (i in count - 1 downTo 0) {
-        val child = super.getChildAt(i) ?: continue
-        children.add(0, child)
-        super.removeViewAt(i)
-      }
+      // Gather from self (physical, since waiting)
+      val children = extractPhysicalChildren()
 
       for (child in children) {
         host.addView(child)
       }
+      ownChildren.addAll(children)
     }
   }
 
   private fun isTeleported(): Boolean = hostName != null && PortalRegistry.getHost(hostName) != null
 
+  private fun extractPhysicalChildren(): List<View> {
+    val children = mutableListOf<View>()
+    val count = super.getChildCount()
+    for (i in count - 1 downTo 0) {
+      val child = super.getChildAt(i) ?: continue
+      children.add(0, child)
+      super.removeViewAt(i)
+    }
+
+    return children
+  }
+
+  private fun extractTeleportedChildren(): List<View> {
+    val oldHost = hostName?.let { PortalRegistry.getHost(it) }
+    val temp = ownChildren.toList()
+    for (child in temp) {
+      oldHost?.removeView(child)
+    }
+    ownChildren.clear()
+
+    return temp
+  }
+
+  private fun extractChildren(): List<View> {
+    // Gather current children (logical if teleported, physical otherwise)
+    val children: List<View> =
+      if (isTeleported()) {
+        extractTeleportedChildren()
+      } else {
+        extractPhysicalChildren()
+      }
+
+    return children
+  }
+
   // region Children management
   override fun getChildCount(): Int =
     if (isTeleported()) {
-      PortalRegistry.getHost(hostName)?.childCount ?: 0
+      ownChildren.size
     } else {
       super.getChildCount()
     }
 
   override fun getChildAt(index: Int): View? =
     if (isTeleported()) {
-      PortalRegistry.getHost(hostName)?.getChildAt(index)
+      ownChildren.getOrNull(index)
     } else {
       super.getChildAt(index)
     }
@@ -89,7 +120,9 @@ class PortalView(
     index: Int,
   ) {
     if (isTeleported()) {
-      PortalRegistry.getHost(hostName)?.addView(child, index) ?: super.addView(child, index)
+      val host = PortalRegistry.getHost(hostName)
+      host?.addView(child, index)
+      ownChildren.add(index, child)
     } else {
       super.addView(child, index)
     }
@@ -98,10 +131,12 @@ class PortalView(
   override fun addView(
     child: View,
     index: Int,
-    params: ViewGroup.LayoutParams,
+    params: LayoutParams,
   ) {
     if (isTeleported()) {
-      PortalRegistry.getHost(hostName)?.addView(child, index, params) ?: super.addView(child, index, params)
+      val host = PortalRegistry.getHost(hostName)
+      host?.addView(child, index, params)
+      ownChildren.add(index, child)
     } else {
       super.addView(child, index, params)
     }
@@ -109,7 +144,9 @@ class PortalView(
 
   override fun removeView(view: View) {
     if (isTeleported()) {
-      PortalRegistry.getHost(hostName)?.removeView(view) ?: super.removeView(view)
+      val host = PortalRegistry.getHost(hostName)
+      host?.removeView(view)
+      ownChildren.remove(view)
     } else {
       super.removeView(view)
     }
@@ -117,7 +154,12 @@ class PortalView(
 
   override fun removeViewAt(index: Int) {
     if (isTeleported()) {
-      PortalRegistry.getHost(hostName)?.removeViewAt(index) ?: super.removeViewAt(index)
+      val host = PortalRegistry.getHost(hostName)
+      val view = ownChildren.getOrNull(index)
+      if (view != null) {
+        host?.removeView(view)
+        ownChildren.removeAt(index)
+      }
     } else {
       super.removeViewAt(index)
     }
@@ -140,6 +182,13 @@ class PortalView(
     if (isWaitingForHost) {
       hostName?.let { PortalRegistry.unregisterPendingPortal(it, this) }
       isWaitingForHost = false
+    }
+    if (isTeleported()) {
+      val host = PortalRegistry.getHost(hostName)
+      for (child in ownChildren) {
+        host?.removeView(child)
+      }
+      ownChildren.clear()
     }
   }
   // endregion
