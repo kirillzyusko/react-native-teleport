@@ -5,6 +5,12 @@
 namespace facebook::react
 {
 
+  PortalShadowRegistry &PortalShadowRegistry::getInstance()
+  {
+    static PortalShadowRegistry instance;
+    return instance;
+  }
+
   void PortalShadowRegistry::registerHost(
       const std::string &name,
       const LayoutableShadowNode *host)
@@ -43,7 +49,7 @@ namespace facebook::react
     portalFamilies_.erase(family);
   }
 
-  std::unordered_set<const ShadowNodeFamily*> PortalShadowRegistry::getPortalFamilies() const
+  std::unordered_set<const ShadowNodeFamily *> PortalShadowRegistry::getPortalFamilies() const
   {
     std::lock_guard<std::mutex> lock(mutex_);
     return portalFamilies_;

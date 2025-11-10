@@ -14,11 +14,7 @@ namespace facebook::react
   class PortalShadowRegistry
   {
   public:
-    static PortalShadowRegistry &getInstance()
-    {
-      static PortalShadowRegistry instance;
-      return instance;
-    }
+    static PortalShadowRegistry &getInstance();
 
     void registerHost(const std::string &name, const LayoutableShadowNode *host);
     void unregisterHost(const std::string &name);
