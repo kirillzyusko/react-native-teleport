@@ -8,37 +8,34 @@
 #include <react/renderer/core/ConcreteComponentDescriptor.h>
 #include <react/renderer/components/view/YogaLayoutableShadowNode.h>
 
-namespace facebook::react {
+namespace facebook::react
+{
 
   class PortalViewComponentDescriptor final
-      : public ConcreteComponentDescriptor<PortalViewShadowNode> {
-   public:
+      : public ConcreteComponentDescriptor<PortalViewShadowNode>
+  {
+  public:
     using ConcreteComponentDescriptor::ConcreteComponentDescriptor;
 
-    void adopt(ShadowNode &shadowNode) const override {
+    void adopt(ShadowNode &shadowNode) const override
+    {
       react_native_assert(dynamic_cast<PortalViewShadowNode *>(&shadowNode));
 
       auto &portalViewShadowNode = static_cast<PortalViewShadowNode &>(shadowNode);
       auto &props = static_cast<const PortalViewProps &>(*portalViewShadowNode.getProps());
 
-      // If this portal is teleported to a host, apply the host's layout constraints
-      if (!props.hostName.empty()) {
-        const LayoutableShadowNode *host =
-            PortalShadowRegistry::getInstance().getHost(props.hostName);
-
-        if (host) {
-          auto &yogaPortal = static_cast<YogaLayoutableShadowNode &>(portalViewShadowNode);
-
-          // Set position to absolute because:
-          // - when the view is teleported, we need to "free" its original space
-          // - we need to stretch the view beyond the parent layout constraints
-          yogaPortal.setPositionType(YGPositionTypeAbsolute);
-
-          auto hostLayoutMetrics = host->getLayoutMetrics();
-
-          // Update view dimensions
-          portalViewShadowNode.setDimensionsFromHost(hostLayoutMetrics.frame.size);
-        }
+      // Register this portal in the registry if it has a hostName
+      // The actual size/position adjustments will be applied in the commit hook
+      if (!props.hostName.empty())
+      {
+        PortalShadowRegistry::getInstance().registerPortal(
+            &portalViewShadowNode.getFamily());
+      }
+      else
+      {
+        // Unregister if hostName is empty (portal is not teleported)
+        PortalShadowRegistry::getInstance().unregisterPortal(
+            &portalViewShadowNode.getFamily());
       }
 
       ConcreteComponentDescriptor::adopt(shadowNode);
