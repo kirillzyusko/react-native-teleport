@@ -16,14 +16,14 @@
     "@gorhom/portal": "^1.0.14",
     "@lottiefiles/dotlottie-react": "^0.15.2",
     "@react-native-community/blur": "^4.4.1",
-    "@react-native/new-app-screen": "0.81.0",
+    "@react-native/new-app-screen": "0.81.5",
     "@react-navigation/elements": "^2.6.4",
     "@react-navigation/native": "^7.1.17",
     "@react-navigation/native-stack": "^7.3.26",
     "lottie-react-native": "^7.3.3",
     "react": "19.1.0",
     "react-dom": "19.1.0",
-    "react-native": "0.81.0",
+    "react-native": "0.81.5",
     "react-native-gesture-handler": "^2.28.0",
     "react-native-reanimated": "^4.1.3",
     "react-native-safe-area-context": "^5.5.2",
@@ -38,9 +38,9 @@
     "@react-native-community/cli": "20.0.0",
     "@react-native-community/cli-platform-android": "20.0.0",
     "@react-native-community/cli-platform-ios": "20.0.0",
-    "@react-native/babel-preset": "0.81.0",
-    "@react-native/metro-config": "0.81.0",
-    "@react-native/typescript-config": "0.81.0",
+    "@react-native/babel-preset": "0.81.5",
+    "@react-native/metro-config": "0.81.5",
+    "@react-native/typescript-config": "0.81.5",
     "@testing-library/react-native": "^13.3.3",
     "@types/react": "^19.1.0",
     "babel-loader": "^10.0.0",
@@ -56,6 +56,6 @@
     "webpack-dev-server": "^5.2.2"
   },
   "engines": {
-    "node": ">=18"
+    "node": ">=20"
   }
 }
