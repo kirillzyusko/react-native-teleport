@@ -65,7 +65,13 @@
     "subspec",
     "xcconfig",
     "SRCROOT",
-    "Layoutable"
+    "Layoutable",
+    "JNIEXPORT",
+    "jint",
+    "JNICALL",
+    "jhybriddata",
+    "jhybridobject",
+    "Lcom"
   ],
   "ignorePaths": [
     "node_modules",
