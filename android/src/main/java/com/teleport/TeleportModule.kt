@@ -10,12 +10,12 @@ import com.facebook.react.uimanager.common.UIManagerType
 
 @ReactModule(name = TeleportModule.NAME)
 class TeleportModule(reactContext: ReactApplicationContext) : NativeTeleportSpec(reactContext) {
-  /*@DoNotStrip
+  @DoNotStrip
   @Suppress("unused")
   private var mHybridData: HybridData = initHybrid()
 
   private external fun initHybrid(): HybridData
-  private external fun createCommitHook(fabricUIManager: FabricUIManager)*/
+  private external fun createCommitHook(fabricUIManager: FabricUIManager)
 
   override fun getName() = NAME
 
@@ -25,7 +25,7 @@ class TeleportModule(reactContext: ReactApplicationContext) : NativeTeleportSpec
         reactApplicationContext,
         UIManagerType.FABRIC
       ) as FabricUIManager
-    // createCommitHook(uiManager)
+    createCommitHook(uiManager)
   }
 
   companion object {
