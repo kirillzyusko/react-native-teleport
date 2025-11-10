@@ -2,7 +2,6 @@
 #include <react/renderer/scheduler/Scheduler.h>
 
 #include "TeleportModule.h"
-#include "TeleportJSI.h"
 
 namespace teleport
 {
@@ -21,8 +20,7 @@ namespace teleport
   {
     registerHybrid(
         {makeNativeMethod("initHybrid", TeleportModule::initHybrid),
-         makeNativeMethod("createCommitHook", TeleportModule::createCommitHook),
-         makeNativeMethod("getBindingsInstallerCxx", TeleportModule::getBindingsInstallerCxx)});
+         makeNativeMethod("createCommitHook", TeleportModule::createCommitHook)});
   }
 
   void TeleportModule::createCommitHook(jni::alias_ref<facebook::react::JFabricUIManager::javaobject> fabricUIManager)
@@ -35,13 +33,6 @@ namespace teleport
   jni::local_ref<TeleportModule::jhybriddata> TeleportModule::initHybrid(jni::alias_ref<jhybridobject> jThis)
   {
     return makeCxxInstance(jThis);
-  }
-
-  jni::local_ref<BindingsInstallerHolder::javaobject> TeleportModule::getBindingsInstallerCxx()
-  {
-    return jni::make_local(
-        BindingsInstallerHolder::newObjectCxxArgs([&](jsi::Runtime &runtime)
-                                                  { TeleportJSI::install(runtime, commitHook_); }));
   }
 
 }

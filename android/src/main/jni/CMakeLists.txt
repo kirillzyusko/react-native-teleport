@@ -37,6 +37,7 @@ target_include_directories(
   PUBLIC
   .
   ${LIB_COMMON_DIR}
+  ${LIB_COMMON_COMPONENTS_DIR}
   ${LIB_ANDROID_GENERATED_JNI_DIR}
   ${LIB_ANDROID_GENERATED_COMPONENTS_DIR}
   ${LIB_ANDROID_DIR}/main/jni
@@ -86,7 +87,7 @@ else()
 endif()
 
 target_include_directories(
- ${CMAKE_PROJECT_NAME}
- PUBLIC
- ${CMAKE_CURRENT_SOURCE_DIR}
+  ${CMAKE_PROJECT_NAME}
+  PUBLIC
+  ${CMAKE_CURRENT_SOURCE_DIR}
 )

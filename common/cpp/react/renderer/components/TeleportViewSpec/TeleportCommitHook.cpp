@@ -60,18 +60,17 @@ namespace teleport
                 {
                   auto hostLayoutMetrics = host->getLayoutMetrics();
                   auto hostSize = hostLayoutMetrics.frame.size;
+                  
+                  auto layoutableNode = std::dynamic_pointer_cast<YogaLayoutableShadowNode>(clone);
+                  
+                  // Set position to absolute to free the original space
+                  layoutableNode->setPositionType(YGPositionTypeAbsolute);
 
                   // Only apply if host has valid (non-zero) size
                   if (hostSize.width > 0 && hostSize.height > 0)
                   {
-                    auto layoutableNode = std::dynamic_pointer_cast<YogaLayoutableShadowNode>(clone);
-                    if (layoutableNode)
-                    {
-                      // Set position to absolute to free the original space
-                      layoutableNode->setPositionType(YGPositionTypeAbsolute);
                       // Set size to match the host
                       layoutableNode->setSize(hostSize);
-                    }
                   }
                 }
               }
