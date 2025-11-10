@@ -21,15 +21,6 @@ namespace facebook::react {
                                    PortalViewState> {
    public:
     using ConcreteViewShadowNode::ConcreteViewShadowNode;
-
-    // Helper method to conditionally set dimensions from host
-    void setDimensionsFromHost(Size hostSize) const {
-      // printf("HostSize:: width - %f height - %f\n", hostSize.width, hostSize.height);
-
-      if (hostSize.width != 0 && hostSize.height != 0) {
-        setSize(Size(hostSize.width, hostSize.height));
-      }
-    }
   };
 
 } // namespace facebook::react

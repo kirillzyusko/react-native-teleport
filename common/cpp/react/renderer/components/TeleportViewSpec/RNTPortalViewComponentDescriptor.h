@@ -8,17 +8,14 @@
 #include <react/renderer/core/ConcreteComponentDescriptor.h>
 #include <react/renderer/components/view/YogaLayoutableShadowNode.h>
 
-namespace facebook::react
-{
+namespace facebook::react {
 
   class PortalViewComponentDescriptor final
-      : public ConcreteComponentDescriptor<PortalViewShadowNode>
-  {
-  public:
+      : public ConcreteComponentDescriptor<PortalViewShadowNode> {
+   public:
     using ConcreteComponentDescriptor::ConcreteComponentDescriptor;
 
-    void adopt(ShadowNode &shadowNode) const override
-    {
+    void adopt(ShadowNode &shadowNode) const override {
       react_native_assert(dynamic_cast<PortalViewShadowNode *>(&shadowNode));
 
       auto &portalViewShadowNode = static_cast<PortalViewShadowNode &>(shadowNode);
@@ -26,13 +23,10 @@ namespace facebook::react
 
       // Register this portal in the registry if it has a hostName
       // The actual size/position adjustments will be applied in the commit hook
-      if (!props.hostName.empty())
-      {
+      if (!props.hostName.empty()) {
         PortalShadowRegistry::getInstance().registerPortal(
             &portalViewShadowNode.getFamily());
-      }
-      else
-      {
+      } else {
         // Unregister if hostName is empty (portal is not teleported)
         PortalShadowRegistry::getInstance().unregisterPortal(
             &portalViewShadowNode.getFamily());
