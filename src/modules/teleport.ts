@@ -1,1 +1,5 @@
-export { default } from "../specs/NativeTeleport";
+const TeleportModule = {
+  install: () => {},
+};
+
+export default TeleportModule;
