@@ -9,6 +9,8 @@
 #include "RNTPortalViewShadowNode.h"
 #include <react/renderer/components/view/YogaLayoutableShadowNode.h>
 
+#include <memory>
+
 using namespace facebook::react;
 
 namespace teleport {
@@ -76,4 +78,4 @@ namespace teleport {
     return std::const_pointer_cast<RootShadowNode>(rootNode);
   }
 
-}
+} // namespace teleport

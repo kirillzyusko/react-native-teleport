@@ -11,6 +11,8 @@
 #include <react/renderer/uimanager/UIManager.h>
 #include <react/renderer/uimanager/UIManagerCommitHook.h>
 
+#include <memory>
+
 using namespace facebook::react;
 
 namespace teleport {
@@ -30,9 +32,9 @@ class TeleportCommitHook : public UIManagerCommitHook {
       RootShadowNode::Shared const &oldRootShadowNode,
       RootShadowNode::Unshared const &newRootShadowNode)
     noexcept override;
-    
+
  private:
   std::shared_ptr<UIManager> uiManager_;
 };
 
-}
+} // namespace teleport
