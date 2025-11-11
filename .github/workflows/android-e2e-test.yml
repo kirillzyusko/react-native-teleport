@@ -109,6 +109,19 @@ jobs:
         run: |
           node e2e/snapshot-engine.js > server.log 2>&1 &
           echo $! > server.pid
+      - name: Create AVD and generate snapshot for caching
+        uses: reactivecircus/android-emulator-runner@v2.33.0
+        with:
+          api-level: ${{ matrix.devices.api }}
+          target: ${{ matrix.devices.target }}
+          ram-size: 4096M
+          disk-size: 10G
+          force-avd-creation: false
+          profile: pixel_2
+          emulator-options: -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -camera-back none
+          disable-animations: false
+          arch: x86_64
+          script: echo "Generated AVD snapshot for caching."
       - name: Run emulator and tests
         uses: reactivecircus/android-emulator-runner@v2.33.0
         with:
@@ -118,8 +131,10 @@ jobs:
           ram-size: "4096M"
           disk-size: "10G"
           disable-animations: false
+          force-avd-creation: false
           avd-name: e2e_emulator_${{ matrix.devices.api }}
           arch: x86_64
+          emulator-options: -no-snapshot-save -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -camera-back none
           script: |
             adb install -r -d -t example/android/app/build/outputs/apk/release/app-release.apk
             maestro --platform android test -e DEVICE="e2e_emulator_31" e2e/flows/* --format html ./e2e/reports/debug --debug-output ./e2e/reports/debug --flatten-debug-output
