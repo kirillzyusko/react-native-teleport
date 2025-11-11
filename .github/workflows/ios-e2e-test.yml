@@ -25,6 +25,7 @@ on:
       - "example/**"
       - "e2e/**"
       - "src/**"
+      - "common/**"
 
 jobs:
   build-ios:
