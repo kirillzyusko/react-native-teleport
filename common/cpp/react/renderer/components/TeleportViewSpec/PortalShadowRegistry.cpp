@@ -4,26 +4,23 @@
 
 namespace facebook::react {
 
-  void PortalShadowRegistry::registerHost(
-      const std::string &name,
-      const LayoutableShadowNode *host) {
-    std::lock_guard<std::mutex> lock(mutex_);
-    hosts_[name] = host;
-  }
-
   void PortalShadowRegistry::unregisterHost(const std::string &name) {
     std::lock_guard<std::mutex> lock(mutex_);
-    hosts_.erase(name);
+    hostSizes_.erase(name);
   }
 
-  const LayoutableShadowNode *PortalShadowRegistry::getHost(
-      const std::string &name) const {
+  void PortalShadowRegistry::updateHostSize(const std::string &name, Size size) {
     std::lock_guard<std::mutex> lock(mutex_);
-    auto it = hosts_.find(name);
-    if (it != hosts_.end()) {
+    hostSizes_[name] = size;
+  }
+
+  Size PortalShadowRegistry::getHostSize(const std::string &name) const {
+    std::lock_guard<std::mutex> lock(mutex_);
+    auto it = hostSizes_.find(name);
+    if (it != hostSizes_.end()) {
       return it->second;
     }
-    return nullptr;
+    return Size{0, 0};
   }
 
 } // namespace facebook::react

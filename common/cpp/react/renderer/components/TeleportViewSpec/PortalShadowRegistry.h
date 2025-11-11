@@ -1,6 +1,6 @@
 #pragma once
 
-#include <react/renderer/core/LayoutableShadowNode.h>
+#include <react/renderer/graphics/Geometry.h>
 
 #include <string>
 #include <unordered_map>
@@ -16,14 +16,14 @@ namespace facebook::react {
       return instance;
     }
 
-    void registerHost(const std::string &name, const LayoutableShadowNode *host);
     void unregisterHost(const std::string &name);
-    const LayoutableShadowNode *getHost(const std::string &name) const;
+    void updateHostSize(const std::string &name, Size size);
+    Size getHostSize(const std::string &name) const;
 
    private:
     PortalShadowRegistry() = default;
     mutable std::mutex mutex_;
-    std::unordered_map<std::string, const LayoutableShadowNode *> hosts_;
+    std::unordered_map<std::string, Size> hostSizes_;
   };
 
 } // namespace facebook::react
