@@ -33,7 +33,7 @@ namespace facebook::react {
         auto layoutMetrics = getLayoutMetrics();
         PortalShadowRegistry::getInstance().updateHostSize(
             props.name,
-            layoutMetrics.frame.size);
+            HostSize{layoutMetrics.frame.size.width, layoutMetrics.frame.size.height});
       }
     }
   };

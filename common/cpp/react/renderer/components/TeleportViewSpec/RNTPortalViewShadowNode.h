@@ -1,6 +1,7 @@
 #pragma once
 
 #include "RNTPortalViewState.h"
+#include "PortalShadowRegistry.h"
 
 #include <react/renderer/components/TeleportViewSpec/EventEmitters.h>
 #include <react/renderer/components/TeleportViewSpec/Props.h>
@@ -23,7 +24,7 @@ namespace facebook::react {
     using ConcreteViewShadowNode::ConcreteViewShadowNode;
 
     // Helper method to conditionally set dimensions from host
-    void setDimensionsFromHost(Size hostSize) const {
+    void setDimensionsFromHost(HostSize hostSize) const {
       // printf("HostSize:: width - %f height - %f\n", hostSize.width, hostSize.height);
 
       if (hostSize.width != 0 && hostSize.height != 0) {

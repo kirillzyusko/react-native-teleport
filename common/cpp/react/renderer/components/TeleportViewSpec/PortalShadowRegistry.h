@@ -1,7 +1,5 @@
 #pragma once
 
-#include <react/renderer/graphics/Geometry.h>
-
 #include <string>
 #include <unordered_map>
 #include <mutex>
@@ -9,21 +7,23 @@
 
 namespace facebook::react {
 
+  struct HostSize {
+    float width;
+    float height;
+  };
+
   class PortalShadowRegistry {
    public:
-    static PortalShadowRegistry &getInstance() {
-      static PortalShadowRegistry instance;
-      return instance;
-    }
+    static PortalShadowRegistry &getInstance();
 
     void unregisterHost(const std::string &name);
-    void updateHostSize(const std::string &name, Size size);
-    Size getHostSize(const std::string &name) const;
+    void updateHostSize(const std::string &name, HostSize size);
+    HostSize getHostSize(const std::string &name) const;
 
    private:
     PortalShadowRegistry() = default;
     mutable std::mutex mutex_;
-    std::unordered_map<std::string, Size> hostSizes_;
+    std::unordered_map<std::string, HostSize> hostSizes_;
   };
 
 } // namespace facebook::react
