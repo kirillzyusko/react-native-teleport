@@ -55,6 +55,18 @@ const imageLoaderConfiguration = {
     },
   },
 };
+const videoLoaderConfiguration = {
+  test: /\.(mp4|mov|webm)$/,
+  type: "asset/resource",
+  generator: {
+    filename: "media/[name][ext]",
+  },
+};
+const iconsLoader = {
+  test: /\.ttf$/,
+  loader: "url-loader",
+  include: path.resolve(__dirname, "node_modules/@react-native-vector-icons"),
+};
 
 module.exports = {
   ignoreWarnings: [
@@ -79,6 +91,10 @@ module.exports = {
       "react-native-teleport": teleportSrc,
       "react": path.resolve(__dirname, "node_modules/react"),
       "react-dom": path.resolve(__dirname, "node_modules/react-dom"),
+      "@react-native-vector-icons/get-image": path.resolve(
+        __dirname,
+        "empty.js",
+      ),
     },
   },
   module: {
@@ -86,6 +102,8 @@ module.exports = {
       babelLoaderConfiguration,
       imageLoaderConfiguration,
       svgLoaderConfiguration,
+      videoLoaderConfiguration,
+      iconsLoader,
     ],
   },
   plugins: [

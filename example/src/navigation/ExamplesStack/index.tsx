@@ -1,4 +1,7 @@
-import { createNativeStackNavigator } from "@react-navigation/native-stack";
+import {
+  createNativeStackNavigator,
+  type NativeStackNavigationProp,
+} from "@react-navigation/native-stack";
 
 import { ScreenNames } from "../../constants/screenNames";
 import GestureHandlerTouchableExample from "../../screens/Touchable";
@@ -10,6 +13,8 @@ import FlexibleStyles from "../../screens/FlexibleStyles";
 import BottomSheet from "../../screens/BottomSheet";
 import Messenger from "../../screens/Messenger";
 import PortalBeforeHost from "../../screens/PortalBeforeHost";
+import InstagramFeed from "../../screens/Instagram/feed";
+import InstagramReels from "../../screens/Instagram/reels";
 
 export type ExamplesStackParamList = {
   [ScreenNames.GESTURE_HANDLER_TOUCHABLE]: undefined;
@@ -21,6 +26,8 @@ export type ExamplesStackParamList = {
   [ScreenNames.BOTTOM_SHEET]: undefined;
   [ScreenNames.MESSENGER]: undefined;
   [ScreenNames.PORTAL_BEFORE_HOST]: undefined;
+  [ScreenNames.INSTAGRAM_FEED]: undefined;
+  [ScreenNames.INSTAGRAM_REELS]: undefined;
 };
 
 const Stack = createNativeStackNavigator<ExamplesStackParamList>();
@@ -52,6 +59,16 @@ const options = {
   },
   [ScreenNames.PORTAL_BEFORE_HOST]: {
     title: "Portal Before Host",
+  },
+  [ScreenNames.INSTAGRAM_FEED]: {
+    title: "Reels",
+    headerShown: false,
+  },
+  [ScreenNames.INSTAGRAM_REELS]: {
+    title: "Reels",
+    headerShown: false,
+    animation: "none" as const,
+    presentation: "transparentModal" as const,
   },
 };
 
@@ -102,7 +119,20 @@ const ExamplesStack = () => (
       name={ScreenNames.PORTAL_BEFORE_HOST}
       options={options[ScreenNames.PORTAL_BEFORE_HOST]}
     />
+    <Stack.Screen
+      component={InstagramFeed}
+      name={ScreenNames.INSTAGRAM_FEED}
+      options={options[ScreenNames.INSTAGRAM_FEED]}
+    />
+    <Stack.Screen
+      component={InstagramReels}
+      name={ScreenNames.INSTAGRAM_REELS}
+      options={options[ScreenNames.INSTAGRAM_REELS]}
+    />
   </Stack.Navigator>
 );
+
+export type ExamplesStackNavigation =
+  NativeStackNavigationProp<ExamplesStackParamList>;
 
 export default ExamplesStack;

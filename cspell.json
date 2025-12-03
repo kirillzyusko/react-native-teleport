@@ -65,7 +65,8 @@
     "subspec",
     "xcconfig",
     "SRCROOT",
-    "Layoutable"
+    "Layoutable",
+    "fontawesome"
   ],
   "ignorePaths": [
     "node_modules",
