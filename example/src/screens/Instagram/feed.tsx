@@ -20,6 +20,7 @@ import {
 } from "./constants";
 import { FontAwesome6 } from "@react-native-vector-icons/fontawesome6";
 import { type PostType, posts } from "./posts";
+import type { ExamplesStackNavigation } from "../../navigation/ExamplesStack";
 
 type PostProps = {
   post: PostType;
@@ -27,7 +28,7 @@ type PostProps = {
 };
 
 const Post = ({ post, active }: PostProps) => {
-  const navigation = useNavigation();
+  const navigation = useNavigation<ExamplesStackNavigation>();
   const progress = useRef(new Animated.Value(0)).current;
   const [destination, setDestination] = useState<string>();
   const videoRef = useRef<View>(null);
@@ -147,8 +148,6 @@ export default function Feed() {
 
   const onScroll = (e: ScrollEvent) => {
     const { y } = e.nativeEvent.contentOffset;
-
-    const idx = Math.floor(y / CARD_HEIGHT);
 
     // TODO: enable next video when you scrolled 50-60% of CURRENT video
     setIndex(Math.floor(y / (CARD_HEIGHT * 0.75)));

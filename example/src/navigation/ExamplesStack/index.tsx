@@ -1,4 +1,7 @@
-import { createNativeStackNavigator } from "@react-navigation/native-stack";
+import {
+  createNativeStackNavigator,
+  type NativeStackNavigationProp,
+} from "@react-navigation/native-stack";
 
 import { ScreenNames } from "../../constants/screenNames";
 import GestureHandlerTouchableExample from "../../screens/Touchable";
@@ -128,5 +131,8 @@ const ExamplesStack = () => (
     />
   </Stack.Navigator>
 );
+
+export type ExamplesStackNavigation =
+  NativeStackNavigationProp<ExamplesStackParamList>;
 
 export default ExamplesStack;

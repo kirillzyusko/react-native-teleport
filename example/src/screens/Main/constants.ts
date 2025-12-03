@@ -58,9 +58,9 @@ export const examples: Example[] = [
     icons: "🔄",
   },
   {
-    title: "Instagram Reels",
+    title: "Instagram Reels (WIP)",
     testID: "reels",
     info: ScreenNames.INSTAGRAM_FEED,
-    icons: "🎞",
+    icons: "🚧 🎞",
   },
 ];
