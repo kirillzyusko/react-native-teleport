@@ -21,13 +21,19 @@ function Screen1() {
               position: "absolute",
               right: 0,
             }}
+            testID="teleported_view"
           />
         </Portal>
       )}
-      <Button title="Unmount" onPress={() => setMounted(false)} />
-      <Button title="Mount" onPress={() => setMounted(true)} />
+      <Button
+        title="Unmount"
+        onPress={() => setMounted(false)}
+        testID="unmount"
+      />
+      <Button title="Mount" onPress={() => setMounted(true)} testID="mount" />
       <Button
         title="Go to next screen"
+        testID="go_next"
         onPress={() =>
           navigation.navigate(ScreenNames.NAVIGATION_LIFECYCLE_NESTED)
         }

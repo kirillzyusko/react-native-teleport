@@ -1,0 +1,58 @@
+appId: teleport.example
+---
+- launchApp
+- tapOn:
+    id: "navigation-lifecycle"
+- takeScreenshot:
+    path: e2e/NavigationScreen1Mounted
+- runScript:
+    file: ../scripts/compare-screenshots.js
+    env:
+      base: screenshots/${DEVICE}/NavigationScreen1Mounted
+      target: NavigationScreen1Mounted
+      diff: 0.3
+- assertTrue: ${output.matches}
+- tapOn:
+    id: "unmount"
+- takeScreenshot:
+    path: e2e/NavigationScreen1Unmounted
+- runScript:
+    file: ../scripts/compare-screenshots.js
+    env:
+      base: screenshots/${DEVICE}/NavigationScreen1Unmounted
+      target: NavigationScreen1Unmounted
+      diff: 0.3
+- assertTrue: ${output.matches}
+- tapOn:
+    id: "mount"
+- takeScreenshot:
+    path: e2e/NavigationScreen1Mounted
+- runScript:
+    file: ../scripts/compare-screenshots.js
+    env:
+      base: screenshots/${DEVICE}/NavigationScreen1Mounted
+      target: NavigationScreen1Mounted
+      diff: 0.3
+- assertTrue: ${output.matches}
+- tapOn:
+    id: "go_next"
+- takeScreenshot:
+    path: e2e/NavigationScreen2
+- runScript:
+    file: ../scripts/compare-screenshots.js
+    env:
+      base: screenshots/${DEVICE}/NavigationScreen2
+      target: NavigationScreen2
+      diff: 0.3
+- assertTrue: ${output.matches}
+- tapOn:
+    id: "go_back"
+- takeScreenshot:
+    path: e2e/NavigationScreen1Mounted
+- runScript:
+    file: ../scripts/compare-screenshots.js
+    env:
+      base: screenshots/${DEVICE}/NavigationScreen1Mounted
+      target: NavigationScreen1Mounted
+      diff: 0.3
+- assertTrue: ${output.matches}
