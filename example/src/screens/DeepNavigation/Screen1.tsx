@@ -3,10 +3,11 @@ import { Button, View } from "react-native";
 import { ScreenNames } from "../../constants/screenNames";
 import { Portal } from "react-native-teleport";
 import { useNavigation } from "@react-navigation/native";
+import type { ExamplesStackNavigation } from "../../navigation/ExamplesStack";
 
 function Screen1() {
   const [mounted, setMounted] = useState(true);
-  const navigation = useNavigation();
+  const navigation = useNavigation<ExamplesStackNavigation>();
 
   return (
     <View style={{ flex: 1 }}>
