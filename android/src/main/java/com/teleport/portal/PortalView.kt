@@ -183,13 +183,6 @@ class PortalView(
       hostName?.let { PortalRegistry.unregisterPendingPortal(it, this) }
       isWaitingForHost = false
     }
-    if (isTeleported()) {
-      val host = PortalRegistry.getHost(hostName)
-      for (child in ownChildren) {
-        host?.removeView(child)
-      }
-      ownChildren.clear()
-    }
   }
   // endregion
 }
