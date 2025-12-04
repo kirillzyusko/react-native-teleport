@@ -179,14 +179,4 @@ class PortalView(
     // When teleported, do nothing—children are handled by the host's accessibility tree
   }
   // endregion
-
-  // region Lifecycle
-  override fun onDetachedFromWindow() {
-    super.onDetachedFromWindow()
-    if (isWaitingForHost) {
-      hostName?.let { PortalRegistry.unregisterPendingPortal(it, this) }
-      isWaitingForHost = false
-    }
-  }
-  // endregion
 }
