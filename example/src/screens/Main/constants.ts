@@ -63,4 +63,10 @@ export const examples: Example[] = [
     info: ScreenNames.INSTAGRAM_FEED,
     icons: "🚧 🎞",
   },
+  {
+    title: "Navigation/Lifecycle",
+    testID: "navigation-lifecycle",
+    info: ScreenNames.NAVIGATION_LIFECYCLE,
+    icons: "♻️",
+  },
 ];

@@ -15,6 +15,8 @@ import Messenger from "../../screens/Messenger";
 import PortalBeforeHost from "../../screens/PortalBeforeHost";
 import InstagramFeed from "../../screens/Instagram/feed";
 import InstagramReels from "../../screens/Instagram/reels";
+import DeepNavigation from "../../screens/DeepNavigation/Screen1";
+import DeepNavigationNested from "../../screens/DeepNavigation/Screen2";
 
 export type ExamplesStackParamList = {
   [ScreenNames.GESTURE_HANDLER_TOUCHABLE]: undefined;
@@ -28,6 +30,8 @@ export type ExamplesStackParamList = {
   [ScreenNames.PORTAL_BEFORE_HOST]: undefined;
   [ScreenNames.INSTAGRAM_FEED]: undefined;
   [ScreenNames.INSTAGRAM_REELS]: undefined;
+  [ScreenNames.NAVIGATION_LIFECYCLE]: undefined;
+  [ScreenNames.NAVIGATION_LIFECYCLE_NESTED]: undefined;
 };
 
 const Stack = createNativeStackNavigator<ExamplesStackParamList>();
@@ -69,6 +73,12 @@ const options = {
     headerShown: false,
     animation: "none" as const,
     presentation: "transparentModal" as const,
+  },
+  [ScreenNames.NAVIGATION_LIFECYCLE]: {
+    title: "Navigation/Lifecycle",
+  },
+  [ScreenNames.NAVIGATION_LIFECYCLE_NESTED]: {
+    title: "Navigation/Lifecycle",
   },
 };
 
@@ -128,6 +138,16 @@ const ExamplesStack = () => (
       component={InstagramReels}
       name={ScreenNames.INSTAGRAM_REELS}
       options={options[ScreenNames.INSTAGRAM_REELS]}
+    />
+    <Stack.Screen
+      component={DeepNavigation}
+      name={ScreenNames.NAVIGATION_LIFECYCLE}
+      options={options[ScreenNames.NAVIGATION_LIFECYCLE]}
+    />
+    <Stack.Screen
+      component={DeepNavigationNested}
+      name={ScreenNames.NAVIGATION_LIFECYCLE_NESTED}
+      options={options[ScreenNames.NAVIGATION_LIFECYCLE_NESTED]}
     />
   </Stack.Navigator>
 );
