@@ -40,6 +40,24 @@ export const examples: Example[] = [
     icons: "💪",
   },
   {
+    title: "Portal Before Host",
+    testID: "portal_before_host",
+    info: ScreenNames.PORTAL_BEFORE_HOST,
+    icons: "🔄",
+  },
+  {
+    title: "Navigation/Lifecycle",
+    testID: "navigation-lifecycle",
+    info: ScreenNames.NAVIGATION_LIFECYCLE,
+    icons: "♻️",
+  },
+  {
+    title: "Instagram Reels (WIP)",
+    testID: "reels",
+    info: ScreenNames.INSTAGRAM_FEED,
+    icons: "🚧 🎞",
+  },
+  {
     title: "Bottom sheet",
     testID: "bottom_sheet",
     info: ScreenNames.BOTTOM_SHEET,
@@ -50,17 +68,5 @@ export const examples: Example[] = [
     testID: "messenger",
     info: ScreenNames.MESSENGER,
     icons: "💬",
-  },
-  {
-    title: "Portal Before Host",
-    testID: "portal_before_host",
-    info: ScreenNames.PORTAL_BEFORE_HOST,
-    icons: "🔄",
-  },
-  {
-    title: "Instagram Reels (WIP)",
-    testID: "reels",
-    info: ScreenNames.INSTAGRAM_FEED,
-    icons: "🚧 🎞",
   },
 ];
