@@ -11,6 +11,19 @@ function Screen1() {
 
   return (
     <View style={{ flex: 1 }}>
+      <Button
+        title="Unmount"
+        onPress={() => setMounted(false)}
+        testID="unmount"
+      />
+      <Button title="Mount" onPress={() => setMounted(true)} testID="mount" />
+      <Button
+        title="Go to next screen"
+        testID="go_next"
+        onPress={() =>
+          navigation.navigate(ScreenNames.NAVIGATION_LIFECYCLE_NESTED)
+        }
+      />
       {mounted && (
         <Portal hostName="overlay">
           <View
@@ -25,19 +38,6 @@ function Screen1() {
           />
         </Portal>
       )}
-      <Button
-        title="Unmount"
-        onPress={() => setMounted(false)}
-        testID="unmount"
-      />
-      <Button title="Mount" onPress={() => setMounted(true)} testID="mount" />
-      <Button
-        title="Go to next screen"
-        testID="go_next"
-        onPress={() =>
-          navigation.navigate(ScreenNames.NAVIGATION_LIFECYCLE_NESTED)
-        }
-      />
     </View>
   );
 }
