@@ -3,6 +3,7 @@ package com.teleport.portal
 import android.content.Context
 import android.view.View
 import android.view.ViewGroup
+import com.facebook.react.uimanager.PointerEvents
 import com.facebook.react.views.view.ReactViewGroup
 import com.teleport.global.PortalRegistry
 import java.util.ArrayList
@@ -13,6 +14,9 @@ class PortalView(
   private var hostName: String? = null
   private var isWaitingForHost = false
   private val ownChildren: MutableList<View> = ArrayList()
+
+  // pass through touches when no child is hit (matches iOS hitTest behavior)
+  override var pointerEvents = PointerEvents.BOX_NONE
 
   fun setHostName(name: String?) {
     val children = extractChildren()
