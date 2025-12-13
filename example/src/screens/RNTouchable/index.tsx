@@ -23,9 +23,7 @@ export default function RNTouchableExample() {
           onPress={() => setPressed(false)}
         />
       </View>
-      <View style={styles.absolute}>
-        <PortalHost name="local" />
-      </View>
+      <PortalHost name="local" style={StyleSheet.absoluteFillObject} />
     </>
   );
 }
