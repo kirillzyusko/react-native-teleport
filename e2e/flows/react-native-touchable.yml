@@ -1,26 +1,21 @@
 appId: teleport.example
 ---
-# don't test Android because Touchable on Android/Fabric is buggy: https://github.com/facebook/react-native/pull/51835
-- runFlow:
-    when:
-      true: ${maestro.platform == 'ios' || maestro.platform == 'web'}
-    commands:
-      - launchApp
-      - tapOn:
-          id: "react_native_touchable"
-      - assertVisible:
-          id: "touchable"
-      - tapOn:
-          id: "touchable"
-      - assertVisible: "OK"
-      - tapOn: "OK"
-      - tapOn: "Move to portal"
-      - tapOn:
-          point: "10%,15%"
-      - assertVisible: "OK"
-      - tapOn: "OK"
-      - tapOn: "Move back"
-      - tapOn:
-          id: "touchable"
-      - assertVisible: "OK"
-      - tapOn: "OK"
+- launchApp
+- tapOn:
+    id: "react_native_touchable"
+- assertVisible:
+    id: "touchable"
+- tapOn:
+    id: "touchable"
+- assertVisible: "OK"
+- tapOn: "OK"
+- tapOn: "Move to portal"
+- tapOn:
+    point: "10%,15%"
+- assertVisible: "OK"
+- tapOn: "OK"
+- tapOn: "Move back"
+- tapOn:
+    id: "touchable"
+- assertVisible: "OK"
+- tapOn: "OK"
