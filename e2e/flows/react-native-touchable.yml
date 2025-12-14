@@ -1,9 +1,6 @@
 appId: teleport.example
 ---
-# don't test Android because Touchable on Android/Fabric is buggy: https://github.com/facebook/react-native/pull/51835
 - runFlow:
-    when:
-      true: ${maestro.platform == 'ios' || maestro.platform == 'web'}
     commands:
       - launchApp
       - tapOn:
