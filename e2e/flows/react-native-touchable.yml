@@ -1,23 +1,20 @@
 appId: teleport.example
 ---
-- runFlow:
-    commands:
-      - launchApp
-      - tapOn:
-          id: "react_native_touchable"
-      - assertVisible:
-          id: "touchable"
-      - tapOn:
-          id: "touchable"
-      - assertVisible: "OK"
-      - tapOn: "OK"
-      - tapOn: "Move to portal"
-      - tapOn:
-          point: "10%,15%"
-      - assertVisible: "OK"
-      - tapOn: "OK"
-      - tapOn: "Move back"
-      - tapOn:
-          id: "touchable"
-      - assertVisible: "OK"
-      - tapOn: "OK"
+- tapOn:
+    id: "react_native_touchable"
+- assertVisible:
+    id: "touchable"
+- tapOn:
+    id: "touchable"
+- assertVisible: "OK"
+- tapOn: "OK"
+- tapOn: "Move to portal"
+- tapOn:
+    point: "10%,15%"
+- assertVisible: "OK"
+- tapOn: "OK"
+- tapOn: "Move back"
+- tapOn:
+    id: "touchable"
+- assertVisible: "OK"
+- tapOn: "OK"
