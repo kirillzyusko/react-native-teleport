@@ -1,5 +1,6 @@
 appId: teleport.example
 ---
+- launchApp
 - tapOn:
     id: "react_native_touchable"
 - assertVisible:
