@@ -9,7 +9,7 @@ import type { PortalProps } from "../types";
  * This is useful when you need a view to visually “break out” of its parent container (for example: modals, toasts, floating UI, popovers).
  *
  * @category components
- * @param hostName - The name of the portal host. It's used to identify the host where the content should be rendered.
+ * @param hostName - The `name` of the `PortalHost`. It's used to identify the host where the content should be rendered.
  * @param name - The name of the portal. It's used to identify the portal.
  * @param children - The content that should be rendered in the portal.
  * @example
