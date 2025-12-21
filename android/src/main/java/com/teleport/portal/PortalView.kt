@@ -15,9 +15,6 @@ class PortalView(
   private var isWaitingForHost = false
   private val ownChildren: MutableList<View> = ArrayList()
 
-  // pass through touches when no child is hit (matches iOS hitTest behavior)
-  override var pointerEvents = PointerEvents.BOX_NONE
-
   fun setHostName(name: String?) {
     val children = extractChildren()
 

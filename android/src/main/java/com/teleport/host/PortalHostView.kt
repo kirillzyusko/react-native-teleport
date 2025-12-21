@@ -10,8 +10,6 @@ class PortalHostView(
 ) : ReactViewGroup(context) {
   private var name: String? = null
 
-  override var pointerEvents = PointerEvents.BOX_NONE
-
   fun setName(newName: String?) {
     if (name == newName) return
 

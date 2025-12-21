@@ -8,10 +8,12 @@ import com.facebook.react.viewmanagers.PortalHostViewManagerDelegate
 import com.facebook.react.viewmanagers.PortalHostViewManagerInterface
 import com.facebook.react.views.view.ReactViewGroup
 import com.facebook.react.views.view.ReactViewManager
+import com.facebook.react.uimanager.PointerEvents
+import com.teleport.util.AbstractBoxNoneReactViewManager
 
 @ReactModule(name = PortalHostViewManager.NAME)
 class PortalHostViewManager :
-  ReactViewManager(),
+  AbstractBoxNoneReactViewManager(),
   PortalHostViewManagerInterface<ReactViewGroup> {
   private val delegate = PortalHostViewManagerDelegate(this)
 
@@ -19,7 +21,8 @@ class PortalHostViewManager :
 
   override fun getDelegate(): ViewManagerDelegate<ReactViewGroup> = delegate
 
-  override fun createViewInstance(context: ThemedReactContext): ReactViewGroup = PortalHostView(context)
+  override fun createTeleportView(context: ThemedReactContext): ReactViewGroup =
+      PortalHostView(context)
 
   @ReactProp(name = "name")
   override fun setName(
