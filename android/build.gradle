@@ -75,3 +75,20 @@ dependencies {
   implementation "com.facebook.react:react-android"
   implementation "org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version"
 }
+
+afterEvaluate {
+  def cfg =
+    configurations.findByName("debugCompileClasspath") ?:
+    configurations.findByName("releaseCompileClasspath")
+
+  def comp = cfg.incoming.resolutionResult.allComponents.find { c ->
+    def id = c.moduleVersion
+    id != null && id.group == "com.facebook.react" && id.name == "react-android"
+  }
+
+  def rnVersion = comp?.moduleVersion?.version ?: "0.0.0"
+  def rnMinor = rnVersion == "0.0.0" ? 0 : (rnVersion.tokenize('.')[1] as int)
+
+  android.sourceSets.main.java.srcDirs += (rnMinor <= 80 ? "src/lt081/java" : "src/gte081/java")
+  println("Teleport source set selected for RN ${rnVersion}: " + (rnMinor <= 80 ? "Pre RN80" : "Post RN80"))
+}
