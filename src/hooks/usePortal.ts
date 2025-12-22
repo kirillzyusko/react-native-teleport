@@ -24,7 +24,7 @@ export default function usePortal(hostName: string = "root") {
 
   return {
     /**
-     * Remove portal from host container. Subsequent re-renders will not resurrect portal,
+     * Remove portal from host container. Subsequent re-renders will not restore portal,
      * but if you mount a new portal with the same name it will be shown (i. e. hook doesn't
      * prevent new portal from being added).
      *

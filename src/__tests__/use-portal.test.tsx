@@ -71,7 +71,7 @@ describe("`usePortal` functional spec", () => {
     expect(screen.queryByTestId("portal-1")).not.toBeOnTheScreen();
   });
 
-  it("re-renders shouldn't resurrect portal after imperative removal", () => {
+  it("re-renders shouldn't restore portal after imperative removal", () => {
     render(
       <PortalProvider>
         <Hook />

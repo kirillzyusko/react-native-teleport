@@ -7,6 +7,14 @@ keywords:
 
 # Portal
 
+`Portal` is a component that moves its children to a different place in the native view hierarchy and preserves the react tree structure.
+
+:::warning View layout
+When a `Portal` is teleported to a new host, it automatically recalculates its layout using the host’s dimensions and **fills the entire available space by default**.
+
+You **do not need to specify any layout styles** (such as `flex: 1`) for this to work - the size is set internally when the portal is attached to the new host.
+:::
+
 ## Props
 
 ### `name`
@@ -15,7 +23,7 @@ The name of the portal. It's used to identify the portal in the context of the p
 
 ### `hostName`
 
-The name of the portal host. It's used to identify the host where the content should be rendered.
+The `name` of the `PortalHost`. It's used to identify the host where the content should be rendered.
 
 ### `style`
 
