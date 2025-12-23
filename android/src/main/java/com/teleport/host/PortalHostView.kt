@@ -1,7 +1,6 @@
 package com.teleport.host
 
 import android.content.Context
-import com.facebook.react.uimanager.PointerEvents
 import com.facebook.react.views.view.ReactViewGroup
 import com.teleport.global.PortalRegistry
 

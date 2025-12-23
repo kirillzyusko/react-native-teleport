@@ -3,7 +3,6 @@ package com.teleport.portal
 import android.content.Context
 import android.view.View
 import android.view.ViewGroup
-import com.facebook.react.uimanager.PointerEvents
 import com.facebook.react.views.view.ReactViewGroup
 import com.teleport.global.PortalRegistry
 import java.util.ArrayList
