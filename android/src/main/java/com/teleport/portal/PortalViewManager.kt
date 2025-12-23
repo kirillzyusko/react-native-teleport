@@ -8,11 +8,11 @@ import com.facebook.react.viewmanagers.PortalViewManagerDelegate
 import com.facebook.react.viewmanagers.PortalViewManagerInterface
 import com.facebook.react.views.view.ReactViewGroup
 import com.facebook.react.views.view.ReactViewManager
-import com.teleport.util.AbstractBoxNoneReactViewManager
+import com.teleport.util.TeleportViewManager
 
 @ReactModule(name = PortalViewManager.NAME)
 class PortalViewManager :
-  AbstractBoxNoneReactViewManager(),
+  TeleportViewManager(),
   PortalViewManagerInterface<ReactViewGroup> {
 
   private val delegate = PortalViewManagerDelegate(this)

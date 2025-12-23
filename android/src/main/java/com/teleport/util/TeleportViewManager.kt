@@ -4,7 +4,7 @@ import com.facebook.react.uimanager.ThemedReactContext
 import com.facebook.react.views.view.ReactViewGroup
 import com.facebook.react.views.view.ReactViewManager
 
-abstract class AbstractBoxNoneReactViewManager : ReactViewManager() {
+abstract class TeleportViewManager : ReactViewManager() {
 
   protected abstract fun createTeleportView(context: ThemedReactContext): ReactViewGroup
 
