@@ -14,7 +14,6 @@ import com.teleport.util.TeleportViewManager
 class PortalViewManager :
   TeleportViewManager(),
   PortalViewManagerInterface<ReactViewGroup> {
-
   private val delegate = PortalViewManagerDelegate(this)
 
   override fun getName(): String = NAME
