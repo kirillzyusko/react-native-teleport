@@ -1,4 +1,4 @@
-package com.teleport.util
+package com.teleport.managers
 
 import com.facebook.react.uimanager.ThemedReactContext
 import com.facebook.react.views.view.ReactViewGroup
