@@ -1,7 +1,6 @@
 package com.teleport.host
 
 import android.content.Context
-import com.facebook.react.uimanager.PointerEvents
 import com.facebook.react.views.view.ReactViewGroup
 import com.teleport.global.PortalRegistry
 
@@ -9,8 +8,6 @@ class PortalHostView(
   context: Context?,
 ) : ReactViewGroup(context) {
   private var name: String? = null
-
-  override var pointerEvents = PointerEvents.BOX_NONE
 
   fun setName(newName: String?) {
     if (name == newName) return
