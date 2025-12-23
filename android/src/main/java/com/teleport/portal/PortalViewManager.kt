@@ -7,7 +7,7 @@ import com.facebook.react.uimanager.annotations.ReactProp
 import com.facebook.react.viewmanagers.PortalViewManagerDelegate
 import com.facebook.react.viewmanagers.PortalViewManagerInterface
 import com.facebook.react.views.view.ReactViewGroup
-import com.teleport.util.TeleportViewManager
+import com.teleport.managers.TeleportViewManager
 
 @ReactModule(name = PortalViewManager.NAME)
 class PortalViewManager :
