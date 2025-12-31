@@ -3,11 +3,19 @@ import name from "./app.json";
 import App from "./src/App";
 
 // Generate the required CSS
-import iconFont from "@react-native-vector-icons/fontawesome6/fonts/FontAwesome6_Regular.ttf";
-const iconFontStyles = `@font-face {
-  src: url(${iconFont});
+import iconFontRegular from "@react-native-vector-icons/fontawesome6/fonts/FontAwesome6_Regular.ttf";
+import iconFontSolid from "@react-native-vector-icons/fontawesome6/fonts/FontAwesome6_Solid.ttf";
+const iconFontStyles = `
+@font-face {
+  src: url(${iconFontRegular});
   font-family: FontAwesome6Free-Regular;
-}`;
+}
+
+@font-face {
+  src: url(${iconFontSolid});
+  font-family: FontAwesome6Free-Solid;
+}
+`;
 
 // Create a stylesheet
 const style = document.createElement("style");

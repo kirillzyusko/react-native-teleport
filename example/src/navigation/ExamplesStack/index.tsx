@@ -13,8 +13,8 @@ import FlexibleStyles from "../../screens/FlexibleStyles";
 import BottomSheet from "../../screens/BottomSheet";
 import Messenger from "../../screens/Messenger";
 import PortalBeforeHost from "../../screens/PortalBeforeHost";
-import InstagramFeed from "../../screens/Instagram/feed";
-import InstagramReels from "../../screens/Instagram/reels";
+import InstagramFeed from "../../screens/Instagram/Feed";
+import InstagramReels from "../../screens/Instagram/Reels";
 import DeepNavigation from "../../screens/DeepNavigation/Screen1";
 import DeepNavigationNested from "../../screens/DeepNavigation/Screen2";
 
