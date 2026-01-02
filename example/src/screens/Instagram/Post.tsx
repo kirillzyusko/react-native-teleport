@@ -20,6 +20,7 @@ import Reanimated, {
   interpolate,
   useAnimatedStyle,
 } from "react-native-reanimated";
+import useMeasure from "../../hooks/useMeasure";
 
 type PostProps = {
   post: PostType;
@@ -30,6 +31,7 @@ const Post = ({ post, active }: PostProps) => {
   const navigation = useNavigation<ExamplesStackNavigation>();
   const { id, destination, setId, y, progress, goToReels } = useTransition();
   const videoRef = useRef<View>(null);
+  const measure = useMeasure(videoRef);
 
   const onPress = () => {
     if (post.photo) {
@@ -37,8 +39,7 @@ const Post = ({ post, active }: PostProps) => {
       return;
     }
     setId(post.id);
-    // @ts-expect-error I don't know what's wrong with types here
-    videoRef.current?.measureInWindow((_x: number, _y: number) => {
+    measure((_x: number, _y: number) => {
       navigation.navigate(ScreenNames.INSTAGRAM_REELS, { post });
       goToReels(_y);
     });

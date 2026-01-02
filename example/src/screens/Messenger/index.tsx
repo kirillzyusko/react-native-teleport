@@ -3,6 +3,7 @@ import { useRef, useState } from "react";
 import { View, Text, ScrollView, Pressable } from "react-native";
 import BlurView from "../../components/BlurView";
 import { Portal } from "react-native-teleport";
+import useMeasure from "../../hooks/useMeasure";
 
 const messages = [
   { text: "Hello, how are you", sender: true },
@@ -49,6 +50,7 @@ export default function Messenger() {
   const [teleport, setTeleported] = useState(false);
   const [style, setStyle] = useState({ paddingTop: 0 });
   const [blur, setBlur] = useState(false);
+  const measure = useMeasure(viewRef);
 
   const handleClick = () => {
     if (blur) {
@@ -62,8 +64,7 @@ export default function Messenger() {
     }
     clearTimeout(timeoutId.current);
     setBlur(true);
-    // @ts-expect-error I don't know what's wrong with types here
-    viewRef.current?.measureInWindow((_x: number, y: number) => {
+    measure((_x: number, y: number) => {
       setTeleported(true);
       setStyle({
         paddingTop: y,
