@@ -22,7 +22,6 @@ const SPRING_CONFIG = { mass: 3, damping: 500, stiffness: 1000 };
 // TODO: fix bugs
 // - add reels scrolling (need ExpandedReel view)
 // - if you scrolled down and then press back button - we need to animate opacity
-// - header appearance on web (video just overlaps it, but we can not use Portal, because transparentModal messes everything up)
 export const useTransition = create<Transition>((set, get) => ({
   destination: undefined,
   id: undefined,
