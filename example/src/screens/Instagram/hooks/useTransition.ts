@@ -20,8 +20,8 @@ interface Transition {
 const SPRING_CONFIG = { mass: 3, damping: 500, stiffness: 1000 };
 
 // TODO: fix bugs
-// - add reels scrolling (need ExpandedReel view)
 // - if you scrolled down and then press back button - we need to animate opacity
+// - on Android icons on full screen reels are not animating (same problem as we had with Header)
 export const useTransition = create<Transition>((set, get) => ({
   destination: undefined,
   id: undefined,
