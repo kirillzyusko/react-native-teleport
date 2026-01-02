@@ -20,7 +20,6 @@ interface Transition {
 const SPRING_CONFIG = { mass: 3, damping: 500, stiffness: 1000 };
 
 // TODO: fix bugs
-// - fix "y" jumps on Android
 // - add reels scrolling (need ExpandedReel view)
 // - if you scrolled down and then press back button - we need to animate opacity
 // - header appearance on web (video just overlaps it, but we can not use Portal, because transparentModal messes everything up)
