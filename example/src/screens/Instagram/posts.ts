@@ -22,10 +22,10 @@ export const posts: PostType[] = [
   {
     id: 2,
     author: "kirillzyusko",
-    text: "Beautiful autumn",
+    text: "Mountains and lake",
     likes: 271,
     comments: 96,
-    video: require("./videos/autumn.mp4"),
+    photo: "https://images.pexels.com/photos/1526713/pexels-photo-1526713.jpeg",
     date: "28 October",
   },
   {
@@ -40,10 +40,10 @@ export const posts: PostType[] = [
   {
     id: 4,
     author: "kirillzyusko",
-    text: "Mountains and lake",
+    text: "Beautiful autumn",
     likes: 65,
     comments: 14,
-    photo: "https://images.pexels.com/photos/1526713/pexels-photo-1526713.jpeg",
+    video: require("./videos/autumn.mp4"),
     date: "26 October",
   },
   {

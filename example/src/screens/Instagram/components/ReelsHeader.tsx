@@ -1,22 +1,39 @@
-import { View, Text, TouchableOpacity, StyleSheet } from "react-native";
+import {
+  Animated,
+  View,
+  Text,
+  TouchableOpacity,
+  StyleSheet,
+} from "react-native";
 import { FontAwesome6 } from "@react-native-vector-icons/fontawesome6";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useNavigation } from "@react-navigation/native";
+import { useTransition } from "../hooks/useTransition";
 
 function ReelsHeader() {
   const insets = useSafeAreaInsets();
   const navigation = useNavigation();
+  const { goToFeed, progress, y } = useTransition();
 
   const onGoBack = () => {
-    navigation.goBack();
+    goToFeed(navigation.goBack);
   };
 
   return (
-    <View
+    <Animated.View
       style={{
         position: "absolute",
         paddingTop: insets.top,
         width: "100%",
+        opacity: progress,
+        transform: [
+          {
+            translateY: progress.interpolate({
+              inputRange: [0, 1],
+              outputRange: [y, 0],
+            }),
+          },
+        ],
       }}
     >
       <View style={styles.header}>
@@ -30,7 +47,7 @@ function ReelsHeader() {
           />
         </TouchableOpacity>
       </View>
-    </View>
+    </Animated.View>
   );
 }
 
@@ -49,7 +66,7 @@ const styles = StyleSheet.create({
     fontSize: 20,
   },
   back: {
-    color: "white"
+    color: "white",
   },
 });
 
