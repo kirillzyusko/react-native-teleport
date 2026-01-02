@@ -65,11 +65,9 @@ const options = {
     title: "Portal Before Host",
   },
   [ScreenNames.INSTAGRAM_FEED]: {
-    title: "Reels",
     headerShown: false,
   },
   [ScreenNames.INSTAGRAM_REELS]: {
-    title: "Reels",
     headerShown: false,
     animation: "none" as const,
     presentation: "transparentModal" as const,
