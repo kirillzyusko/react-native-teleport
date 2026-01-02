@@ -1,6 +1,6 @@
 import { View, StyleSheet, Image } from "react-native";
 import type { PostType } from "./posts";
-import Video from "react-native-video";
+import Video, { ViewType } from "react-native-video";
 import type { ExamplesStackNavigation } from "../../navigation/ExamplesStack";
 import { useNavigation } from "@react-navigation/native";
 import { useRef } from "react";
@@ -79,6 +79,7 @@ const Post = ({ post, active }: PostProps) => {
                   paused={!active}
                   controls={false}
                   resizeMode="cover"
+                  viewType={ViewType.TEXTURE}
                 />
               )}
               {post.photo && (

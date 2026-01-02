@@ -21,7 +21,6 @@ const SPRING_CONFIG = { mass: 3, damping: 500, stiffness: 1000 };
 
 // TODO: fix bugs
 // - fix "y" jumps on Android
-// - why on Android video becomes black for a fraction of a second? Happens only after teleportation into destination? Timing issue (wrap in setTimeout?) Layout issue? Pausing/resetting issue? Xiaomi API 28 still have issue, looks like it has been fixed on real devices starting from API 29+ I can not reproduce issue on Pixel 7 Pro Android 16
 // - add reels scrolling (need ExpandedReel view)
 // - if you scrolled down and then press back button - we need to animate opacity
 // - header appearance on web (video just overlaps it, but we can not use Portal, because transparentModal messes everything up)
