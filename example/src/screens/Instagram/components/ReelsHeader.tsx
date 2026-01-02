@@ -1,4 +1,10 @@
-import { View, Text, TouchableOpacity, StyleSheet } from "react-native";
+import {
+  View,
+  Text,
+  TouchableOpacity,
+  StyleSheet,
+  Platform,
+} from "react-native";
 import { FontAwesome6 } from "@react-native-vector-icons/fontawesome6";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useNavigation } from "@react-navigation/native";
@@ -7,6 +13,14 @@ import Reanimated, {
   interpolate,
   useAnimatedStyle,
 } from "react-native-reanimated";
+import { Portal } from "react-native-teleport";
+
+// iOS can draw header on top of video because we use specific `presentation="transparentModal"`
+// for other platforms draw on top of everything manually
+const destination = Platform.select({
+  ios: undefined,
+  default: "root",
+});
 
 function ReelsHeader() {
   const insets = useSafeAreaInsets();
@@ -30,27 +44,28 @@ function ReelsHeader() {
   );
 
   return (
-    <Reanimated.View
-      style={[
-        styles.container,
-        {
-          paddingTop: insets.top,
-        },
-        style,
-      ]}
-    >
-      <View style={styles.header}>
-        <Text style={styles.title}>Reels</Text>
-        <TouchableOpacity onPress={onGoBack}>
-          <FontAwesome6
-            name="chevron-left"
-            iconStyle="solid"
-            size={22}
-            style={styles.back}
-          />
-        </TouchableOpacity>
-      </View>
-    </Reanimated.View>
+    <Portal hostName={destination} style={styles.container}>
+      <Reanimated.View
+        style={[
+          {
+            paddingTop: insets.top,
+          },
+          style,
+        ]}
+      >
+        <View style={styles.header}>
+          <Text style={styles.title}>Reels</Text>
+          <TouchableOpacity onPress={onGoBack}>
+            <FontAwesome6
+              name="chevron-left"
+              iconStyle="solid"
+              size={22}
+              style={styles.back}
+            />
+          </TouchableOpacity>
+        </View>
+      </Reanimated.View>
+    </Portal>
   );
 }
 
