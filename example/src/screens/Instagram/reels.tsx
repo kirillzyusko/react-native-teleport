@@ -22,6 +22,8 @@ export default function Reels({ route }) {
         decelerationRate="fast"
         showsVerticalScrollIndicator={false}
         onScroll={onScroll}
+        overScrollMode="never"
+        bounces={false}
       >
         <FullScreenReel post={post} portal active={index === 0} />
         {reels.map((p, i) => (
