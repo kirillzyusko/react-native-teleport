@@ -52,10 +52,10 @@ export const examples: Example[] = [
     icons: "♻️",
   },
   {
-    title: "Instagram Reels (WIP)",
+    title: "Instagram Reels",
     testID: "reels",
     info: ScreenNames.INSTAGRAM_FEED,
-    icons: "🚧 🎞",
+    icons: "🎞",
   },
   {
     title: "Bottom sheet",
