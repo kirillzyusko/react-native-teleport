@@ -10,9 +10,10 @@ import Reanimated, { useAnimatedStyle } from "react-native-reanimated";
 type FullScreenReelProps = {
   post: PostType;
   portal?: boolean;
+  active: boolean;
 };
 
-function FullScreenReel({ post, portal = false }: FullScreenReelProps) {
+function FullScreenReel({ post, active, portal = false }: FullScreenReelProps) {
   const progress = useTransition((state) => state.progress);
 
   const icons = useAnimatedStyle(
@@ -27,7 +28,11 @@ function FullScreenReel({ post, portal = false }: FullScreenReelProps) {
       {portal ? (
         <PortalHost name="reels" style={styles.container} />
       ) : (
-        <Video source={{ uri: post.video }} style={styles.video} />
+        <Video
+          source={{ uri: post.video }}
+          style={styles.video}
+          paused={!active}
+        />
       )}
       <Reanimated.View style={[styles.icons, icons]}>
         <View>
