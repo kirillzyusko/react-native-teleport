@@ -32,6 +32,7 @@ function FullScreenReel({ post, active, portal = false }: FullScreenReelProps) {
           source={{ uri: post.video }}
           style={styles.video}
           paused={!active}
+          resizeMode="cover"
         />
       )}
       <Reanimated.View style={[styles.icons, icons]}>
@@ -83,6 +84,7 @@ const styles = StyleSheet.create({
   },
   video: {
     flex: 1,
+    objectFit: "cover",
   },
   icons: {
     position: "absolute",
