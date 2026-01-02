@@ -17,6 +17,7 @@ import InstagramFeed from "../../screens/Instagram/Feed";
 import InstagramReels from "../../screens/Instagram/Reels";
 import DeepNavigation from "../../screens/DeepNavigation/Screen1";
 import DeepNavigationNested from "../../screens/DeepNavigation/Screen2";
+import type { PostType } from "../../screens/Instagram/posts";
 
 export type ExamplesStackParamList = {
   [ScreenNames.GESTURE_HANDLER_TOUCHABLE]: undefined;
@@ -29,7 +30,9 @@ export type ExamplesStackParamList = {
   [ScreenNames.MESSENGER]: undefined;
   [ScreenNames.PORTAL_BEFORE_HOST]: undefined;
   [ScreenNames.INSTAGRAM_FEED]: undefined;
-  [ScreenNames.INSTAGRAM_REELS]: undefined;
+  [ScreenNames.INSTAGRAM_REELS]: {
+    post: PostType;
+  };
   [ScreenNames.NAVIGATION_LIFECYCLE]: undefined;
   [ScreenNames.NAVIGATION_LIFECYCLE_NESTED]: undefined;
 };
