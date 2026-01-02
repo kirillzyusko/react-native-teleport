@@ -1,14 +1,12 @@
-import {
-  Animated,
-  View,
-  Text,
-  TouchableOpacity,
-  StyleSheet,
-} from "react-native";
+import { View, Text, TouchableOpacity, StyleSheet } from "react-native";
 import { FontAwesome6 } from "@react-native-vector-icons/fontawesome6";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useNavigation } from "@react-navigation/native";
 import { useTransition } from "../hooks/useTransition";
+import Reanimated, {
+  interpolate,
+  useAnimatedStyle,
+} from "react-native-reanimated";
 
 function ReelsHeader() {
   const insets = useSafeAreaInsets();
@@ -19,22 +17,27 @@ function ReelsHeader() {
     goToFeed(navigation.goBack);
   };
 
+  const style = useAnimatedStyle(
+    () => ({
+      opacity: progress.value,
+      transform: [
+        {
+          translateY: interpolate(progress.value, [0, 1], [y, 0]),
+        },
+      ],
+    }),
+    [y],
+  );
+
   return (
-    <Animated.View
-      style={{
-        position: "absolute",
-        paddingTop: insets.top,
-        width: "100%",
-        opacity: progress,
-        transform: [
-          {
-            translateY: progress.interpolate({
-              inputRange: [0, 1],
-              outputRange: [y, 0],
-            }),
-          },
-        ],
-      }}
+    <Reanimated.View
+      style={[
+        styles.container,
+        {
+          paddingTop: insets.top,
+        },
+        style,
+      ]}
     >
       <View style={styles.header}>
         <Text style={styles.title}>Reels</Text>
@@ -47,11 +50,15 @@ function ReelsHeader() {
           />
         </TouchableOpacity>
       </View>
-    </Animated.View>
+    </Reanimated.View>
   );
 }
 
 const styles = StyleSheet.create({
+  container: {
+    position: "absolute",
+    width: "100%",
+  },
   header: {
     flexDirection: "row",
     paddingHorizontal: 20,
