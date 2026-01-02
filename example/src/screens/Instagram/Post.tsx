@@ -28,9 +28,18 @@ type PostProps = {
 };
 
 const Post = ({ post, active }: PostProps) => {
-  const navigation = useNavigation<ExamplesStackNavigation>();
-  const { id, destination, setId, y, progress, goToReels } = useTransition();
   const videoRef = useRef<View>(null);
+  // transition
+  const shouldMove = useTransition((state) => state.id === post.id);
+  const setId = useTransition((state) => state.setId);
+  const progress = useTransition((state) => state.progress);
+  const goToReels = useTransition((state) => state.goToReels);
+  const destination = useTransition((state) =>
+    shouldMove ? state.destination : undefined,
+  );
+  const y = useTransition((state) => (shouldMove ? state.y : 0));
+  // other
+  const navigation = useNavigation<ExamplesStackNavigation>();
   const measure = useMeasure(videoRef);
 
   const onPress = () => {
@@ -44,7 +53,6 @@ const Post = ({ post, active }: PostProps) => {
       goToReels(_y);
     });
   };
-  const shouldMove = id === post.id;
 
   const frame = useAnimatedStyle(
     () => ({
