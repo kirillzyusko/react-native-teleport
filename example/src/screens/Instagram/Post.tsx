@@ -1,4 +1,4 @@
-import { Animated, View, StyleSheet, Image } from "react-native";
+import { View, StyleSheet, Image } from "react-native";
 import type { PostType } from "./posts";
 import Video from "react-native-video";
 import type { ExamplesStackNavigation } from "../../navigation/ExamplesStack";
@@ -16,18 +16,19 @@ import { Portal } from "react-native-teleport";
 import SocialSection from "./components/SocialSection";
 import { TouchableWithoutFeedback } from "react-native-gesture-handler";
 import { useTransition } from "./hooks/useTransition";
+import Reanimated, {
+  interpolate,
+  useAnimatedStyle,
+} from "react-native-reanimated";
 
 type PostProps = {
   post: PostType;
   active: boolean;
 };
 
-const AnimatedVideo = Animated.createAnimatedComponent(Video);
-
 const Post = ({ post, active }: PostProps) => {
   const navigation = useNavigation<ExamplesStackNavigation>();
-  const { id, destination, setId, y, progress, layout, goToReels } =
-    useTransition();
+  const { id, destination, setId, y, progress, goToReels } = useTransition();
   const videoRef = useRef<View>(null);
 
   const onPress = () => {
@@ -44,6 +45,22 @@ const Post = ({ post, active }: PostProps) => {
   };
   const shouldMove = id === post.id;
 
+  const frame = useAnimatedStyle(
+    () => ({
+      height: shouldMove
+        ? interpolate(progress.value, [0, 1], [VIDEO_HEIGHT, SCREEN_HEIGHT])
+        : VIDEO_HEIGHT,
+      transform: [
+        {
+          translateY: shouldMove
+            ? interpolate(progress.value, [0, 1], [0, -y])
+            : 0,
+        },
+      ],
+    }),
+    [shouldMove, y],
+  );
+
   return (
     <View style={{ height: CARD_HEIGHT }}>
       <TouchableWithoutFeedback onPress={onPress}>
@@ -53,38 +70,11 @@ const Post = ({ post, active }: PostProps) => {
           style={styles.container}
         >
           <Portal hostName={shouldMove ? destination : undefined}>
-            <Animated.View
-              style={{
-                height: VIDEO_HEIGHT,
-                width: "100%",
-                transform: [
-                  {
-                    translateY: shouldMove
-                      ? progress.interpolate({
-                          inputRange: [0, 1],
-                          outputRange: [0, -y],
-                        })
-                      : 0,
-                  },
-                ],
-              }}
-            >
+            <Reanimated.View style={[{ width: "100%" }, frame]}>
               {post.video && (
-                <AnimatedVideo
+                <Video
                   source={{ uri: post.video }}
-                  style={[
-                    styles.video,
-                    { top: shouldMove ? y : 0 },
-                    {
-                      height:
-                        id === post.id
-                          ? layout.interpolate({
-                              inputRange: [0, 1],
-                              outputRange: [VIDEO_HEIGHT, SCREEN_HEIGHT],
-                            })
-                          : VIDEO_HEIGHT,
-                    },
-                  ]}
+                  style={[styles.video, { top: shouldMove ? y : 0 }]}
                   repeat
                   paused={!active}
                   controls={false}
@@ -102,7 +92,7 @@ const Post = ({ post, active }: PostProps) => {
                   }}
                 />
               )}
-            </Animated.View>
+            </Reanimated.View>
           </Portal>
         </View>
       </TouchableWithoutFeedback>
@@ -121,7 +111,7 @@ const styles = StyleSheet.create({
     width: "100%",
   },
   video: {
-    width: SCREEN_WIDTH,
+    flex: 1,
     position: "relative",
     objectFit: "cover",
   },

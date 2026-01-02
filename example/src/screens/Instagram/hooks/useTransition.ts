@@ -1,28 +1,35 @@
-import { Animated } from "react-native";
+import {
+  makeMutable,
+  withSpring,
+  type SharedValue,
+} from "react-native-reanimated";
+import { scheduleOnRN } from "react-native-worklets";
 import { create } from "zustand";
 
 interface Transition {
   destination?: string;
   id?: number;
   y: number;
-  progress: Animated.Value;
-  layout: Animated.Value;
+  progress: SharedValue<number>;
   setDestination: (destination?: string) => void;
   setId: (id: number) => void;
   goToReels: (y: number) => void;
   goToFeed: (onFinish?: () => void) => void;
 }
 
+const SPRING_CONFIG = { mass: 3, damping: 500, stiffness: 1000 };
+
 // TODO: fix bugs
+// - fix "y" jumps on Android
 // - why on Android video becomes black for a fraction of a second? Happens only after teleportation into destination? Timing issue (wrap in setTimeout?) Layout issue? Pausing/resetting issue? Xiaomi API 28 still have issue, looks like it has been fixed on real devices starting from API 29+ I can not reproduce issue on Pixel 7 Pro Android 16
-// - reels scrolling
-// - if you scrolled a little bit and then back - we need to animate opacity
+// - add reels scrolling (need ExpandedReel view)
+// - if you scrolled down and then press back button - we need to animate opacity
+// - header appearance on web (video just overlaps it, but we can not use Portal, because transparentModal messes everything up)
 export const useTransition = create<Transition>((set, get) => ({
   destination: undefined,
   id: undefined,
   y: 0,
-  progress: new Animated.Value(0),
-  layout: new Animated.Value(0),
+  progress: makeMutable(0),
   setDestination: (destination?: string) => {
     set({ destination });
   },
@@ -31,41 +38,25 @@ export const useTransition = create<Transition>((set, get) => ({
   },
   goToReels: (y) => {
     set({ destination: "overlay", y });
-    Animated.spring(get().progress, {
-      toValue: 1,
-      mass: 3,
-      damping: 500,
-      stiffness: 1000,
-      useNativeDriver: true,
-    }).start(() => {
+    const moveToReels = () => {
       set({ destination: "reels" });
-    });
-    Animated.spring(get().layout, {
-      toValue: 1,
-      mass: 3,
-      damping: 500,
-      stiffness: 1000,
-      useNativeDriver: false,
-    }).start();
+    };
+    get().progress.set(
+      withSpring(1, SPRING_CONFIG, () => {
+        scheduleOnRN(moveToReels);
+      }),
+    );
   },
   goToFeed: (onFinish) => {
     set({ destination: "overlay" });
-    Animated.spring(get().progress, {
-      toValue: 0,
-      mass: 3,
-      damping: 500,
-      stiffness: 1000,
-      useNativeDriver: true,
-    }).start(() => {
+    const moveToFeed = () => {
       set({ destination: undefined, y: 0 });
       onFinish?.();
-    });
-    Animated.spring(get().layout, {
-      toValue: 0,
-      mass: 3,
-      damping: 500,
-      stiffness: 1000,
-      useNativeDriver: false,
-    }).start();
+    };
+    get().progress.set(
+      withSpring(0, SPRING_CONFIG, () => {
+        scheduleOnRN(moveToFeed);
+      }),
+    );
   },
 }));
