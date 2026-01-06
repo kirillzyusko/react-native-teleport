@@ -1,26 +1,14 @@
-import {
-  View,
-  Text,
-  TouchableOpacity,
-  StyleSheet,
-  Platform,
-} from "react-native";
+import { View, Text, TouchableOpacity, StyleSheet } from "react-native";
 import { FontAwesome6 } from "@react-native-vector-icons/fontawesome6";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useNavigation } from "@react-navigation/native";
-import { useTransition } from "../hooks/useTransition";
 import Reanimated, {
   interpolate,
   useAnimatedStyle,
 } from "react-native-reanimated";
 import { Portal } from "react-native-teleport";
-
-// iOS can draw header on top of video because we use specific `presentation="transparentModal"`
-// for other platforms draw on top of everything manually
-const destination = Platform.select({
-  ios: undefined,
-  default: "root",
-});
+import { FLOATING_ELEMENTS_DESTINATION } from "../constants";
+import { useTransition } from "../hooks/useTransition";
 
 function ReelsHeader() {
   const insets = useSafeAreaInsets();
@@ -44,7 +32,7 @@ function ReelsHeader() {
   );
 
   return (
-    <Portal hostName={destination} style={styles.container}>
+    <Portal hostName={FLOATING_ELEMENTS_DESTINATION} style={styles.container}>
       <Reanimated.View
         style={[
           {
