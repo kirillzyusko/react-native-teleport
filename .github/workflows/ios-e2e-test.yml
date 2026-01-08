@@ -117,7 +117,7 @@ jobs:
       - name: Install Maestro CLI
         run: |
           brew tap mobile-dev-inc/tap
-          brew install maestro
+          brew install mobile-dev-inc/tap/maestro
       - name: Prepare snapshot engine
         run: cd e2e && npm install
 
