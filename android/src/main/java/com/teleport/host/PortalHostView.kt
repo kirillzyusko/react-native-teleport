@@ -17,10 +17,7 @@ class PortalHostView(
     newName?.let { PortalRegistry.registerHost(it, this) }
   }
 
-  // region Lifecycle
-  override fun onDetachedFromWindow() {
-    super.onDetachedFromWindow()
+  fun cleanup() {
     name?.let { PortalRegistry.unregisterHost(it) }
   }
-  // endregion
 }
