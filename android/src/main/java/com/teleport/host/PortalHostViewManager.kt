@@ -21,6 +21,12 @@ class PortalHostViewManager :
 
   override fun createTeleportView(context: ThemedReactContext): ReactViewGroup = PortalHostView(context)
 
+  override fun onDropViewInstance(view: ReactViewGroup) {
+    super.onDropViewInstance(view)
+
+    (view as? PortalHostView)?.cleanup()
+  }
+
   @ReactProp(name = "name")
   override fun setName(
     view: ReactViewGroup?,
