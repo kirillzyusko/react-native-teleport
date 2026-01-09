@@ -23,7 +23,6 @@ const SPRING_CONFIG = { mass: 3, damping: 500, stiffness: 1000 };
 // - if you scrolled down and then press back button - we need to animate opacity
 // - (-) on Android icons on full screen reels are not animating (same problem as we had with Header)
 // - scroll to squirrel so that it sits on top - press on it and see how text stays on top of everything
-// - check pressability of icons on full screen reels
 export const useTransition = create<Transition>((set, get) => ({
   destination: undefined,
   id: undefined,

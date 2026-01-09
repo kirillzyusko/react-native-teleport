@@ -1,4 +1,4 @@
-import { View, Text, StyleSheet } from "react-native";
+import { View, Text, StyleSheet, TouchableOpacity } from "react-native";
 import Video from "react-native-video";
 import { Portal, PortalHost } from "react-native-teleport";
 import { FontAwesome6 } from "@react-native-vector-icons/fontawesome6";
@@ -10,6 +10,7 @@ import {
 import type { PostType } from "../posts";
 import { useTransition } from "../hooks/useTransition";
 import Reanimated, { useAnimatedStyle } from "react-native-reanimated";
+import { useState } from "react";
 
 type FullScreenReelProps = {
   post: PostType;
@@ -18,6 +19,7 @@ type FullScreenReelProps = {
 };
 
 function FullScreenReel({ post, active, portal = false }: FullScreenReelProps) {
+  const [isLiked, setLiked] = useState(false);
   const progress = useTransition((state) => state.progress);
   const destination = useTransition((state) => state.destination);
 
@@ -27,6 +29,10 @@ function FullScreenReel({ post, active, portal = false }: FullScreenReelProps) {
     }),
     [],
   );
+
+  const onToggleLike = () => {
+    setLiked((l) => !l);
+  };
 
   return (
     <View style={styles.container}>
@@ -49,13 +55,18 @@ function FullScreenReel({ post, active, portal = false }: FullScreenReelProps) {
       >
         <Reanimated.View style={[styles.icons, icons]}>
           <View>
-            <FontAwesome6
-              name="heart"
-              size={24}
-              color="white"
-              style={styles.icon}
-            />
-            <Text style={styles.text}>{post.likes}</Text>
+            <TouchableOpacity onPress={onToggleLike}>
+              <FontAwesome6
+                name="heart"
+                iconStyle={isLiked ? "solid" : "regular"}
+                size={24}
+                color={isLiked ? "red" : "white"}
+                style={styles.icon}
+              />
+            </TouchableOpacity>
+            <Text style={styles.text}>
+              {isLiked ? post.likes + 1 : post.likes}
+            </Text>
           </View>
           <View>
             <FontAwesome6
