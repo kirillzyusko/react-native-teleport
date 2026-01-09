@@ -1,8 +1,12 @@
 import { View, Text, StyleSheet } from "react-native";
 import Video from "react-native-video";
-import { PortalHost } from "react-native-teleport";
+import { Portal, PortalHost } from "react-native-teleport";
 import { FontAwesome6 } from "@react-native-vector-icons/fontawesome6";
-import { SCREEN_HEIGHT, SCREEN_WIDTH } from "../constants";
+import {
+  FLOATING_ELEMENTS_DESTINATION,
+  SCREEN_HEIGHT,
+  SCREEN_WIDTH,
+} from "../constants";
 import type { PostType } from "../posts";
 import { useTransition } from "../hooks/useTransition";
 import Reanimated, { useAnimatedStyle } from "react-native-reanimated";
@@ -15,6 +19,7 @@ type FullScreenReelProps = {
 
 function FullScreenReel({ post, active, portal = false }: FullScreenReelProps) {
   const progress = useTransition((state) => state.progress);
+  const destination = useTransition((state) => state.destination);
 
   const icons = useAnimatedStyle(
     () => ({
@@ -35,44 +40,52 @@ function FullScreenReel({ post, active, portal = false }: FullScreenReelProps) {
           resizeMode="cover"
         />
       )}
-      <Reanimated.View style={[styles.icons, icons]}>
-        <View>
-          <FontAwesome6
-            name="heart"
-            size={24}
-            color="white"
-            style={styles.icon}
-          />
-          <Text style={styles.text}>{post.likes}</Text>
-        </View>
-        <View>
-          <FontAwesome6
-            name="comments"
-            size={24}
-            color="white"
-            style={styles.icon}
-          />
-          <Text style={styles.text}>{post.comments}</Text>
-        </View>
-        <View>
-          <FontAwesome6
-            name="paper-plane"
-            size={24}
-            color="white"
-            style={styles.icon}
-          />
-          <Text style={styles.text}>{post.sent}</Text>
-        </View>
-        <View>
-          <FontAwesome6
-            name="ellipsis"
-            iconStyle="solid"
-            size={22}
-            color="white"
-            style={styles.icon}
-          />
-        </View>
-      </Reanimated.View>
+      <Portal
+        hostName={
+          portal && destination === "overlay"
+            ? FLOATING_ELEMENTS_DESTINATION
+            : undefined
+        }
+      >
+        <Reanimated.View style={[styles.icons, icons]}>
+          <View>
+            <FontAwesome6
+              name="heart"
+              size={24}
+              color="white"
+              style={styles.icon}
+            />
+            <Text style={styles.text}>{post.likes}</Text>
+          </View>
+          <View>
+            <FontAwesome6
+              name="comments"
+              size={24}
+              color="white"
+              style={styles.icon}
+            />
+            <Text style={styles.text}>{post.comments}</Text>
+          </View>
+          <View>
+            <FontAwesome6
+              name="paper-plane"
+              size={24}
+              color="white"
+              style={styles.icon}
+            />
+            <Text style={styles.text}>{post.sent}</Text>
+          </View>
+          <View>
+            <FontAwesome6
+              name="ellipsis"
+              iconStyle="solid"
+              size={22}
+              color="white"
+              style={styles.icon}
+            />
+          </View>
+        </Reanimated.View>
+      </Portal>
     </View>
   );
 }
