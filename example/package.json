@@ -10,8 +10,7 @@
     "build:android": "react-native build-android --extra-params \"--no-daemon --console=plain -PreactNativeArchitectures=arm64-v8a\"",
     "build:ios": "react-native build-ios --mode Debug",
     "build:web": "webpack --mode=production --config webpack.config.js",
-    "test": "jest",
-    "postinstall": "patch-package"
+    "test": "jest"
   },
   "dependencies": {
     "@gorhom/portal": "^1.0.14",
@@ -51,7 +50,6 @@
     "babel-plugin-react-native-web": "^0.21.1",
     "html-webpack-plugin": "^5.6.4",
     "jest": "^30.1.3",
-    "patch-package": "^8.0.1",
     "react-native-builder-bob": "^0.40.13",
     "react-native-monorepo-config": "^0.1.9",
     "react-test-renderer": "19.1.0",
