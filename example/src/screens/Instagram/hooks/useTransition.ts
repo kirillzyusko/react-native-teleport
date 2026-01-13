@@ -19,10 +19,7 @@ interface Transition {
 
 const SPRING_CONFIG = { mass: 3, damping: 500, stiffness: 1000 };
 
-// TODO: fix bugs
-// - if you scrolled down and then press back button - we need to animate opacity
-// - (-) on Android icons on full screen reels are not animating (same problem as we had with Header)
-// - (-) scroll to squirrel so that it sits on top - press on it and see how text stays on top of everything - looks like Android only, and it looks like it's a problem of video animation - something is wrong with applying offset + animation
+// TODO: if you scrolled down and then press back button - we need to animate opacity
 export const useTransition = create<Transition>((set, get) => ({
   destination: undefined,
   id: undefined,
