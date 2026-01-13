@@ -1,4 +1,10 @@
-import { View, Text, TouchableOpacity, StyleSheet } from "react-native";
+import {
+  View,
+  Text,
+  TouchableOpacity,
+  StyleSheet,
+  BackHandler,
+} from "react-native";
 import { FontAwesome6 } from "@react-native-vector-icons/fontawesome6";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useNavigation } from "@react-navigation/native";
@@ -9,15 +15,29 @@ import Reanimated, {
 import { Portal } from "react-native-teleport";
 import { FLOATING_ELEMENTS_DESTINATION } from "../constants";
 import { useTransition } from "../hooks/useTransition";
+import { useCallback, useEffect } from "react";
 
 function ReelsHeader() {
   const insets = useSafeAreaInsets();
   const navigation = useNavigation();
   const { goToFeed, progress, y } = useTransition();
 
-  const onGoBack = () => {
+  const onGoBack = useCallback(() => {
     goToFeed(navigation.goBack);
-  };
+  }, [goToFeed, navigation]);
+
+  useEffect(() => {
+    const subscription = BackHandler.addEventListener(
+      "hardwareBackPress",
+      () => {
+        onGoBack();
+
+        return true;
+      },
+    );
+
+    return () => subscription.remove();
+  }, [onGoBack]);
 
   const style = useAnimatedStyle(
     () => ({
