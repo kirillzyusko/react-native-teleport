@@ -13,10 +13,11 @@ import FlexibleStyles from "../../screens/FlexibleStyles";
 import BottomSheet from "../../screens/BottomSheet";
 import Messenger from "../../screens/Messenger";
 import PortalBeforeHost from "../../screens/PortalBeforeHost";
-import InstagramFeed from "../../screens/Instagram/feed";
-import InstagramReels from "../../screens/Instagram/reels";
+import InstagramFeed from "../../screens/Instagram/Feed";
+import InstagramReels from "../../screens/Instagram/Reels";
 import DeepNavigation from "../../screens/DeepNavigation/Screen1";
 import DeepNavigationNested from "../../screens/DeepNavigation/Screen2";
+import type { PostType } from "../../screens/Instagram/posts";
 
 export type ExamplesStackParamList = {
   [ScreenNames.GESTURE_HANDLER_TOUCHABLE]: undefined;
@@ -29,7 +30,9 @@ export type ExamplesStackParamList = {
   [ScreenNames.MESSENGER]: undefined;
   [ScreenNames.PORTAL_BEFORE_HOST]: undefined;
   [ScreenNames.INSTAGRAM_FEED]: undefined;
-  [ScreenNames.INSTAGRAM_REELS]: undefined;
+  [ScreenNames.INSTAGRAM_REELS]: {
+    post: PostType;
+  };
   [ScreenNames.NAVIGATION_LIFECYCLE]: undefined;
   [ScreenNames.NAVIGATION_LIFECYCLE_NESTED]: undefined;
 };
@@ -65,11 +68,9 @@ const options = {
     title: "Portal Before Host",
   },
   [ScreenNames.INSTAGRAM_FEED]: {
-    title: "Reels",
     headerShown: false,
   },
   [ScreenNames.INSTAGRAM_REELS]: {
-    title: "Reels",
     headerShown: false,
     animation: "none" as const,
     presentation: "transparentModal" as const,

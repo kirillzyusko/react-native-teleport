@@ -7,6 +7,7 @@ export type PostType = {
   video?: ReturnType<typeof require>;
   photo?: string;
   date: string;
+  sent: number;
 };
 
 export const posts: PostType[] = [
@@ -16,16 +17,18 @@ export const posts: PostType[] = [
     text: "Magic forest",
     likes: 126,
     comments: 12,
+    sent: 31,
     video: require("./videos/forest.mp4"),
     date: "29 October",
   },
   {
     id: 2,
     author: "kirillzyusko",
-    text: "Beautiful autumn",
+    text: "Mountains and lake",
     likes: 271,
     comments: 96,
-    video: require("./videos/autumn.mp4"),
+    sent: 182,
+    photo: "https://images.pexels.com/photos/1526713/pexels-photo-1526713.jpeg",
     date: "28 October",
   },
   {
@@ -33,6 +36,7 @@ export const posts: PostType[] = [
     author: "kirillzyusko",
     text: "Squirrel in the forest...",
     likes: 34,
+    sent: 12,
     comments: 3,
     video: require("./videos/squirrel.mp4"),
     date: "27 October",
@@ -40,10 +44,11 @@ export const posts: PostType[] = [
   {
     id: 4,
     author: "kirillzyusko",
-    text: "Mountains and lake",
+    text: "Beautiful autumn",
     likes: 65,
+    sent: 37,
     comments: 14,
-    photo: "https://images.pexels.com/photos/1526713/pexels-photo-1526713.jpeg",
+    video: require("./videos/autumn.mp4"),
     date: "26 October",
   },
   {
@@ -52,6 +57,7 @@ export const posts: PostType[] = [
     text: "Last Norway trip",
     likes: 189,
     comments: 44,
+    sent: 108,
     photo: "https://images.pexels.com/photos/3791466/pexels-photo-3791466.jpeg",
     date: "25 October",
   },

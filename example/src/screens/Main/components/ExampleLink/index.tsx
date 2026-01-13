@@ -3,12 +3,11 @@ import { Text, TouchableOpacity, View } from "react-native";
 
 import styles from "./styles";
 
-import type { ScreenNames } from "../../../../constants/screenNames";
-import type { Example } from "../../types";
+import type { Example, ExampleScreen } from "../../types";
 import type { FC } from "react";
 
 type Props = {
-  onPress: (info: ScreenNames) => void;
+  onPress: (info: ExampleScreen) => void;
   index: number;
 } & Example;
 
