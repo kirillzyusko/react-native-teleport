@@ -43,6 +43,9 @@ jobs:
         with:
           xcode-version: ${{ env.XCODE_VERSION }}
 
+      - name: List all available simulators
+        run: xcrun simctl list
+
       - name: Setup
         uses: ./.github/actions/setup
 
