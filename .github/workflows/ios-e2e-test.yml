@@ -26,6 +26,8 @@ on:
       - "e2e/**"
       - "src/**"
       - "common/**"
+env:
+  XCODE_VERSION: "16.4"
 
 jobs:
   build-ios:
@@ -34,8 +36,6 @@ jobs:
     defaults:
       run:
         working-directory: example/ios
-    env:
-      XCODE_VERSION: "16.3"
     steps:
       - uses: actions/checkout@v4
 
@@ -114,7 +114,7 @@ jobs:
       cancel-in-progress: true
     strategy:
       matrix:
-        devices: [{ ios: 18, xcode: "16.0", macos: 15 }]
+        devices: [{ ios: 18, macos: 15 }]
     needs: build-ios
     steps:
       - uses: actions/checkout@v4
@@ -125,7 +125,7 @@ jobs:
           path: example/ios/build/Build/Products/Release-iphonesimulator/TeleportExample.app/
       - uses: maxim-lobanov/setup-xcode@v1
         with:
-          xcode-version: "16.3"
+          xcode-version: ${{ env.XCODE_VERSION }}
       - name: Install Maestro CLI
         run: |
           brew tap mobile-dev-inc/tap
