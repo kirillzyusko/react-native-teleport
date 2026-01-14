@@ -73,7 +73,7 @@ const PortalComponent = ({ hostName, name, style, children }: PortalProps) => {
   }, [dispatch, hostName, name, instanceId]);
 
   if (isRemoved) {
-    return <PortalView hostName={hostName} name={name} />;
+    return <PortalView children={null} hostName={hostName} name={name} />;
   }
 
   return (
