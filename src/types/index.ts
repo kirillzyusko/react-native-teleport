@@ -12,5 +12,5 @@ export type PortalProps = {
   name?: string;
   hostName?: string;
   style?: ViewStyle;
-  children: React.ReactNode;
+  children?: React.ReactNode;
 };
