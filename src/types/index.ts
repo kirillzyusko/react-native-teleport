@@ -7,7 +7,6 @@ export type PortalHostProps = {
   name: string;
   style?: ViewStyle;
   children?: React.ReactNode;
-  pointerEvents?: React.CSSProperties["pointerEvents"] | "box-none";
 };
 export type PortalProps = {
   name?: string;

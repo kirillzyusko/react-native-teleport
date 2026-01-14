@@ -24,7 +24,7 @@ import PortalHost from "../views/PortalHost";
  */
 const PortalHostComponent = ({ name, children, style }: PortalHostProps) => {
   return (
-    <PortalHost name={name} style={style} pointerEvents="box-none">
+    <PortalHost name={name} style={style}>
       {children}
     </PortalHost>
   );
