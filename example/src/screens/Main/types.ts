@@ -11,7 +11,8 @@ export type ExampleScreen =
   | ScreenNames.NAVIGATION_LIFECYCLE
   | ScreenNames.INSTAGRAM_FEED
   | ScreenNames.BOTTOM_SHEET
-  | ScreenNames.MESSENGER;
+  | ScreenNames.MESSENGER
+  | ScreenNames.TRAVEL_EXPLORE;
 
 export type Example = {
   testID: string;

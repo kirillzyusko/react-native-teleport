@@ -88,6 +88,7 @@ module.exports = {
     extensions: [".web.tsx", ".web.ts", ".tsx", ".ts", ".web.js", ".js"],
     alias: {
       "react-native$": "react-native-web",
+      "react-native-linear-gradient": "react-native-web-linear-gradient",
       "react-native-teleport": teleportSrc,
       "react": path.resolve(__dirname, "node_modules/react"),
       "react-dom": path.resolve(__dirname, "node_modules/react-dom"),

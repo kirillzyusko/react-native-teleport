@@ -18830,6 +18830,16 @@ __metadata:
   languageName: node
   linkType: hard
 
+"react-native-linear-gradient@npm:^2.8.3":
+  version: 2.8.3
+  resolution: "react-native-linear-gradient@npm:2.8.3"
+  peerDependencies:
+    react: "*"
+    react-native: "*"
+  checksum: f980d324e551bbc475c6406bdc5250a08242020cbe653412fa169bbdf51e28a502e225de105b4d696d6a1a1b733d44782469020f4936d8b3ce0e2c78e51cf58f
+  languageName: node
+  linkType: hard
+
 "react-native-monorepo-config@npm:^0.1.8, react-native-monorepo-config@npm:^0.1.9":
   version: 0.1.10
   resolution: "react-native-monorepo-config@npm:0.1.10"
@@ -18931,12 +18941,14 @@ __metadata:
     react-native: 0.81.0
     react-native-builder-bob: ^0.40.13
     react-native-gesture-handler: ^2.28.0
+    react-native-linear-gradient: ^2.8.3
     react-native-monorepo-config: ^0.1.9
     react-native-reanimated: ^4.2.1
     react-native-safe-area-context: ^5.5.2
     react-native-screens: ^4.16.0
     react-native-video: 6.17.0
     react-native-web: ^0.21.1
+    react-native-web-linear-gradient: ^1.1.2
     react-native-worklets: ^0.7.1
     react-test-renderer: 19.1.0
     url-loader: ^4.1.1
@@ -18993,6 +19005,15 @@ __metadata:
     react: "*"
     react-native: "*"
   checksum: 36cb907b9d96aabe5878214a3be3d1b70fdc504e5e8f9276d892a8e76dc8cfc98c48223ea99b5e1f70e5da547a0047b9a82d9406bd3996897ff421a52ea98656
+  languageName: node
+  linkType: hard
+
+"react-native-web-linear-gradient@npm:^1.1.2":
+  version: 1.1.2
+  resolution: "react-native-web-linear-gradient@npm:1.1.2"
+  peerDependencies:
+    react-native-web: "*"
+  checksum: 633971331b3f3a1cf66eb59908ae0900dcd1cb2fbc3349ca57fac3ea0801f1a737eb1991bf0313a5609f2567f4862de2ec99d7496db2857d50d791f1004f973c
   languageName: node
   linkType: hard
 
