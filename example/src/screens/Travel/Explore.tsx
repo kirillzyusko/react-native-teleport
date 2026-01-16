@@ -1,179 +1,35 @@
-import {
-  Image,
-  StyleSheet,
-  Text,
-  useWindowDimensions,
-  View,
-} from "react-native";
-import Button from "../Travel/components/button/button";
-import LinearGradient from "react-native-linear-gradient";
-import { FontAwesome6 } from "@react-native-vector-icons/fontawesome6";
+import { Image, StyleSheet, Text, View } from "react-native";
+import TravelInput from "./components/input/input";
+import { SafeAreaView } from "react-native-safe-area-context";
+import Subheader from "./components/subheader/subheader";
+import CategoryCard from "./components/category-card/category-card";
 
-type Props = {
-  image: string;
-  header: string;
-  text: string;
-  location: string;
-  substring?: string;
-  description?: string;
-  buttonText: string;
-  rating?: string;
-  price?: string;
-};
-
-const DetailScreen = ({
-  image,
-  header,
-  text,
-  location,
-  description,
-  substring,
-  rating,
-  price,
-  buttonText,
-}: Props) => {
+export default function Login() {
   return (
-    <View style={styles.screen}>
-      <Image style={styles.image} source={image} />
-      <View style={styles.mainContainer}>
-        <LinearGradient
-          colors={["rgba(0, 0, 0, 0)", "rgba(0, 0, 0, 0.89)"]}
-          style={styles.gradient}
-        >
-          <View style={styles.view}>
-            <View style={styles.verification}>
-              <Text style={styles.heading}>{text}</Text>
-              <Image
-                source={require("./images/verify.png")}
-                style={{ width: 18, height: 18 }}
-              />
-            </View>
-            <Text style={styles.mainText}>{header}</Text>
-            <View style={styles.verification}>
-              <FontAwesome6
-                name="location-dot"
-                iconStyle="solid"
-                size={18}
-                style={{ color: "white" }}
-              />
-              <Text style={[styles.heading, { textTransform: "uppercase" }]}>
-                {location}
-              </Text>
-            </View>
-            <View style={[styles.verification, styles.textContainer]}>
-              <Text>
-                <Text style={styles.heading}>{substring}</Text>
-                <Text style={styles.smallText}>people have explored</Text>
-              </Text>
-              <Image source={require("./images/group1.png")} />
-            </View>
-            <Text style={[styles.smallText]}>{description}</Text>
-            <View style={[styles.textContainer, styles.mt30]}>
-              <View style={styles.verification}>
-                <FontAwesome6
-                  name="star"
-                  iconStyle="solid"
-                  size={18}
-                  style={{ color: "#FCD240" }}
-                />
-                <Text style={styles.numbers}>{rating}</Text>
-              </View>
-              <View>
-                <FontAwesome6
-                  name="arrow-down"
-                  iconStyle="solid"
-                  size={18}
-                  style={{ color: "white" }}
-                />
-              </View>
-            </View>
-            <View
-              style={[styles.verification, styles.textContainer, styles.mt50]}
-            >
-              <Text>
-                <Text style={styles.numbers}>{price}</Text>
-                <Text style={styles.smallText}>/ Person </Text>
-              </Text>
-              <Button text={buttonText} />
-            </View>
-          </View>
-        </LinearGradient>
+    <SafeAreaView style={styles.view}>
+      <View style={styles.textContainer}>
+        <View style={styles.avatarContainer}>
+          <Image style={styles.image} source={require("./images/avatar.png")} />
+          <Text style={styles.avatarText}> Hello, Pristia!</Text>
+        </View>
+        <Image
+          style={styles.image}
+          source={require("./images/notification.png")}
+        />
       </View>
-    </View>
-  );
-};
 
-export default function Detail() {
-  return (
-    <DetailScreen
-      image={require("./images/details.jpg")}
-      header="Kuta Beach"
-      text="FAVORITE PLACE"
-      location="Bali, Indonesia"
-      description="Bali is an island in Indonesia known for its verdant volcanoes, unique rice terraces, beaches, and beautiful coral reefs. Before becoming a tourist attraction, Kuta was a trading port where local products were traded to buyers from outside Bali."
-      substring="100+ "
-      rating="4.8"
-      price="$245,00 "
-      buttonText="Booking"
-    />
+      <Text style={styles.mainText}>Where do you want to explore today?</Text>
+      <TravelInput style={styles.margin} />
+
+      <Subheader text="Choose Category" subtext="Sell All" />
+      <CategoryCard text="Beach" image={require("./images/beach.png")} />
+    </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
-  screen: { flex: 1 },
-
-  image: {
-    position: "absolute",
-    width: "100%",
-    height: "100%",
-    zIndex: -1,
-  },
-  view: {
-    marginHorizontal: 30,
-    gap: 10,
-    bottom: 20,
-  },
-
-  mainContainer: {
-    flex: 1,
-    justifyContent: "flex-end",
-  },
-
-  gradient: {
-    flex: 0.8,
-    justifyContent: "flex-end",
-  },
-  mainText: {
-    fontFamily: "Urbanist",
-    fontWeight: 700,
-    fontSize: 36,
-    lineHeight: 46,
-    color: "#FFFFFF",
-    zIndex: 1,
-    letterSpacing: 0.9,
-  },
-  smallText: {
-    fontFamily: "Urbanist",
-    fontWeight: 400,
-    fontSize: 12,
-    lineHeight: 25,
-    color: "#FFFFFF",
-    letterSpacing: 0.39,
-  },
-  heading: {
-    fontFamily: "Urbanist",
-    fontWeight: 900,
-    fontSize: 11,
-    lineHeight: 22,
-    color: "#FFFFFF",
-    letterSpacing: 0.25,
-    alignSelf: "stretch",
-    textAlign: "center",
-  },
-  verification: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 8,
+  margin: {
+    marginBottom: 27,
   },
 
   textContainer: {
@@ -182,21 +38,35 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     textAlign: "center",
   },
+  mainText: {
+    color: "#1B1B1B",
+    fontFamily: "Urbanist",
+    fontWeight: 700,
+    fontSize: 28,
+    lineHeight: 34,
+    letterSpacing: 0.9,
+  },
 
-  numbers: {
+  view: {
+    paddingTop: 30,
+    paddingHorizontal: 30,
+    gap: 30,
+    paddingBottom: 20,
+    backgroundColor: "#FFFFFF",
+    flex: 1,
+  },
+
+  avatarContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 10,
+  },
+
+  avatarText: {
     fontFamily: "Urbanist",
     fontWeight: 600,
     fontSize: 16,
     lineHeight: 26,
-    color: "#FFFFFF",
-    letterSpacing: 0.32,
-    textTransform: "uppercase",
-  },
-
-  mt50: {
-    marginTop: 50,
-  },
-  mt30: {
-    marginTop: 30,
+    color: "#0C0507",
   },
 });
