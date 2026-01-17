@@ -6,11 +6,7 @@ import {
   View,
 } from "react-native";
 
-type Props = {
-  inputLabel: string;
-};
-
-export default function TravelInput({ inputLabel }: Props) {
+export default function TravelInput() {
   return (
     <View>
       <TextInput
