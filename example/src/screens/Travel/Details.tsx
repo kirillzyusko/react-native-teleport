@@ -1,16 +1,13 @@
-import {
-  Image,
-  StyleSheet,
-  Text,
-  useWindowDimensions,
-  View,
-} from "react-native";
+import { Image, StyleSheet, Text, View, type ImageProps } from "react-native";
 import Button from "../Travel/components/button/button";
 import LinearGradient from "react-native-linear-gradient";
 import { FontAwesome6 } from "@react-native-vector-icons/fontawesome6";
+import type { NativeStackScreenProps } from "@react-navigation/native-stack";
+import type { ExamplesStackParamList } from "../../navigation/ExamplesStack";
+import type { ScreenNames } from "../../constants/screenNames";
 
 type Props = {
-  image: string;
+  image: ImageProps["source"];
   header: string;
   text: string;
   location: string;
@@ -56,9 +53,7 @@ const DetailScreen = ({
                 size={18}
                 style={{ color: "white" }}
               />
-              <Text style={[styles.heading, { textTransform: "uppercase" }]}>
-                {location}
-              </Text>
+              <Text style={styles.location}>{location}</Text>
             </View>
             <View style={[styles.verification, styles.textContainer]}>
               <Text>
@@ -103,16 +98,23 @@ const DetailScreen = ({
   );
 };
 
-export default function Detail() {
+type DetailsProps = NativeStackScreenProps<
+  ExamplesStackParamList,
+  ScreenNames.TRAVEL_DETAILS
+>;
+
+export default function Detail({ route }: DetailsProps) {
+  const { image, header, location, rating } = route.params;
+
   return (
     <DetailScreen
-      image={require("./images/kuta.jpg")}
-      header="Kuta Beach"
+      image={image}
+      header={header}
       text="FAVORITE PLACE"
-      location="Bali, Indonesia"
+      location={location}
       description="Bali is an island in Indonesia known for its verdant volcanoes, unique rice terraces, beaches, and beautiful coral reefs. Before becoming a tourist attraction, Kuta was a trading port where local products were traded to buyers from outside Bali."
       substring="100+ "
-      rating="4.8"
+      rating={rating}
       price="$245,00 "
       buttonText="Booking"
     />
@@ -169,6 +171,14 @@ const styles = StyleSheet.create({
     letterSpacing: 0.25,
     alignSelf: "stretch",
     textAlign: "center",
+  },
+  location: {
+    fontFamily: "Urbanist",
+    fontWeight: 900,
+    fontSize: 16,
+    lineHeight: 22,
+    color: "#FFFFFF",
+    letterSpacing: 0.25,
   },
   verification: {
     flexDirection: "row",

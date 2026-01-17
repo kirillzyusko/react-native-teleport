@@ -9,6 +9,9 @@ import {
 import { FontAwesome6 } from "@react-native-vector-icons/fontawesome6";
 import LinearGradient from "react-native-linear-gradient";
 import { useState } from "react";
+import { useNavigation } from "@react-navigation/native";
+import { ScreenNames } from "../../../../constants/screenNames";
+import type { ExamplesStackNavigation } from "../../../../navigation/ExamplesStack";
 
 type Props = {
   text: string;
@@ -19,11 +22,27 @@ type Props = {
 
 export default function PlaceCard({ text, image, header, rate }: Props) {
   const [liked, setLiked] = useState(false);
+  const navigation = useNavigation<ExamplesStackNavigation>();
+
   const handlePress = () => {
     liked ? setLiked(false) : setLiked(true);
   };
+  const handleCardPress = () => {
+    navigation.navigate(ScreenNames.TRAVEL_DETAILS, {
+      image: image,
+      header: header,
+      text: text,
+      location: text,
+      rating: rate,
+    });
+  };
+
   return (
-    <TouchableOpacity activeOpacity={0.8} style={styles.card}>
+    <TouchableOpacity
+      activeOpacity={0.8}
+      style={styles.card}
+      onPress={handleCardPress}
+    >
       <Image style={styles.card} source={image}></Image>
       <LinearGradient
         colors={["rgba(0, 0, 0, 0)", "rgba(0, 0, 0, 0.89)"]}
