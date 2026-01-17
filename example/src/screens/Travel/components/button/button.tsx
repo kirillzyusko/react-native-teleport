@@ -2,7 +2,7 @@ import { Text, TouchableOpacity, View } from "react-native";
 
 type Props = {
   text: string;
-  onPress: () => void;
+  onPress?: () => void;
 };
 
 export default function Button({ text, onPress }: Props) {

@@ -38,7 +38,7 @@ export default function Login() {
       </View>
 
       <Text style={styles.mainText}>Where do you want to explore today?</Text>
-      <TravelInput style={styles.margin} />
+      <TravelInput />
 
       <Subheader text="Choose Category" subtext="Sell All" />
       <View>
@@ -77,10 +77,6 @@ export default function Login() {
 }
 
 const styles = StyleSheet.create({
-  margin: {
-    marginBottom: 27,
-  },
-
   textContainer: {
     paddingHorizontal: 30,
     flexDirection: "row",
