@@ -18,6 +18,7 @@ export default function Subheader({ text, subtext }: Props) {
 
 const styles = StyleSheet.create({
   container: {
+    marginHorizontal: 30,
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",

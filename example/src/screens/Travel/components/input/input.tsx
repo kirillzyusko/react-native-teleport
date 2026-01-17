@@ -27,6 +27,7 @@ export default function TravelInput({ inputLabel }: Props) {
 
 const styles = StyleSheet.create({
   input: {
+    marginHorizontal: 30,
     borderRadius: 15,
     borderWidth: 1,
     borderColor: "#E8E8E8",
@@ -63,7 +64,7 @@ const styles = StyleSheet.create({
 
   image: {
     position: "absolute",
-    right: 20,
+    right: 50,
     top: 0,
     bottom: 0,
     justifyContent: "center",

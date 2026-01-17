@@ -1,8 +1,9 @@
-import { Image, StyleSheet, Text, View } from "react-native";
+import { Image, ScrollView, StyleSheet, Text, View } from "react-native";
 import TravelInput from "./components/input/input";
 import { SafeAreaView } from "react-native-safe-area-context";
 import Subheader from "./components/subheader/subheader";
 import CategoryCard from "./components/category-card/category-card";
+import PlaceCard from "./components/place-card/place-card";
 
 export default function Login() {
   return (
@@ -22,7 +23,40 @@ export default function Login() {
       <TravelInput style={styles.margin} />
 
       <Subheader text="Choose Category" subtext="Sell All" />
-      <CategoryCard text="Beach" image={require("./images/beach.png")} />
+      <View>
+        <ScrollView
+          contentContainerStyle={styles.placeContainer}
+          horizontal
+          showsHorizontalScrollIndicator={false}
+        >
+          <CategoryCard text="Beach" image={require("./images/beach.png")} />
+          <CategoryCard
+            text="Mountain"
+            image={require("./images/mountain.png")}
+          />
+          <CategoryCard text="Forest" image={require("./images/forest.png")} />
+        </ScrollView>
+      </View>
+      <Subheader text="Favorite" subtext="Explore" />
+      <ScrollView
+        horizontal
+        contentContainerStyle={styles.placeCardContainer}
+        showsHorizontalScrollIndicator={false}
+      >
+        <PlaceCard
+          image={require("./images/details.jpg")}
+          header="Kuta Beach"
+          text="Bali, Indonesia"
+          rate="4.8"
+        />
+        <PlaceCard
+          text={"Jawa Ti, Indonesia"}
+          header={"Bromo Mountain"}
+          rate="4.0"
+          image={require("./images/bromo.jpg")}
+        ></PlaceCard>
+      </ScrollView>
+      <></>
     </SafeAreaView>
   );
 }
@@ -33,12 +67,14 @@ const styles = StyleSheet.create({
   },
 
   textContainer: {
+    paddingHorizontal: 30,
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
     textAlign: "center",
   },
   mainText: {
+    paddingHorizontal: 30,
     color: "#1B1B1B",
     fontFamily: "Urbanist",
     fontWeight: 700,
@@ -49,7 +85,6 @@ const styles = StyleSheet.create({
 
   view: {
     paddingTop: 30,
-    paddingHorizontal: 30,
     gap: 30,
     paddingBottom: 20,
     backgroundColor: "#FFFFFF",
@@ -68,5 +103,17 @@ const styles = StyleSheet.create({
     fontSize: 16,
     lineHeight: 26,
     color: "#0C0507",
+  },
+
+  placeContainer: {
+    paddingHorizontal: 30,
+    flexDirection: "row",
+    gap: 10,
+  },
+
+  placeCardContainer: {
+    paddingHorizontal: 30,
+    flexDirection: "row",
+    gap: 19.5,
   },
 });
