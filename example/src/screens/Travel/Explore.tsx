@@ -3,7 +3,6 @@ import {
   ScrollView,
   StyleSheet,
   Text,
-  Touchable,
   TouchableOpacity,
   View,
 } from "react-native";
@@ -13,13 +12,19 @@ import Subheader from "./components/subheader/subheader";
 import CategoryCard from "./components/category-card/category-card";
 import PlaceCard from "./components/place-card/place-card";
 import { FontAwesome6 } from "@react-native-vector-icons/fontawesome6";
+import avatar from "./images/avatar.png";
+import beach from "./images/beach.png";
+import mountain from "./images/mountain.png";
+import forest from "./images/forest.png";
+import kuta from "./images/kuta.jpg";
+import bromo from "./images/bromo.jpg";
 
 export default function Login() {
   return (
     <SafeAreaView style={styles.view}>
       <View style={styles.textContainer}>
         <View style={styles.avatarContainer}>
-          <Image style={styles.image} source={require("./images/avatar.png")} />
+          <Image style={styles.image} source={avatar} />
           <Text style={styles.avatarText}> Hello, Pristia!</Text>
         </View>
         <TouchableOpacity>
@@ -42,12 +47,9 @@ export default function Login() {
           horizontal
           showsHorizontalScrollIndicator={false}
         >
-          <CategoryCard text="Beach" image={require("./images/beach.png")} />
-          <CategoryCard
-            text="Mountain"
-            image={require("./images/mountain.png")}
-          />
-          <CategoryCard text="Forest" image={require("./images/forest.png")} />
+          <CategoryCard text="Beach" image={beach} />
+          <CategoryCard text="Mountain" image={mountain} />
+          <CategoryCard text="Forest" image={forest} />
         </ScrollView>
       </View>
       <Subheader text="Favorite" subtext="Explore" />
@@ -57,7 +59,7 @@ export default function Login() {
         showsHorizontalScrollIndicator={false}
       >
         <PlaceCard
-          image={require("./images/kuta.jpg")}
+          image={kuta}
           header="Kuta Beach"
           text="Bali, Indonesia"
           rate="4.8"
@@ -66,7 +68,7 @@ export default function Login() {
           text={"Jawa Ti, Indonesia"}
           header={"Bromo Mountain"}
           rate="4.0"
-          image={require("./images/bromo.jpg")}
+          image={bromo}
         ></PlaceCard>
       </ScrollView>
       <></>
@@ -108,6 +110,12 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     gap: 10,
+  },
+
+  image: {
+    width: 30,
+    height: 30,
+    borderRadius: 15,
   },
 
   avatarText: {

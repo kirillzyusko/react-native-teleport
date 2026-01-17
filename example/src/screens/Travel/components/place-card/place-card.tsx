@@ -16,7 +16,7 @@ import type { ExamplesStackNavigation } from "../../../../navigation/ExamplesSta
 type Props = {
   text: string;
   header: string;
-  rate?: string;
+  rate: string;
   image: ImageProps["source"];
 };
 
