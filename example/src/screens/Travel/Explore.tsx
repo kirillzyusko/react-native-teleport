@@ -1,9 +1,18 @@
-import { Image, ScrollView, StyleSheet, Text, View } from "react-native";
+import {
+  Image,
+  ScrollView,
+  StyleSheet,
+  Text,
+  Touchable,
+  TouchableOpacity,
+  View,
+} from "react-native";
 import TravelInput from "./components/input/input";
 import { SafeAreaView } from "react-native-safe-area-context";
 import Subheader from "./components/subheader/subheader";
 import CategoryCard from "./components/category-card/category-card";
 import PlaceCard from "./components/place-card/place-card";
+import { FontAwesome6 } from "@react-native-vector-icons/fontawesome6";
 
 export default function Login() {
   return (
@@ -13,10 +22,14 @@ export default function Login() {
           <Image style={styles.image} source={require("./images/avatar.png")} />
           <Text style={styles.avatarText}> Hello, Pristia!</Text>
         </View>
-        <Image
-          style={styles.image}
-          source={require("./images/notification.png")}
-        />
+        <TouchableOpacity>
+          <FontAwesome6
+            name="bell"
+            iconStyle="regular"
+            size={20}
+            style={{ color: "#000000" }}
+          />
+        </TouchableOpacity>
       </View>
 
       <Text style={styles.mainText}>Where do you want to explore today?</Text>
@@ -44,7 +57,7 @@ export default function Login() {
         showsHorizontalScrollIndicator={false}
       >
         <PlaceCard
-          image={require("./images/details.jpg")}
+          image={require("./images/kuta.jpg")}
           header="Kuta Beach"
           text="Bali, Indonesia"
           rate="4.8"

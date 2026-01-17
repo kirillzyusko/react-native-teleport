@@ -106,7 +106,7 @@ const DetailScreen = ({
 export default function Detail() {
   return (
     <DetailScreen
-      image={require("./images/details.jpg")}
+      image={require("./images/kuta.jpg")}
       header="Kuta Beach"
       text="FAVORITE PLACE"
       location="Bali, Indonesia"
