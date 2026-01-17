@@ -1,10 +1,5 @@
-import {
-  Image,
-  StyleSheet,
-  TextInput,
-  TouchableOpacity,
-  View,
-} from "react-native";
+import { FontAwesome6 } from "@react-native-vector-icons/fontawesome6";
+import { StyleSheet, TextInput, TouchableOpacity, View } from "react-native";
 
 export default function TravelInput() {
   return (
@@ -15,7 +10,12 @@ export default function TravelInput() {
         placeholderTextColor={"#BABABA"}
       />
       <TouchableOpacity style={styles.image}>
-        <Image source={require("../../images/search.png")} />
+        <FontAwesome6
+          name="magnifying-glass"
+          iconStyle="solid"
+          size={20}
+          color={"black"}
+        />
       </TouchableOpacity>
     </View>
   );
@@ -37,7 +37,6 @@ const styles = StyleSheet.create({
     letterSpacing: 0.25,
     backgroundColor: "#FAFAFA",
   },
-
   image: {
     position: "absolute",
     right: 50,

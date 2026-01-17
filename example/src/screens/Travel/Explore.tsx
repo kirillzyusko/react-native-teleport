@@ -69,9 +69,8 @@ export default function Login() {
           header={"Bromo Mountain"}
           rate="4.0"
           image={bromo}
-        ></PlaceCard>
+        />
       </ScrollView>
-      <></>
     </SafeAreaView>
   );
 }

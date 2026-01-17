@@ -5,6 +5,8 @@ import { FontAwesome6 } from "@react-native-vector-icons/fontawesome6";
 import type { NativeStackScreenProps } from "@react-navigation/native-stack";
 import type { ExamplesStackParamList } from "../../navigation/ExamplesStack";
 import type { ScreenNames } from "../../constants/screenNames";
+import verify from "./images/verify.png";
+import group1 from "./images/group1.png";
 
 type Props = {
   image: ImageProps["source"];
@@ -40,10 +42,7 @@ const DetailScreen = ({
           <View style={styles.view}>
             <View style={styles.verification}>
               <Text style={styles.heading}>{text}</Text>
-              <Image
-                source={require("./images/verify.png")}
-                style={styles.verificationImage}
-              />
+              <Image source={verify} style={styles.verificationImage} />
             </View>
             <Text style={styles.mainText}>{header}</Text>
             <View style={styles.verification}>
@@ -60,7 +59,7 @@ const DetailScreen = ({
                 <Text style={styles.heading}>{substring}</Text>
                 <Text style={styles.smallText}>people have explored</Text>
               </Text>
-              <Image source={require("./images/group1.png")} />
+              <Image source={group1} style={styles.avatars} />
             </View>
             <Text style={[styles.smallText]}>{description}</Text>
             <View style={[styles.textContainer, styles.mt30]}>
@@ -221,5 +220,9 @@ const styles = StyleSheet.create({
   verificationImage: {
     width: 18,
     height: 18,
+  },
+  avatars: {
+    width: 85,
+    height: 25,
   },
 });
