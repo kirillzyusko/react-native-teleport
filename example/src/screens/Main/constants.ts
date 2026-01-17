@@ -69,4 +69,10 @@ export const examples: Example[] = [
     info: ScreenNames.MESSENGER,
     icons: "💬",
   },
+  {
+    title: "Travel",
+    testID: "travel",
+    info: ScreenNames.TRAVEL_EXPLORE,
+    icons: "🏝️",
+  },
 ];

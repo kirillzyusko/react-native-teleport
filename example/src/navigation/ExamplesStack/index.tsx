@@ -17,7 +17,10 @@ import InstagramFeed from "../../screens/Instagram/Feed";
 import InstagramReels from "../../screens/Instagram/Reels";
 import DeepNavigation from "../../screens/DeepNavigation/Screen1";
 import DeepNavigationNested from "../../screens/DeepNavigation/Screen2";
+import TravelExplore from "../../screens/Travel/Explore";
+import TravelDetails from "../../screens/Travel/Details";
 import type { PostType } from "../../screens/Instagram/posts";
+import type { ImageProps } from "react-native";
 
 export type ExamplesStackParamList = {
   [ScreenNames.GESTURE_HANDLER_TOUCHABLE]: undefined;
@@ -35,6 +38,14 @@ export type ExamplesStackParamList = {
   };
   [ScreenNames.NAVIGATION_LIFECYCLE]: undefined;
   [ScreenNames.NAVIGATION_LIFECYCLE_NESTED]: undefined;
+  [ScreenNames.TRAVEL_EXPLORE]: undefined;
+  [ScreenNames.TRAVEL_DETAILS]: {
+    image: ImageProps["source"];
+    header: string;
+    text: string;
+    location: string;
+    rating: string;
+  };
 };
 
 const Stack = createNativeStackNavigator<ExamplesStackParamList>();
@@ -80,6 +91,12 @@ const options = {
   },
   [ScreenNames.NAVIGATION_LIFECYCLE_NESTED]: {
     title: "Navigation/Lifecycle",
+  },
+  [ScreenNames.TRAVEL_EXPLORE]: {
+    headerShown: false,
+  },
+  [ScreenNames.TRAVEL_DETAILS]: {
+    headerShown: false,
   },
 };
 
@@ -149,6 +166,16 @@ const ExamplesStack = () => (
       component={DeepNavigationNested}
       name={ScreenNames.NAVIGATION_LIFECYCLE_NESTED}
       options={options[ScreenNames.NAVIGATION_LIFECYCLE_NESTED]}
+    />
+    <Stack.Screen
+      component={TravelExplore}
+      name={ScreenNames.TRAVEL_EXPLORE}
+      options={options[ScreenNames.TRAVEL_EXPLORE]}
+    />
+    <Stack.Screen
+      component={TravelDetails}
+      name={ScreenNames.TRAVEL_DETAILS}
+      options={options[ScreenNames.TRAVEL_DETAILS]}
     />
   </Stack.Navigator>
 );
