@@ -38,26 +38,6 @@ const styles = StyleSheet.create({
     backgroundColor: "#FAFAFA",
   },
 
-  text: {
-    fontFamily: "Urbanist",
-    fontWeight: 400,
-    fontSize: 12,
-    lineHeight: 25,
-    color: "#BABABA",
-    marginLeft: 5,
-    marginRight: 5,
-  },
-
-  textContainer: {
-    backgroundColor: "#FFFFFF",
-    marginLeft: 20,
-    position: "absolute",
-    left: 30,
-    top: -12,
-
-    zIndex: 1,
-  },
-
   image: {
     position: "absolute",
     right: 50,

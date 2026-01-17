@@ -25,14 +25,14 @@ export default function Login() {
       <View style={styles.textContainer}>
         <View style={styles.avatarContainer}>
           <Image style={styles.image} source={avatar} />
-          <Text style={styles.avatarText}> Hello, Pristia!</Text>
+          <Text style={styles.avatarText}>Hello, Pristia!</Text>
         </View>
         <TouchableOpacity>
           <FontAwesome6
             name="bell"
             iconStyle="regular"
             size={20}
-            style={{ color: "#000000" }}
+            style={styles.black}
           />
         </TouchableOpacity>
       </View>
@@ -132,5 +132,9 @@ const styles = StyleSheet.create({
     paddingHorizontal: 30,
     flexDirection: "row",
     gap: 19.5,
+  },
+
+  black: {
+    color: "#000000",
   },
 });

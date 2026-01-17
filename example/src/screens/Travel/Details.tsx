@@ -42,7 +42,7 @@ const DetailScreen = ({
               <Text style={styles.heading}>{text}</Text>
               <Image
                 source={require("./images/verify.png")}
-                style={{ width: 18, height: 18 }}
+                style={styles.verificationImage}
               />
             </View>
             <Text style={styles.mainText}>{header}</Text>
@@ -51,7 +51,7 @@ const DetailScreen = ({
                 name="location-dot"
                 iconStyle="solid"
                 size={18}
-                style={{ color: "white" }}
+                style={styles.white}
               />
               <Text style={styles.location}>{location}</Text>
             </View>
@@ -69,7 +69,7 @@ const DetailScreen = ({
                   name="star"
                   iconStyle="solid"
                   size={18}
-                  style={{ color: "#FCD240" }}
+                  style={styles.yellow}
                 />
                 <Text style={styles.numbers}>{rating}</Text>
               </View>
@@ -78,7 +78,7 @@ const DetailScreen = ({
                   name="arrow-down"
                   iconStyle="solid"
                   size={18}
-                  style={{ color: "white" }}
+                  style={styles.white}
                 />
               </View>
             </View>
@@ -208,5 +208,18 @@ const styles = StyleSheet.create({
   },
   mt30: {
     marginTop: 30,
+  },
+
+  yellow: {
+    color: "#FCD240",
+  },
+
+  white: {
+    color: "#FFFFFF",
+  },
+
+  verificationImage: {
+    width: 18,
+    height: 18,
   },
 });

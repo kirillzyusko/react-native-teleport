@@ -55,7 +55,7 @@ export default function PlaceCard({ text, image, header, rate }: Props) {
               name="location-dot"
               iconStyle="solid"
               size={12}
-              style={{ color: "white" }}
+              style={styles.white}
             />
             <Text style={styles.text}>{text}</Text>
           </View>
@@ -65,31 +65,31 @@ export default function PlaceCard({ text, image, header, rate }: Props) {
                 name="star"
                 iconStyle="solid"
                 size={12}
-                style={{ color: "#FCD240" }}
+                style={styles.yellow}
               />
               <FontAwesome6
                 name="star"
                 iconStyle="solid"
                 size={12}
-                style={{ color: "#FCD240" }}
+                style={styles.yellow}
               />
               <FontAwesome6
                 name="star"
                 iconStyle="solid"
                 size={12}
-                style={{ color: "#FCD240" }}
+                style={styles.yellow}
               />
               <FontAwesome6
                 name="star"
                 iconStyle="solid"
                 size={12}
-                style={{ color: "#FCD240" }}
+                style={styles.yellow}
               />
               <FontAwesome6
                 name="star"
                 iconStyle="solid"
                 size={12}
-                style={{ color: "#FFFFFF" }}
+                style={styles.white}
               />
             </View>
             <Text style={styles.rate}>{rate}</Text>
@@ -168,4 +168,8 @@ const styles = StyleSheet.create({
     backgroundColor: "#FFFFFF",
     borderRadius: 999,
   },
+
+  yellow: { color: "#FCD240" },
+
+  white: { color: "#FFFFFF" },
 });

@@ -45,13 +45,6 @@ const styles = StyleSheet.create({
     lineHeight: 26,
     color: "#0C0507",
   },
-  subtext: {
-    fontFamily: "Urbanist",
-    fontWeight: 400,
-    fontSize: 14,
-    lineHeight: 24,
-    color: "#BABABA",
-  },
 
   image: {
     width: 24,
