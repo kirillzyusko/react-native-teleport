@@ -32,4 +32,4 @@ More
 * [Blog](/react-native-teleport/blog)
 * [GitHub](https://github.com/kirillzyusko/react-native-teleport)
 
-Copyright © 2025 Kirill Zyusko. Built with Docusaurus.
+Copyright © 2026 Kirill Zyusko. Built with Docusaurus.
