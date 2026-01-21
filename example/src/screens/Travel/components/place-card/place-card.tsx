@@ -13,6 +13,8 @@ import { useNavigation } from "@react-navigation/native";
 import { ScreenNames } from "../../../../constants/screenNames";
 import type { ExamplesStackNavigation } from "../../../../navigation/ExamplesStack";
 
+import Hero from "../../hero";
+
 type Props = {
   text: string;
   header: string;
@@ -43,13 +45,15 @@ export default function PlaceCard({ text, image, header, rate }: Props) {
       style={styles.card}
       onPress={handleCardPress}
     >
-      <Image style={styles.card} source={image}></Image>
+      <Image style={styles.card} source={image} />
       <LinearGradient
         colors={["rgba(0, 0, 0, 0)", "rgba(0, 0, 0, 0.89)"]}
         style={[styles.card, styles.absolute]}
       >
         <View style={styles.content}>
-          <Text style={styles.header}>{header}</Text>
+          <Hero.Text id={header} style={styles.header}>
+            {header}
+          </Hero.Text>
           <View style={styles.container}>
             <FontAwesome6
               name="location-dot"
