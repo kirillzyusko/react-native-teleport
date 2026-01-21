@@ -65,9 +65,10 @@ export default function Login() {
           rate="4.8"
         />
         <PlaceCard
-          text={"Jawa Ti, Indonesia"}
-          header={"Bromo Mountain"}
+          text="Jawa Ti, Indonesia"
+          header="Bromo Mountain"
           rate="4.0"
+          // TODO: change images to fetch from web
           image={bromo}
         />
       </ScrollView>
