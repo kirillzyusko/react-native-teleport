@@ -8,6 +8,8 @@ import type { ScreenNames } from "../../constants/screenNames";
 import verify from "./images/verify.png";
 import group1 from "./images/group1.png";
 
+import Hero from "./hero";
+
 type Props = {
   image: ImageProps["source"];
   header: string;
@@ -44,7 +46,9 @@ const DetailScreen = ({
               <Text style={styles.heading}>{text}</Text>
               <Image source={verify} style={styles.verificationImage} />
             </View>
-            <Text style={styles.mainText}>{header}</Text>
+            <Hero.Text id={header} style={styles.mainText}>
+              {header}
+            </Hero.Text>
             <View style={styles.verification}>
               <FontAwesome6
                 name="location-dot"
