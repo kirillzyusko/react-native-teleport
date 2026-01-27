@@ -2726,7 +2726,7 @@ PODS:
     - SocketRocket
     - Yoga
   - SocketRocket (0.7.1)
-  - Teleport (0.5.6):
+  - Teleport (1.0.0):
     - boost
     - DoubleConversion
     - fast_float
@@ -2753,9 +2753,9 @@ PODS:
     - ReactCommon/turbomodule/bridging
     - ReactCommon/turbomodule/core
     - SocketRocket
-    - Teleport/common (= 0.5.6)
+    - Teleport/common (= 1.0.0)
     - Yoga
-  - Teleport/common (0.5.6):
+  - Teleport/common (1.0.0):
     - boost
     - DoubleConversion
     - fast_float
@@ -3054,7 +3054,7 @@ SPEC CHECKSUMS:
   hermes-engine: e7491a2038f2618c8cd444ed411a6deb350a3742
   lottie-ios: a881093fab623c467d3bce374367755c272bdd59
   lottie-react-native: d849be4292d467c0e13fd4ca5042bb352b7d1a61
-  RCT-Folly: 59ec0ac1f2f39672a0c6e6cecdd39383b764646f
+  RCT-Folly: 846fda9475e61ec7bcbf8a3fe81edfcaeb090669
   RCTDeprecation: 0735ab4f6b3ec93a7f98187b5da74d7916e2cf4c
   RCTRequired: 8fcc7801bfc433072287b0f24a662e2816e89d0c
   RCTTypeSafety: 2b2be515d6b968bcba7a68c4179d8199bd8c9b58
@@ -3126,7 +3126,7 @@ SPEC CHECKSUMS:
   RNScreens: 74985ca8e102294a60cec7513fa84c936fa0b20b
   RNWorklets: ab7740c2a152f77ff76a40d52be860d8f128fab1
   SocketRocket: d4aabe649be1e368d1318fdf28a022d714d65748
-  Teleport: 04b643bd15e2c549667060e57c06843186e0a652
+  Teleport: 369f9b5bd327045ed00018145db75685232e4838
   Yoga: b01392348aeea02064c21a2762a42893d82b60a7
 
 PODFILE CHECKSUM: fa8e39e99744a38fb613b9c3b11b26af576d7d44
