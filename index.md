@@ -8,8 +8,6 @@
 
 Search
 
-![](/react-native-teleport/assets/images/teleport-65785a9f1211bc6992db0cca2993d621.png)
-
 # Teleport
 
 Missing native portal implementation for react-native
