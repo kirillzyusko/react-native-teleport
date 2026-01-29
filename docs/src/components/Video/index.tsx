@@ -1,5 +1,4 @@
 import useBaseUrl from "@docusaurus/useBaseUrl";
-import React from "react";
 
 type VideoProps = {
   src: string;
