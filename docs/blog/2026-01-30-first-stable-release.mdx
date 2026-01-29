@@ -1,0 +1,88 @@
+---
+slug: welcome
+title: Meet teleport!
+authors: [kirill]
+tags: [portal, teleport, react-native]
+---
+
+I'm excited to announce the **first stable release of `react-native-teleport`**! 🎉
+
+After extensive development, community feedback and integrating the lib into many prod apps, we've reached a big milestone: a **production-ready** portal solution that brings **true native portals** to react-native — something the framework has been missing for years.
+
+## What is `react-native-teleport`?
+
+`react-native-teleport` solves a fundamental problem in React Native development: it brings missing [Portal](https://react.dev/reference/react-dom/createPortal) component to react-native.
+
+Historically, developers had to use JS based solutions to render modals, tooltips, overlays, and other components that need to visually appear in a different part of your UI tree. While they work, they have significant limitation: they **physically** render components in a **different part of React tree**, **breaking context** and bringing other related problems.
+
+The `react-native-teleport` solves this problem by moving rendering of components in the native layer. This library provides a **declarative API**, doesn't rely on ***internal*** React implementation details, and **works identically** on **iOS, Android, and Web**.
+
+## Not only Portal
+
+As you may noticed from the library title this library is **not only a portal solution**. It also provides a **re-parenting pattern** that allows you to **move existing components without unmounting or remounting** them.
+
+With that technique you can build **advanced and seamless** transitions, implement **shared-element-style** transitions between screens, and more.
+
+For example you can implement photos app transitions like this without flickering, white/black screens, jumps and other distracting things:
+
+import Video from "@site/src/components/Video";
+
+<Video src="/video/photos.mp4" width={35} />
+<br />
+
+The great thing is that view is **not re-created or destroyed** when it's moved between different parents. This mean you can use this lib for stateful components, like `Video`/`Lottie` etc. and you can easily replicate patterns that you've seen in many well-known apps, for example you can re-build Instagram-like reels transition:
+
+<Video src="/video/instagram.mov" width={35} />
+<br />
+
+## Not only about transitions and rendering outside
+
+Traditionally, React has three operations in its reconciliation mechanism: **create**, **update**, and **destroy**. When you **move** a component from one parent to another in the React tree, it gets **destroyed** and **recreated**.
+
+But effectively `react-native-teleport` **unlocks a new dimension** and introduces a fourth operation: **move**. This is a game-changer because it allows you to:
+
+### Pre-render Components Offscreen
+
+You can render expensive components off-screen and move them into view only when needed. This is particularly useful for complex overlays, modals, or bottom sheets that require significant setup time.
+
+```tsx
+// Pre-render the editor off-screen
+<Portal hostName={used ? 'editor' : undefined}>
+  <ExpensiveRichTextEditor />
+</Portal>
+
+// Later, when user triggers an action, simply move it into view
+// No re-rendering, no state loss, just a native view reposition
+```
+
+### Re-use Views Between Screens
+
+One of the most powerful patterns enabled by the "move" operation is **view reuse across navigation transitions**. You can render the same component instance on multiple screens and seamlessly move it as users navigate.
+
+Imagine you have the same component rendered twice on two different screens. If it's heavy for rendering a typical path is to dig into performance bottlenecks, fixing them etc. But with `react-native-teleport` you can **simply move** the component between screens and it will be rendered only once 🤯
+
+### And more
+
+I'm still exploring of what can be done with this library. Things that I discovered helped to build flicker free transitions while moving heavy views and helped to optimize performance from the angle that I never thought about that (just re-using the view without re-creating it).
+
+But I continue to explore what other patterns and use cases can be enabled with this library. I'm also looking for feedback from the community and I'm open to suggestions and ideas.
+
+## What's Next?
+
+We have exciting plans for future releases:
+
+- 🪞 Mirror support for advanced mirroring patterns
+- 🚀 Performance optimizations
+- 🤓 Additional platform support
+- 🙌 Community-driven features based on feedback
+
+## Thank You
+
+This milestone wouldn't be possible without the incredible React Native community. Thank you to everyone who tested, provided feedback, reported issues, and contributed to making `react-native-teleport` better.
+
+If you find this library useful, please consider:
+
+- ⭐ Starring on [GitHub](https://github.com/kirillzyusko/react-native-teleport)
+- 📢 Sharing with the community
+- 🐛 Reporting issues and providing feedback
+- 🤝 Contributing improvements
