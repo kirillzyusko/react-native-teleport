@@ -7,7 +7,6 @@ import Layout from "@theme/Layout";
 import Heading from "@theme/Heading";
 
 import styles from "./index.module.css";
-import ufo from "@site/static/img/lottie/ufo.lottie.json";
 
 const lottie = {
   width: 600,
@@ -20,7 +19,12 @@ function HomepageHeader() {
     <header className={clsx(styles.landing, styles.heroBanner)}>
       <div className="container">
         <div className="preview">
-          <Lottie animationData={ufo} loop={true} style={lottie} />
+          <Lottie
+            animationData={require("@site/static/img/lottie/ufo.lottie.json")}
+            loop={true}
+            autoPlay={true}
+            style={lottie}
+          />
         </div>
         <Heading as="h1" className={styles.title}>
           {siteConfig.title}
