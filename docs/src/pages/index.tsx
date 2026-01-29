@@ -1,4 +1,5 @@
 import type { ReactNode } from "react";
+import Lottie from "lottie-react";
 import clsx from "clsx";
 import Link from "@docusaurus/Link";
 import useDocusaurusContext from "@docusaurus/useDocusaurusContext";
@@ -7,13 +8,23 @@ import Heading from "@theme/Heading";
 
 import styles from "./index.module.css";
 
+const lottie = {
+  width: 600,
+  height: 600,
+};
+
 function HomepageHeader() {
   const { siteConfig } = useDocusaurusContext();
   return (
     <header className={clsx(styles.landing, styles.heroBanner)}>
       <div className="container">
         <div className="preview">
-          <img src={require("@site/static/img/gifs/teleport.png").default} />
+          <Lottie
+            animationData={require("@site/static/img/lottie/ufo.lottie.json")}
+            loop={true}
+            autoPlay={true}
+            style={lottie}
+          />
         </div>
         <Heading as="h1" className={styles.title}>
           {siteConfig.title}

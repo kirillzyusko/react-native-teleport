@@ -80,6 +80,7 @@
     "**/*.xcscheme",
     "**/*.xcworkspacedata",
     "**/*.svg",
+    "**/*.lottie.json",
     "**/*.storyboard",
     "example/src/assets/lottie/**",
     "cspell.json",
