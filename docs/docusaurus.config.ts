@@ -188,8 +188,8 @@ const config: Config = {
         content:
           "react-native, portal, teleport, reparent, re-parent, re-parenting, reparentable",
       },
-      { name: "og:image:width", content: "3456" },
-      { name: "og:image:height", content: "1582" },
+      { name: "og:image:width", content: "3232" },
+      { name: "og:image:height", content: "1596" },
     ],
     algolia: {
       appId: "XYVIEPDGBE",
