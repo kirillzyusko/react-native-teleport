@@ -17,13 +17,23 @@
 
 #import <React/RCTSurfaceTouchHandler.h>
 
+#include <atomic>
+
 using namespace facebook::react;
+
+// Global counter for z-ordering of portals - ensures later portals appear on top
+// Using atomic for thread safety in React Native Fabric's concurrent architecture
+static std::atomic<NSInteger> globalZIndexCounter(0);
+// Base z-position high enough to be above normal content
+static const CGFloat kBaseZPosition = 1000.0f;
+static const CGFloat kZPositionIncrement = 1.0f;
 
 @interface PortalView () <RCTPortalViewViewProtocol>
 
 @property (nonatomic, strong) NSString *hostName;
 @property (nonatomic, strong) UIView *targetView;
 @property (nonatomic, assign) BOOL isWaitingForHost;
+@property (nonatomic, assign) NSInteger portalZIndex;
 
 @end
 
@@ -44,6 +54,7 @@ using namespace facebook::react;
     UIView *content = [[UIView alloc] init];
     self.contentView = content;
     self.targetView = content;
+    self.portalZIndex = 0;
   }
 
   return self;
@@ -58,6 +69,14 @@ using namespace facebook::react;
   NSInteger i = 0;
   for (UIView *child in children) {
     [target insertSubview:child atIndex:i++];
+    // Apply z-position for proper stacking order of nested portals
+    if (target != self.contentView) {
+      child.layer.zPosition = kBaseZPosition + (self.portalZIndex * kZPositionIncrement);
+      [target bringSubviewToFront:child];
+    } else {
+      // Reset zPosition when moving back to contentView
+      child.layer.zPosition = 0;
+    }
   }
 }
 
@@ -78,6 +97,10 @@ using namespace facebook::react;
     }
 
     self.hostName = newHostName;
+
+    // Assign a new z-index when teleporting to a host
+    // Using atomic fetch_add for thread safety
+    self.portalZIndex = (newHostName != nil) ? globalZIndexCounter.fetch_add(1) + 1 : 0;
 
     PortalHostView *hostView = nil;
     if (self.hostName) {
@@ -110,17 +133,28 @@ using namespace facebook::react;
                           index:(NSInteger)index
 {
   [self.targetView insertSubview:childComponentView atIndex:index];
+  // Apply z-position for proper stacking order of nested portals
+  if (self.targetView != self.contentView) {
+    childComponentView.layer.zPosition = kBaseZPosition + (self.portalZIndex * kZPositionIncrement);
+    [self.targetView bringSubviewToFront:childComponentView];
+  }
 }
 
 - (void)unmountChildComponentView:(UIView<RCTComponentViewProtocol> *)childComponentView
                             index:(NSInteger)index
 {
+  // Reset zPosition before removing to prevent stale values in recycled views
+  childComponentView.layer.zPosition = 0;
   [childComponentView removeFromSuperview];
 }
 
 - (void)onHostAvailable
 {
   self.isWaitingForHost = NO;
+
+  // Assign a new z-index when host becomes available
+  // Using atomic fetch_add for thread safety
+  self.portalZIndex = globalZIndexCounter.fetch_add(1) + 1;
 
   PortalHostView *hostView = [[PortalRegistry sharedInstance] getHostWithName:self.hostName];
   if (hostView) {
@@ -137,6 +171,16 @@ using namespace facebook::react;
     [[PortalRegistry sharedInstance] unregisterPendingPortal:self withHostName:self.hostName];
     self.isWaitingForHost = NO;
   }
+
+  // Reset zPosition on all contentView children to prevent stale values in recycled views
+  for (UIView *child in self.contentView.subviews) {
+    child.layer.zPosition = 0;
+  }
+
+  // Reset portal state for clean recycling
+  self.portalZIndex = 0;
+  self.targetView = self.contentView;
+  self.hostName = nil;
 }
 
 // MARK: touch handling

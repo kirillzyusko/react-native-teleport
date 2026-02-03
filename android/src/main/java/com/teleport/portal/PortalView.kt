@@ -6,6 +6,7 @@ import android.view.ViewGroup
 import com.facebook.react.views.view.ReactViewGroup
 import com.teleport.global.PortalRegistry
 import java.util.ArrayList
+import java.util.concurrent.atomic.AtomicInteger
 
 class PortalView(
   context: Context,
@@ -13,6 +14,20 @@ class PortalView(
   private var hostName: String? = null
   private var isWaitingForHost = false
   private val ownChildren: MutableList<View> = ArrayList()
+  private var portalZIndex: Int = 0
+
+  companion object {
+    // Global counter for z-ordering of portals - ensures later portals appear on top
+    private val zIndexCounter = AtomicInteger(0)
+    private const val BASE_ELEVATION = 10f
+    private const val ELEVATION_INCREMENT = 1f
+  }
+
+  private fun applyElevation(child: View) {
+    // Use translationZ for proper z-ordering on Android API 21+
+    // This ensures nested portals (e.g., nested bottom sheets) render on top
+    child.translationZ = BASE_ELEVATION + (portalZIndex * ELEVATION_INCREMENT)
+  }
 
   fun setHostName(name: String?) {
     val children = extractChildren()
@@ -23,6 +38,9 @@ class PortalView(
     }
 
     hostName = name
+
+    // Assign a new z-index when teleporting to a host
+    portalZIndex = if (name != null) zIndexCounter.incrementAndGet() else 0
 
     val target: ViewGroup =
       hostName?.let { hostNameValue ->
@@ -40,6 +58,14 @@ class PortalView(
       val child = children[i]
       // Append if to host, preserve index if to self
       target.addView(child, if (target == this) i else -1)
+      // Apply elevation and bring to front for proper stacking order
+      if (target != this) {
+        applyElevation(child)
+        child.bringToFront()
+      } else {
+        // Reset translationZ when un-teleporting back to self
+        child.translationZ = 0f
+      }
     }
 
     // Track own children if teleported
@@ -53,11 +79,16 @@ class PortalView(
 
     val host = PortalRegistry.getHost(hostName)
     if (host != null) {
+      // Assign a new z-index when host becomes available
+      portalZIndex = zIndexCounter.incrementAndGet()
+
       // Gather from self (physical, since waiting)
       val children = extractPhysicalChildren()
 
       for (child in children) {
         host.addView(child)
+        applyElevation(child)
+        child.bringToFront()
       }
       ownChildren.addAll(children)
     }
@@ -122,6 +153,8 @@ class PortalView(
     if (isTeleported()) {
       val host = PortalRegistry.getHost(hostName)
       host?.addView(child, index)
+      applyElevation(child)
+      child.bringToFront()
       ownChildren.add(index, child)
     } else {
       super.addView(child, index)
@@ -136,6 +169,8 @@ class PortalView(
     if (isTeleported()) {
       val host = PortalRegistry.getHost(hostName)
       host?.addView(child, index, params)
+      applyElevation(child)
+      child.bringToFront()
       ownChildren.add(index, child)
     } else {
       super.addView(child, index, params)
@@ -143,6 +178,8 @@ class PortalView(
   }
 
   override fun removeView(view: View) {
+    // Reset translationZ before removal to prevent stale values in recycled views
+    view.translationZ = 0f
     if (isTeleported()) {
       val host = PortalRegistry.getHost(hostName)
       host?.removeView(view)
@@ -157,6 +194,8 @@ class PortalView(
       val host = PortalRegistry.getHost(hostName)
       val view = ownChildren.getOrNull(index)
       if (view != null) {
+        // Reset translationZ before removal to prevent stale values in recycled views
+        view.translationZ = 0f
         host?.removeView(view)
         ownChildren.removeAt(index)
       }
