@@ -39,7 +39,7 @@ class PortalView(
 
     hostName = name
 
-    // Assign a new z-index when teleporting to a host
+    // Assign a new z-index when teleport to a host
     portalZIndex = if (name != null) zIndexCounter.incrementAndGet() else 0
 
     val target: ViewGroup =
@@ -63,7 +63,7 @@ class PortalView(
         applyElevation(child)
         child.bringToFront()
       } else {
-        // Reset translationZ when un-teleporting back to self
+        // Reset translationZ when un-teleport back to self
         child.translationZ = 0f
       }
     }

@@ -98,7 +98,7 @@ static const CGFloat kZPositionIncrement = 1.0f;
 
     self.hostName = newHostName;
 
-    // Assign a new z-index when teleporting to a host
+    // Assign a new z-index when teleport to a host
     // Using atomic fetch_add for thread safety
     self.portalZIndex = (newHostName != nil) ? globalZIndexCounter.fetch_add(1) + 1 : 0;
 
