@@ -55,9 +55,10 @@ using namespace facebook::react;
   for (UIView *child in children) {
     [child removeFromSuperview];
   }
-  NSInteger i = 0;
   for (UIView *child in children) {
-    [target insertSubview:child atIndex:i++];
+    // Append children to the end of the target to maintain correct z-order
+    // when teleporting to a different container
+    [target addSubview:child];
   }
 }
 
@@ -109,7 +110,14 @@ using namespace facebook::react;
 - (void)mountChildComponentView:(UIView<RCTComponentViewProtocol> *)childComponentView
                           index:(NSInteger)index
 {
-  [self.targetView insertSubview:childComponentView atIndex:index];
+  if (self.targetView == self.contentView) {
+    // When adding to self, preserve the React tree order with the provided index
+    [self.targetView insertSubview:childComponentView atIndex:index];
+  } else {
+    // When adding to a different container (host), append to the end to ensure
+    // correct z-order: later dialogs appear on top of earlier ones
+    [self.targetView addSubview:childComponentView];
+  }
 }
 
 - (void)unmountChildComponentView:(UIView<RCTComponentViewProtocol> *)childComponentView
