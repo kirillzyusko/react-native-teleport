@@ -121,7 +121,7 @@ class PortalView(
   ) {
     if (isTeleported()) {
       val host = PortalRegistry.getHost(hostName)
-      host?.addView(child, index)
+      host?.addView(child)
       ownChildren.add(index, child)
     } else {
       super.addView(child, index)
@@ -135,7 +135,7 @@ class PortalView(
   ) {
     if (isTeleported()) {
       val host = PortalRegistry.getHost(hostName)
-      host?.addView(child, index, params)
+      host?.addView(child, params)
       ownChildren.add(index, child)
     } else {
       super.addView(child, index, params)

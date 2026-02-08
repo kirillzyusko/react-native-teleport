@@ -21,6 +21,7 @@ import TravelExplore from "../../screens/Travel/Explore";
 import TravelDetails from "../../screens/Travel/Details";
 import type { PostType } from "../../screens/Instagram/posts";
 import type { ImageProps } from "react-native";
+import TeleportationOrder from "../../screens/TeleportationOrder";
 
 export type ExamplesStackParamList = {
   [ScreenNames.GESTURE_HANDLER_TOUCHABLE]: undefined;
@@ -46,6 +47,7 @@ export type ExamplesStackParamList = {
     location: string;
     rating: string;
   };
+  [ScreenNames.TELEPORTATION_ORDER]: undefined;
 };
 
 const Stack = createNativeStackNavigator<ExamplesStackParamList>();
@@ -97,6 +99,9 @@ const options = {
   },
   [ScreenNames.TRAVEL_DETAILS]: {
     headerShown: false,
+  },
+  [ScreenNames.TELEPORTATION_ORDER]: {
+    title: "Teleportation order",
   },
 };
 
@@ -176,6 +181,11 @@ const ExamplesStack = () => (
       component={TravelDetails}
       name={ScreenNames.TRAVEL_DETAILS}
       options={options[ScreenNames.TRAVEL_DETAILS]}
+    />
+    <Stack.Screen
+      component={TeleportationOrder}
+      name={ScreenNames.TELEPORTATION_ORDER}
+      options={options[ScreenNames.TELEPORTATION_ORDER]}
     />
   </Stack.Navigator>
 );

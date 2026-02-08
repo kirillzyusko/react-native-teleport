@@ -55,9 +55,8 @@ using namespace facebook::react;
   for (UIView *child in children) {
     [child removeFromSuperview];
   }
-  NSInteger i = 0;
   for (UIView *child in children) {
-    [target insertSubview:child atIndex:i++];
+    [target addSubview:child];
   }
 }
 
@@ -109,7 +108,13 @@ using namespace facebook::react;
 - (void)mountChildComponentView:(UIView<RCTComponentViewProtocol> *)childComponentView
                           index:(NSInteger)index
 {
-  [self.targetView insertSubview:childComponentView atIndex:index];
+  if (self.targetView == self.contentView) {
+    // when adding to self, preserve the React tree order with the provided index
+    [self.targetView insertSubview:childComponentView atIndex:index];
+  } else {
+    // when adding to a different container (host), append to the
+    [self.targetView addSubview:childComponentView];
+  }
 }
 
 - (void)unmountChildComponentView:(UIView<RCTComponentViewProtocol> *)childComponentView

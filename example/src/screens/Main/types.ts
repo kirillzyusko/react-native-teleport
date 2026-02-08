@@ -12,7 +12,8 @@ export type ExampleScreen =
   | ScreenNames.INSTAGRAM_FEED
   | ScreenNames.BOTTOM_SHEET
   | ScreenNames.MESSENGER
-  | ScreenNames.TRAVEL_EXPLORE;
+  | ScreenNames.TRAVEL_EXPLORE
+  | ScreenNames.TELEPORTATION_ORDER;
 
 export type Example = {
   testID: string;
