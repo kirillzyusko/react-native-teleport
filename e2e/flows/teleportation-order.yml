@@ -1,0 +1,41 @@
+appId: teleport.example
+---
+- launchApp
+- tapOn:
+    id: "teleportation_order"
+- assertVisible:
+    text: "Open First Dialog"
+- tapOn:
+    text: "Open First Dialog"
+- assertVisible:
+    text: "First Dialog"
+- tapOn:
+    text: "Open Second Dialog"
+- assertVisible:
+    text: "Second Dialog"
+- tapOn:
+    text: "Open Third Dialog"
+- assertVisible:
+    text: "Third Dialog"
+- tapOn:
+    text: "Close Third Dialog"
+- assertVisible:
+    text: "Second Dialog"
+- assertNotVisible:
+    text: "Third Dialog"
+- tapOn:
+    text: "Close Second Dialog"
+- assertVisible:
+    text: "First Dialog"
+- assertNotVisible:
+    text: "Second Dialog"
+- assertNotVisible:
+    text: "Third Dialog"
+- tapOn:
+    text: "Close First Dialog"
+- assertNotVisible:
+    text: "First Dialog"
+- assertNotVisible:
+    text: "Second Dialog"
+- assertNotVisible:
+    text: "Third Dialog"

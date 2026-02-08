@@ -52,6 +52,12 @@ export const examples: Example[] = [
     icons: "♻️",
   },
   {
+    title: "Teleportation order",
+    testID: "teleportation_order",
+    info: ScreenNames.TELEPORTATION_ORDER,
+    icons: "🛸",
+  },
+  {
     title: "Instagram Reels",
     testID: "reels",
     info: ScreenNames.INSTAGRAM_FEED,

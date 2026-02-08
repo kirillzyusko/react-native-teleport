@@ -56,8 +56,6 @@ using namespace facebook::react;
     [child removeFromSuperview];
   }
   for (UIView *child in children) {
-    // Append children to the end of the target to maintain correct z-order
-    // when teleporting to a different container
     [target addSubview:child];
   }
 }
@@ -111,11 +109,10 @@ using namespace facebook::react;
                           index:(NSInteger)index
 {
   if (self.targetView == self.contentView) {
-    // When adding to self, preserve the React tree order with the provided index
+    // when adding to self, preserve the React tree order with the provided index
     [self.targetView insertSubview:childComponentView atIndex:index];
   } else {
-    // When adding to a different container (host), append to the end to ensure
-    // correct z-order: later dialogs appear on top of earlier ones
+    // when adding to a different container (host), append to the
     [self.targetView addSubview:childComponentView];
   }
 }

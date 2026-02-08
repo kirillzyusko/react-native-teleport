@@ -121,8 +121,6 @@ class PortalView(
   ) {
     if (isTeleported()) {
       val host = PortalRegistry.getHost(hostName)
-      // Append to host to maintain correct z-order (later dialogs on top)
-      // but preserve index in ownChildren to maintain logical order
       host?.addView(child)
       ownChildren.add(index, child)
     } else {
@@ -137,8 +135,6 @@ class PortalView(
   ) {
     if (isTeleported()) {
       val host = PortalRegistry.getHost(hostName)
-      // Append to host to maintain correct z-order (later dialogs on top)
-      // but preserve index in ownChildren to maintain logical order
       host?.addView(child, params)
       ownChildren.add(index, child)
     } else {
