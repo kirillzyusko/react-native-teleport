@@ -30,17 +30,22 @@ export default function Portal({ hostName, children, style }: PortalProps) {
 
     const hostNode = hostName ? getHost(hostName) : null;
     if (hostNode) {
+      // teleport view to the host
       if (supportsMoveBefore && el.parentNode) {
         hostNode.moveBefore(el, null);
       } else {
         if (el.parentNode) {
           el.parentNode.removeChild(el);
         }
+
         hostNode.appendChild(el);
       }
+
       isWaitingForHostRef.current = false;
     } else if (sentinelRef.current && sentinelRef.current.parentNode) {
+      // keep view locally
       const parent = sentinelRef.current.parentNode;
+
       if (supportsMoveBefore && el.parentNode) {
         parent.moveBefore(el, sentinelRef.current);
       } else {
