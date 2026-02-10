@@ -5,6 +5,8 @@ import { createPortal } from "react-dom";
 import { usePortalRegistryContext } from "../../contexts/PortalRegistry";
 import type { PortalProps } from "../../types";
 
+const supportsMoveBefore =
+  typeof Element !== "undefined" && "moveBefore" in Element.prototype;
 export default function Portal({ hostName, children, style }: PortalProps) {
   const { getHost, registerPendingPortal, unregisterPendingPortal } =
     usePortalRegistryContext();
@@ -26,19 +28,27 @@ export default function Portal({ hostName, children, style }: PortalProps) {
     const el = elRef.current;
     if (!el) return;
 
-    if (el.parentNode) {
-      el.parentNode.removeChild(el);
-    }
-
     const hostNode = hostName ? getHost(hostName) : null;
-
     if (hostNode) {
-      // teleport view to the host
-      hostNode.appendChild(el);
+      if (supportsMoveBefore && el.parentNode) {
+        hostNode.moveBefore(el, null);
+      } else {
+        if (el.parentNode) {
+          el.parentNode.removeChild(el);
+        }
+        hostNode.appendChild(el);
+      }
       isWaitingForHostRef.current = false;
     } else if (sentinelRef.current && sentinelRef.current.parentNode) {
-      // keep view locally
-      sentinelRef.current.parentNode.insertBefore(el, sentinelRef.current);
+      const parent = sentinelRef.current.parentNode;
+      if (supportsMoveBefore && el.parentNode) {
+        parent.moveBefore(el, sentinelRef.current);
+      } else {
+        if (el.parentNode) {
+          el.parentNode.removeChild(el);
+        }
+        parent.insertBefore(el, sentinelRef.current);
+      }
     }
   }, [hostName, getHost]);
 
