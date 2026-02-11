@@ -17,11 +17,15 @@ keywords:
   ]
 ---
 
-# Building Instagram-like Shared Transitions
+# Building Instagram-like Transitions
 
 In this guide we'll recreate the transition Instagram uses when you tap a video in your feed and it smoothly expands into a full-screen Reels viewer. When you go back, the video shrinks back into its original position — all without interrupting playback.
 
 We'll use iOS transition reference and will replicate it to iOS, Android and web, so that navigation on all 3 platforms delivers the same exceptional experience.
+
+import Video from "@site/src/components/Video";
+
+<Video src="/video/instagram.mov" width={35} />
 
 ## How it works — the big picture
 
@@ -51,10 +55,10 @@ Feed (in-place) ◀──done──────┘
 
 This guide assumes you have a React Native project with the following libraries installed:
 
-- [`react-native-teleport`](../../installation) — the star of the show
-- [`@react-navigation/native-stack`](https://reactnavigation.org/docs/native-stack-navigator/) — for navigation
+- [`react-native-teleport`](../installation) — the star of the show
+- [`@react-navigation/native-stack`](https://reactnavigation.org/docs/native-stack-navigator/) — for navigation (but you can use **any** navigation library)
 - [`react-native-reanimated`](https://docs.swmansion.com/react-native-reanimated/) — for smooth animations
-- [`react-native-video`](https://docs.thewidlarzgroup.com/react-native-video) — for video playback
+- [`react-native-video`](https://docs.thewidlarzgroup.com/react-native-video) — for video playback (but you can use other libraries)
 - [`zustand`](https://zustand.docs.pmnd.rs/) — for lightweight state management
 
 ## Step 1: Build the basic layout
@@ -157,11 +161,89 @@ const styles = StyleSheet.create({
     objectFit: "cover",
   },
 });
+
+export default Post;
+```
+
+```tsx title="SocialSection.tsx"
+import { FontAwesome6 } from "@react-native-vector-icons/fontawesome6";
+import { View, Text, StyleSheet } from "react-native";
+import type { PostType } from "../posts";
+
+type SocialSectionProps = {
+  post: PostType;
+};
+
+function SocialSection({ post }: SocialSectionProps) {
+  return (
+    <View style={styles.container}>
+      <View style={styles.row}>
+        <View style={styles.iconGroup}>
+          <View style={styles.icon}>
+            <FontAwesome6 name="heart" size={24} />
+            <Text style={styles.iconText}>{post.likes}</Text>
+          </View>
+          <View style={styles.icon}>
+            <FontAwesome6 name="comments" size={24} />
+            <Text style={styles.iconText}>{post.comments}</Text>
+          </View>
+          <FontAwesome6 name="paper-plane" size={24} />
+        </View>
+        <FontAwesome6 name="bookmark" size={24} />
+      </View>
+      <View style={styles.authorSection}>
+        <Text style={styles.author}>{post.author}</Text>
+        <Text style={styles.description}>{post.text}</Text>
+      </View>
+      <Text style={styles.date}>{post.date}</Text>
+    </View>
+  );
+}
+
+const styles = StyleSheet.create({
+  container: {
+    margin: 12,
+  },
+  row: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+  },
+  iconGroup: {
+    flexDirection: "row",
+    gap: 14,
+    alignItems: "center",
+  },
+  icon: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+  },
+  iconText: {
+    fontWeight: "600",
+  },
+  description: {
+    fontWeight: "400",
+    color: "black",
+  },
+  date: { paddingTop: 4, color: "#5c5c5c" },
+  authorSection: {
+    paddingTop: 8,
+    flexDirection: "row",
+  },
+  author: {
+    fontWeight: "700",
+    paddingRight: 4,
+  },
+});
+
+export default SocialSection;
 ```
 
 ### Build the Feed screen
 
-A simple scrollable list of posts:
+For a simplicity purposes we'll use a plain `ScrollView` without any virtualizations. In real world apps most likely you'll be using `FlatList`/`FlashList`/`LegendList` for delivering best performance, but the goal of this tutorial is to show the idea that stays behind the transition.
+
+So let's create a simple scrollable list of posts:
 
 ```tsx title="Feed.tsx"
 import { useState } from "react";
@@ -190,7 +272,7 @@ export default function Feed() {
 }
 ```
 
-:::tip
+:::tip Play only one video at a time
 The `index` tracks which post is currently visible so we only play one video at a time (the `active` prop pauses off-screen videos to save resources).
 :::
 
@@ -234,6 +316,10 @@ export default function Reels({ route }) {
 }
 ```
 
+:::info Default snapping behavior
+We are using `decelerationRate="fast"` , `snapToInterval={SCREEN_HEIGHT}` and `bounces={false}` to achieve an effect of snapping without writing too much code. It offers default behavior and may not feel like a real Instagram app, but the goal of this tutorial is focusing on transitions and not on snapping.
+:::
+
 The tapped post is always first in the list, followed by other video posts.
 
 ## Step 2: Add navigation (without shared transitions)
@@ -244,8 +330,16 @@ Now let's wire up the screens with `react-navigation`. The key decision here is 
 
 We use `presentation: "transparentModal"` for the Reels screen for two important reasons:
 
-1. **Visible background during transitions** — When the video animates from its card position to full-screen, the feed is still visible behind it. A regular screen push would show a solid background.
+1. **Visible background during transitions** — When the video animates from its card position to full-screen, the feed is still visible behind it. A regular screen push would show a solid background (which is not desired in out case).
 2. **Future gesture support** — If you later add a swipe-down-to-dismiss gesture, the user needs to see the feed screen underneath while dragging. A `transparentModal` keeps the previous screen rendered and visible.
+
+import useBaseUrl from '@docusaurus/useBaseUrl';
+
+<div className="center video">
+<img src={useBaseUrl('/img/instagram-transparent-modal.png')} style={{width: "35%"}} alt="Instagram modal" />
+</div>
+
+TODO: re-capture image
 
 ### Configure the navigator
 
@@ -271,6 +365,7 @@ Make each video post navigable:
 
 ```tsx title="Post.tsx (updated)"
 import { useNavigation } from "@react-navigation/native";
+import { TouchableWithoutFeedback } from "react-native";
 
 const Post = ({ post, active }) => {
   const navigation = useNavigation();
@@ -293,7 +388,19 @@ const Post = ({ post, active }) => {
 };
 ```
 
-At this point you have a working app — tapping a video opens Reels, pressing back returns to Feed. But there's no transition animation; the screen simply appears and disappears. Let's fix that.
+<Video src="/video/instagram-no-shared-transition.mov" width="35%" />
+
+TODO: back button
+
+TODO: re-capture video
+
+TODO: make sure no additional imports required
+
+At this point you have a working app — tapping a video opens Reels, pressing back returns to Feed, but:
+- there's no transition animation for video;
+- video starts to play from the beginning on a new screen.
+
+Let's fix that!
 
 ## Step 3: Add the teleport infrastructure
 
@@ -361,7 +468,7 @@ Let's break down each field:
 | `destination` | Controls where the `<Portal>` renders. `undefined` = in-place (feed), `"overlay"` = floating above everything (during animation), `"reels"` = inside the Reels screen. |
 | `id` | Which post is being transitioned. Only the matching `<Post>` will teleport its content. |
 | `y` | The Y coordinate of the tapped video. Needed to animate `translateY` so the video slides from its feed position to the top of the screen. |
-| `progress` | A Reanimated `SharedValue` from `0` to `1`. Drives all animations: height, translateY, opacity, etc. Using a shared value means animations run on the UI thread at 60fps. |
+| `progress` | A Reanimated `SharedValue` from `0` to `1`. Drives all animations: `height`, `translateY`, `opacity`, etc. Using a shared value means animations run on the UI thread at 60fps. |
 
 The two key methods orchestrate the transition:
 
@@ -369,7 +476,7 @@ The two key methods orchestrate the transition:
 - **`goToFeed(onFinish)`** — Reverses the process: destination back to `"overlay"`, animate progress from 1→0, then clear everything and call `onFinish` (which triggers `navigation.goBack()`).
 
 :::info Why Zustand?
-We use Zustand instead of React Context because it gives us **granular subscriptions**. Each component selects only the slice of state it needs (`state.id === post.id`, `state.progress`, etc.), so only the relevant components re-render. This is critical for performance during animations. Also, Zustand stores work seamlessly with Reanimated `SharedValue` — you can't store a `SharedValue` in React state, but you can in a Zustand store.
+We use Zustand instead of React Context because it gives us **granular subscriptions**. Each component selects only the slice of state it needs (`state.id === post.id`, `state.progress`, etc.), so only the relevant components re-render. This is critical for performance during animations.
 :::
 
 ### Set up the root PortalHost
