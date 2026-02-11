@@ -1,5 +1,6 @@
 import { StyleSheet } from "react-native";
 import { PortalHost, PortalProvider } from "react-native-teleport";
+import { HeroOverlay } from "./screens/Travel/hero";
 import { PortalProvider as GorhomPortalProvider } from "@gorhom/portal";
 import {
   initialWindowMetrics,
@@ -19,6 +20,7 @@ export default function App() {
               <RootStack />
             </NavigationContainer>
             <PortalHost name="overlay" style={StyleSheet.absoluteFillObject} />
+            <HeroOverlay />
           </PortalProvider>
         </GorhomPortalProvider>
       </GestureHandlerRootView>

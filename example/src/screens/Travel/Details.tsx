@@ -35,7 +35,7 @@ const DetailScreen = ({
 }: Props) => {
   return (
     <View style={styles.screen}>
-      <Image style={styles.image} source={image} />
+      <Hero.Image id={`${header}-cover`} style={styles.image} source={image} />
       <View style={styles.mainContainer}>
         <LinearGradient
           colors={["rgba(0, 0, 0, 0)", "rgba(0, 0, 0, 0.89)"]}
@@ -56,7 +56,7 @@ const DetailScreen = ({
                 size={18}
                 style={styles.white}
               />
-              <Text style={styles.location}>{location}</Text>
+              <Hero.Text id={`${header}-location`} style={styles.location}>{location}</Hero.Text>
             </View>
             <View style={[styles.verification, styles.textContainer]}>
               <Text>
@@ -125,8 +125,9 @@ export default function Detail({ route }: DetailsProps) {
 }
 
 const styles = StyleSheet.create({
-  screen: { flex: 1 },
-
+  screen: {
+    flex: 1,
+  },
   image: {
     position: "absolute",
     width: "100%",
@@ -138,12 +139,10 @@ const styles = StyleSheet.create({
     gap: 10,
     bottom: 20,
   },
-
   mainContainer: {
     flex: 1,
     justifyContent: "flex-end",
   },
-
   gradient: {
     flex: 0.8,
     justifyContent: "flex-end",
@@ -205,22 +204,18 @@ const styles = StyleSheet.create({
     letterSpacing: 0.32,
     textTransform: "uppercase",
   },
-
   mt50: {
     marginTop: 50,
   },
   mt30: {
     marginTop: 30,
   },
-
   yellow: {
     color: "#FCD240",
   },
-
   white: {
     color: "#FFFFFF",
   },
-
   verificationImage: {
     width: 18,
     height: 18,
