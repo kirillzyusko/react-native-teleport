@@ -69,7 +69,9 @@
     "fontawesome",
     "kuta",
     "jawa",
-    "pristia"
+    "pristia",
+    "reparenting",
+    "portaling"
   ],
   "ignorePaths": [
     "node_modules",
