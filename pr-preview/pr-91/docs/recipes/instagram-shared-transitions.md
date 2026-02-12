@@ -444,20 +444,24 @@ export const useTransition = create<Transition>((set, get) => ({
   setId: (id) => set({ id }),
   goToReels: (y) => {
     set({ destination: "overlay", y });
+    const moveToReels = () => {
+      set({ destination: "reels" });
+    };
     get().progress.set(
       withSpring(1, SPRING_CONFIG, () => {
-        scheduleOnRN(() => set({ destination: "reels" }));
+        scheduleOnRN(moveToReels);
       }),
     );
   },
   goToFeed: (onFinish) => {
     set({ destination: "overlay" });
+    const moveToFeed = () => {
+      set({ destination: undefined, y: 0 });
+      onFinish?.();
+    };
     get().progress.set(
       withSpring(0, SPRING_CONFIG, () => {
-        scheduleOnRN(() => {
-          set({ destination: undefined, y: 0 });
-          onFinish?.();
-        });
+        scheduleOnRN(moveToFeed);
       }),
     );
   },
@@ -532,6 +536,8 @@ const useMeasure = (viewRef: React.RefObject<View | null>) => {
     });
   };
 };
+
+export default useMeasure;
 ```
 
 The measured `y` value tells the animation system how far the video needs to translate vertically to reach the top of the screen.
@@ -631,6 +637,8 @@ const Post = ({ post, active }) => {
     </View>
   );
 };
+
+export default Post;
 ```
 
 Here's what happens step by step when the user taps a video:
@@ -709,6 +717,8 @@ function FullScreenReel({ post, active, portal = false }) {
     </View>
   );
 }
+
+export default FullScreenReel;
 ```
 
 The `portal` prop distinguishes the first reel (which receives the teleported video) from subsequent reels (which render their own inline video). Only the first `FullScreenReel` renders a `<PortalHost name="reels">` instead of a `<Video>`.
@@ -821,9 +831,26 @@ function ReelsHeader() {
     </Portal>
   );
 }
+
+export default ReelsHeader;
 ```
 
 Notice how `goToFeed` receives `navigation.goBack` as the `onFinish` callback. This means the actual navigation back only happens **after** the reverse animation completes, keeping everything perfectly synchronized.
+
+And we need to add rendering of the header on our screen:
+
+Reels.tsx (updated)
+
+```
+function Reels({ route }: Props) {
+  return (
+    <View style={styles.container}>
+      {/* Old content, draw header on top of all elements */}
+      <ReelsHeader />
+    </View>
+  );
+}
+```
 
 ### Platform-specific rendering for floating elements[​](#platform-specific-rendering-for-floating-elements "Direct link to Platform-specific rendering for floating elements")
 
