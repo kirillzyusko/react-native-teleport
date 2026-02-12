@@ -50,5 +50,6 @@ Intro into portal and teleport concepts
 
 #### recipes
 
+- [Building Instagram-like Transitions](/docs/recipes/instagram-shared-transitions.md): Build Instagram-like shared transitions between a feed and full-screen reels viewer using react-native-teleport.
 - [Jest testing guide](/docs/recipes/jest-testing-guide.md): A testing-guide showing how to write unit-tests using jest
 - [Working with Modals](/docs/recipes/modals.md): Learn how modals work on iOS/Android and how to use Portal within modal screens.
