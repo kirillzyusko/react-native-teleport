@@ -635,7 +635,7 @@ Ready to get started? 🚀 Head over to the [Installation](/react-native-telepor
 
 In this guide we'll recreate the transition Instagram uses when you tap a video in your feed and it smoothly expands into a full-screen Reels viewer. When you go back, the video shrinks back into its original position — all without interrupting playback.
 
-We'll use iOS transition reference and will replicate it to iOS, Android and web, so that navigation on all 3 platforms delivers the same exceptional experience.
+We'll use iOS as our reference and replicate the transition across iOS, Android, and web, so that navigation on all three platforms delivers the same polished experience.
 
 <!-- -->
 
@@ -661,7 +661,7 @@ Because the video is **re-parented** (moved in the native view hierarchy) rather
 Feed (in-place) ──tap──▶ Overlay (animating) ──done──▶ Reels (in-place)
                                                               │
                          Overlay (animating) ◀──back──────────┘
-                              │
+                             │
 Feed (in-place) ◀──done──────┘
 ```
 
@@ -689,6 +689,8 @@ constants.ts
 import { Dimensions } from "react-native";
 
 export const SCREEN_HEIGHT = Dimensions.get("screen").height;
+// instagram doesn't stretch video/images feed to full screen width on web
+// so `540` max width for web
 export const SCREEN_WIDTH = Math.min(Dimensions.get("screen").width, 540);
 export const ASPECT_RATIO = 3 / 4;
 export const VIDEO_HEIGHT = SCREEN_WIDTH / ASPECT_RATIO;
@@ -729,7 +731,7 @@ export const posts: PostType[] = [
 ];
 ```
 
-### Build the Post component[​](#build-the-post-component "Direct link to Build the Post component")
+### Build the `Post` component[​](#build-the-post-component "Direct link to build-the-post-component")
 
 Each post card shows a video (or image) with a social section underneath:
 
@@ -738,7 +740,12 @@ Post.tsx
 ```
 import { View, StyleSheet, Image } from "react-native";
 import Video from "react-native-video";
-import { VIDEO_HEIGHT, SCREEN_WIDTH, ASPECT_RATIO, CARD_HEIGHT } from "./constants";
+import {
+  VIDEO_HEIGHT,
+  SCREEN_WIDTH,
+  ASPECT_RATIO,
+  CARD_HEIGHT,
+} from "./constants";
 import SocialSection from "./components/SocialSection";
 
 const Post = ({ post, active }) => {
@@ -861,9 +868,9 @@ const styles = StyleSheet.create({
 export default SocialSection;
 ```
 
-### Build the Feed screen[​](#build-the-feed-screen "Direct link to Build the Feed screen")
+### Build the `Feed` screen[​](#build-the-feed-screen "Direct link to build-the-feed-screen")
 
-For a simplicity purposes we'll use a plain `ScrollView` without any virtualizations. In real world apps most likely you'll be using `FlatList`/`FlashList`/`LegendList` for delivering best performance, but the goal of this tutorial is to show the idea that stays behind the transition.
+For simplicity, we'll use a plain `ScrollView` without any virtualization. In a real app you'd most likely use `FlatList`/`FlashList`/`LegendList` for better performance, but the goal of this tutorial is to demonstrate the idea behind the transition.
 
 So let's create a simple scrollable list of posts:
 
@@ -900,7 +907,7 @@ Play only one video at a time
 
 The `index` tracks which post is currently visible so we only play one video at a time (the `active` prop pauses off-screen videos to save resources).
 
-### Build the Reels screen[​](#build-the-reels-screen "Direct link to Build the Reels screen")
+### Build the `Reels` screen[​](#build-the-reels-screen "Direct link to build-the-reels-screen")
 
 The Reels screen is a vertical pager — each reel takes up the full screen and snaps into place:
 
@@ -944,7 +951,7 @@ export default function Reels({ route }) {
 
 Default snapping behavior
 
-We are using `decelerationRate="fast"` , `snapToInterval={SCREEN_HEIGHT}` and `bounces={false}` to achieve an effect of snapping without writing too much code. It offers default behavior and may not feel like a real Instagram app, but the goal of this tutorial is focusing on transitions and not on snapping.
+We use `decelerationRate="fast"`, `snapToInterval={SCREEN_HEIGHT}`, and `bounces={false}` to get a snapping effect without writing much code. The result may not feel exactly like the real Instagram app, but the goal of this tutorial is to focus on transitions, not on perfecting the snapping behavior.
 
 The tapped post is always first in the list, followed by other video posts.
 
@@ -956,14 +963,12 @@ Now let's wire up the screens with `react-navigation`. The key decision here is 
 
 We use `presentation: "transparentModal"` for the Reels screen for two important reasons:
 
-1. **Visible background during transitions** — When the video animates from its card position to full-screen, the feed is still visible behind it. A regular screen push would show a solid background (which is not desired in out case).
+1. **Visible background during transitions** — When the video animates from its card position to full-screen, the feed is still visible behind it. A regular screen push would show a solid background, which isn't what we want.
 2. **Future gesture support** — If you later add a swipe-down-to-dismiss gesture, the user needs to see the feed screen underneath while dragging. A `transparentModal` keeps the previous screen rendered and visible.
 
 <!-- -->
 
 ![Instagram modal](/react-native-teleport/pr-preview/pr-91/img/instagram-transparent-modal.png)
-
-TODO: re-capture image
 
 ### Configure the navigator[​](#configure-the-navigator "Direct link to Configure the navigator")
 
@@ -977,7 +982,7 @@ const options = {
   },
   Reels: {
     headerShown: false,
-    animation: "none",                // we handle animations ourselves
+    animation: "none", // we handle animations ourselves
     presentation: "transparentModal", // keeps feed visible behind
   },
 };
@@ -985,7 +990,7 @@ const options = {
 
 Setting `animation: "none"` disables the default slide/fade transition because we'll drive the animation ourselves with Reanimated.
 
-### Add tap handling to Post[​](#add-tap-handling-to-post "Direct link to Add tap handling to Post")
+### Add tap handling to `Post`[​](#add-tap-handling-to-post "Direct link to add-tap-handling-to-post")
 
 Make each video post navigable:
 
@@ -1007,7 +1012,7 @@ const Post = ({ post, active }) => {
     <View style={{ height: CARD_HEIGHT }}>
       <TouchableWithoutFeedback onPress={onPress}>
         <View style={styles.container}>
-          {/* video/image content */}
+          {/* old code that displays the video/image content */}
         </View>
       </TouchableWithoutFeedback>
       <SocialSection post={post} />
@@ -1018,20 +1023,16 @@ const Post = ({ post, active }) => {
 
 [](/react-native-teleport/pr-preview/pr-91/video/instagram-no-shared-transition.mov)
 
-TODO: back button
-
-TODO: re-capture video
-
 TODO: make sure no additional imports required
 
-At this point you have a working app — tapping a video opens Reels, pressing back returns to Feed, but:
+At this point you have a working app — tapping a video opens the `Reels` screen, and calling `navigation.goBack()` returns to `Feed`. But there are two problems:
 
-* there's no transition animation for video;
-* video starts to play from the beginning on a new screen.
+* there's no transition animation for the video;
+* the video starts playing from the beginning on the new screen.
 
 Let's fix that!
 
-## Step 3: Add the teleport infrastructure[​](#step-3-add-the-teleport-infrastructure "Direct link to Step 3: Add the teleport infrastructure")
+## Step 3: Add the `teleport` infrastructure[​](#step-3-add-the-teleport-infrastructure "Direct link to step-3-add-the-teleport-infrastructure")
 
 This is where the magic happens. We need three things:
 
@@ -1046,15 +1047,19 @@ The store tracks everything needed to orchestrate the animation:
 hooks/useTransition.ts
 
 ```
-import { makeMutable, withSpring, type SharedValue } from "react-native-reanimated";
+import {
+  makeMutable,
+  withSpring,
+  type SharedValue,
+} from "react-native-reanimated";
 import { scheduleOnRN } from "react-native-worklets";
 import { create } from "zustand";
 
 interface Transition {
-  destination?: string;           // where the portal renders: undefined | "overlay" | "reels"
-  id?: number;                    // which post is currently animating
-  y: number;                      // the tapped video's Y position on screen
-  progress: SharedValue<number>;  // 0 = feed position, 1 = full-screen
+  destination?: string; // where the portal renders: undefined | "overlay" | "reels"
+  id?: number; // which post is currently animating
+  y: number; // the tapped video's Y position on screen
+  progress: SharedValue<number>; // 0 = feed position, 1 = full-screen
   setDestination: (destination?: string) => void;
   setId: (id: number) => void;
   goToReels: (y: number) => void;
@@ -1094,12 +1099,12 @@ export const useTransition = create<Transition>((set, get) => ({
 
 Let's break down each field:
 
-| Field         | Purpose                                                                                                                                                                         |
-| ------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `destination` | Controls where the `<Portal>` renders. `undefined` = in-place (feed), `"overlay"` = floating above everything (during animation), `"reels"` = inside the Reels screen.          |
-| `id`          | Which post is being transitioned. Only the matching `<Post>` will teleport its content.                                                                                         |
-| `y`           | The Y coordinate of the tapped video. Needed to animate `translateY` so the video slides from its feed position to the top of the screen.                                       |
-| `progress`    | A Reanimated `SharedValue` from `0` to `1`. Drives all animations: `height`, `translateY`, `opacity`, etc. Using a shared value means animations run on the UI thread at 60fps. |
+| Field         | Purpose                                                                                                                                                                                                                           |
+| ------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `destination` | Controls where the `<Portal>` renders. `undefined` = in-place (feed), `"overlay"` = floating above everything (during animation), `"reels"` = inside the Reels screen.                                                            |
+| `id`          | Which post is being transitioned. Only the matching `<Post>` will teleport its content.                                                                                                                                           |
+| `y`           | The Y coordinate of the tapped video. Needed to animate `translateY` so the video slides from its feed position to the top of the screen.                                                                                         |
+| `progress`    | A Reanimated `SharedValue` from `0` to `1`. Drives all animations: `height`, `translateY`, `opacity`, etc. Using a shared value means animations run on the UI thread at 60fps and we can animate non-UI props, such as `height`. |
 
 The two key methods orchestrate the transition:
 
@@ -1110,7 +1115,7 @@ Why Zustand?
 
 We use Zustand instead of React Context because it gives us **granular subscriptions**. Each component selects only the slice of state it needs (`state.id === post.id`, `state.progress`, etc.), so only the relevant components re-render. This is critical for performance during animations.
 
-### Set up the root PortalHost[​](#set-up-the-root-portalhost "Direct link to Set up the root PortalHost")
+### Set up the root `PortalHost`[​](#set-up-the-root-portalhost "Direct link to set-up-the-root-portalhost")
 
 The `"overlay"` `PortalHost` must be placed at the root of your app, **after** the navigation container, so it renders on top of all screens:
 
@@ -1137,7 +1142,7 @@ export default function App() {
 }
 ```
 
-### The useMeasure hook[​](#the-usemeasure-hook "Direct link to The useMeasure hook")
+### The `useMeasure` hook[​](#the-usemeasure-hook "Direct link to the-usemeasure-hook")
 
 Before animating, we need to know **where** the tapped video is on screen. `measureInWindow` gives us the absolute coordinates:
 
@@ -1168,7 +1173,7 @@ The measured `y` value tells the animation system how far the video needs to tra
 
 Now we connect everything. This is where `<Portal>` and `<PortalHost>` bring the transition to life.
 
-### Update the Post component[​](#update-the-post-component "Direct link to Update the Post component")
+### Update the `Post` component[​](#update-the-post-component "Direct link to update-the-post-component")
 
 The `Post` component is the heart of the transition. It wraps the video in a `<Portal>` whose destination changes based on the transition state:
 
@@ -1179,7 +1184,10 @@ import { View, StyleSheet, Image } from "react-native";
 import Video, { ViewType } from "react-native-video";
 import { Portal } from "react-native-teleport";
 import { TouchableWithoutFeedback } from "react-native-gesture-handler";
-import Reanimated, { interpolate, useAnimatedStyle } from "react-native-reanimated";
+import Reanimated, {
+  interpolate,
+  useAnimatedStyle,
+} from "react-native-reanimated";
 import { useNavigation } from "@react-navigation/native";
 import { useRef } from "react";
 import { useTransition } from "./hooks/useTransition";
@@ -1276,7 +1284,7 @@ Here's what happens step by step when the user taps a video:
 
 Notice that the outer `<View>` always has a fixed `CARD_HEIGHT`, even after the video teleports away. This is crucial — without it, the feed's `ScrollView` would reflow and jump when the video disappears, changing the scroll position and potentially switching which video is considered "active."
 
-### Add a PortalHost in the Reels screen[​](#add-a-portalhost-in-the-reels-screen "Direct link to Add a PortalHost in the Reels screen")
+### Add a `PortalHost` in the `Reels` screen[​](#add-a-portalhost-in-the-reels-screen "Direct link to add-a-portalhost-in-the-reels-screen")
 
 The first reel (the one the user tapped) needs a `<PortalHost>` to receive the teleported video:
 
@@ -1286,7 +1294,11 @@ components/FullScreenReel.tsx
 import { View, StyleSheet } from "react-native";
 import Video from "react-native-video";
 import { Portal, PortalHost } from "react-native-teleport";
-import { SCREEN_HEIGHT, SCREEN_WIDTH, FLOATING_ELEMENTS_DESTINATION } from "../constants";
+import {
+  SCREEN_HEIGHT,
+  SCREEN_WIDTH,
+  FLOATING_ELEMENTS_DESTINATION,
+} from "../constants";
 import { useTransition } from "../hooks/useTransition";
 import Reanimated, { useAnimatedStyle } from "react-native-reanimated";
 
@@ -1294,9 +1306,12 @@ function FullScreenReel({ post, active, portal = false }) {
   const progress = useTransition((state) => state.progress);
   const destination = useTransition((state) => state.destination);
 
-  const icons = useAnimatedStyle(() => ({
-    opacity: progress.value,
-  }), []);
+  const icons = useAnimatedStyle(
+    () => ({
+      opacity: progress.value,
+    }),
+    [],
+  );
 
   return (
     <View style={styles.container}>
@@ -1333,7 +1348,7 @@ The `portal` prop distinguishes the first reel (which receives the teleported vi
 
 The action buttons (like, comment, share) are also portaled to the overlay during the transition so they fade in correctly on top of the animating video.
 
-### Update the Feed and Reels screens to disable scroll during transitions[​](#update-the-feed-and-reels-screens-to-disable-scroll-during-transitions "Direct link to Update the Feed and Reels screens to disable scroll during transitions")
+### Update the `Feed` and `Reels` screens to disable scroll during transitions[​](#update-the-feed-and-reels-screens-to-disable-scroll-during-transitions "Direct link to update-the-feed-and-reels-screens-to-disable-scroll-during-transitions")
 
 Both screens need to lock scrolling while the animation is in progress. Otherwise, the user could scroll the feed while the video is mid-flight:
 
@@ -1346,9 +1361,12 @@ import { useTransition } from "./hooks/useTransition";
 export default function Feed() {
   const progress = useTransition((state) => state.progress);
 
-  const animatedProps = useAnimatedProps(() => ({
-    scrollEnabled: progress.value === 0, // only scroll when fully on feed
-  }), []);
+  const animatedProps = useAnimatedProps(
+    () => ({
+      scrollEnabled: progress.value === 0, // only scroll when fully on feed
+    }),
+    [],
+  );
 
   return (
     <Reanimated.ScrollView animatedProps={animatedProps}>
@@ -1361,22 +1379,34 @@ export default function Feed() {
 Reels.tsx (updated)
 
 ```
-const animatedProps = useAnimatedProps(() => ({
-  scrollEnabled: progress.value === 1, // only scroll when fully on reels
-}), []);
+const animatedProps = useAnimatedProps(
+  () => ({
+    scrollEnabled: progress.value === 1, // only scroll when fully on reels
+  }),
+  [],
+);
 ```
 
-### Add the ReelsHeader with back navigation[​](#add-the-reelsheader-with-back-navigation "Direct link to Add the ReelsHeader with back navigation")
+### Add the `ReelsHeader` with back navigation[​](#add-the-reelsheader-with-back-navigation "Direct link to add-the-reelsheader-with-back-navigation")
 
-The header animates alongside the video — it fades in and slides down from the video's original position:
+Instagram uses a custom header in its app, and we'll build one too. The header animates alongside the video — it fades in and slides down from the video's original position:
 
 components/ReelsHeader.tsx
 
 ```
-import { View, Text, TouchableOpacity, StyleSheet, BackHandler } from "react-native";
+import {
+  View,
+  Text,
+  TouchableOpacity,
+  StyleSheet,
+  BackHandler,
+} from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useNavigation } from "@react-navigation/native";
-import Reanimated, { interpolate, useAnimatedStyle } from "react-native-reanimated";
+import Reanimated, {
+  interpolate,
+  useAnimatedStyle,
+} from "react-native-reanimated";
 import { Portal } from "react-native-teleport";
 import { FLOATING_ELEMENTS_DESTINATION } from "../constants";
 import { useTransition } from "../hooks/useTransition";
@@ -1393,19 +1423,23 @@ function ReelsHeader() {
 
   // Handle Android hardware back button
   useEffect(() => {
-    const subscription = BackHandler.addEventListener("hardwareBackPress", () => {
-      onGoBack();
-      return true; // prevent default behavior
-    });
+    const subscription = BackHandler.addEventListener(
+      "hardwareBackPress",
+      () => {
+        onGoBack();
+        return true; // prevent default behavior
+      },
+    );
     return () => subscription.remove();
   }, [onGoBack]);
 
-  const style = useAnimatedStyle(() => ({
-    opacity: progress.value,
-    transform: [
-      { translateY: interpolate(progress.value, [0, 1], [y, 0]) },
-    ],
-  }), [y]);
+  const style = useAnimatedStyle(
+    () => ({
+      opacity: progress.value,
+      transform: [{ translateY: interpolate(progress.value, [0, 1], [y, 0]) }],
+    }),
+    [y],
+  );
 
   return (
     <Portal hostName={FLOATING_ELEMENTS_DESTINATION} style={styles.container}>
@@ -1434,10 +1468,14 @@ constants.ts
 import { Platform } from "react-native";
 
 export const FLOATING_ELEMENTS_DESTINATION = Platform.select({
-  ios: undefined,     // renders naturally above the modal
-  default: "root",    // needs explicit portaling on Android
+  ios: undefined, // renders naturally above the modal
+  default: "root", // needs explicit portaling on Android
 });
 ```
+
+And now we can see how all pieces work together!
+
+[](/react-native-teleport/pr-preview/pr-91/video/instagram.mov)
 
 ## The complete transition flow[​](#the-complete-transition-flow "Direct link to The complete transition flow")
 
@@ -1480,6 +1518,8 @@ The key patterns used in this implementation:
 * **`measureInWindow`** captures the video's screen position so the animation starts from exactly the right place.
 
 With these building blocks you can create fluid, Instagram-quality shared transitions in your own app. The same pattern works for any content — images, cards, avatars — anywhere you want seamless movement between screens.
+
+If you'd like to see the complete working code, check out the [example app](https://github.com/kirillzyusko/react-native-teleport/tree/main/example/src/screens/Instagram).
 
 
 ---
