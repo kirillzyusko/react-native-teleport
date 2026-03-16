@@ -1,3 +1,5 @@
+import { useEffect } from "react";
+import { usePortalManagerContext } from "../contexts/PortalManager";
 import type { PortalHostProps } from "../types";
 import PortalHost from "../views/PortalHost";
 
@@ -23,6 +25,16 @@ import PortalHost from "../views/PortalHost";
  * ```
  */
 const PortalHostComponent = ({ name, children, style }: PortalHostProps) => {
+  const { dispatch } = usePortalManagerContext();
+
+  useEffect(() => {
+    dispatch({ type: "REGISTER_HOST", hostName: name });
+
+    return () => {
+      dispatch({ type: "UNREGISTER_HOST", hostName: name });
+    };
+  }, [name, dispatch]);
+
   return (
     <PortalHost name={name} style={style}>
       {children}
