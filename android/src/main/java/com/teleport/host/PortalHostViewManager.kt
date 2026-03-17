@@ -24,7 +24,7 @@ class PortalHostViewManager :
   override fun onDropViewInstance(view: ReactViewGroup) {
     super.onDropViewInstance(view)
 
-    (view as? PortalHostView)?.cleanup()
+    (view as? PortalHostView)?.cleanup(view.id)
   }
 
   @ReactProp(name = "name")
