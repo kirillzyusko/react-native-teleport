@@ -12,12 +12,12 @@ class PortalHostView(
   fun setName(newName: String?) {
     if (name == newName) return
 
-    name?.let { PortalRegistry.unregisterHost(it) }
+    name?.let { PortalRegistry.unregisterHost(it, id) }
     name = newName
     newName?.let { PortalRegistry.registerHost(it, this) }
   }
 
-  fun cleanup() {
-    name?.let { PortalRegistry.unregisterHost(it) }
+  fun cleanup(viewId: Int) {
+    name?.let { PortalRegistry.unregisterHost(it, viewId) }
   }
 }
