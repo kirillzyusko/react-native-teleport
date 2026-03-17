@@ -24,7 +24,10 @@ object PortalRegistry {
     }
   }
 
-  fun unregisterHost(name: String, viewId: Int) {
+  fun unregisterHost(
+    name: String,
+    viewId: Int,
+  ) {
     val hostViewId = hosts[name]?.get()?.id
     if (hostViewId == viewId) {
       hosts.remove(name)
