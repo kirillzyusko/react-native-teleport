@@ -128,3 +128,94 @@ describe("`usePortal` functional spec", () => {
     expect(screen.queryByTestId("portal-2")).not.toBeOnTheScreen();
   });
 });
+
+function IsHostAvailableHook() {
+  const [showHost, setShowHost] = useState(true);
+  const { isHostAvailable } = usePortal("dynamic");
+
+  return (
+    <>
+      {showHost && <PortalHost name="dynamic" />}
+      <View testID="status">
+        {isHostAvailable ? (
+          <View testID="available" />
+        ) : (
+          <View testID="unavailable" />
+        )}
+      </View>
+      <Button title="Toggle host" onPress={() => setShowHost((v) => !v)} />
+    </>
+  );
+}
+
+describe("`usePortal` isHostAvailable", () => {
+  it("should return true when host is mounted", () => {
+    render(
+      <PortalProvider>
+        <IsHostAvailableHook />
+      </PortalProvider>,
+    );
+    expect(screen.getByTestId("available")).toBeOnTheScreen();
+  });
+
+  it("should return false when host is unmounted", () => {
+    render(
+      <PortalProvider>
+        <IsHostAvailableHook />
+      </PortalProvider>,
+    );
+    expect(screen.getByTestId("available")).toBeOnTheScreen();
+    fireEvent.press(screen.getByText("Toggle host"));
+    expect(screen.getByTestId("unavailable")).toBeOnTheScreen();
+  });
+
+  it("should return true again when host is remounted", () => {
+    render(
+      <PortalProvider>
+        <IsHostAvailableHook />
+      </PortalProvider>,
+    );
+    fireEvent.press(screen.getByText("Toggle host"));
+    expect(screen.getByTestId("unavailable")).toBeOnTheScreen();
+    fireEvent.press(screen.getByText("Toggle host"));
+    expect(screen.getByTestId("available")).toBeOnTheScreen();
+  });
+
+  it("should return false for a host that was never mounted", () => {
+    function NoHost() {
+      const { isHostAvailable } = usePortal("nonexistent");
+
+      return isHostAvailable ? (
+        <View testID="available" />
+      ) : (
+        <View testID="unavailable" />
+      );
+    }
+
+    render(
+      <PortalProvider>
+        <NoHost />
+      </PortalProvider>,
+    );
+    expect(screen.getByTestId("unavailable")).toBeOnTheScreen();
+  });
+
+  it("should return true for the default root host", () => {
+    function RootHost() {
+      const { isHostAvailable } = usePortal();
+
+      return isHostAvailable ? (
+        <View testID="available" />
+      ) : (
+        <View testID="unavailable" />
+      );
+    }
+
+    render(
+      <PortalProvider>
+        <RootHost />
+      </PortalProvider>,
+    );
+    expect(screen.getByTestId("available")).toBeOnTheScreen();
+  });
+});

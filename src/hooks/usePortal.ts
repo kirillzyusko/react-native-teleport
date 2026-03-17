@@ -10,9 +10,10 @@ import { usePortalManagerContext } from "../contexts/PortalManager";
  * ```tsx
  * import { usePortal } from "react-native-teleport";
  * export default function App() {
- *   const { removePortal } = usePortal("root");
+ *   const { removePortal, isHostAvailable } = usePortal("root");
  *   return (
  *     <View style={{ flex: 1 }}>
+ *       <Text>{isHostAvailable ? "Host is available" : "Host is not available"}</Text>
  *       <Button title="Remove" onPress={() => removePortal("portal")} />
  *     </View>
  *   );
@@ -20,9 +21,13 @@ import { usePortalManagerContext } from "../contexts/PortalManager";
  * ```
  */
 export default function usePortal(hostName: string = "root") {
-  const { dispatch } = usePortalManagerContext();
+  const { state, dispatch } = usePortalManagerContext();
 
   return {
+    /**
+     * Whether a `<PortalHost />` with the given `hostName` is currently mounted.
+     */
+    isHostAvailable: (state.hosts[hostName] ?? 0) > 0,
     /**
      * Remove portal from host container. Subsequent re-renders will not restore portal,
      * but if you mount a new portal with the same name it will be shown (i. e. hook doesn't
