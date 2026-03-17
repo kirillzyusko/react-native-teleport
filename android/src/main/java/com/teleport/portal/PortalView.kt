@@ -143,6 +143,7 @@ class PortalView(
   }
 
   override fun removeView(view: View?) {
+    if (view == null) return
     if (isTeleported()) {
       val host = PortalRegistry.getHost(hostName)
       host?.removeView(view)
