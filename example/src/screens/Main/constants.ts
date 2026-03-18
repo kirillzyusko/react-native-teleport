@@ -93,4 +93,10 @@ export const examples: Example[] = [
     info: ScreenNames.RICH_TEXT_EDITOR,
     icons: "📝",
   },
+  {
+    title: "Photo Gallery",
+    testID: "photo_gallery",
+    info: ScreenNames.PHOTO_GALLERY,
+    icons: "📸",
+  },
 ];
