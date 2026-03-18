@@ -13,7 +13,8 @@ export type ExampleScreen =
   | ScreenNames.BOTTOM_SHEET
   | ScreenNames.MESSENGER
   | ScreenNames.TRAVEL_EXPLORE
-  | ScreenNames.TELEPORTATION_ORDER;
+  | ScreenNames.TELEPORTATION_ORDER
+  | ScreenNames.PHOTO_GALLERY;
 
 export type Example = {
   testID: string;
