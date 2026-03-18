@@ -81,4 +81,10 @@ export const examples: Example[] = [
     info: ScreenNames.TRAVEL_EXPLORE,
     icons: "🏝️",
   },
+  {
+    title: "Photo Gallery",
+    testID: "photo_gallery",
+    info: ScreenNames.PHOTO_GALLERY,
+    icons: "📸",
+  },
 ];
