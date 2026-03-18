@@ -99,4 +99,10 @@ export const examples: Example[] = [
     info: ScreenNames.PERSISTED_PORTAL,
     icons: "🪂",
   },
+  {
+    title: "Photo Gallery",
+    testID: "photo_gallery",
+    info: ScreenNames.PHOTO_GALLERY,
+    icons: "📸",
+  },
 ];
