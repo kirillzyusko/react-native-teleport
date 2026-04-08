@@ -7,7 +7,12 @@ import type { PortalProps } from "../../types";
 
 const supportsMoveBefore =
   typeof Element !== "undefined" && "moveBefore" in Element.prototype;
-export default function Portal({ hostName, children, style }: PortalProps) {
+export default function Portal({
+  hostName,
+  children,
+  style,
+  order: _order,
+}: PortalProps) {
   const { getHost, registerPendingPortal, unregisterPendingPortal } =
     usePortalRegistryContext();
   const elRef = useRef<HTMLDivElement | null>(null);

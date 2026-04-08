@@ -12,5 +12,7 @@ export type PortalProps = {
   name?: string;
   hostName?: string;
   style?: ViewStyle;
+  /** Controls insertion order when multiple Portals target the same host. Bigger == inserted later */
+  order?: number;
   children?: React.ReactNode;
 };

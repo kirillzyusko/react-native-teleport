@@ -48,7 +48,13 @@ import type { PortalProps } from "../types";
  * });
  * ```
  */
-const PortalComponent = ({ hostName, name, style, children }: PortalProps) => {
+const PortalComponent = ({
+  hostName,
+  name,
+  style,
+  order,
+  children,
+}: PortalProps) => {
   const { state, dispatch } = usePortalManagerContext();
   const instanceId = useId();
 
@@ -73,11 +79,11 @@ const PortalComponent = ({ hostName, name, style, children }: PortalProps) => {
   }, [dispatch, hostName, name, instanceId]);
 
   if (isRemoved) {
-    return <PortalView hostName={hostName} name={name} />;
+    return <PortalView hostName={hostName} name={name} order={order} />;
   }
 
   return (
-    <PortalView hostName={hostName} name={name} style={style}>
+    <PortalView hostName={hostName} name={name} style={style} order={order}>
       {children}
     </PortalView>
   );
