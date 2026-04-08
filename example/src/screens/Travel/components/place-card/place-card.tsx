@@ -45,13 +45,18 @@ export default function PlaceCard({ text, image, header, rate }: Props) {
       style={styles.card}
       onPress={handleCardPress}
     >
-      <Hero.Image id={`${header}-cover`} style={styles.card} source={image} />
+      <Hero.Image
+        id={`${header}-cover`}
+        style={styles.card}
+        source={image}
+        zIndex={0}
+      />
       <LinearGradient
         colors={["rgba(0, 0, 0, 0)", "rgba(0, 0, 0, 0.89)"]}
         style={[styles.card, styles.absolute]}
       >
         <View style={styles.content}>
-          <Hero.Text id={header} style={styles.header}>
+          <Hero.Text id={header} style={styles.header} zIndex={1}>
             {header}
           </Hero.Text>
           <View style={styles.container}>
@@ -61,7 +66,7 @@ export default function PlaceCard({ text, image, header, rate }: Props) {
               size={12}
               style={styles.white}
             />
-            <Hero.Text id={`${header}-location`} style={styles.text}>{text}</Hero.Text>
+            <Hero.Text id={`${header}-location`} style={styles.text} zIndex={1}>{text}</Hero.Text>
           </View>
           <View style={styles.container}>
             <View style={styles.container}>
