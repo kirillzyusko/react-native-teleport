@@ -37,6 +37,14 @@ class PortalViewManager :
     (view as? PortalView)?.setHostName(name)
   }
 
+  @ReactProp(name = "order", defaultInt = 0)
+  override fun setOrder(
+    view: ReactViewGroup?,
+    order: Int,
+  ) {
+    (view as? PortalView)?.order = order
+  }
+
   companion object {
     const val NAME = "PortalView"
   }

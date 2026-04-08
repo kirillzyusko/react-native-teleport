@@ -13,6 +13,12 @@ class PortalView(
   private var hostName: String? = null
   private var isWaitingForHost = false
   private val ownChildren: MutableList<View> = ArrayList()
+  var order: Int = 0
+
+  private fun insertChildIntoHost(host: ViewGroup, child: View) {
+    val index = minOf(order, host.childCount)
+    host.addView(child, index)
+  }
 
   fun setHostName(name: String?) {
     val children = extractChildren()
@@ -38,8 +44,11 @@ class PortalView(
 
     for (i in children.indices) {
       val child = children[i]
-      // Append if to host, preserve index if to self
-      target.addView(child, if (target == this) i else -1)
+      if (target == this) {
+        target.addView(child, i)
+      } else {
+        insertChildIntoHost(target, child)
+      }
     }
 
     // Track own children if teleported
@@ -57,7 +66,7 @@ class PortalView(
       val children = extractPhysicalChildren()
 
       for (child in children) {
-        host.addView(child)
+        insertChildIntoHost(host, child)
       }
       ownChildren.addAll(children)
     }
@@ -121,7 +130,7 @@ class PortalView(
   ) {
     if (isTeleported()) {
       val host = PortalRegistry.getHost(hostName)
-      host?.addView(child)
+      host?.let { insertChildIntoHost(it, child) }
       ownChildren.add(index, child)
     } else {
       super.addView(child, index)
@@ -135,7 +144,7 @@ class PortalView(
   ) {
     if (isTeleported()) {
       val host = PortalRegistry.getHost(hostName)
-      host?.addView(child, params)
+      host?.let { insertChildIntoHost(it, child) }
       ownChildren.add(index, child)
     } else {
       super.addView(child, index, params)

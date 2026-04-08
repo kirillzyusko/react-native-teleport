@@ -24,6 +24,7 @@ using namespace facebook::react;
 @property (nonatomic, strong) NSString *hostName;
 @property (nonatomic, strong) UIView *targetView;
 @property (nonatomic, assign) BOOL isWaitingForHost;
+@property (nonatomic, assign) NSInteger order;
 
 @end
 
@@ -49,14 +50,25 @@ using namespace facebook::react;
   return self;
 }
 
+- (void)insertChild:(UIView *)child intoHost:(UIView *)host
+{
+  NSInteger index = MIN(self.order, (NSInteger)host.subviews.count);
+  [host insertSubview:child atIndex:index];
+}
+
 - (void)moveChildrenToTarget:(UIView *)source target:(UIView *)target
 {
   NSArray<UIView *> *children = [source.subviews copy];
   for (UIView *child in children) {
     [child removeFromSuperview];
   }
+  BOOL toHost = (target != self.contentView);
   for (UIView *child in children) {
-    [target addSubview:child];
+    if (toHost) {
+      [self insertChild:child intoHost:target];
+    } else {
+      [target addSubview:child];
+    }
   }
 }
 
@@ -69,6 +81,8 @@ using namespace facebook::react;
       newHostStr.empty() ? nil : [NSString stringWithUTF8String:newHostStr.c_str()];
 
   std::string newNameStr = newViewProps.name;
+
+  self.order = newViewProps.order;
 
   if (![self.hostName isEqualToString:newHostName]) {
     if (self.isWaitingForHost && self.hostName) {
@@ -108,12 +122,13 @@ using namespace facebook::react;
 - (void)mountChildComponentView:(UIView<RCTComponentViewProtocol> *)childComponentView
                           index:(NSInteger)index
 {
-  if (self.targetView == self.contentView) {
+  BOOL toHost = (self.targetView != self.contentView);
+  if (!toHost) {
     // when adding to self, preserve the React tree order with the provided index
     [self.targetView insertSubview:childComponentView atIndex:index];
   } else {
-    // when adding to a different container (host), append to the
-    [self.targetView addSubview:childComponentView];
+    // when adding to host, use the order prop to control stacking
+    [self insertChild:childComponentView intoHost:self.targetView];
   }
 }
 
@@ -129,8 +144,13 @@ using namespace facebook::react;
 
   PortalHostView *hostView = [[PortalRegistry sharedInstance] getHostWithName:self.hostName];
   if (hostView) {
-    [self moveChildrenToTarget:self.contentView target:(UIView *)hostView];
-    self.targetView = (UIView *)hostView;
+    UIView *host = (UIView *)hostView;
+    NSArray<UIView *> *children = [self.contentView.subviews copy];
+    for (UIView *child in children) {
+      [child removeFromSuperview];
+      [self insertChild:child intoHost:host];
+    }
+    self.targetView = host;
   }
 }
 
