@@ -13,6 +13,8 @@ export const HERO_OVERLAY_HOST = "hero-overlay";
 type HeroComponentProps = {
   id: string;
   style?: any;
+  /** Controls stacking order in the overlay during transitions */
+  zIndex?: number;
   children?: React.ReactNode;
   [key: string]: any;
 };
@@ -83,7 +85,13 @@ export function createHeroComponent(Component: React.ComponentType<any>) {
     Component as React.ComponentType<any>,
   );
 
-  function HeroComponent({ id, style, children, ...rest }: HeroComponentProps) {
+  function HeroComponent({
+    id,
+    style,
+    zIndex = 0,
+    children,
+    ...rest
+  }: HeroComponentProps) {
     const ref = useRef<any>(null);
 
     // Determine role once at mount time
@@ -186,7 +194,7 @@ export function createHeroComponent(Component: React.ComponentType<any>) {
 
     if (shouldTeleport) {
       return (
-        <Portal hostName={HERO_OVERLAY_HOST}>
+        <Portal hostName={HERO_OVERLAY_HOST} order={zIndex}>
           <Animated.View style={overlayStyle}>
             <AnimatedComponent
               ref={ref}
