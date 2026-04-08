@@ -99,6 +99,8 @@ const options = {
   },
   [ScreenNames.TRAVEL_DETAILS]: {
     headerShown: false,
+    animation: "none",
+    animationDuration: 516,
   },
   [ScreenNames.TELEPORTATION_ORDER]: {
     title: "Teleportation order",

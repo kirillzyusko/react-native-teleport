@@ -58,42 +58,44 @@ const DetailScreen = ({
               />
               <Hero.Text id={`${header}-location`} style={styles.location}>{location}</Hero.Text>
             </View>
-            <View style={[styles.verification, styles.textContainer]}>
-              <Text>
-                <Text style={styles.heading}>{substring}</Text>
-                <Text style={styles.smallText}>people have explored</Text>
-              </Text>
-              <Image source={group1} style={styles.avatars} />
-            </View>
-            <Text style={[styles.smallText]}>{description}</Text>
-            <View style={[styles.textContainer, styles.mt30]}>
-              <View style={styles.verification}>
-                <FontAwesome6
-                  name="star"
-                  iconStyle="solid"
-                  size={18}
-                  style={styles.yellow}
-                />
-                <Text style={styles.numbers}>{rating}</Text>
+            <Hero.Reveal>
+              <View style={[styles.verification, styles.textContainer]}>
+                <Text>
+                  <Text style={styles.heading}>{substring}</Text>
+                  <Text style={styles.smallText}>people have explored</Text>
+                </Text>
+                <Image source={group1} style={styles.avatars} />
               </View>
-              <View>
-                <FontAwesome6
-                  name="arrow-down"
-                  iconStyle="solid"
-                  size={18}
-                  style={styles.white}
-                />
+              <Text style={[styles.smallText]}>{description}</Text>
+              <View style={[styles.textContainer, styles.mt30]}>
+                <View style={styles.verification}>
+                  <FontAwesome6
+                    name="star"
+                    iconStyle="solid"
+                    size={18}
+                    style={styles.yellow}
+                  />
+                  <Text style={styles.numbers}>{rating}</Text>
+                </View>
+                <View>
+                  <FontAwesome6
+                    name="arrow-down"
+                    iconStyle="solid"
+                    size={18}
+                    style={styles.white}
+                  />
+                </View>
               </View>
-            </View>
-            <View
-              style={[styles.verification, styles.textContainer, styles.mt50]}
-            >
-              <Text>
-                <Text style={styles.numbers}>{price}</Text>
-                <Text style={styles.smallText}>/ Person </Text>
-              </Text>
-              <Button text={buttonText} />
-            </View>
+              <View
+                style={[styles.verification, styles.textContainer, styles.mt50]}
+              >
+                <Text>
+                  <Text style={styles.numbers}>{price}</Text>
+                  <Text style={styles.smallText}>/ Person </Text>
+                </Text>
+                <Button text={buttonText} />
+              </View>
+            </Hero.Reveal>
           </View>
         </LinearGradient>
       </View>
