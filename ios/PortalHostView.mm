@@ -51,7 +51,8 @@ using namespace facebook::react;
 
     if (![self.registeredName isEqualToString:newName]) {
       if (self.registeredName) {
-        [[PortalRegistry sharedInstance] unregisterHostWithName:self.registeredName viewTag:self.tag];
+        [[PortalRegistry sharedInstance] unregisterHostWithName:self.registeredName
+                                                        viewTag:self.tag];
       }
       self.registeredName = newName;
       if (newName) {
