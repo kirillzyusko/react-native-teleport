@@ -115,7 +115,7 @@ using namespace facebook::react;
     // when adding to self, preserve the React tree order with the provided index
     [self.targetView insertSubview:childComponentView atIndex:index];
   } else {
-    // when adding to a different container (host), append
+    // when adding to a different container (host), append to the end
     [self.targetView addSubview:childComponentView];
   }
 }
