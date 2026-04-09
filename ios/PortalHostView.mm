@@ -51,7 +51,7 @@ using namespace facebook::react;
 
     if (![self.registeredName isEqualToString:newName]) {
       if (self.registeredName) {
-        [[PortalRegistry sharedInstance] unregisterHost:self withName:self.registeredName];
+        [[PortalRegistry sharedInstance] unregisterHostWithName:self.registeredName viewTag:self.tag];
       }
       self.registeredName = newName;
       if (newName) {
@@ -71,7 +71,7 @@ using namespace facebook::react;
   // this view to unregister a DIFFERENT host's entry when it's reused
   // with a new name.
   if (self.registeredName) {
-    [[PortalRegistry sharedInstance] unregisterHost:self withName:self.registeredName];
+    [[PortalRegistry sharedInstance] unregisterHostWithName:self.registeredName viewTag:self.tag];
     self.registeredName = nil;
   }
 }
@@ -79,7 +79,7 @@ using namespace facebook::react;
 - (void)dealloc
 {
   if (self.registeredName) {
-    [[PortalRegistry sharedInstance] unregisterHost:self withName:self.registeredName];
+    [[PortalRegistry sharedInstance] unregisterHostWithName:self.registeredName viewTag:self.tag];
   }
 }
 
