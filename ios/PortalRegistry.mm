@@ -60,10 +60,13 @@
   }
 }
 
-- (void)unregisterHostWithName:(NSString *)name
+- (void)unregisterHostWithName:(NSString *)name viewTag:(NSInteger)viewTag
 {
   if (name) {
-    [self.hosts removeObjectForKey:name];
+    PortalHostView *registered = [self.hosts objectForKey:name];
+    if (registered && registered.tag == viewTag) {
+      [self.hosts removeObjectForKey:name];
+    }
   }
 }
 

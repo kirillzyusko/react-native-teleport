@@ -18,7 +18,7 @@ NS_ASSUME_NONNULL_BEGIN
 + (instancetype)sharedInstance;
 
 - (void)registerHost:(PortalHostView *)host withName:(NSString *)name;
-- (void)unregisterHostWithName:(NSString *)name;
+- (void)unregisterHostWithName:(NSString *)name viewTag:(NSInteger)viewTag;
 - (nullable PortalHostView *)getHostWithName:(NSString *)name;
 
 - (void)registerPendingPortal:(PortalView *)portal withHostName:(NSString *)hostName;

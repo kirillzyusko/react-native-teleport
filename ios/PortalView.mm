@@ -28,6 +28,7 @@ using namespace facebook::react;
 @end
 
 @implementation PortalView {
+  NSMutableArray<UIView *> *_ownChildren;
 }
 
 + (ComponentDescriptorProvider)componentDescriptorProvider
@@ -44,14 +45,15 @@ using namespace facebook::react;
     UIView *content = [[UIView alloc] init];
     self.contentView = content;
     self.targetView = content;
+    _ownChildren = [NSMutableArray array];
   }
 
   return self;
 }
 
-- (void)moveChildrenToTarget:(UIView *)source target:(UIView *)target
+- (void)moveOwnChildrenToTarget:(UIView *)target
 {
-  NSArray<UIView *> *children = [source.subviews copy];
+  NSArray<UIView *> *children = [_ownChildren copy];
   for (UIView *child in children) {
     [child removeFromSuperview];
   }
@@ -95,10 +97,9 @@ using namespace facebook::react;
     }
 
     if (newTarget != self.targetView) {
-      UIView *oldTarget = self.targetView;
       self.targetView = newTarget;
 
-      [self moveChildrenToTarget:oldTarget target:newTarget];
+      [self moveOwnChildrenToTarget:newTarget];
     }
   }
 
@@ -108,11 +109,13 @@ using namespace facebook::react;
 - (void)mountChildComponentView:(UIView<RCTComponentViewProtocol> *)childComponentView
                           index:(NSInteger)index
 {
+  [_ownChildren insertObject:childComponentView atIndex:MIN(index, (NSInteger)_ownChildren.count)];
+
   if (self.targetView == self.contentView) {
     // when adding to self, preserve the React tree order with the provided index
     [self.targetView insertSubview:childComponentView atIndex:index];
   } else {
-    // when adding to a different container (host), append to the
+    // when adding to a different container (host), append to the end
     [self.targetView addSubview:childComponentView];
   }
 }
@@ -120,6 +123,7 @@ using namespace facebook::react;
 - (void)unmountChildComponentView:(UIView<RCTComponentViewProtocol> *)childComponentView
                             index:(NSInteger)index
 {
+  [_ownChildren removeObject:childComponentView];
   [childComponentView removeFromSuperview];
 }
 
@@ -129,7 +133,7 @@ using namespace facebook::react;
 
   PortalHostView *hostView = [[PortalRegistry sharedInstance] getHostWithName:self.hostName];
   if (hostView) {
-    [self moveChildrenToTarget:self.contentView target:(UIView *)hostView];
+    [self moveOwnChildrenToTarget:(UIView *)hostView];
     self.targetView = (UIView *)hostView;
   }
 }
@@ -142,6 +146,14 @@ using namespace facebook::react;
     [[PortalRegistry sharedInstance] unregisterPendingPortal:self withHostName:self.hostName];
     self.isWaitingForHost = NO;
   }
+
+  // Reset all portal state so recycled views don't retain stale host references.
+  // Without this, a recycled PortalView's targetView still points to the old host,
+  // causing mountChildComponentView to add children to the wrong host and
+  // moveOwnChildrenToTarget to operate on a stale source.
+  self.hostName = nil;
+  self.targetView = self.contentView;
+  [_ownChildren removeAllObjects];
 }
 
 // MARK: touch handling
