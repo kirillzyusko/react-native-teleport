@@ -81,4 +81,10 @@ export const examples: Example[] = [
     info: ScreenNames.TRAVEL_EXPLORE,
     icons: "🏝️",
   },
+  {
+    title: "Adaptive Shadow",
+    testID: "adaptive_shadow",
+    info: ScreenNames.ADAPTIVE_SHADOW,
+    icons: "🌈",
+  },
 ];

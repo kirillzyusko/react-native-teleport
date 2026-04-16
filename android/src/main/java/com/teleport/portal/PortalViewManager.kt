@@ -26,7 +26,7 @@ class PortalViewManager :
     view: ReactViewGroup?,
     name: String?,
   ) {
-    // implement later if needed
+    (view as? PortalView)?.setPortalName(name)
   }
 
   @ReactProp(name = "hostName")

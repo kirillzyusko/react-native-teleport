@@ -14,3 +14,9 @@ export type PortalProps = {
   style?: StyleProp<ViewStyle>;
   children?: React.ReactNode;
 };
+export type MirrorMode = "live" | "snapshot" | "layer";
+export type MirrorProps = {
+  name: string;
+  mode?: MirrorMode;
+  style?: StyleProp<ViewStyle>;
+};

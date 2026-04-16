@@ -10,9 +10,28 @@ import java.util.ArrayList
 class PortalView(
   context: Context,
 ) : ReactViewGroup(context) {
+  private var portalName: String? = null
   private var hostName: String? = null
   private var isWaitingForHost = false
   private val ownChildren: MutableList<View> = ArrayList()
+
+  fun setPortalName(name: String?) {
+    if (portalName == name) return
+
+    portalName?.let { PortalRegistry.unregisterPortal(it, id) }
+    portalName = name
+    name?.let { PortalRegistry.registerPortal(it, this) }
+  }
+
+  fun getTargetView(): ViewGroup {
+    return if (isTeleported()) {
+      PortalRegistry.getHost(hostName) ?: this
+    } else {
+      this
+    }
+  }
+
+  fun getOwnChildren(): List<View> = ownChildren.toList()
 
   fun setHostName(name: String?) {
     val children = extractChildren()

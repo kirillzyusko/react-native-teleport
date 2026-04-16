@@ -1,15 +1,19 @@
 /// <reference lib="dom" />
 
-import { useRef, useLayoutEffect, useCallback } from "react";
+import { useRef, useLayoutEffect, useCallback, useEffect } from "react";
 import { createPortal } from "react-dom";
 import { usePortalRegistryContext } from "../../contexts/PortalRegistry";
 import type { PortalProps } from "../../types";
 
 const supportsMoveBefore =
   typeof Element !== "undefined" && "moveBefore" in Element.prototype;
-export default function Portal({ hostName, children, style }: PortalProps) {
-  const { getHost, registerPendingPortal, unregisterPendingPortal } =
-    usePortalRegistryContext();
+export default function Portal({ hostName, name, children, style }: PortalProps) {
+  const {
+    getHost,
+    registerPendingPortal,
+    unregisterPendingPortal,
+    registerPortal,
+  } = usePortalRegistryContext();
   const elRef = useRef<HTMLDivElement | null>(null);
   if (!elRef.current) {
     elRef.current = document.createElement("div");
@@ -23,6 +27,17 @@ export default function Portal({ hostName, children, style }: PortalProps) {
       Object.assign(elRef.current.style, style);
     }
   }, [style]);
+
+  useEffect(() => {
+    if (name && elRef.current) {
+      registerPortal(name, elRef.current);
+    }
+    return () => {
+      if (name) {
+        registerPortal(name, null);
+      }
+    };
+  }, [name, registerPortal]);
 
   const teleportToHost = useCallback(() => {
     const el = elRef.current;

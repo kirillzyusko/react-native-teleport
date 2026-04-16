@@ -21,6 +21,7 @@ using namespace facebook::react;
 
 @interface PortalView () <RCTPortalViewViewProtocol>
 
+@property (nonatomic, strong) NSString *portalName;
 @property (nonatomic, strong) NSString *hostName;
 @property (nonatomic, strong) UIView *targetView;
 @property (nonatomic, assign) BOOL isWaitingForHost;
@@ -71,6 +72,17 @@ using namespace facebook::react;
       newHostStr.empty() ? nil : [NSString stringWithUTF8String:newHostStr.c_str()];
 
   std::string newNameStr = newViewProps.name;
+
+  NSString *newName =
+      newNameStr.empty() ? nil : [NSString stringWithUTF8String:newNameStr.c_str()];
+
+  if (newName && ![self.portalName isEqualToString:newName]) {
+    if (self.portalName) {
+      [[PortalRegistry sharedInstance] unregisterPortalWithName:self.portalName viewTag:self.tag];
+    }
+    self.portalName = newName;
+    [[PortalRegistry sharedInstance] registerPortal:self withName:newName];
+  }
 
   if (![self.hostName isEqualToString:newHostName]) {
     if (self.isWaitingForHost && self.hostName) {
@@ -151,9 +163,18 @@ using namespace facebook::react;
   // Without this, a recycled PortalView's targetView still points to the old host,
   // causing mountChildComponentView to add children to the wrong host and
   // moveOwnChildrenToTarget to operate on a stale source.
+  if (self.portalName) {
+    [[PortalRegistry sharedInstance] unregisterPortalWithName:self.portalName viewTag:self.tag];
+    self.portalName = nil;
+  }
   self.hostName = nil;
   self.targetView = self.contentView;
   [_ownChildren removeAllObjects];
+}
+
+- (UIView *)captureTarget
+{
+  return self.targetView;
 }
 
 // MARK: touch handling

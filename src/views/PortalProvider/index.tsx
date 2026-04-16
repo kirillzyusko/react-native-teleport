@@ -5,6 +5,8 @@ import type { PortalProviderProps } from "../../types";
 export default function PortalProvider({ children }: PortalProviderProps) {
   const hostsRef = useRef<Map<string, HTMLElement>>(new Map());
   const pendingPortalsRef = useRef<Map<string, Set<() => void>>>(new Map());
+  const portalsRef = useRef<Map<string, HTMLElement>>(new Map());
+  const pendingMirrorsRef = useRef<Map<string, Set<() => void>>>(new Map());
 
   const registerHost = useCallback((name: string, node: HTMLElement | null) => {
     if (node) {
@@ -44,14 +46,65 @@ export default function PortalProvider({ children }: PortalProviderProps) {
     [],
   );
 
+  const registerPortal = useCallback((name: string, node: HTMLElement | null) => {
+    if (node) {
+      portalsRef.current.set(name, node);
+
+      const callbacks = pendingMirrorsRef.current.get(name);
+      if (callbacks) {
+        callbacks.forEach((callback) => callback());
+        pendingMirrorsRef.current.delete(name);
+      }
+    } else {
+      portalsRef.current.delete(name);
+    }
+  }, []);
+  const getPortal = useCallback(
+    (name: string) => portalsRef.current.get(name) ?? null,
+    [],
+  );
+  const registerPendingMirror = useCallback(
+    (name: string, callback: () => void) => {
+      const callbacks = pendingMirrorsRef.current.get(name) ?? new Set();
+      callbacks.add(callback);
+      pendingMirrorsRef.current.set(name, callbacks);
+    },
+    [],
+  );
+  const unregisterPendingMirror = useCallback(
+    (name: string, callback: () => void) => {
+      const callbacks = pendingMirrorsRef.current.get(name);
+      if (callbacks) {
+        callbacks.delete(callback);
+        if (callbacks.size === 0) {
+          pendingMirrorsRef.current.delete(name);
+        }
+      }
+    },
+    [],
+  );
+
   const value = useMemo(
     () => ({
       registerHost,
       getHost,
       registerPendingPortal,
       unregisterPendingPortal,
+      registerPortal,
+      getPortal,
+      registerPendingMirror,
+      unregisterPendingMirror,
     }),
-    [registerHost, getHost, registerPendingPortal, unregisterPendingPortal],
+    [
+      registerHost,
+      getHost,
+      registerPendingPortal,
+      unregisterPendingPortal,
+      registerPortal,
+      getPortal,
+      registerPendingMirror,
+      unregisterPendingMirror,
+    ],
   );
 
   return (

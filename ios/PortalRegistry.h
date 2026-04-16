@@ -24,6 +24,13 @@ NS_ASSUME_NONNULL_BEGIN
 - (void)registerPendingPortal:(PortalView *)portal withHostName:(NSString *)hostName;
 - (void)unregisterPendingPortal:(PortalView *)portal withHostName:(NSString *)hostName;
 
+- (void)registerPortal:(PortalView *)portal withName:(NSString *)name;
+- (void)unregisterPortalWithName:(NSString *)name viewTag:(NSInteger)viewTag;
+- (nullable PortalView *)getPortalWithName:(NSString *)name;
+
+- (void)registerPendingMirror:(id)mirror withPortalName:(NSString *)portalName;
+- (void)unregisterPendingMirror:(id)mirror withPortalName:(NSString *)portalName;
+
 @end
 
 NS_ASSUME_NONNULL_END

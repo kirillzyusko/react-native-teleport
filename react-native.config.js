@@ -5,6 +5,7 @@ module.exports = {
         componentDescriptors: [
           "PortalViewComponentDescriptor",
           "PortalHostViewComponentDescriptor",
+          "MirrorViewComponentDescriptor",
         ],
         cmakeListsPath: "../android/src/main/jni/CMakeLists.txt",
       },

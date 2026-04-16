@@ -6,6 +6,7 @@
 
 #include <react/renderer/components/TeleportViewSpec/RNTPortalHostViewComponentDescriptor.h>
 #include <react/renderer/components/TeleportViewSpec/RNTPortalViewComponentDescriptor.h>
+#include <react/renderer/components/TeleportViewSpec/RNTMirrorViewComponentDescriptor.h>
 
 #include <memory>
 

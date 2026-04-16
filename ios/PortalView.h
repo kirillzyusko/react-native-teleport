@@ -16,6 +16,7 @@ NS_ASSUME_NONNULL_BEGIN
 @interface PortalView : RCTViewComponentView
 
 - (void)onHostAvailable;
+- (UIView *)captureTarget;
 
 @end
 

@@ -22,6 +22,7 @@ import TravelDetails from "../../screens/Travel/Details";
 import type { PostType } from "../../screens/Instagram/posts";
 import type { ImageProps } from "react-native";
 import TeleportationOrder from "../../screens/TeleportationOrder";
+import AdaptiveShadow from "../../screens/AdaptiveShadow";
 
 export type ExamplesStackParamList = {
   [ScreenNames.GESTURE_HANDLER_TOUCHABLE]: undefined;
@@ -48,6 +49,7 @@ export type ExamplesStackParamList = {
     rating: string;
   };
   [ScreenNames.TELEPORTATION_ORDER]: undefined;
+  [ScreenNames.ADAPTIVE_SHADOW]: undefined;
 };
 
 const Stack = createNativeStackNavigator<ExamplesStackParamList>();
@@ -102,6 +104,9 @@ const options = {
   },
   [ScreenNames.TELEPORTATION_ORDER]: {
     title: "Teleportation order",
+  },
+  [ScreenNames.ADAPTIVE_SHADOW]: {
+    title: "Adaptive Shadow",
   },
 };
 
@@ -186,6 +191,11 @@ const ExamplesStack = () => (
       component={TeleportationOrder}
       name={ScreenNames.TELEPORTATION_ORDER}
       options={options[ScreenNames.TELEPORTATION_ORDER]}
+    />
+    <Stack.Screen
+      component={AdaptiveShadow}
+      name={ScreenNames.ADAPTIVE_SHADOW}
+      options={options[ScreenNames.ADAPTIVE_SHADOW]}
     />
   </Stack.Navigator>
 );
