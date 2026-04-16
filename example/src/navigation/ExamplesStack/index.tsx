@@ -23,6 +23,7 @@ import TravelDetails from "../../screens/Travel/Details";
 import type { PostType } from "../../screens/Instagram/posts";
 import type { ImageProps } from "react-native";
 import TeleportationOrder from "../../screens/TeleportationOrder";
+import RichTextEditor from "../../screens/RichTextEditor";
 
 export type ExamplesStackParamList = {
   [ScreenNames.GESTURE_HANDLER_TOUCHABLE]: undefined;
@@ -50,6 +51,7 @@ export type ExamplesStackParamList = {
     rating: string;
   };
   [ScreenNames.TELEPORTATION_ORDER]: undefined;
+  [ScreenNames.RICH_TEXT_EDITOR]: undefined;
 };
 
 const Stack = createNativeStackNavigator<ExamplesStackParamList>();
@@ -107,6 +109,9 @@ const options = {
   },
   [ScreenNames.TELEPORTATION_ORDER]: {
     title: "Teleportation order",
+  },
+  [ScreenNames.RICH_TEXT_EDITOR]: {
+    title: "Rich Text Editor",
   },
 };
 
@@ -196,6 +201,11 @@ const ExamplesStack = () => (
       component={TeleportationOrder}
       name={ScreenNames.TELEPORTATION_ORDER}
       options={options[ScreenNames.TELEPORTATION_ORDER]}
+    />
+    <Stack.Screen
+      component={RichTextEditor}
+      name={ScreenNames.RICH_TEXT_EDITOR}
+      options={options[ScreenNames.RICH_TEXT_EDITOR]}
     />
   </Stack.Navigator>
 );
