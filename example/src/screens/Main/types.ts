@@ -8,6 +8,7 @@ export type ExampleScreen =
   | ScreenNames.HOOKS
   | ScreenNames.FLEXIBLE_STYLES
   | ScreenNames.PORTAL_BEFORE_HOST
+  | ScreenNames.IOS_RECYCLE_REPRO
   | ScreenNames.NAVIGATION_LIFECYCLE
   | ScreenNames.INSTAGRAM_FEED
   | ScreenNames.BOTTOM_SHEET

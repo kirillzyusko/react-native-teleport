@@ -13,6 +13,7 @@ import FlexibleStyles from "../../screens/FlexibleStyles";
 import BottomSheet from "../../screens/BottomSheet";
 import Messenger from "../../screens/Messenger";
 import PortalBeforeHost from "../../screens/PortalBeforeHost";
+import RecycleRepro from "../../screens/RecycleRepro";
 import InstagramFeed from "../../screens/Instagram/Feed";
 import InstagramReels from "../../screens/Instagram/Reels";
 import DeepNavigation from "../../screens/DeepNavigation/Screen1";
@@ -33,6 +34,7 @@ export type ExamplesStackParamList = {
   [ScreenNames.BOTTOM_SHEET]: undefined;
   [ScreenNames.MESSENGER]: undefined;
   [ScreenNames.PORTAL_BEFORE_HOST]: undefined;
+  [ScreenNames.IOS_RECYCLE_REPRO]: undefined;
   [ScreenNames.INSTAGRAM_FEED]: undefined;
   [ScreenNames.INSTAGRAM_REELS]: {
     post: PostType;
@@ -79,6 +81,9 @@ const options = {
   },
   [ScreenNames.PORTAL_BEFORE_HOST]: {
     title: "Portal Before Host",
+  },
+  [ScreenNames.IOS_RECYCLE_REPRO]: {
+    title: "iOS recycle repro",
   },
   [ScreenNames.INSTAGRAM_FEED]: {
     headerShown: false,
@@ -151,6 +156,11 @@ const ExamplesStack = () => (
       component={PortalBeforeHost}
       name={ScreenNames.PORTAL_BEFORE_HOST}
       options={options[ScreenNames.PORTAL_BEFORE_HOST]}
+    />
+    <Stack.Screen
+      component={RecycleRepro}
+      name={ScreenNames.IOS_RECYCLE_REPRO}
+      options={options[ScreenNames.IOS_RECYCLE_REPRO]}
     />
     <Stack.Screen
       component={InstagramFeed}
