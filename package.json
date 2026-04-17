@@ -10,6 +10,7 @@
       "types": "./lib/typescript/src/index.d.ts",
       "default": "./lib/module/index.js"
     },
+    "./jest": "./jest/index.js",
     "./package.json": "./package.json"
   },
   "files": [
