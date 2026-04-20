@@ -81,4 +81,10 @@ export const examples: Example[] = [
     info: ScreenNames.TRAVEL_EXPLORE,
     icons: "🏝️",
   },
+  {
+    title: "Recycling",
+    testID: "recycling",
+    info: ScreenNames.RECYCLING,
+    icons: "🗑️",
+  },
 ];

@@ -42,22 +42,18 @@ using namespace facebook::react;
 
 - (void)updateProps:(Props::Shared const &)props oldProps:(Props::Shared const &)oldProps
 {
-  const auto &oldViewProps = *std::static_pointer_cast<PortalHostViewProps const>(_props);
   const auto &newViewProps = *std::static_pointer_cast<PortalHostViewProps const>(props);
 
-  if (oldViewProps.name != newViewProps.name) {
-    std::string nameStr = newViewProps.name;
-    NSString *newName = nameStr.empty() ? nil : [NSString stringWithUTF8String:nameStr.c_str()];
+  std::string nameStr = newViewProps.name;
+  NSString *newName = nameStr.empty() ? nil : [NSString stringWithUTF8String:nameStr.c_str()];
 
-    if (![self.registeredName isEqualToString:newName]) {
-      if (self.registeredName) {
-        [[PortalRegistry sharedInstance] unregisterHostWithName:self.registeredName
-                                                        viewTag:self.tag];
-      }
-      self.registeredName = newName;
-      if (newName) {
-        [[PortalRegistry sharedInstance] registerHost:self withName:newName];
-      }
+  if (![self.registeredName isEqualToString:newName]) {
+    if (self.registeredName) {
+      [[PortalRegistry sharedInstance] unregisterHostWithName:self.registeredName viewTag:self.tag];
+    }
+    self.registeredName = newName;
+    if (newName) {
+      [[PortalRegistry sharedInstance] registerHost:self withName:newName];
     }
   }
 
