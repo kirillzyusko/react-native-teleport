@@ -46,21 +46,13 @@ using namespace facebook::react;
 
   std::string nameStr = newViewProps.name;
   NSString *newName = nameStr.empty() ? nil : [NSString stringWithUTF8String:nameStr.c_str()];
-  PortalHostView *registeredHost =
-      newName ? [[PortalRegistry sharedInstance] getHostWithName:newName] : nil;
 
-  // Repair registration when Fabric reuses this native view with the same
-  // host name after prepareForRecycle cleared the previous registry entry.
-  BOOL needsRegistrationRepair =
-      ![self.registeredName isEqualToString:newName] || (newName && registeredHost != self);
-
-  if (needsRegistrationRepair) {
+  if (![self.registeredName isEqualToString:newName]) {
     if (self.registeredName) {
-      [[PortalRegistry sharedInstance] unregisterHostWithName:self.registeredName viewTag:self.tag];
+      [[PortalRegistry sharedInstance] unregisterHostWithName:self.registeredName
+                                                      viewTag:self.tag];
     }
-
     self.registeredName = newName;
-
     if (newName) {
       [[PortalRegistry sharedInstance] registerHost:self withName:newName];
     }

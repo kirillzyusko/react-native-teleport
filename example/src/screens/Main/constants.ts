@@ -46,12 +46,6 @@ export const examples: Example[] = [
     icons: "🔄",
   },
   {
-    title: "iOS recycle repro",
-    testID: "ios_recycle_repro",
-    info: ScreenNames.IOS_RECYCLE_REPRO,
-    icons: "♻️🍎",
-  },
-  {
     title: "Navigation/Lifecycle",
     testID: "navigation-lifecycle",
     info: ScreenNames.NAVIGATION_LIFECYCLE,
@@ -86,5 +80,11 @@ export const examples: Example[] = [
     testID: "travel",
     info: ScreenNames.TRAVEL_EXPLORE,
     icons: "🏝️",
+  },
+  {
+    title: "Recycling",
+    testID: "recycling",
+    info: ScreenNames.RECYCLING,
+    icons: "🗑️",
   },
 ];

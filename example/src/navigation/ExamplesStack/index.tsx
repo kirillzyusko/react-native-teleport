@@ -34,7 +34,7 @@ export type ExamplesStackParamList = {
   [ScreenNames.BOTTOM_SHEET]: undefined;
   [ScreenNames.MESSENGER]: undefined;
   [ScreenNames.PORTAL_BEFORE_HOST]: undefined;
-  [ScreenNames.IOS_RECYCLE_REPRO]: undefined;
+  [ScreenNames.RECYCLING]: undefined;
   [ScreenNames.INSTAGRAM_FEED]: undefined;
   [ScreenNames.INSTAGRAM_REELS]: {
     post: PostType;
@@ -82,8 +82,8 @@ const options = {
   [ScreenNames.PORTAL_BEFORE_HOST]: {
     title: "Portal Before Host",
   },
-  [ScreenNames.IOS_RECYCLE_REPRO]: {
-    title: "iOS recycle repro",
+  [ScreenNames.RECYCLING]: {
+    title: "Recycling",
   },
   [ScreenNames.INSTAGRAM_FEED]: {
     headerShown: false,
@@ -159,8 +159,8 @@ const ExamplesStack = () => (
     />
     <Stack.Screen
       component={RecycleRepro}
-      name={ScreenNames.IOS_RECYCLE_REPRO}
-      options={options[ScreenNames.IOS_RECYCLE_REPRO]}
+      name={ScreenNames.RECYCLING}
+      options={options[ScreenNames.RECYCLING]}
     />
     <Stack.Screen
       component={InstagramFeed}
