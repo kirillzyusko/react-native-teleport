@@ -1,0 +1,73 @@
+appId: teleport.example
+---
+- launchApp
+
+- scrollUntilVisible:
+    element:
+      id: "recycling"
+    direction: DOWN
+- tapOn:
+    id: "recycling"
+
+# ─── Scenario 1: Host Remount ───────────────────────────────────────────────
+# Teleport into a host, unmount it, remount it, teleport again.
+# The second teleported card must still render.
+
+- tapOn:
+    id: "teleport_first_time"
+- assertVisible:
+    id: "remount_teleported_card"
+
+- tapOn:
+    id: "unmount_host"
+- assertNotVisible:
+    id: "remount_teleported_card"
+
+- tapOn:
+    id: "remount_host"
+- tapOn:
+    id: "teleport_second_time"
+- assertVisible:
+    id: "remount_teleported_card"
+
+# Reset scenario 1
+- tapOn:
+    id: "reset_repro"
+- assertNotVisible:
+    id: "remount_teleported_card"
+
+# ─── Scenario 2: Portal Swap ────────────────────────────────────────────────
+# Swap between two Portals with different hostNames at the same tree position.
+# Host B is nested inside Host A - Fabric recycles the PortalView.
+# The app must not crash and the correct content must render.
+
+- scrollUntilVisible:
+    element:
+      id: "switch_mode"
+    direction: DOWN
+
+# Initial state: layers mode -> content in Host A
+- assertVisible:
+    id: "swap_layers_content"
+
+# Switch to overlay -> content in Host B
+- tapOn:
+    id: "switch_mode"
+- assertVisible:
+    id: "swap_overlay_content"
+
+# Switch back to layers -> content in Host A again
+- tapOn:
+    id: "switch_mode"
+- assertVisible:
+    id: "swap_layers_content"
+
+# Rapid swap to stress-test recycling (no crash = pass)
+- tapOn:
+    id: "switch_mode"
+- tapOn:
+    id: "switch_mode"
+- tapOn:
+    id: "switch_mode"
+- assertVisible:
+    id: "swap_overlay_content"
