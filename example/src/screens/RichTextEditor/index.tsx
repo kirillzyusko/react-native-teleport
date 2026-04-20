@@ -105,9 +105,7 @@ export default function RichTextEditorExample() {
         </Text>
       </View>
 
-      {mode === "preloaded" && (
-        <PortalHost name="editor" style={styles.editor} />
-      )}
+      <PortalHost name="editor" style={styles.editor} />
 
       {mode === "standard" && (
         <View style={styles.editor}>

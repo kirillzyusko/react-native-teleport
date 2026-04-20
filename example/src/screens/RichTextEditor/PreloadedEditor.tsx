@@ -13,7 +13,7 @@ export default function PreloadedEditor() {
 
   return (
     <View style={styles.offscreen}>
-      <Portal hostName={hostName}>
+      <Portal hostName={hostName} style={{width: 300, height: 200}}>
         <WebView
           source={{ html: EDITOR_HTML }}
           style={styles.webview}
