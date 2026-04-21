@@ -106,7 +106,10 @@ class PortalView(
    * Finds the host index of the first next sibling (in [ownChildren]) that is
    * already present in the host.  Returns -1 when none is found (caller should append).
    */
-  private fun findNextSiblingHostIndex(host: ViewGroup, ownIndex: Int): Int {
+  private fun findNextSiblingHostIndex(
+    host: ViewGroup,
+    ownIndex: Int,
+  ): Int {
     for (i in (ownIndex + 1) until ownChildren.size) {
       val sibling = ownChildren[i]
       val siblingIndex = host.indexOfChild(sibling)
