@@ -5,6 +5,7 @@ import android.view.View
 import android.view.ViewGroup
 import com.facebook.react.views.view.ReactViewGroup
 import com.teleport.global.PortalRegistry
+import com.teleport.host.PortalHostView
 import java.util.ArrayList
 
 class PortalView(
@@ -36,15 +37,16 @@ class PortalView(
         }
       } ?: this
 
-    for (i in children.indices) {
-      val child = children[i]
-      // Append if to host, preserve index if to self
-      target.addView(child, if (target == this) i else -1)
-    }
-
-    // Track own children if teleported
-    if (target != this) {
+    if (target is PortalHostView) {
+      for (i in children.indices) {
+        val idx = target.nextInsertionIndexForChildAt(i)
+        target.addView(children[i], idx)
+      }
       ownChildren.addAll(children)
+    } else {
+      for (i in children.indices) {
+        target.addView(children[i], i)
+      }
     }
   }
 
@@ -53,11 +55,11 @@ class PortalView(
 
     val host = PortalRegistry.getHost(hostName)
     if (host != null) {
-      // Gather from self (physical, since waiting)
       val children = extractPhysicalChildren()
 
-      for (child in children) {
-        host.addView(child)
+      for (i in children.indices) {
+        val idx = host.nextInsertionIndexForChildAt(i)
+        host.addView(children[i], idx)
       }
       ownChildren.addAll(children)
     }
@@ -100,6 +102,22 @@ class PortalView(
     return children
   }
 
+  /**
+   * Finds the host index of the first next sibling (in [ownChildren]) that is
+   * already present in the host.  Returns -1 when none is found (caller should append).
+   */
+  private fun findNextSiblingHostIndex(
+    host: ViewGroup,
+    ownIndex: Int,
+  ): Int {
+    for (i in (ownIndex + 1) until ownChildren.size) {
+      val sibling = ownChildren[i]
+      val siblingIndex = host.indexOfChild(sibling)
+      if (siblingIndex >= 0) return siblingIndex
+    }
+    return -1
+  }
+
   // region Children management
   override fun getChildCount(): Int =
     if (isTeleported()) {
@@ -121,8 +139,15 @@ class PortalView(
   ) {
     if (isTeleported()) {
       val host = PortalRegistry.getHost(hostName)
-      host?.addView(child)
       ownChildren.add(index, child)
+      if (host != null) {
+        val hostIndex = findNextSiblingHostIndex(host, index)
+        if (hostIndex >= 0) {
+          host.addView(child, hostIndex)
+        } else {
+          host.addView(child)
+        }
+      }
     } else {
       super.addView(child, index)
     }
@@ -135,8 +160,15 @@ class PortalView(
   ) {
     if (isTeleported()) {
       val host = PortalRegistry.getHost(hostName)
-      host?.addView(child, params)
       ownChildren.add(index, child)
+      if (host != null) {
+        val hostIndex = findNextSiblingHostIndex(host, index)
+        if (hostIndex >= 0) {
+          host.addView(child, hostIndex)
+        } else {
+          host.addView(child, params)
+        }
+      }
     } else {
       super.addView(child, index, params)
     }

@@ -1,0 +1,29 @@
+appId: teleport.example
+---
+- launchApp
+- repeat:
+    while:
+      notVisible:
+        id: "bottom_sheet"
+    commands:
+      - swipe:
+          start: 50%, 80%
+          end: 50%, 20%
+- tapOn:
+    id: "bottom_sheet"
+- assertNotVisible:
+    text: "Sheet"
+- assertNotVisible:
+    text: "Close"
+- tapOn:
+    id: "open_bottom_sheet"
+- assertVisible:
+    text: "Sheet"
+- assertVisible:
+    text: "Close"
+- tapOn:
+    text: "Close"
+- assertNotVisible:
+    text: "Sheet"
+- assertNotVisible:
+    text: "Close"

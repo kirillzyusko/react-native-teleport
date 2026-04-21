@@ -6,6 +6,7 @@
 //
 
 #import "PortalView.h"
+#import "PortalHostView.h"
 #import "PortalRegistry.h"
 
 #import <react/renderer/components/TeleportViewSpec/EventEmitters.h>
@@ -57,8 +58,17 @@ using namespace facebook::react;
   for (UIView *child in children) {
     [child removeFromSuperview];
   }
-  for (UIView *child in children) {
-    [target addSubview:child];
+
+  if ([target isKindOfClass:[PortalHostView class]]) {
+    PortalHostView *host = (PortalHostView *)target;
+    for (NSInteger i = 0; i < (NSInteger)children.count; i++) {
+      NSInteger idx = [host nextInsertionIndexForChildAt:i];
+      [target insertSubview:children[i] atIndex:idx];
+    }
+  } else {
+    for (UIView *child in children) {
+      [target addSubview:child];
+    }
   }
 }
 
@@ -106,6 +116,20 @@ using namespace facebook::react;
   [super updateProps:props oldProps:oldProps];
 }
 
+/// Finds the host index of the first next sibling (in _ownChildren) that is
+/// already present in the host.  Returns -1 when none is found (caller should append).
+- (NSInteger)findNextSiblingHostIndex:(NSInteger)ownIndex
+{
+  for (NSInteger i = ownIndex + 1; i < (NSInteger)_ownChildren.count; i++) {
+    UIView *sibling = _ownChildren[i];
+    NSInteger siblingIdx = [self.targetView.subviews indexOfObject:sibling];
+    if (siblingIdx != NSNotFound) {
+      return (NSInteger)siblingIdx;
+    }
+  }
+  return -1;
+}
+
 - (void)mountChildComponentView:(UIView<RCTComponentViewProtocol> *)childComponentView
                           index:(NSInteger)index
 {
@@ -115,8 +139,13 @@ using namespace facebook::react;
     // when adding to self, preserve the React tree order with the provided index
     [self.targetView insertSubview:childComponentView atIndex:index];
   } else {
-    // when adding to a different container (host), append to the end
-    [self.targetView addSubview:childComponentView];
+    NSInteger ownIndex = [_ownChildren indexOfObject:childComponentView];
+    NSInteger hostIndex = [self findNextSiblingHostIndex:ownIndex];
+    if (hostIndex >= 0) {
+      [self.targetView insertSubview:childComponentView atIndex:hostIndex];
+    } else {
+      [self.targetView addSubview:childComponentView];
+    }
   }
 }
 
@@ -133,8 +162,8 @@ using namespace facebook::react;
 
   PortalHostView *hostView = [[PortalRegistry sharedInstance] getHostWithName:self.hostName];
   if (hostView) {
-    [self moveOwnChildrenToTarget:(UIView *)hostView];
     self.targetView = (UIView *)hostView;
+    [self moveOwnChildrenToTarget:(UIView *)hostView];
   }
 }
 
