@@ -20,6 +20,8 @@ using namespace facebook::react;
 @interface PortalHostView () <RCTPortalHostViewViewProtocol>
 
 @property (nonatomic, strong) NSString *registeredName;
+@property (nonatomic, assign) BOOL isInBatch;
+@property (nonatomic, assign) NSInteger batchBaseIndex;
 
 @end
 
@@ -60,9 +62,25 @@ using namespace facebook::react;
   [super updateProps:props oldProps:oldProps];
 }
 
+- (NSInteger)nextInsertionIndexForChildAt:(NSInteger)childIndex
+{
+  if (!self.isInBatch) {
+    self.isInBatch = YES;
+    self.batchBaseIndex = (NSInteger)self.subviews.count;
+    __weak PortalHostView *weakSelf = self;
+    dispatch_async(dispatch_get_main_queue(), ^{
+      weakSelf.isInBatch = NO;
+    });
+  }
+  return MIN(self.batchBaseIndex + childIndex, (NSInteger)self.subviews.count);
+}
+
 - (void)prepareForRecycle
 {
   [super prepareForRecycle];
+
+  self.isInBatch = NO;
+  self.batchBaseIndex = 0;
 
   // Unregister before recycling so a stale registeredName doesn't cause
   // this view to unregister a DIFFERENT host's entry when it's reused
