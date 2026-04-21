@@ -16,6 +16,7 @@ export default function BottomSheet() {
           <View style={styles.row}>
             <View style={styles.column} />
             <TouchableOpacity
+              testID="open_bottom_sheet"
               onPress={() => setVisible(true)}
               style={styles.button}
             >
