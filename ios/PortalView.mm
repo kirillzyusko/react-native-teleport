@@ -136,6 +136,7 @@ using namespace facebook::react;
   [_ownChildren insertObject:childComponentView atIndex:MIN(index, (NSInteger)_ownChildren.count)];
 
   if (self.targetView == self.contentView) {
+    // when adding to self, preserve the React tree order with the provided index
     [self.targetView insertSubview:childComponentView atIndex:index];
   } else {
     NSInteger ownIndex = [_ownChildren indexOfObject:childComponentView];
