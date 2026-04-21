@@ -1,0 +1,58 @@
+appId: teleport.example
+---
+- launchApp
+
+# Scroll to the Recycling example (last item in the list)
+- repeat:
+    while:
+      notVisible:
+        id: "recycling"
+    commands:
+      - swipe:
+          start: 50%, 80%
+          end: 50%, 20%
+- tapOn:
+    id: "recycling"
+
+# Step 1: Teleport into the host for the first time
+- tapOn:
+    id: "teleport_first_time"
+- takeScreenshot:
+    path: e2e/RecyclingFirstTeleport
+- runScript:
+    file: ../scripts/compare-screenshots.js
+    env:
+      base: screenshots/${DEVICE}/RecyclingFirstTeleport
+      target: RecyclingFirstTeleport
+      diff: 0.3
+- assertTrue: ${output.matches}
+
+# Step 2: Unmount the host
+- tapOn:
+    id: "unmount_host"
+- takeScreenshot:
+    path: e2e/RecyclingHostUnmounted
+- runScript:
+    file: ../scripts/compare-screenshots.js
+    env:
+      base: screenshots/${DEVICE}/RecyclingHostUnmounted
+      target: RecyclingHostUnmounted
+      diff: 0.3
+- assertTrue: ${output.matches}
+
+# Step 3: Remount the host
+- tapOn:
+    id: "remount_host"
+
+# Step 4: Teleport into the remounted host a second time.
+- tapOn:
+    id: "teleport_second_time"
+- takeScreenshot:
+    path: e2e/RecyclingSecondTeleport
+- runScript:
+    file: ../scripts/compare-screenshots.js
+    env:
+      base: screenshots/${DEVICE}/RecyclingSecondTeleport
+      target: RecyclingSecondTeleport
+      diff: 0.3
+- assertTrue: ${output.matches}
