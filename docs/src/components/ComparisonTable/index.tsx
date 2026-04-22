@@ -25,7 +25,7 @@ export default function ComparisonTable({
   leftText,
   right,
   rightText,
-}: Props): JSX.Element {
+}: Props): React.ReactNode {
   return (
     <table>
       <tbody>
