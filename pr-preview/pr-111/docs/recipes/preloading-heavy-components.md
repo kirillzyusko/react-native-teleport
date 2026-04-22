@@ -2,34 +2,27 @@
 
 Some components are expensive to initialize. A WebView-based rich text editor, for example, must download JavaScript from a CDN, parse it, and run initialization logic before the user can interact with it. The same applies to maps, charts, and other third-party views rendered inside WebViews.
 
-The result is a loading spinner every time the user opens the screen — even though the component's content doesn't depend on anything screen-specific.
-
-With `react-native-teleport`, you can **render these components offscreen at app startup** and **teleport them on-screen when the user needs them**. Because the native view is reparented (moved in the view hierarchy) rather than remounted, the component keeps its fully initialized state and appears instantly.
+The result is a loading spinner every time the user opens the screen - even though the component's content doesn't depend on anything screen-specific.
 
 <!-- -->
 
+|                                                                                                                    |                                                                  |
+| ------------------------------------------------------------------------------------------------------------------ | ---------------------------------------------------------------- |
+| [](/react-native-teleport/pr-preview/pr-111/video/not-preloaded.mp4)                                               | [](/react-native-teleport/pr-preview/pr-111/video/preloaded.mp4) |
+| *Not preloaded component - need to download JS from CDN, parse it, run initialization and do a layout in the end.* | *Preloaded component - instant rendering*                        |
+
+With `react-native-teleport`, you can **render these components offscreen at app startup** and **teleport them on-screen when the user needs them**. Because the native view is **re-parented** (moved in the view hierarchy) rather than **re-mounted**, the component keeps its fully initialized state and appears instantly.
+
 ## The pattern[​](#the-pattern "Direct link to The pattern")
 
-```
-App startup                     User opens editor screen
-     │                                   │
-     ▼                                   ▼
-┌──────────────┐               ┌──────────────────┐
-│  Offscreen   │   teleport    │  Editor Screen    │
-│  container   │ ────────────▶ │  ┌──────────────┐ │
-│  ┌────────┐  │               │  │  PortalHost   │ │
-│  │WebView │  │               │  │  ┌──────────┐ │ │
-│  │(loaded)│  │               │  │  │ WebView  │ │ │
-│  └────────┘  │               │  │  │ (ready!) │ │ │
-└──────────────┘               │  │  └──────────┘ │ │
-                               │  └──────────────┘ │
-                               └──────────────────┘
-```
+<!-- -->
+
+![](/react-native-teleport/pr-preview/pr-111/img/preloading.svg)
 
 1. At app startup, mount the heavy component inside a `<Portal>` in a hidden offscreen container.
 2. The component loads and initializes in the background while the user is on other screens.
 3. When the user navigates to the target screen, change the Portal's `hostName` to point at a `<PortalHost>` on that screen.
-4. The component teleports in — fully loaded, zero wait.
+4. The component teleports in - fully loaded, zero wait.
 
 ## Example: WebView rich text editor[​](#example-webview-rich-text-editor "Direct link to Example: WebView rich text editor")
 
@@ -39,7 +32,7 @@ We'll build a WebView-based editor using [Quill](https://quilljs.com) that pre-l
 
 * [`react-native-teleport`](/react-native-teleport/pr-preview/pr-111/docs/installation.md)
 * [`react-native-webview`](https://github.com/nicolestandifer3/react-native-webview)
-* [`zustand`](https://zustand.docs.pmnd.rs/) — for lightweight state coordination (you can use any state management)
+* [`zustand`](https://zustand.docs.pmnd.rs/) - for lightweight state coordination (you can use any state management)
 
 ### Step 1: Define the editor HTML[​](#step-1-define-the-editor-html "Direct link to Step 1: Define the editor HTML")
 
@@ -154,8 +147,8 @@ const styles = StyleSheet.create({
 
 **How it works:**
 
-* When `hostName` is `undefined`, the Portal renders in-place — inside the offscreen container. The WebView loads and initializes invisibly.
-* When `hostName` changes to `"editor"`, the Portal teleports the WebView to the matching `<PortalHost>`. The native view is **moved**, not recreated — so the editor keeps its fully loaded state.
+* When `hostName` is `undefined`, the Portal renders in-place - inside the offscreen container. The WebView loads and initializes invisibly.
+* When `hostName` changes to `"editor"`, the Portal teleports the WebView to the matching `<PortalHost>`. The native view is **moved, not recreated** - so the editor keeps its fully loaded state.
 * When the user leaves the editor screen and `hostName` returns to `undefined`, the WebView teleports back to the offscreen container, preserving any content the user typed.
 
 ### Step 4: Mount at the app root[​](#step-4-mount-at-the-app-root "Direct link to Step 4: Mount at the app root")
@@ -189,7 +182,13 @@ EditorScreen.tsx
 
 ```
 import { useEffect, useCallback, useState } from "react";
-import { View, Text, TouchableOpacity, StyleSheet, ActivityIndicator } from "react-native";
+import {
+  View,
+  Text,
+  TouchableOpacity,
+  StyleSheet,
+  ActivityIndicator,
+} from "react-native";
 import { PortalHost } from "react-native-teleport";
 import { useEditorStore } from "./useEditorStore";
 
@@ -245,23 +244,23 @@ App startup → Mount WebView offscreen → Download JS → Parse → Initialize
               (happens in background while user is on other screens)
 
 Navigate → Teleport WebView on-screen → Ready!
-           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-             Instant — no waiting
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^
+             Instant - no waiting
 ```
 
-The key insight is that `react-native-teleport` **moves native views** rather than unmounting and remounting them. The WebView's internal state — loaded scripts, DOM, scroll position, user input — all survives the teleport.
+The key insight is that `react-native-teleport` **moves native views** rather than unmounting and remounting them. The WebView's internal state - loaded scripts, DOM, scroll position, user input - all survives the teleport.
 
 ## When to use this pattern[​](#when-to-use-this-pattern "Direct link to When to use this pattern")
 
 This pattern is most valuable when:
 
-* **A component has expensive initialization** — WebView-based editors, maps, payment forms, or chart libraries that load JavaScript from CDNs.
-* **The initialization doesn't depend on screen-specific data** — the component can be pre-loaded with a generic configuration.
-* **The user will likely visit the screen** — pre-loading a component the user never sees wastes resources. Use this for screens that are part of the core flow.
+* **A component has expensive initialization** - WebView-based editors, maps, payment forms, or chart libraries that load JavaScript from CDNs.
+* **The initialization doesn't depend on screen-specific data** - the component can be pre-loaded with a generic configuration.
+* **The user will likely visit the screen** - pre-loading a component the user never sees wastes resources. Use this for screens that are part of the core flow.
 
 Content preservation
 
-Because the native view is reparented rather than remounted, user input is preserved across teleports. If the user types something in the editor, navigates away, and comes back — their text is still there.
+Because the native view is **re-parented** rather than **re-mounted,** user input is preserved across teleports. If the user types something in the editor, navigates away, and comes back - their text is still there.
 
 ## See it in action[​](#see-it-in-action "Direct link to See it in action")
 
