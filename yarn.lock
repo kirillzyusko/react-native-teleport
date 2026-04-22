@@ -12543,7 +12543,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"invariant@npm:^2.2.4":
+"invariant@npm:2.2.4, invariant@npm:^2.2.4":
   version: 2.2.4
   resolution: "invariant@npm:2.2.4"
   dependencies:
@@ -18969,6 +18969,7 @@ __metadata:
     react-native-video: 6.17.0
     react-native-web: ^0.21.1
     react-native-web-linear-gradient: ^1.1.2
+    react-native-webview: ^13.16.1
     react-native-worklets: ^0.7.1
     react-test-renderer: 19.1.0
     url-loader: ^4.1.1
@@ -19053,6 +19054,19 @@ __metadata:
     react: ^18.0.0 || ^19.0.0
     react-dom: ^18.0.0 || ^19.0.0
   checksum: 9c1e10c35feaf334dcb69aa8d8b01eda78713e6e4597f462e88ce1e4706d72978059b9ad322856c87d4b7c27b97914ad3185770a1980cdd838ebc7baeaca469e
+  languageName: node
+  linkType: hard
+
+"react-native-webview@npm:^13.16.1":
+  version: 13.16.1
+  resolution: "react-native-webview@npm:13.16.1"
+  dependencies:
+    escape-string-regexp: ^4.0.0
+    invariant: 2.2.4
+  peerDependencies:
+    react: "*"
+    react-native: "*"
+  checksum: c202500df090114877d7a92549dbac1c36bdcc2010d50ddffb57aedcec81870d9695f1e4e3ef852cbe02a8ef952ef8626b120b774813c396a32b4fdc5838a4a5
   languageName: node
   linkType: hard
 

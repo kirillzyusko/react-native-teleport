@@ -25,7 +25,7 @@ We'll use iOS as our reference and replicate the transition across iOS, Android,
 
 import Video from "@site/src/components/Video";
 
-<Video src="/video/instagram.mov" width={35} />
+<Video src="/video/instagram.mp4" style={{ height: "50vh" }} />
 
 ## How it works — the big picture
 
@@ -398,8 +398,8 @@ const Post = ({ post, active }) => {
 ```
 
 <Video
-  src="/video/instagram-no-shared-transition.mov"
-  width="35%"
+  src="/video/instagram-no-shared-transition.mp4"
+  style={{ height: "50vh" }}
   autoPlay={false}
   controls={true}
   loop={false}
@@ -862,7 +862,7 @@ export const FLOATING_ELEMENTS_DESTINATION = Platform.select({
 
 And now we can see how all pieces work together!
 
-<Video src="/video/instagram.mov" width={35} />
+<Video src="/video/instagram.mp4" style={{ height: "50vh" }} />
 
 ## The complete transition flow
 

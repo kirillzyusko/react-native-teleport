@@ -87,4 +87,10 @@ export const examples: Example[] = [
     info: ScreenNames.RECYCLING,
     icons: "🗑️",
   },
+  {
+    title: "Rich Text Editor",
+    testID: "rich_text_editor",
+    info: ScreenNames.RICH_TEXT_EDITOR,
+    icons: "📝",
+  },
 ];

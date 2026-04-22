@@ -14,7 +14,8 @@ export type ExampleScreen =
   | ScreenNames.BOTTOM_SHEET
   | ScreenNames.MESSENGER
   | ScreenNames.TRAVEL_EXPLORE
-  | ScreenNames.TELEPORTATION_ORDER;
+  | ScreenNames.TELEPORTATION_ORDER
+  | ScreenNames.RICH_TEXT_EDITOR;
 
 export type Example = {
   testID: string;
