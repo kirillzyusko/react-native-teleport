@@ -6,7 +6,7 @@ We'll use iOS as our reference and replicate the transition across iOS, Android,
 
 <!-- -->
 
-[](/react-native-teleport/video/instagram.mov)
+[](/react-native-teleport/video/instagram.mp4)
 
 ## How it works — the big picture[​](#how-it-works--the-big-picture "Direct link to How it works — the big picture")
 
@@ -388,7 +388,7 @@ const Post = ({ post, active }) => {
 };
 ```
 
-[](/react-native-teleport/video/instagram-no-shared-transition.mov)
+[](/react-native-teleport/video/instagram-no-shared-transition.mp4)
 
 At this point you have a working app — tapping a video opens the `Reels` screen, and calling `navigation.goBack()` returns to `Feed`. But there are two problems:
 
@@ -867,7 +867,7 @@ export const FLOATING_ELEMENTS_DESTINATION = Platform.select({
 
 And now we can see how all pieces work together!
 
-[](/react-native-teleport/video/instagram.mov)
+[](/react-native-teleport/video/instagram.mp4)
 
 ## The complete transition flow[​](#the-complete-transition-flow "Direct link to The complete transition flow")
 
