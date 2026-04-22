@@ -17,7 +17,7 @@ After extensive development, community feedback and integrating the lib into man
 
 Historically, developers had to use JS based solutions to render modals, tooltips, overlays, and other components that need to visually appear in a different part of your UI tree. While they work, they have significant limitation: they **physically** render components in a **different part of React tree**, **breaking context** and bringing other related problems.
 
-The `react-native-teleport` solves this problem by moving rendering of components in the native layer. This library provides a **declarative API**, doesn't rely on ***internal*** React implementation details, and **works identically** on **iOS, Android, and Web**.
+The `react-native-teleport` solves this problem by moving rendering of components in the native layer. This library provides a **declarative API**, doesn't rely on **_internal_** React implementation details, and **works identically** on **iOS, Android, and Web**.
 
 ## Not only Portal
 
@@ -34,7 +34,7 @@ import Video from "@site/src/components/Video";
 
 The great thing is that view is **not re-created or destroyed** when it's moved between different parents. This mean you can use this lib for stateful components, like `Video`/`Lottie` etc. and you can easily replicate patterns that you've seen in many well-known apps, for example you can re-build Instagram-like reels transition:
 
-<Video src="/video/instagram.mov" width={35} />
+<Video src="/video/instagram.mp4" width={35} />
 <br />
 
 ## Not only about transitions and rendering outside
@@ -49,7 +49,7 @@ You can render expensive components off-screen and move them into view only when
 
 ```tsx
 // Pre-render the editor off-screen
-<Portal hostName={used ? 'editor' : undefined}>
+<Portal hostName={used ? "editor" : undefined}>
   <ExpensiveRichTextEditor />
 </Portal>
 
