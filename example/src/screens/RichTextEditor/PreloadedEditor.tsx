@@ -28,7 +28,6 @@ const styles = StyleSheet.create({
   offscreen: {
     position: "absolute",
     top: -9999,
-    width: width,
     height: 500,
   },
   webview: {
