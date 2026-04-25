@@ -72,7 +72,7 @@ export const examples: Example[] = [
   {
     title: "Messenger",
     testID: "messenger",
-    info: ScreenNames.MESSENGER,
+    info: ScreenNames.MESSENGER_LIST,
     icons: "💬",
   },
   {

@@ -8,13 +8,12 @@ import React, {
 } from "react";
 import {
   BackHandler,
-  Pressable,
   StyleSheet,
   TouchableOpacity,
-  TouchableWithoutFeedback,
   View,
 } from "react-native";
 import { Portal } from "react-native-teleport";
+import { useRoute } from "@react-navigation/native";
 import { runOnUI } from "react-native-reanimated";
 
 import AnimatedPopup from "./AnimatedPopup";
@@ -66,6 +65,7 @@ type Props = {
   blurred?: boolean;
   teleportable?: boolean;
   level?: "screen";
+  hostName?: string;
   horizontalMovementRelativeToAnchor?: boolean;
   children: [ReactElement<AnchorProps>, ReactElement<OptionsProps>];
   onClose?: () => void;
@@ -103,20 +103,23 @@ const ContextMenu = forwardRef<ContextMenuRef, Props>((props, ref) => {
     style = {},
     animation,
     blurred,
+    level,
+    hostName,
     teleportable,
     horizontalMovementRelativeToAnchor = true,
   } = props;
   const [anchorElement, optionElement] = children;
 
   const [visible, setVisible] = useState(false);
-  const [position, setPosition] = useState({ x: 0, y: 0, top: 0, left: 0 });
   const viewRef = useRef<React.ElementRef<typeof View>>(null);
   const animatedPopupRef = useRef<AnimatedPopupRef>(null);
   const layout = useRef<Layout>({ x: 0, y: 0, width: 0, height: 0 });
   const isMounted = useIsMountedRef();
   const { getInsets } = useInsets();
   const { setDestination } = useTeleport();
+  const route = useRoute();
   const shouldBeTeleported = teleportable && visible;
+  const portalHostName = level === "screen" ? hostName ?? route.key : "overlay";
 
   const hide = useCallback(() => {
     animatedPopupRef.current?.close();
@@ -167,7 +170,6 @@ const ContextMenu = forwardRef<ContextMenuRef, Props>((props, ref) => {
             pageY: number,
           ) => {
             layout.current = { x: pageX, y: pageY, width, height };
-            setPosition({ x: _x, y: _y, top: pageY, left: pageX });
 
             if (teleportable) {
               runOnUI(setDestination)(
@@ -200,7 +202,7 @@ const ContextMenu = forwardRef<ContextMenuRef, Props>((props, ref) => {
   return (
     <View ref={viewRef} style={styles.anchorContainer}>
       {teleportable ? (
-        <TeleportedView position={position} teleported={shouldBeTeleported}>
+        <TeleportedView teleported={shouldBeTeleported}>
           {anchorElement}
         </TeleportedView>
       ) : (
@@ -208,7 +210,7 @@ const ContextMenu = forwardRef<ContextMenuRef, Props>((props, ref) => {
       )}
 
       {visible ? (
-        <Portal hostName="overlay">
+        <Portal hostName={portalHostName}>
           <TouchableOpacity onPress={hide} style={styles.overlay}>
             <View pointerEvents="box-none" style={styles.overlay}>
               <AnimatedPopup
