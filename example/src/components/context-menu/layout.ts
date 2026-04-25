@@ -1,4 +1,4 @@
-import { SAFE_AREA_INSETS, SCREEN_DIMENSIONS } from "../../../styles/common";
+import { SAFE_AREA_INSETS, SCREEN_DIMENSIONS } from "./theme";
 
 import type { ViewStyle } from "react-native";
 import type {
@@ -195,16 +195,9 @@ export const getAnchorOverflow = (
     SAFE_AREA_INSETS.bottom -
     (insets?.bottom || 0); // cut from below
 
-  console.log(9999, top, bottom);
-
   // view is cut from both directions
   if (top < 0 && bottom < 0) {
     if (animation.includes("bottom")) {
-      console.log(8888, {
-        top: 0,
-        height: anchorLayout.height + bottom + top,
-        bottom: -bottom,
-      });
       return {
         top: 0,
         height: anchorLayout.height + bottom + top,
@@ -213,11 +206,6 @@ export const getAnchorOverflow = (
     }
 
     if (animation.includes("top")) {
-      console.log(7777, {
-        top: -top,
-        height: anchorLayout.height + top,
-        bottom: 0,
-      });
       return {
         top: -top,
         height: anchorLayout.height + top,
@@ -231,17 +219,6 @@ export const getAnchorOverflow = (
     bottom,
     0, // fully visible
   );
-  console.log(
-    33333,
-    top,
-    bottom,
-    0, // fully visible
-  );
-  console.log(2222, {
-    top: Math.abs(Math.min(top, 0)),
-    height: anchorLayout.height - invisiblePartOfAnchor,
-    bottom: Math.abs(Math.min(bottom, 0)),
-  });
 
   return {
     top: Math.abs(Math.min(top, 0)),

@@ -1,24 +1,23 @@
 import React from "react";
-import { Text, View } from "react-native";
+import { StyleSheet, Text, View } from "react-native";
 
-import { Divider } from "../../../../modules/library";
-import { commonStyle } from "../../../../styles/common";
-import { createStyle } from "../../../../styles/utils";
-
-////////////////////////////////////////////////////////////////////////////////
+import Divider from "./Divider";
 
 export type LabelProps = {
   isLast?: boolean;
   children: React.ReactNode;
 };
 
-const styles = createStyle({
+const styles = StyleSheet.create({
   container: {
     paddingHorizontal: 16,
-    paddingVertical: 12,
+    paddingVertical: 10,
   },
   title: {
-    ...commonStyle.subheadText,
+    color: "#6b7280",
+    fontSize: 13,
+    fontWeight: "600",
+    textTransform: "uppercase",
   },
 });
 
@@ -29,7 +28,7 @@ const Label: React.FC<LabelProps> = ({ isLast = false, children }) => {
         <Text style={styles.title}>{children}</Text>
       </View>
 
-      {!isLast && <Divider type="none" />}
+      {!isLast && <Divider />}
     </>
   );
 };

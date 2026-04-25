@@ -9,6 +9,7 @@ import { NavigationContainer } from "@react-navigation/native";
 import RootStack from "./navigation";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import PreloadedEditor from "./screens/RichTextEditor/PreloadedEditor";
+import { ContextMenuTeleportProvider } from "./components/context-menu";
 
 export default function App() {
   return (
@@ -16,9 +17,11 @@ export default function App() {
       <GestureHandlerRootView style={styles.container}>
         <GorhomPortalProvider>
           <PortalProvider>
-            <NavigationContainer>
-              <RootStack />
-            </NavigationContainer>
+            <ContextMenuTeleportProvider>
+              <NavigationContainer>
+                <RootStack />
+              </NavigationContainer>
+            </ContextMenuTeleportProvider>
             <PortalHost name="overlay" style={StyleSheet.absoluteFillObject} />
             <PreloadedEditor />
           </PortalProvider>

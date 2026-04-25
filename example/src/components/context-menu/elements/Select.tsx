@@ -1,7 +1,4 @@
-import LottieView from "lottie-react-native";
-import React from "react";
-
-import Checkmark from "../../../../../assets/animations/checkmark.json";
+import { FontAwesome6 } from "@react-native-vector-icons/fontawesome6";
 
 import Item from "./Item";
 
@@ -25,17 +22,39 @@ type SelectProps<T> = (SelectPropsNoItem | SelectPropsWithItem<T>) &
   BaseSelectProps;
 
 function AnimatedCheckmark() {
-  return <LottieView source={Checkmark} speed={3} loop={false} autoPlay />;
+  return (
+    <FontAwesome6 color="#16a34a" iconStyle="solid" name="check" size={16} />
+  );
 }
 
 function Select<T>(props: SelectProps<T>) {
-  const { isChecked, onChange, ...other } = props;
+  const { isChecked, onChange } = props;
+  const iconComponent = isChecked ? AnimatedCheckmark : undefined;
+
+  if ("item" in props && typeof props.item !== "undefined") {
+    return (
+      <Item
+        disabled={props.disabled}
+        iconComponent={iconComponent}
+        iconName={props.iconName}
+        isLast={props.isLast}
+        item={props.item}
+        onPress={onChange}
+        title={props.title}
+        type={props.type}
+      />
+    );
+  }
 
   return (
     <Item
-      {...other}
-      onPress={onChange}
-      iconComponent={isChecked && AnimatedCheckmark}
+      disabled={props.disabled}
+      iconComponent={iconComponent}
+      iconName={props.iconName}
+      isLast={props.isLast}
+      onPress={onChange as () => void}
+      title={props.title}
+      type={props.type}
     />
   );
 }
