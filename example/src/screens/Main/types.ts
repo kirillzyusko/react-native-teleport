@@ -12,7 +12,7 @@ export type ExampleScreen =
   | ScreenNames.NAVIGATION_LIFECYCLE
   | ScreenNames.INSTAGRAM_FEED
   | ScreenNames.BOTTOM_SHEET
-  | ScreenNames.MESSENGER
+  | ScreenNames.MESSENGER_LIST
   | ScreenNames.TRAVEL_EXPLORE
   | ScreenNames.TELEPORTATION_ORDER
   | ScreenNames.RICH_TEXT_EDITOR;

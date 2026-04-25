@@ -11,6 +11,7 @@ import InstantRoot from "../../screens/InstantRoot";
 import Hook from "../../screens/Hook/Hook";
 import FlexibleStyles from "../../screens/FlexibleStyles";
 import BottomSheet from "../../screens/BottomSheet";
+import MessengerList from "../../screens/Messenger/List";
 import Messenger from "../../screens/Messenger";
 import PortalBeforeHost from "../../screens/PortalBeforeHost";
 import RecycleRepro from "../../screens/RecycleRepro";
@@ -33,7 +34,11 @@ export type ExamplesStackParamList = {
   [ScreenNames.HOOKS]: undefined;
   [ScreenNames.FLEXIBLE_STYLES]: undefined;
   [ScreenNames.BOTTOM_SHEET]: undefined;
-  [ScreenNames.MESSENGER]: undefined;
+  [ScreenNames.MESSENGER_LIST]: undefined;
+  [ScreenNames.MESSENGER]: {
+    chatId: string;
+    title: string;
+  };
   [ScreenNames.PORTAL_BEFORE_HOST]: undefined;
   [ScreenNames.RECYCLING]: undefined;
   [ScreenNames.INSTAGRAM_FEED]: undefined;
@@ -78,8 +83,12 @@ const options = {
   [ScreenNames.BOTTOM_SHEET]: {
     title: "Bottom sheet",
   },
+  [ScreenNames.MESSENGER_LIST]: {
+    headerShown: false,
+  },
   [ScreenNames.MESSENGER]: {
     title: "Messenger",
+    headerBackTitle: "Back",
   },
   [ScreenNames.PORTAL_BEFORE_HOST]: {
     title: "Portal Before Host",
@@ -151,6 +160,11 @@ const ExamplesStack = () => (
       component={BottomSheet}
       name={ScreenNames.BOTTOM_SHEET}
       options={options[ScreenNames.BOTTOM_SHEET]}
+    />
+    <Stack.Screen
+      component={MessengerList}
+      name={ScreenNames.MESSENGER_LIST}
+      options={options[ScreenNames.MESSENGER_LIST]}
     />
     <Stack.Screen
       component={Messenger}
