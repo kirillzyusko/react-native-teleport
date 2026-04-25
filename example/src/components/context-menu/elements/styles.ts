@@ -1,18 +1,19 @@
-import { commonStyle } from "../../../../styles/common";
-import { createStyle } from "../../../../styles/utils";
+import { StyleSheet } from "react-native";
 
-////////////////////////////////////////////////////////////////////////////////
-
-const styles = createStyle({
-  text: commonStyle.bodyLabel,
+const styles = StyleSheet.create({
+  text: {
+    color: "#111827",
+    fontSize: 16,
+    lineHeight: 20,
+    fontWeight: "500",
+  },
   container: {
     paddingHorizontal: 16,
     paddingVertical: 13,
     flexDirection: "row",
     justifyContent: "space-between",
+    alignItems: "center",
   },
 });
-
-////////////////////////////////////////////////////////////////////////////////
 
 export default styles;

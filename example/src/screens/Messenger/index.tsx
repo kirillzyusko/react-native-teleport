@@ -1,17 +1,21 @@
 import LottieView from "lottie-react-native";
-import { useRef, useState } from "react";
-import { View, Text, ScrollView, Pressable } from "react-native";
-import BlurView from "../../components/BlurView";
-import { Portal } from "react-native-teleport";
-import useMeasure from "../../hooks/useMeasure";
+import { useMemo, useRef, useState } from "react";
+import { Pressable, ScrollView, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
+
+import {
+  ContextMenu,
+  type ContextMenuRef,
+  ContextMenuInsetsRegistry,
+} from "../../components/context-menu";
 
 const messages = [
-  { text: "Hello, how are you", sender: true },
-  { text: "Hello, not too bad! You?", sender: false },
-  { text: "I'm fine, thanks", sender: true },
-  { text: "What is your plan for evening today?", sender: true },
-  { text: "I'm not sure yet... Any ideas?", sender: false },
-  { text: "Sure, let's go for a walk?", sender: true },
+  { id: "1", text: "Hello, how are you", sender: true },
+  { id: "2", text: "Hello, not too bad! You?", sender: false },
+  { id: "3", text: "I'm fine, thanks", sender: true },
+  { id: "4", text: "What is your plan for evening today?", sender: true },
+  { id: "5", text: "I'm not sure yet... Any ideas?", sender: false },
+  { id: "6", text: "Sure, let's go for a walk?", sender: true },
 ];
 
 type MessageProps = {
@@ -22,22 +26,12 @@ type MessageProps = {
 const Message = ({ sender, text }: MessageProps) => {
   return (
     <View
-      style={{
-        flexDirection: "row",
-        width: "100%",
-        justifyContent: sender ? "flex-end" : "flex-start",
-      }}
+      style={[
+        styles.messageRow,
+        sender ? styles.messageRowRight : styles.messageRowLeft,
+      ]}
     >
-      <Text
-        style={{
-          opacity: 1,
-          color: "black",
-          padding: 10,
-          backgroundColor: sender ? "#38f269" : "#38c7f2",
-          margin: 10,
-          borderRadius: 10,
-        }}
-      >
+      <Text style={[styles.message, sender ? styles.sent : styles.received]}>
         {text}
       </Text>
     </View>
@@ -45,63 +39,158 @@ const Message = ({ sender, text }: MessageProps) => {
 };
 
 export default function Messenger() {
-  const viewRef = useRef<View>(null);
-  const timeoutId = useRef<number>(undefined);
-  const [teleport, setTeleported] = useState(false);
-  const [style, setStyle] = useState({ paddingTop: 0 });
-  const [blur, setBlur] = useState(false);
-  const measure = useMeasure(viewRef);
+  const insets = useSafeAreaInsets();
+  const menuRef = useRef<ContextMenuRef>(null);
+  const [selectedAction, setSelectedAction] = useState("Forward");
+  const actions = useMemo(
+    () => [
+      { id: "reply", title: "Reply", iconName: "reply" as const },
+      { id: "forward", title: "Forward", iconName: "share" as const },
+      { id: "save", title: "Save", iconName: "bookmark" as const },
+      {
+        id: "delete",
+        title: "Delete",
+        iconName: "trash" as const,
+        type: "danger" as const,
+      },
+    ],
+    [],
+  );
 
-  const handleClick = () => {
-    if (blur) {
-      setBlur(false);
-      timeoutId.current = setTimeout(() => {
-        // after blur animation finish
-        setTeleported(false);
-        setStyle({ paddingTop: 0 });
-      }, 500);
-      return;
-    }
-    clearTimeout(timeoutId.current);
-    setBlur(true);
-    measure((_x: number, y: number) => {
-      setTeleported(true);
-      setStyle({
-        paddingTop: y,
-      });
-    });
+  const handleAction = (title: string) => {
+    setSelectedAction(title);
+    menuRef.current?.close();
   };
 
   return (
-    <View style={{ flex: 1 }}>
-      <ScrollView>
+    <View style={styles.container}>
+      <ContextMenuInsetsRegistry mode="top" style={{ height: insets.top }} />
+      <ScrollView
+        contentContainerStyle={styles.content}
+        showsVerticalScrollIndicator={false}
+      >
         {messages.map((item) => (
-          <Message key={item.text} {...item} />
+          <Message key={item.id} sender={item.sender} text={item.text} />
         ))}
-        <View
-          // @ts-expect-error I don't know what's wrong with types here
-          ref={viewRef}
-          style={{
-            width: "100%",
-            justifyContent: "flex-start",
-            flexDirection: "row",
-          }}
-        >
-          <Portal hostName={teleport ? "overlay" : undefined}>
-            <Pressable onPress={handleClick} style={style}>
-              <View style={{ width: 200, height: 200 }}>
+
+        <View style={styles.messageRowRight}>
+          <ContextMenu
+            ref={menuRef}
+            animation="top-right"
+            blurred
+            cover="bottom-left"
+            style={styles.menu}
+            teleportable
+          >
+            <ContextMenu.Anchor>
+              <TouchableOpacity
+                onPress={() => menuRef.current?.open()}
+                style={styles.stickerBubble}
+              >
                 <LottieView
-                  source={require("../../assets/lottie/bear.json")}
-                  style={{ width: 200, height: 200 }}
                   autoPlay
                   loop
+                  source={require("../../assets/lottie/bear.json")}
+                  style={styles.sticker}
                 />
-              </View>
-            </Pressable>
-          </Portal>
+              </TouchableOpacity>
+            </ContextMenu.Anchor>
+
+            <ContextMenu.Options>
+              <ContextMenu.Label>Sticker actions</ContextMenu.Label>
+              {actions.map((action, index) => (
+                <ContextMenu.Item
+                  key={action.id}
+                  iconName={action.iconName}
+                  isLast={index === actions.length - 1}
+                  onPress={() => handleAction(action.title)}
+                  title={action.title}
+                  type={action.type}
+                />
+              ))}
+            </ContextMenu.Options>
+          </ContextMenu>
         </View>
       </ScrollView>
-      <BlurView visible={blur} />
     </View>
   );
 }
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: "#f4f6fb",
+  },
+  content: {
+    paddingHorizontal: 16,
+    paddingTop: 16,
+    paddingBottom: 40,
+  },
+  header: {
+    color: "#111827",
+    fontSize: 22,
+    fontWeight: "700",
+    marginBottom: 6,
+  },
+  subheader: {
+    color: "#6b7280",
+    fontSize: 14,
+    lineHeight: 20,
+    marginBottom: 18,
+  },
+  messageRow: {
+    flexDirection: "row",
+    width: "100%",
+    marginBottom: 6,
+  },
+  messageRowLeft: {
+    justifyContent: "flex-start",
+  },
+  messageRowRight: {
+    justifyContent: "flex-end",
+  },
+  message: {
+    borderRadius: 18,
+    color: "#111827",
+    maxWidth: "82%",
+    overflow: "hidden",
+    paddingHorizontal: 14,
+    paddingVertical: 10,
+  },
+  sent: {
+    backgroundColor: "#c9f7d5",
+  },
+  received: {
+    backgroundColor: "#ffffff",
+  },
+  stickerRow: {
+    alignItems: "flex-start",
+    marginTop: 10,
+    marginBottom: 18,
+  },
+  stickerBubble: {
+  },
+  sticker: {
+    width: 180,
+    height: 180,
+  },
+  menu: {
+    minWidth: 220,
+  },
+  status: {
+    backgroundColor: "#ffffff",
+    borderRadius: 18,
+    paddingHorizontal: 16,
+    paddingVertical: 14,
+  },
+  statusLabel: {
+    color: "#6b7280",
+    fontSize: 13,
+    marginBottom: 4,
+  },
+  statusValue: {
+    color: "#111827",
+    fontSize: 17,
+    fontWeight: "600",
+  },
+});

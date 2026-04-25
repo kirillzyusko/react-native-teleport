@@ -1,9 +1,4 @@
-import React, {
-  forwardRef,
-  useCallback,
-  useImperativeHandle,
-  useMemo,
-} from "react";
+import { forwardRef, useCallback, useImperativeHandle, useMemo } from "react";
 import { StyleSheet, View } from "react-native";
 import Reanimated, {
   Easing,
@@ -15,23 +10,14 @@ import Reanimated, {
   withTiming,
 } from "react-native-reanimated";
 
-import {
-  COLOR_BG_PRIMARY,
-  FAR_FAR_AWAY,
-  commonStyle,
-  corners,
-  timings,
-} from "../../../styles/common";
-import { getPivotPoint } from "../../../styles/pivot-point";
-
 import { useTeleport } from "./teleport/context";
 import {
   getAnchorPoint,
   getDestinationCoordinates,
   getHorizontalBias,
 } from "./layout";
-import PanContextProvider from "./pan/PanContext";
 import { SPRING_CONFIGURATION_MENU } from "./state";
+import { COLORS, CORNERS, SHADOW, TIMINGS } from "./theme";
 import BlurredBackground from "./BlurredBackground";
 
 import type { AnimationCallback } from "react-native-reanimated";
@@ -41,6 +27,7 @@ import type {
   CoverType,
   Layout,
   Point,
+  Size,
 } from "./types";
 import type { ReactNode } from "react";
 import type { LayoutChangeEvent } from "react-native";
@@ -63,15 +50,28 @@ export type AnimatedPopupRef = {
 
 const INITIAL_SCALE = 0.1;
 const HALF_HEIGHT = 0.5 - INITIAL_SCALE / 2;
+const FAR_FAR_AWAY = -10000;
 
 const styles = StyleSheet.create({
   options: {
-    borderRadius: corners.large,
-    backgroundColor: COLOR_BG_PRIMARY,
+    borderRadius: CORNERS.menu,
+    backgroundColor: COLORS.background,
     minWidth: 160,
   },
-  shadow: commonStyle.shadowHigh,
+  shadow: SHADOW.elevated,
 });
+
+const getPivotPoint = (pivot: Point, size: Size) => {
+  "worklet";
+
+  const translateX = (0.5 - pivot.x) * size.width;
+  const translateY = (0.5 - pivot.y) * size.height;
+
+  return {
+    start: [{ translateX }, { translateY }],
+    end: [{ translateX: -translateX }, { translateY: -translateY }],
+  };
+};
 
 const AnimatedPopup = forwardRef<AnimatedPopupRef, AnimatedPopupProps>(
   (props, ref) => {
@@ -128,7 +128,7 @@ const AnimatedPopup = forwardRef<AnimatedPopupRef, AnimatedPopupProps>(
         close: () => {
           progress.value = withTiming(
             0,
-            { duration: timings.medium.out },
+            { duration: TIMINGS.close },
             (finished) => {
               runOnJS(onClosed)(finished);
               runOnJS(resetDestination)();
@@ -235,11 +235,9 @@ const AnimatedPopup = forwardRef<AnimatedPopupRef, AnimatedPopupProps>(
       <>
         {blurred && <BlurredBackground />}
         <Reanimated.View onLayout={onLayout} style={popup}>
-          <PanContextProvider>
-            <View style={styles.shadow}>
-              <Reanimated.View style={animated}>{children}</Reanimated.View>
-            </View>
-          </PanContextProvider>
+          <View style={styles.shadow}>
+            <Reanimated.View style={animated}>{children}</Reanimated.View>
+          </View>
         </Reanimated.View>
       </>
     );
