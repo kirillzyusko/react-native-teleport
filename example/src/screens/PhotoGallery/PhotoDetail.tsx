@@ -1,5 +1,10 @@
-import { useCallback } from "react";
+import { useCallback, useEffect } from "react";
 import { Image, Pressable, StyleSheet, Text, View } from "react-native";
+import Animated, {
+  useAnimatedStyle,
+  useSharedValue,
+  withTiming,
+} from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useNavigation } from "@react-navigation/native";
 import type { StaticScreenProps } from "@react-navigation/native";
@@ -7,6 +12,8 @@ import type { StaticScreenProps } from "@react-navigation/native";
 import type { Photo } from "./photos";
 import { SCREEN_WIDTH } from "./constants";
 import { useHeroTransition } from "./hero";
+
+const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
 
 type PhotoDetailProps = StaticScreenProps<{ photo: Photo }>;
 
@@ -18,6 +25,19 @@ function PhotoDetail({ route }: PhotoDetailProps) {
   const { top: safeAreaTop } = useSafeAreaInsets();
 
   const fullHeight = SCREEN_WIDTH * (photo.height / photo.width);
+
+  const isTransitionDone = visibility.target === 1;
+  const buttonOpacity = useSharedValue(0);
+
+  useEffect(() => {
+    buttonOpacity.value = withTiming(isTransitionDone ? 1 : 0, {
+      duration: 200,
+    });
+  }, [isTransitionDone, buttonOpacity]);
+
+  const buttonStyle = useAnimatedStyle(() => ({
+    opacity: buttonOpacity.value,
+  }));
 
   const onLoad = useCallback(() => {
     if (useHeroTransition.getState().id === photo.id) {
@@ -49,12 +69,13 @@ function PhotoDetail({ route }: PhotoDetailProps) {
         }}
         onLoad={onLoad}
       />
-      <Pressable
-        style={[styles.backButton, { top: safeAreaTop + 10 }]}
+      <AnimatedPressable
+        style={[styles.backButton, { top: safeAreaTop + 10 }, buttonStyle]}
         onPress={onGoBack}
+        disabled={!isTransitionDone}
       >
         <Text style={styles.backText}>Close</Text>
-      </Pressable>
+      </AnimatedPressable>
     </View>
   );
 }
