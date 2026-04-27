@@ -1,6 +1,7 @@
 import { useCallback, useEffect } from "react";
-import { Image, Pressable, StyleSheet, Text, View } from "react-native";
+import { Pressable, StyleSheet, Text, View } from "react-native";
 import Animated, {
+  interpolate,
   useAnimatedStyle,
   useSharedValue,
   withTiming,
@@ -10,7 +11,7 @@ import { useNavigation } from "@react-navigation/native";
 import type { StaticScreenProps } from "@react-navigation/native";
 
 import type { Photo } from "./photos";
-import { SCREEN_WIDTH } from "./constants";
+import { SCALE, SCREEN_WIDTH } from "./constants";
 import { useHeroTransition } from "./hero";
 
 const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
@@ -19,8 +20,11 @@ type PhotoDetailProps = StaticScreenProps<{ photo: Photo }>;
 
 function PhotoDetail({ route }: PhotoDetailProps) {
   const { photo } = route.params;
-  const { targetElementAvailable, visibility, set } = useHeroTransition();
+  const { targetElementAvailable, visibility } = useHeroTransition();
   const progress = useHeroTransition((s) => s.progress);
+  const direction = useHeroTransition((s) => s.direction);
+  const position = useHeroTransition((s) => s.position);
+  const goBack = useHeroTransition((s) => s.goBack);
   const navigation = useNavigation();
   const { top: safeAreaTop } = useSafeAreaInsets();
 
@@ -38,6 +42,37 @@ function PhotoDetail({ route }: PhotoDetailProps) {
   const buttonStyle = useAnimatedStyle(() => ({
     opacity: buttonOpacity.value,
   }));
+  const backdrop = useAnimatedStyle(
+    () => ({
+      opacity: direction === "neutral" ? 1 : progress.value,
+    }),
+    [direction],
+  );
+
+  const heroImage = useAnimatedStyle(() => {
+    if (direction !== "backward" || !position) {
+      return {
+        width: SCREEN_WIDTH,
+        height: fullHeight,
+        transform: [],
+      };
+    }
+    return {
+      width: SCREEN_WIDTH,
+      height: interpolate(progress.value, [0, 1], [SCREEN_WIDTH, fullHeight]),
+      transform: [
+        { translateX: interpolate(progress.value, [0, 1], [position.x, 0]) },
+        {
+          translateY: interpolate(
+            progress.value,
+            [0, 1],
+            [position.y - safeAreaTop, 0],
+          ),
+        },
+        { scale: interpolate(progress.value, [0, 1], [1 / SCALE, 1]) },
+      ],
+    };
+  }, [direction, position, safeAreaTop, fullHeight]);
 
   const onLoad = useCallback(() => {
     if (useHeroTransition.getState().id === photo.id) {
@@ -46,27 +81,20 @@ function PhotoDetail({ route }: PhotoDetailProps) {
   }, [photo.id, targetElementAvailable]);
 
   const onGoBack = useCallback(() => {
-    progress.set(0);
-    set({
-      id: "",
-      position: undefined,
-      visibility: { source: 1, target: 0 },
-      isAnimationCompleted: false,
-      isTargetElementAvailable: false,
-    });
-    navigation.goBack();
-  }, [navigation, set, progress]);
+    goBack(navigation.goBack);
+  }, [navigation, goBack]);
 
   return (
     <View style={styles.container}>
-      <Image
+      <Animated.View style={[styles.backdrop, backdrop]} />
+      <Animated.Image
         source={{ uri: photo.fullSize }}
-        style={{
-          width: SCREEN_WIDTH,
-          height: fullHeight,
-          marginTop: safeAreaTop,
-          opacity: visibility.target,
-        }}
+        style={[
+          styles.heroImage,
+          { marginTop: safeAreaTop, opacity: visibility.target },
+          heroImage,
+        ]}
+        resizeMode="cover"
         onLoad={onLoad}
       />
       <AnimatedPressable
@@ -81,9 +109,15 @@ function PhotoDetail({ route }: PhotoDetailProps) {
 }
 
 const styles = StyleSheet.create({
+  backdrop: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: "#000",
+  },
   container: {
     flex: 1,
-    backgroundColor: "#000",
+  },
+  heroImage: {
+    transformOrigin: "0% 0%",
   },
   backButton: {
     position: "absolute",

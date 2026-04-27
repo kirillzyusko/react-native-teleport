@@ -123,12 +123,10 @@ const options = {
   },
   [ScreenNames.PHOTO_DETAIL]: {
     headerShown: false,
-    // TODO: not supported on web, leave as is or use transparent modal and use custom background?
-    animation: "fade" as const,
+    animation: "none" as const,
+    presentation: "containedTransparentModal" as const,
   },
 };
-
-// TODO: implement back transitions
 
 const ExamplesStack = () => (
   <Stack.Navigator>
