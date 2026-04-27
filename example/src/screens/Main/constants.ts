@@ -79,7 +79,7 @@ export const examples: Example[] = [
     title: "Travel",
     testID: "travel",
     info: ScreenNames.TRAVEL_EXPLORE,
-    icons: "🏝️",
+    icons: "🚧 🏝️",
   },
   {
     title: "Recycling",
