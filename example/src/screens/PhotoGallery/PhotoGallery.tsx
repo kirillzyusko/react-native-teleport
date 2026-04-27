@@ -21,7 +21,6 @@ function PhotoGallery() {
         data={PHOTOS}
         keyExtractor={(item) => item.id}
         numColumns={3}
-        contentContainerStyle={styles.list}
         renderItem={({ item }) => (
           <PhotoPreview photo={item} onOpen={onPhotoOpen} />
         )}
@@ -34,9 +33,6 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: "#000",
-  },
-  list: {
-    paddingTop: 8,
   },
 });
 
