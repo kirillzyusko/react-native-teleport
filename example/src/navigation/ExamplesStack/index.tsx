@@ -133,7 +133,6 @@ const options = {
   },
 };
 
-// TODO: images 1, 2 will shift the row
 // TODO: implement back transitions
 
 const ExamplesStack = () => (

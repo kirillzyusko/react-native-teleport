@@ -11,7 +11,7 @@ import { Portal } from "react-native-teleport";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import type { Photo } from "./photos";
-import { GAP, SCALE, SCREEN_WIDTH, THUMB_SIZE } from "./constants";
+import { SCALE, SCREEN_WIDTH, THUMB_SIZE } from "./constants";
 import { useHeroTransition } from "./hero";
 
 type Props = {
@@ -107,7 +107,8 @@ function PhotoPreview({ photo, onOpen }: Props) {
       <View
         ref={ref}
         style={{
-          height: THUMB_SIZE + GAP,
+          height: THUMB_SIZE,
+          width: THUMB_SIZE,
         }}
       >
         <Portal hostName={position && isAnimating ? "root" : undefined}>
@@ -144,7 +145,6 @@ function PhotoPreview({ photo, onOpen }: Props) {
 const styles = StyleSheet.create({
   thumb: {
     height: THUMB_SIZE,
-    marginBottom: GAP,
   },
   animating: {
     transformOrigin: "0% 0%",
