@@ -21,12 +21,28 @@ const PHOTO_DATA: { id: number; width: number; height: number }[] = [
   { id: 76, width: 720, height: 1080 },
 ];
 
-const PHOTOS: Photo[] = PHOTO_DATA.map(({ id, width, height }) => ({
-  id: String(id),
-  thumbnail: `https://picsum.photos/id/${id}/150/150`,
-  fullSize: `https://picsum.photos/id/${id}/${width}/${height}`,
-  width,
-  height,
-}));
+const THUMB_SHORT_SIDE = 150;
+
+const PHOTOS: Photo[] = PHOTO_DATA.map(({ id, width, height }) => {
+  // Match the thumbnail's aspect to the full image so picsum returns the same
+  // crop window — otherwise the cover-cropped thumb and the full image show
+  // different parts of the original, producing a content jump at handoff.
+  const thumbW =
+    width >= height
+      ? Math.round(THUMB_SHORT_SIDE * (width / height))
+      : THUMB_SHORT_SIDE;
+  const thumbH =
+    height > width
+      ? Math.round(THUMB_SHORT_SIDE * (height / width))
+      : THUMB_SHORT_SIDE;
+
+  return {
+    id: String(id),
+    thumbnail: `https://picsum.photos/id/${id}/${thumbW}/${thumbH}`,
+    fullSize: `https://picsum.photos/id/${id}/${width}/${height}`,
+    width,
+    height,
+  };
+});
 
 export default PHOTOS;

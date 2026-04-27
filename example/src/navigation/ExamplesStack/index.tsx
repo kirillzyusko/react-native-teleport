@@ -128,9 +128,13 @@ const options = {
   },
   [ScreenNames.PHOTO_DETAIL]: {
     headerShown: false,
-    animation: "none" as const,
+    // TODO: not supported on web, leave as is or use transparent modal and use custom background?
+    animation: "fade" as const,
   },
 };
+
+// TODO: images 1, 2 will shift the row
+// TODO: implement back transitions
 
 const ExamplesStack = () => (
   <Stack.Navigator>
