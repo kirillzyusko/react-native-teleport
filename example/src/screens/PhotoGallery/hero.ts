@@ -2,9 +2,11 @@ import {
   type SharedValue,
   makeMutable,
   runOnJS,
+  withSpring,
   withTiming,
 } from "react-native-reanimated";
 import { create } from "zustand";
+import { SPRING_CONFIG } from "./constants";
 
 type Position = {
   x: number;
@@ -12,6 +14,7 @@ type Position = {
 };
 
 interface HeroStore {
+  direction: "forward" | "backward" | "neutral";
   /** Which photo is currently animating */
   id: string;
   /** Animation progress [0..1] */
@@ -29,9 +32,12 @@ interface HeroStore {
   isTargetElementAvailable: boolean;
   transitionCompleted: () => void;
   targetElementAvailable: () => void;
+  goBack: (callback: () => void) => void;
+  goForward: (id: string, x: number, y: number, callback: () => void) => void;
 }
 
 export const useHeroTransition = create<HeroStore>((set, get) => ({
+  direction: "neutral",
   id: "",
   position: undefined,
   visibility: { source: 1, target: 0 },
@@ -61,14 +67,14 @@ export const useHeroTransition = create<HeroStore>((set, get) => ({
       setTimeout(() => {
         set({
           id: "",
-          position: undefined,
-          visibility: { source: 1, target: 1 },
         });
+        get().progress.set(1);
       }, 48);
     };
 
     // Swap visibility: hide source thumbnail, show target full-res image
     set({
+      direction: "neutral",
       visibility: { source: 0, target: 1 },
       isTargetElementAvailable: false,
       isAnimationCompleted: false,
@@ -83,5 +89,47 @@ export const useHeroTransition = create<HeroStore>((set, get) => ({
         }),
       );
     }, 16);
+  },
+
+  goBack: (callback: () => void) => {
+    set({ direction: "backward" });
+
+    const onAnimationFinished = () => {
+      set({
+        direction: "neutral",
+        id: "",
+        position: undefined,
+        visibility: { source: 1, target: 0 },
+        isAnimationCompleted: false,
+        isTargetElementAvailable: false,
+      });
+      callback();
+    };
+
+    get().progress.set(
+      withSpring(0, SPRING_CONFIG, () => {
+        runOnJS(onAnimationFinished)();
+      }),
+    );
+  },
+  goForward: (id: string, x: number, y: number, callback: () => void) => {
+    set({
+      direction: "forward",
+      position: { x, y },
+      visibility: { source: 1, target: 0 },
+      isAnimationCompleted: false,
+      isTargetElementAvailable: false,
+      id,
+    });
+
+    const transitionCompleted = get().transitionCompleted;
+    requestAnimationFrame(() => {
+      get().progress.set(
+        withSpring(1, SPRING_CONFIG, () => {
+          runOnJS(transitionCompleted)();
+        }),
+      );
+      callback();
+    });
   },
 }));

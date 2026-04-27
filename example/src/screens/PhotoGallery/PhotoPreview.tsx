@@ -3,9 +3,7 @@ import { StyleSheet, TouchableWithoutFeedback, View } from "react-native";
 import type { HostInstance } from "react-native";
 import Animated, {
   interpolate,
-  runOnJS,
   useAnimatedStyle,
-  withSpring,
 } from "react-native-reanimated";
 import { Portal } from "react-native-teleport";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -26,11 +24,10 @@ function PhotoPreview({ photo, onOpen }: Props) {
     s.id === photo.id ? s.position : undefined,
   );
   const progress = useHeroTransition((s) => s.progress);
-  const set = useHeroTransition((s) => s.set);
+  const goForward = useHeroTransition((s) => s.goForward);
   const source = useHeroTransition((s) =>
     s.id === photo.id ? s.visibility.source : 1,
   );
-  const transitionCompleted = useHeroTransition((s) => s.transitionCompleted);
   const { top: safeAreaTop } = useSafeAreaInsets();
 
   // Height the full image takes at thumbnail scale
@@ -74,33 +71,9 @@ function PhotoPreview({ photo, onOpen }: Props) {
     if (useHeroTransition.getState().id !== "") return;
 
     ref.current?.measureInWindow((x: number, y: number) => {
-      set({
-        position: { x, y },
-        visibility: { source: 1, target: 0 },
-        isAnimationCompleted: false,
-        isTargetElementAvailable: false,
-        id: photo.id,
-      });
-
-      requestAnimationFrame(() => {
-        progress.set(
-          withSpring(
-            1,
-            {
-              mass: 1.2,
-              damping: 1000,
-              stiffness: 500,
-              overshootClamping: false,
-            },
-            () => {
-              runOnJS(transitionCompleted)();
-            },
-          ),
-        );
-        onOpen(photo);
-      });
+      goForward(photo.id, x, y, () => onOpen(photo));
     });
-  }, [photo, set, progress, transitionCompleted, onOpen]);
+  }, [photo, goForward, onOpen]);
 
   return (
     <TouchableWithoutFeedback onPress={onPress}>
@@ -120,7 +93,6 @@ function PhotoPreview({ photo, onOpen }: Props) {
                     {
                       top: position?.y,
                       left: position?.x,
-                      opacity: source,
                     },
                     transform,
                   ]
@@ -129,7 +101,7 @@ function PhotoPreview({ photo, onOpen }: Props) {
           >
             <Animated.Image
               style={[
-                { width: THUMB_SIZE },
+                { width: THUMB_SIZE, opacity: source },
                 isAnimating ? animatedHeight : styles.thumb,
               ]}
               source={{ uri: photo.thumbnail }}
