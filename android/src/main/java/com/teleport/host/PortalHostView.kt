@@ -62,11 +62,15 @@ class PortalHostView(
    * child until that host is GC'd, but it has been removed from the window
    * and is not drawing — so the inconsistency is harmless.
    */
-  internal fun forceAdoptStuckView(child: View, index: Int) {
-    val params = child.layoutParams ?: ViewGroup.LayoutParams(
-      ViewGroup.LayoutParams.MATCH_PARENT,
-      ViewGroup.LayoutParams.MATCH_PARENT
-    )
+  internal fun forceAdoptStuckView(
+    child: View,
+    index: Int,
+  ) {
+    val params =
+      child.layoutParams ?: ViewGroup.LayoutParams(
+        ViewGroup.LayoutParams.MATCH_PARENT,
+        ViewGroup.LayoutParams.MATCH_PARENT,
+      )
     val safeIndex = minOf(index, childCount)
     addViewInLayout(child, safeIndex, params, false)
     requestLayout()
