@@ -1,5 +1,5 @@
 import { useCallback, useEffect } from "react";
-import { Pressable, StyleSheet, Text, View } from "react-native";
+import { BackHandler, Pressable, StyleSheet, Text, View } from "react-native";
 import Animated, {
   interpolate,
   useAnimatedStyle,
@@ -33,11 +33,31 @@ function PhotoDetail({ route }: PhotoDetailProps) {
   const isTransitionDone = visibility.target === 1;
   const buttonOpacity = useSharedValue(0);
 
+  const onLoad = useCallback(() => {
+    if (useHeroTransition.getState().id === photo.id) {
+      targetElementAvailable();
+    }
+  }, [photo.id, targetElementAvailable]);
+
+  const onGoBack = useCallback(() => {
+    goBack(navigation.goBack);
+
+    return true;
+  }, [navigation, goBack]);
+
   useEffect(() => {
     buttonOpacity.value = withTiming(isTransitionDone ? 1 : 0, {
       duration: 200,
     });
   }, [isTransitionDone, buttonOpacity]);
+
+  useEffect(() => {
+    const listener = BackHandler.addEventListener(
+      "hardwareBackPress",
+      onGoBack,
+    );
+    return () => listener.remove();
+  }, [onGoBack]);
 
   const buttonStyle = useAnimatedStyle(() => ({
     opacity: buttonOpacity.value,
@@ -74,16 +94,6 @@ function PhotoDetail({ route }: PhotoDetailProps) {
     };
   }, [direction, position, safeAreaTop, fullHeight]);
 
-  const onLoad = useCallback(() => {
-    if (useHeroTransition.getState().id === photo.id) {
-      targetElementAvailable();
-    }
-  }, [photo.id, targetElementAvailable]);
-
-  const onGoBack = useCallback(() => {
-    goBack(navigation.goBack);
-  }, [navigation, goBack]);
-
   return (
     <View style={styles.container}>
       <Animated.View style={[styles.backdrop, backdrop]} />
@@ -95,6 +105,7 @@ function PhotoDetail({ route }: PhotoDetailProps) {
           heroImage,
         ]}
         resizeMode="cover"
+        fadeDuration={0}
         onLoad={onLoad}
       />
       <AnimatedPressable

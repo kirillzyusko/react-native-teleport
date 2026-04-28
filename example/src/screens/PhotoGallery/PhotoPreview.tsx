@@ -1,6 +1,5 @@
 import React, { useCallback, useRef } from "react";
 import { StyleSheet, TouchableWithoutFeedback, View } from "react-native";
-import type { HostInstance } from "react-native";
 import Animated, {
   interpolate,
   useAnimatedStyle,
@@ -11,6 +10,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import type { Photo } from "./photos";
 import { SCALE, SCREEN_WIDTH, THUMB_SIZE } from "./constants";
 import { useHeroTransition } from "./hero";
+import useMeasure from "../../hooks/useMeasure";
 
 type Props = {
   photo: Photo;
@@ -18,7 +18,8 @@ type Props = {
 };
 
 function PhotoPreview({ photo, onOpen }: Props) {
-  const ref = useRef<HostInstance>(null);
+  const ref = useRef<View>(null);
+  const measure = useMeasure(ref);
   const isAnimating = useHeroTransition((s) => s.id === photo.id);
   const position = useHeroTransition((s) =>
     s.id === photo.id ? s.position : undefined,
@@ -26,7 +27,7 @@ function PhotoPreview({ photo, onOpen }: Props) {
   const progress = useHeroTransition((s) => s.progress);
   const goForward = useHeroTransition((s) => s.goForward);
   const source = useHeroTransition((s) =>
-    s.id === photo.id ? s.visibility.source : 1,
+    s.id === photo.id || s.ownerId === photo.id ? s.visibility.source : 1,
   );
   const { top: safeAreaTop } = useSafeAreaInsets();
 
@@ -70,14 +71,15 @@ function PhotoPreview({ photo, onOpen }: Props) {
   const onPress = useCallback(() => {
     if (useHeroTransition.getState().id !== "") return;
 
-    ref.current?.measureInWindow((x: number, y: number) => {
+    measure((x, y) => {
       goForward(photo.id, x, y, () => onOpen(photo));
     });
-  }, [photo, goForward, onOpen]);
+  }, [photo, goForward, onOpen, measure]);
 
   return (
     <TouchableWithoutFeedback onPress={onPress}>
       <View
+        // @ts-expect-error ref type mismatch between View component and host instance
         ref={ref}
         style={{
           height: THUMB_SIZE,
