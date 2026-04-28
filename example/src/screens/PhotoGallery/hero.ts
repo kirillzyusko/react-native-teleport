@@ -15,8 +15,10 @@ type Position = {
 
 interface HeroStore {
   direction: "forward" | "backward" | "neutral";
-  /** Which photo is currently animating */
+  /** Which photo is currently animating (Portal teleport) */
   id: string;
+  /** Photo that owns the hero pipeline; survives teleportBack so opacity gating works during detail + back */
+  ownerId: string;
   /** Animation progress [0..1] */
   progress: SharedValue<number>;
   /** Measured position of the thumbnail before transition */
@@ -39,6 +41,7 @@ interface HeroStore {
 export const useHeroTransition = create<HeroStore>((set, get) => ({
   direction: "neutral",
   id: "",
+  ownerId: "",
   position: undefined,
   visibility: { source: 1, target: 0 },
   progress: makeMutable(0),
@@ -98,6 +101,7 @@ export const useHeroTransition = create<HeroStore>((set, get) => ({
       set({
         direction: "neutral",
         id: "",
+        ownerId: "",
         position: undefined,
         visibility: { source: 1, target: 0 },
         isAnimationCompleted: false,
@@ -120,6 +124,7 @@ export const useHeroTransition = create<HeroStore>((set, get) => ({
       isAnimationCompleted: false,
       isTargetElementAvailable: false,
       id,
+      ownerId: id,
     });
 
     const transitionCompleted = get().transitionCompleted;
