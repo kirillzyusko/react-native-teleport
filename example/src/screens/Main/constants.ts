@@ -79,7 +79,7 @@ export const examples: Example[] = [
     title: "Travel",
     testID: "travel",
     info: ScreenNames.TRAVEL_EXPLORE,
-    icons: "🏝️",
+    icons: "🚧 🏝️",
   },
   {
     title: "Recycling",
@@ -92,5 +92,11 @@ export const examples: Example[] = [
     testID: "rich_text_editor",
     info: ScreenNames.RICH_TEXT_EDITOR,
     icons: "📝",
+  },
+  {
+    title: "Photo Gallery",
+    testID: "photo_gallery",
+    info: ScreenNames.PHOTO_GALLERY,
+    icons: "📸",
   },
 ];
