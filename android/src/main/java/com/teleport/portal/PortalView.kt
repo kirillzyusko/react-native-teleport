@@ -53,15 +53,31 @@ class PortalView(
   internal fun onHostAvailable() {
     isWaitingForHost = false
 
-    val host = PortalRegistry.getHost(hostName)
-    if (host != null) {
-      val children = extractPhysicalChildren()
+    val host = PortalRegistry.getHost(hostName) ?: return
 
+    if (super.getChildCount() > 0) {
+      // First-time binding: children are still physically inside PortalView.
+      val children = extractPhysicalChildren()
       for (i in children.indices) {
         val idx = host.nextInsertionIndexForChildAt(i)
         host.addView(children[i], idx)
       }
       ownChildren.addAll(children)
+    } else if (ownChildren.isNotEmpty()) {
+      // Re-binding after a previous host was destroyed (e.g. NativeStack
+      // pop unmounted the screen and a subsequent push remounts a fresh
+      // <PortalHost> with the same name). ownChildren references views
+      // that are still parented to the previous (now-orphaned) host.
+      // Standard parent.removeView is a no-op on a Fabric-dropped host
+      // and View.mParent reflection by literal name throws
+      // NoSuchFieldException on Android 16, so use forceAdoptStuckView
+      // (which calls the protected ViewGroup.addViewInLayout — that
+      // clears mParent from inside the framework before adding).
+      val children = ownChildren.toList()
+      for (i in children.indices) {
+        val idx = host.nextInsertionIndexForChildAt(i)
+        host.forceAdoptStuckView(children[i], idx)
+      }
     }
   }
 
