@@ -20,7 +20,14 @@ object PortalRegistry {
         val portalRef = iterator.next()
         portalRef.get()?.onHostAvailable() ?: iterator.remove()
       }
-      pendingPortals.remove(name)
+      // Intentionally do NOT remove the pending list here. Portals stay
+      // subscribed to this hostname so they can re-bind when the host is
+      // re-mounted (e.g. NativeStack pop unmounted the screen hosting
+      // <PortalHost> and a subsequent push mounts a fresh one). The
+      // WeakReference cleanup in the iterator above prunes dead portals,
+      // so leaving the list populated does not leak. Portals also
+      // unsubscribe explicitly when their hostName changes — see
+      // PortalView.setHostName.
     }
   }
 

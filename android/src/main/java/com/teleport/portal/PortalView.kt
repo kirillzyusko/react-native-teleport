@@ -18,10 +18,13 @@ class PortalView(
   fun setHostName(name: String?) {
     val children = extractChildren()
 
-    if (isWaitingForHost) {
-      hostName?.let { PortalRegistry.unregisterPendingPortal(it, this) }
-      isWaitingForHost = false
-    }
+    // Always unsubscribe from the old hostname's pending list. The previous
+    // `if (isWaitingForHost)` guard relied on portals being removed from
+    // pendingPortals after the first onHostAvailable; with PortalRegistry
+    // now keeping portals subscribed across host-mount cycles, that guard
+    // misses and leaves stale subscriptions when hostName changes.
+    hostName?.let { PortalRegistry.unregisterPendingPortal(it, this) }
+    isWaitingForHost = false
 
     hostName = name
 
