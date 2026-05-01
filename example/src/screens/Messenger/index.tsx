@@ -7,6 +7,7 @@ import {
   TouchableOpacity,
   View,
   Text,
+  TouchableWithoutFeedback,
 } from "react-native";
 import { PortalHost } from "react-native-teleport";
 import LottieView from "lottie-react-native";
@@ -152,7 +153,7 @@ export default function Messenger() {
           <Message key={item.id} sender={item.sender} text={item.text} />
         ))}
 
-        {false && (
+        {true && (
           <View style={styles.messageRowRight}>
             <ContextMenu
               ref={stickerMenuRef}
@@ -163,7 +164,7 @@ export default function Messenger() {
               teleportable
             >
               <ContextMenu.Anchor>
-                <TouchableOpacity
+                <TouchableWithoutFeedback
                   onPress={() => stickerMenuRef.current?.open()}
                   style={styles.stickerBubble}
                 >
@@ -173,7 +174,7 @@ export default function Messenger() {
                     source={require("../../assets/lottie/bear.json")}
                     style={styles.sticker}
                   />
-                </TouchableOpacity>
+                </TouchableWithoutFeedback>
               </ContextMenu.Anchor>
 
               <ContextMenu.Options>

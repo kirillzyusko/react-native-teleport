@@ -10,6 +10,7 @@ import {
   BackHandler,
   StyleSheet,
   TouchableOpacity,
+  TouchableWithoutFeedback,
   View,
 } from "react-native";
 import { Portal } from "react-native-teleport";
@@ -211,7 +212,7 @@ const ContextMenu = forwardRef<ContextMenuRef, Props>((props, ref) => {
 
       {visible ? (
         <Portal hostName={portalHostName}>
-          <TouchableOpacity onPress={hide} style={styles.overlay}>
+          <TouchableWithoutFeedback onPress={hide} style={styles.overlay}>
             <View pointerEvents="box-none" style={styles.overlay}>
               <AnimatedPopup
                 ref={animatedPopupRef}
@@ -229,7 +230,7 @@ const ContextMenu = forwardRef<ContextMenuRef, Props>((props, ref) => {
                 {optionElement}
               </AnimatedPopup>
             </View>
-          </TouchableOpacity>
+          </TouchableWithoutFeedback>
         </Portal>
       ) : null}
     </View>

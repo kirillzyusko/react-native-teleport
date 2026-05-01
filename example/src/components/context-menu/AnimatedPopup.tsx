@@ -183,12 +183,6 @@ const AnimatedPopup = forwardRef<AnimatedPopupRef, AnimatedPopupProps>(
           : 0,
         transform: [
           {
-            translateX: -180,
-          },
-          {
-            translateY: -33,
-          },
-          {
             translateY: interpolate(
               progress.value,
               [0, 1],
