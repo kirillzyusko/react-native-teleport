@@ -29,7 +29,13 @@ const TeleportedView: React.FC<React.PropsWithChildren<Props>> = ({
   return (
     <Portal hostName={teleported ? "root" : undefined}>
       <Reanimated.View
-        style={[{ top: teleported ? 380 : 0, left: teleported ? 16 : 0 }, s]}
+        style={[
+          {
+            top: teleported ? 320 : 0,
+            left: teleported ? 16 : 0,
+          },
+          s,
+        ]}
       >
         {children}
       </Reanimated.View>

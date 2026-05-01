@@ -1,9 +1,13 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { StatusBar, StyleSheet, View } from "react-native";
-import Reanimated, { useAnimatedStyle } from "react-native-reanimated";
+import Reanimated, {
+  runOnJS,
+  useAnimatedReaction,
+  useAnimatedStyle,
+} from "react-native-reanimated";
 
 import { useTeleport } from "./teleport/context";
-import { BlurView } from "@react-native-community/blur";
+import BlurView from "../BlurView";
 
 const ReanimatedBlurView = Reanimated.createAnimatedComponent(BlurView);
 
@@ -23,15 +27,21 @@ const styles = StyleSheet.create({
  */
 const BlurredBackground: React.FC<Props> = () => {
   const { progress } = useTeleport();
-  const blur = useAnimatedStyle(
-    () => ({
-      position: "absolute",
-      top: 0,
-      left: 0,
-      right: 0,
-      bottom: 0,
-      opacity: progress.value,
-    }),
+  const [visible, setVisible] = useState(false);
+
+  useAnimatedReaction(
+    () => progress.value,
+    (next, prev) => {
+      if (next === null) {
+        return;
+      }
+      if (prev === 0 && next > 0) {
+        runOnJS(setVisible)(true);
+      }
+      if (prev === 1 && next < 1) {
+        runOnJS(setVisible)(false);
+      }
+    },
     [],
   );
 
@@ -47,7 +57,7 @@ const BlurredBackground: React.FC<Props> = () => {
   return (
     <>
       <View style={styles.stretch} />
-      <ReanimatedBlurView style={blur} blurType="dark" blurAmount={6} />
+      <ReanimatedBlurView visible={visible} />
     </>
   );
 };
