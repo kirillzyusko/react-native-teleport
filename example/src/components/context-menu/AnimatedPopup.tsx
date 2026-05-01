@@ -226,7 +226,7 @@ const AnimatedPopup = forwardRef<AnimatedPopupRef, AnimatedPopupProps>(
       alignSelf: "flex-start",
       position: "absolute",
     }));
-    const animated = useMemo(() => [styles.options, transform], []);
+    const animated = useMemo(() => [styles.options, transform, styles.shadow], []);
     const popup = useMemo(() => [parent, style], []);
 
     const { children } = props;
@@ -235,9 +235,9 @@ const AnimatedPopup = forwardRef<AnimatedPopupRef, AnimatedPopupProps>(
       <>
         {blurred && <BlurredBackground />}
         <Reanimated.View onLayout={onLayout} style={popup}>
-          <View style={styles.shadow}>
+          <>
             <Reanimated.View style={animated}>{children}</Reanimated.View>
-          </View>
+          </>
         </Reanimated.View>
       </>
     );

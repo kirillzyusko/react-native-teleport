@@ -8,6 +8,7 @@ import {
   View,
   Text,
   TouchableWithoutFeedback,
+  Pressable,
 } from "react-native";
 import { PortalHost } from "react-native-teleport";
 import LottieView from "lottie-react-native";
@@ -134,7 +135,7 @@ export default function Messenger() {
   useLayoutEffect(() => {
     navigation.setOptions({
       title: route.params.title,
-      headerRight: () => <HeaderMenu hostName={route.key} />,
+      // headerRight: () => <HeaderMenu hostName={route.key} />,
     });
   }, [navigation, route.key, route.params.title]);
 
@@ -164,7 +165,7 @@ export default function Messenger() {
               teleportable
             >
               <ContextMenu.Anchor>
-                <TouchableWithoutFeedback
+                <Pressable
                   onPress={() => stickerMenuRef.current?.open()}
                   style={styles.stickerBubble}
                 >
@@ -174,7 +175,7 @@ export default function Messenger() {
                     source={require("../../assets/lottie/bear.json")}
                     style={styles.sticker}
                   />
-                </TouchableWithoutFeedback>
+                </Pressable>
               </ContextMenu.Anchor>
 
               <ContextMenu.Options>
@@ -234,7 +235,10 @@ const styles = StyleSheet.create({
   received: {
     backgroundColor: "#ffffff",
   },
-  stickerBubble: {},
+  stickerBubble: {
+        width: 180,
+    height: 180,
+  },
   sticker: {
     width: 180,
     height: 180,

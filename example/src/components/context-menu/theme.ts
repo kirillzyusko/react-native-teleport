@@ -36,6 +36,7 @@ export const SHADOW = StyleSheet.create({
       height: 12,
     },
     elevation: 18,
+    borderRadius: CORNERS.menu,
   },
 });
 
