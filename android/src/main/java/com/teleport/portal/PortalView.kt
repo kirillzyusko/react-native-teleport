@@ -68,14 +68,23 @@ class PortalView(
   private fun isTeleported(): Boolean = hostName != null && PortalRegistry.getHost(hostName) != null
 
   private fun extractPhysicalChildren(): List<View> {
-    val children = mutableListOf<View>()
+    // Gather first, then remove via super.removeView(child). Calling
+    // super.removeViewAt(i) here would dispatch ViewGroup.removeViewAt's
+    // internal getChildAt(index) virtually back through PortalView's
+    // override — which can return null mid-onHostAvailable (isTeleported()
+    // flips true once the host registers, but ownChildren is not populated
+    // until after this method returns), and that null reaches
+    // removeViewInternal as the `view` arg, NPEing on view.unFocus(null).
+    // super.removeView(View) takes a different path that uses indexOfChild
+    // (direct mChildren[] walk) and never re-fetches the view by index.
     val count = super.getChildCount()
-    for (i in count - 1 downTo 0) {
-      val child = super.getChildAt(i) ?: continue
-      children.add(0, child)
-      super.removeViewAt(i)
+    val children = ArrayList<View>(count)
+    for (i in 0 until count) {
+      super.getChildAt(i)?.let { children.add(it) }
     }
-
+    for (child in children) {
+      super.removeView(child)
+    }
     return children
   }
 
