@@ -93,4 +93,10 @@ export const examples: Example[] = [
     info: ScreenNames.RICH_TEXT_EDITOR,
     icons: "📝",
   },
+  {
+    title: "Persisted Portal",
+    testID: "persisted_portal",
+    info: ScreenNames.PERSISTED_PORTAL,
+    icons: "🪂",
+  },
 ];
