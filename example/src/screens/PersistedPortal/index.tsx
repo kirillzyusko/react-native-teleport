@@ -10,32 +10,26 @@ export default function PersistedPortal() {
 
   return (
     <View style={styles.container}>
-      <Text style={styles.label}>
-        A {"<Portal>"} with hostName="{PERSISTED_PORTAL_HOST}" mounts on screen
-        entry while no host is registered yet, so its child is physically
-        attached inside PortalView. Tapping "Mount host" later mounts a
-        {"<PortalHost>"} in a separate commit, which on Android Fabric release
-        builds (1.1.4) NPEs in extractPhysicalChildren.
-      </Text>
-
       <Portal hostName={PERSISTED_PORTAL_HOST}>
         <View testID="persisted_portal_teleported" style={styles.teleported}>
           <Text style={styles.teleportedText}>TELEPORTED CONTENT</Text>
         </View>
       </Portal>
 
-      <Button
-        testID="persisted_portal_toggle_host"
-        title={
-          hostMounted
-            ? `Unmount host (toggles: ${toggleCount})`
-            : `Mount host (toggles: ${toggleCount})`
-        }
-        onPress={() => {
-          setHostMounted((v) => !v);
-          setToggleCount((c) => c + 1);
-        }}
-      />
+      <View style={styles.button}>
+        <Button
+          testID="persisted_portal_toggle_host"
+          title={
+            hostMounted
+              ? `Unmount host (toggles: ${toggleCount})`
+              : `Mount host (toggles: ${toggleCount})`
+          }
+          onPress={() => {
+            setHostMounted((v) => !v);
+            setToggleCount((c) => c + 1);
+          }}
+        />
+      </View>
 
       <View style={styles.hostFrame}>
         <Text style={styles.hostFrameLabel}>
@@ -57,9 +51,8 @@ const styles = StyleSheet.create({
     padding: 16,
     gap: 12,
   },
-  label: {
-    fontSize: 13,
-    lineHeight: 18,
+  button: {
+    paddingTop: 60,
   },
   teleported: {
     width: 240,
@@ -68,7 +61,6 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     borderRadius: 8,
-    alignSelf: "center",
   },
   teleportedText: {
     color: "white",
