@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Button, StyleSheet, Text, View } from "react-native";
-import { PortalHost } from "react-native-teleport";
+import { Portal, PortalHost } from "react-native-teleport";
 
 import { PERSISTED_PORTAL_HOST } from "./hostName";
 
@@ -11,10 +11,18 @@ export default function PersistedPortal() {
   return (
     <View style={styles.container}>
       <Text style={styles.label}>
-        A {"<Portal>"} with hostName="{PERSISTED_PORTAL_HOST}" lives ABOVE the
-        NavigationContainer (see App.tsx). Until a matching {"<PortalHost>"}
-        registers, its children render inside PortalView itself.
+        A {"<Portal>"} with hostName="{PERSISTED_PORTAL_HOST}" mounts on screen
+        entry while no host is registered yet, so its child is physically
+        attached inside PortalView. Tapping "Mount host" later mounts a
+        {"<PortalHost>"} in a separate commit, which on Android Fabric release
+        builds (1.1.4) NPEs in extractPhysicalChildren.
       </Text>
+
+      <Portal hostName={PERSISTED_PORTAL_HOST}>
+        <View testID="persisted_portal_teleported" style={styles.teleported}>
+          <Text style={styles.teleportedText}>TELEPORTED CONTENT</Text>
+        </View>
+      </Portal>
 
       <Button
         testID="persisted_portal_toggle_host"
@@ -52,6 +60,20 @@ const styles = StyleSheet.create({
   label: {
     fontSize: 13,
     lineHeight: 18,
+  },
+  teleported: {
+    width: 240,
+    height: 60,
+    backgroundColor: "crimson",
+    alignItems: "center",
+    justifyContent: "center",
+    borderRadius: 8,
+    alignSelf: "center",
+  },
+  teleportedText: {
+    color: "white",
+    fontWeight: "700",
+    fontSize: 14,
   },
   hostFrame: {
     flex: 1,
