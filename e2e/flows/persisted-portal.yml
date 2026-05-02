@@ -1,0 +1,39 @@
+appId: teleport.example
+---
+- launchApp
+
+# Scroll to the Persisted Portal example (last item in the list)
+- repeat:
+    while:
+      notVisible:
+        id: "persisted_portal"
+    commands:
+      - swipe:
+          start: 50%, 80%
+          end: 50%, 20%
+- tapOn:
+    id: "persisted_portal"
+
+- takeScreenshot:
+    path: e2e/PersistedPortalWithoutHost
+- runScript:
+    file: ../scripts/compare-screenshots.js
+    env:
+      base: screenshots/${DEVICE}/PersistedPortalWithoutHost
+      target: PersistedPortalWithoutHost
+      diff: 0.3
+- assertTrue: ${output.matches}
+
+# Step 1: Mount the <PortalHost> for the first time
+# pending Portal should be teleported to proper host
+- tapOn:
+    id: "persisted_portal_toggle_host"
+- takeScreenshot:
+    path: e2e/PersistedPortalWithHost
+- runScript:
+    file: ../scripts/compare-screenshots.js
+    env:
+      base: screenshots/${DEVICE}/PersistedPortalWithHost
+      target: PersistedPortalWithHost
+      diff: 0.3
+- assertTrue: ${output.matches}

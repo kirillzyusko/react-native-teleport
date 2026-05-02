@@ -24,6 +24,7 @@ import type { PostType } from "../../screens/Instagram/posts";
 import type { ImageProps } from "react-native";
 import TeleportationOrder from "../../screens/TeleportationOrder";
 import RichTextEditor from "../../screens/RichTextEditor";
+import PersistedPortal from "../../screens/PersistedPortal";
 
 export type ExamplesStackParamList = {
   [ScreenNames.GESTURE_HANDLER_TOUCHABLE]: undefined;
@@ -52,6 +53,7 @@ export type ExamplesStackParamList = {
   };
   [ScreenNames.TELEPORTATION_ORDER]: undefined;
   [ScreenNames.RICH_TEXT_EDITOR]: undefined;
+  [ScreenNames.PERSISTED_PORTAL]: undefined;
 };
 
 const Stack = createNativeStackNavigator<ExamplesStackParamList>();
@@ -112,6 +114,9 @@ const options = {
   },
   [ScreenNames.RICH_TEXT_EDITOR]: {
     title: "Rich Text Editor",
+  },
+  [ScreenNames.PERSISTED_PORTAL]: {
+    title: "Persisted Portal (above navigator)",
   },
 };
 
@@ -206,6 +211,11 @@ const ExamplesStack = () => (
       component={RichTextEditor}
       name={ScreenNames.RICH_TEXT_EDITOR}
       options={options[ScreenNames.RICH_TEXT_EDITOR]}
+    />
+    <Stack.Screen
+      component={PersistedPortal}
+      name={ScreenNames.PERSISTED_PORTAL}
+      options={options[ScreenNames.PERSISTED_PORTAL]}
     />
   </Stack.Navigator>
 );
