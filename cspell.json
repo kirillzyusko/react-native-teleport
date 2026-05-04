@@ -72,7 +72,8 @@
     "pristia",
     "reparenting",
     "portaling",
-    "segoe"
+    "segoe",
+    "picsum"
   ],
   "ignorePaths": [
     "node_modules",
