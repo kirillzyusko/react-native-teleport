@@ -199,16 +199,15 @@ export default function ProfileMenuExample() {
           />
           <Text style={styles.logoutText}>Log Out</Text>
         </ScalePressable>
+        {alertVisible && (
+          <View style={{height: 200}}>
+            <LogoutAlert
+              onConfirm={() => setAlertVisible(false)}
+              onCancel={() => setAlertVisible(false)}
+            />
+          </View>
+        )}
       </View>
-
-      {alertVisible && (
-        <Portal hostName="overlay">
-          <LogoutAlert
-            onConfirm={() => setAlertVisible(false)}
-            onCancel={() => setAlertVisible(false)}
-          />
-        </Portal>
-      )}
 
       <PortalHost name="alert-overlay" style={StyleSheet.absoluteFillObject} />
     </>
