@@ -4,7 +4,7 @@ import type { Example } from "./types";
 
 export const examples: Example[] = [
   {
-    title: "GestureHandler Touchable",
+    title: "Settings",
     testID: "gesture_handler_touchable",
     info: ScreenNames.GESTURE_HANDLER_TOUCHABLE,
     icons: "👆🧬",

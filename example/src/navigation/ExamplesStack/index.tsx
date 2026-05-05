@@ -70,7 +70,7 @@ const Stack = createNativeStackNavigator<ExamplesStackParamList>();
 
 const options = {
   [ScreenNames.GESTURE_HANDLER_TOUCHABLE]: {
-    title: "GestureHandler Touchable",
+    title: "Settings",
   },
   [ScreenNames.REACT_NATIVE_TOUCHABLE]: {
     title: "RN Touchable",
