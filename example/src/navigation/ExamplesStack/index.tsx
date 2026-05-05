@@ -67,6 +67,7 @@ const options = {
   },
   [ScreenNames.REACT_NATIVE_TOUCHABLE]: {
     title: "RN Touchable",
+    headerShown: false,
   },
   [ScreenNames.DYNAMIC_CHILDREN]: {
     title: "Dynamic children",
