@@ -5,7 +5,7 @@ keywords:
   [
     react-native-teleport,
     portal,
-    portalhost,
+    PortalHost,
     lifecycle,
     mount,
     unmount,
