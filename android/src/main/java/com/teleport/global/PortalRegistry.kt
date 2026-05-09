@@ -13,15 +13,7 @@ object PortalRegistry {
     view: PortalHostView,
   ) {
     hosts[name] = WeakReference(view)
-
-    pendingPortals[name]?.let { portals ->
-      val iterator = portals.iterator()
-      while (iterator.hasNext()) {
-        val portalRef = iterator.next()
-        portalRef.get()?.onHostAvailable() ?: iterator.remove()
-      }
-      pendingPortals.remove(name)
-    }
+    notifySubscribers(name)
   }
 
   fun unregisterHost(
@@ -31,6 +23,17 @@ object PortalRegistry {
     val hostViewId = hosts[name]?.get()?.id
     if (hostViewId == viewId) {
       hosts.remove(name)
+      notifySubscribers(name)
+    }
+  }
+
+  private fun notifySubscribers(name: String) {
+    pendingPortals[name]?.let { portals ->
+      val iterator = portals.iterator()
+      while (iterator.hasNext()) {
+        val portalRef = iterator.next()
+        portalRef.get()?.onHostChanged() ?: iterator.remove()
+      }
     }
   }
 

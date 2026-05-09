@@ -42,21 +42,7 @@
 {
   if (name) {
     [self.hosts setObject:host forKey:name];
-
-    NSPointerArray *portals = self.pendingPortals[name];
-    if (portals) {
-      // Compact the array to remove nil entries
-      [portals compact];
-
-      for (NSUInteger i = 0; i < portals.count; i++) {
-        PortalView *portal = (__bridge PortalView *)[portals pointerAtIndex:i];
-        if (portal) {
-          [portal onHostAvailable];
-        }
-      }
-
-      [self.pendingPortals removeObjectForKey:name];
-    }
+    [self notifySubscribersForName:name];
   }
 }
 
@@ -66,6 +52,24 @@
     PortalHostView *registered = [self.hosts objectForKey:name];
     if (registered && registered.tag == viewTag) {
       [self.hosts removeObjectForKey:name];
+      [self notifySubscribersForName:name];
+    }
+  }
+}
+
+- (void)notifySubscribersForName:(NSString *)name
+{
+  NSPointerArray *portals = self.pendingPortals[name];
+  if (!portals) {
+    return;
+  }
+
+  [portals compact];
+
+  for (NSUInteger i = 0; i < portals.count; i++) {
+    PortalView *portal = (__bridge PortalView *)[portals pointerAtIndex:i];
+    if (portal) {
+      [portal onHostChanged];
     }
   }
 }

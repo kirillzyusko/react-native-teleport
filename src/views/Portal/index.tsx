@@ -16,7 +16,6 @@ export default function Portal({ hostName, children, style }: PortalProps) {
   }
 
   const sentinelRef = useRef<HTMLDivElement>(null);
-  const isWaitingForHostRef = useRef(false);
 
   useLayoutEffect(() => {
     if (elRef.current && style) {
@@ -40,8 +39,6 @@ export default function Portal({ hostName, children, style }: PortalProps) {
 
         hostNode.appendChild(el);
       }
-
-      isWaitingForHostRef.current = false;
     } else if (sentinelRef.current && sentinelRef.current.parentNode) {
       // keep view locally
       const parent = sentinelRef.current.parentNode;
@@ -58,29 +55,16 @@ export default function Portal({ hostName, children, style }: PortalProps) {
   }, [hostName, getHost]);
 
   useLayoutEffect(() => {
-    const hostNode = hostName ? getHost(hostName) : null;
-
-    if (isWaitingForHostRef.current && hostName) {
-      unregisterPendingPortal(hostName, teleportToHost);
-      isWaitingForHostRef.current = false;
-    }
-
     teleportToHost();
 
-    if (hostName && !hostNode) {
-      registerPendingPortal(hostName, teleportToHost);
-      isWaitingForHostRef.current = true;
-    }
+    if (!hostName) return;
 
+    registerPendingPortal(hostName, teleportToHost);
     return () => {
-      if (isWaitingForHostRef.current && hostName) {
-        unregisterPendingPortal(hostName, teleportToHost);
-        isWaitingForHostRef.current = false;
-      }
+      unregisterPendingPortal(hostName, teleportToHost);
     };
   }, [
     hostName,
-    getHost,
     registerPendingPortal,
     unregisterPendingPortal,
     teleportToHost,

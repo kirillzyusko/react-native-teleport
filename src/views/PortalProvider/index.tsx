@@ -9,14 +9,13 @@ export default function PortalProvider({ children }: PortalProviderProps) {
   const registerHost = useCallback((name: string, node: HTMLElement | null) => {
     if (node) {
       hostsRef.current.set(name, node);
-
-      const callbacks = pendingPortalsRef.current.get(name);
-      if (callbacks) {
-        callbacks.forEach((callback) => callback());
-        pendingPortalsRef.current.delete(name);
-      }
     } else {
       hostsRef.current.delete(name);
+    }
+
+    const callbacks = pendingPortalsRef.current.get(name);
+    if (callbacks) {
+      callbacks.forEach((callback) => callback());
     }
   }, []);
   const getHost = useCallback(
