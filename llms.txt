@@ -33,6 +33,7 @@ Teleport views across your component tree for seamless transitions and powerful 
 
 #### guides
 
+- [Lifecycle & behavior](/docs/guides/lifecycle.md): How Portal and PortalHost behave together over time - what gets rendered where, and how children move when components mount and unmount.
 - [Portal](/docs/guides/portal.md): Portal helps you to render a component in a different place in the view hierarchy.
 - [Teleport](/docs/guides/teleport.md): Teleport helps you to re-use existing component and render it in a different part of tree without remounting and resetting the internal state.
 
