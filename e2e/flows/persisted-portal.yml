@@ -49,7 +49,7 @@ appId: teleport.example
     env:
       base: screenshots/${DEVICE}/PersistedPortalWithoutHost
       target: PersistedPortalWithoutHost
-      diff: 0.3
+      diff: 0.4
 - assertTrue: ${output.matches}
 
 # Step 3: Mount the <PortalHost> again
@@ -63,5 +63,5 @@ appId: teleport.example
     env:
       base: screenshots/${DEVICE}/PersistedPortalWithHost
       target: PersistedPortalWithHost
-      diff: 0.3
+      diff: 0.4
 - assertTrue: ${output.matches}

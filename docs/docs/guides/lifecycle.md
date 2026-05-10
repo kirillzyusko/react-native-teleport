@@ -87,21 +87,35 @@ Only the host disappears. All Portals targeting it survive, with their children 
 
 These are the rules that are easy to get wrong if you don't know them.
 
-- **Multiple Portals targeting the same host** are appended in React mount order. If `Portal A` mounts before `Portal B`, `A`'s children appear above `B`'s in the host. Reordering the Portals in the React tree reorders them in the host.
+- **Multiple Portals targeting the same host** preserve order, with one important nuance:
+  - **When teleported in the same commit** (e.g. both rendered at the same time on initial mount), their children appear in the host in the same order they sit in the JSX tree. If `<Portal A />` comes before `<Portal B />` in source, `A`'s children gets mounted earlier in the host than `B`'s.
+  - **When teleported in different commits** (e.g. `B` mounts later, after `A` is already in the host), order is defined by _arrival time_, not JSX position. The newcomer is appended after whatever is already in the host, even if it appears earlier in the source.
 - **Host names are matched as strings.** Two `PortalHost` instances with the same `name` mounted at the same time is undefined behavior - only the most recently registered one will receive new portals. Unmounting either may leave children stranded. Use unique names per active host.
 - **React identity is preserved across host mount/unmount cycles.** A teleported `<Video />` does not reset its playback position when its host unmounts and remounts. This is the whole reason you'd reach for a Portal that outlives its host.
 
-## 4. What Portal does NOT do
+:::warning Layout is not preserved at the original location
 
-To set expectations, here are things people sometimes assume Portal handles but it doesn't:
+`Portal` does not reserve space at its position. Once children are teleported into a host, they take their size and position from the **host's** layout - the original location collapses to zero.
 
-- **It does not proxy layout from the local position to the host.** The teleported children take their size and position from the host's layout, not from where the `<Portal>` sits in the tree. If you need a "ghost" placeholder at the local position, render one yourself.
-- **It does not bridge React context in any special way.** It doesn't need to: `createPortal`-style semantics already mean children read context from their React parent (the `<Portal>`), not from their physical DOM/native parent. If a context provider sits above the `<Portal>`, teleported children see it.
-- **It does not implement focus, keyboard, or accessibility traversal across the teleport.** Native focus order and screen reader traversal follow the physical view hierarchy - i.e. the host's location, not the Portal's.
+If you need to avoid surrounding content reflowing while children are teleported away, render a wrapper view at the original position with the same dimensions as the teleported children:
+
+```tsx
+<View style={{ width: 200, height: 60 }}>
+  <Portal hostName="overlay">
+    <View style={{ width: 200, height: 60 }}>
+      <ChildContent />
+    </View>
+  </Portal>
+</View>
+```
+
+The outer `<View>` keeps its slot in the layout regardless of whether the inner content is currently teleported.
+
+:::
 
 ## See also
 
-- [Portal API](../api/components/portal)
-- [PortalHost API](../api/components/portal-host)
+- [Portal API](../api/components/portal) - declarative component that teleports its children into a named host
+- [PortalHost API](../api/components/portal-host) - the destination where teleported children are mounted
 - [usePortal hook](../api/hooks/use-portal) - imperative access and `isHostAvailable` flag
 - [Teleport guide](./teleport) - for moving an _existing_ view without unmounting it
