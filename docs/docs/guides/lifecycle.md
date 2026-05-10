@@ -69,7 +69,7 @@ Children are pulled back to the Portal's local position so they remain attached 
 
 ### A host remounts (mount → unmount → mount)
 
-On each cycle, children follow the host. Mounting a host with the same name a second time picks up exactly where the first cycle left off - there's no special "first mount" logic. This is the foundation for `PersistedPortal`-style patterns where a Portal outlives its host(s).
+On each cycle, children follow the host. Mounting a host with the same name a second time picks up exactly where the first cycle left off - there's no special "first mount" logic.
 
 ### Portal's `hostName` prop changes
 
