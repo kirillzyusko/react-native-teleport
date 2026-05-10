@@ -14,7 +14,7 @@
 
 
 <link rel="search" type="application/opensearchdescription+xml" title="Teleport" href="/react-native-teleport/pr-preview/pr-124/opensearch.xml"><link rel="stylesheet" href="/react-native-teleport/pr-preview/pr-124/assets/css/styles.5f21375c.css">
-<script src="/react-native-teleport/pr-preview/pr-124/assets/js/runtime~main.44c09461.js" defer="defer"></script>
+<script src="/react-native-teleport/pr-preview/pr-124/assets/js/runtime~main.baeda1ec.js" defer="defer"></script>
 <script src="/react-native-teleport/pr-preview/pr-124/assets/js/main.c4c557b1.js" defer="defer"></script>
 </head>
 <body class="navigation-with-keyboard">
@@ -36,7 +36,7 @@
 <h3 class="anchor anchorWithStickyNavbar_LWe7" id="a-host-unmounts-while-the-portal-is-still-alive">A host unmounts while the Portal is still alive<a href="#a-host-unmounts-while-the-portal-is-still-alive" class="hash-link" aria-label="Direct link to A host unmounts while the Portal is still alive" title="Direct link to A host unmounts while the Portal is still alive">​</a></h3>
 <p>Children are pulled back to the Portal&#x27;s local position so they remain attached to a live view tree. They are <em>not</em> destroyed. Component state, refs, and any imperative native state (animation values, video playback position, scroll offset, etc.) are preserved.</p>
 <h3 class="anchor anchorWithStickyNavbar_LWe7" id="a-host-remounts-mount--unmount--mount">A host remounts (mount → unmount → mount)<a href="#a-host-remounts-mount--unmount--mount" class="hash-link" aria-label="Direct link to A host remounts (mount → unmount → mount)" title="Direct link to A host remounts (mount → unmount → mount)">​</a></h3>
-<p>On each cycle, children follow the host. Mounting a host with the same name a second time picks up exactly where the first cycle left off - there&#x27;s no special &quot;first mount&quot; logic. This is the foundation for <code>PersistedPortal</code>-style patterns where a Portal outlives its host(s).</p>
+<p>On each cycle, children follow the host. Mounting a host with the same name a second time picks up exactly where the first cycle left off - there&#x27;s no special &quot;first mount&quot; logic.</p>
 <h3 class="anchor anchorWithStickyNavbar_LWe7" id="portals-hostname-prop-changes">Portal&#x27;s <code>hostName</code> prop changes<a href="#portals-hostname-prop-changes" class="hash-link" aria-label="Direct link to portals-hostname-prop-changes" title="Direct link to portals-hostname-prop-changes">​</a></h3>
 <p>Children migrate from the previous target (host or local) to the new target. If the new <code>hostName</code> has no matching host, children fall back to local rendering until that host appears.</p>
 <h3 class="anchor anchorWithStickyNavbar_LWe7" id="portal-unmounts">Portal unmounts<a href="#portal-unmounts" class="hash-link" aria-label="Direct link to Portal unmounts" title="Direct link to Portal unmounts">​</a></h3>
