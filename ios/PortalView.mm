@@ -24,7 +24,6 @@ using namespace facebook::react;
 
 @property (nonatomic, strong) NSString *hostName;
 @property (nonatomic, strong) UIView *targetView;
-@property (nonatomic, assign) BOOL isWaitingForHost;
 
 @end
 
@@ -83,9 +82,8 @@ using namespace facebook::react;
   std::string newNameStr = newViewProps.name;
 
   if (![self.hostName isEqualToString:newHostName]) {
-    if (self.isWaitingForHost && self.hostName) {
+    if (self.hostName) {
       [[PortalRegistry sharedInstance] unregisterPendingPortal:self withHostName:self.hostName];
-      self.isWaitingForHost = NO;
     }
 
     self.hostName = newHostName;
@@ -95,21 +93,16 @@ using namespace facebook::react;
       hostView = [[PortalRegistry sharedInstance] getHostWithName:self.hostName];
     }
 
-    UIView *newTarget = self.contentView;
-    if (self.hostName) {
-      if (hostView) {
-        newTarget = (UIView *)hostView;
-      } else {
-        [[PortalRegistry sharedInstance] registerPendingPortal:self withHostName:self.hostName];
-        self.isWaitingForHost = YES;
-        newTarget = self.contentView;
-      }
-    }
+    UIView *newTarget = hostView ? (UIView *)hostView : self.contentView;
 
     if (newTarget != self.targetView) {
       self.targetView = newTarget;
 
       [self moveOwnChildrenToTarget:newTarget];
+    }
+
+    if (self.hostName) {
+      [[PortalRegistry sharedInstance] registerPendingPortal:self withHostName:self.hostName];
     }
   }
 
@@ -156,14 +149,14 @@ using namespace facebook::react;
   [childComponentView removeFromSuperview];
 }
 
-- (void)onHostAvailable
+- (void)onHostChanged
 {
-  self.isWaitingForHost = NO;
-
   PortalHostView *hostView = [[PortalRegistry sharedInstance] getHostWithName:self.hostName];
-  if (hostView) {
-    self.targetView = (UIView *)hostView;
-    [self moveOwnChildrenToTarget:(UIView *)hostView];
+  UIView *newTarget = hostView ? (UIView *)hostView : self.contentView;
+
+  if (newTarget != self.targetView) {
+    self.targetView = newTarget;
+    [self moveOwnChildrenToTarget:newTarget];
   }
 }
 
@@ -171,9 +164,8 @@ using namespace facebook::react;
 {
   [super prepareForRecycle];
 
-  if (self.isWaitingForHost && self.hostName) {
+  if (self.hostName) {
     [[PortalRegistry sharedInstance] unregisterPendingPortal:self withHostName:self.hostName];
-    self.isWaitingForHost = NO;
   }
 
   // Reset all portal state so recycled views don't retain stale host references.

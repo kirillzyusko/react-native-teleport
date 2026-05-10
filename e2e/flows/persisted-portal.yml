@@ -37,3 +37,31 @@ appId: teleport.example
       target: PersistedPortalWithHost
       diff: 0.3
 - assertTrue: ${output.matches}
+
+# Step 2: Unmount the <PortalHost>
+# teleported children should return to the local Portal location
+- tapOn:
+    id: "persisted_portal_toggle_host"
+- takeScreenshot:
+    path: e2e/PersistedPortalWithoutHost
+- runScript:
+    file: ../scripts/compare-screenshots.js
+    env:
+      base: screenshots/${DEVICE}/PersistedPortalWithoutHost
+      target: PersistedPortalWithoutHost
+      diff: 0.4
+- assertTrue: ${output.matches}
+
+# Step 3: Mount the <PortalHost> again
+# Portal should re-teleport its children to the new host instance
+- tapOn:
+    id: "persisted_portal_toggle_host"
+- takeScreenshot:
+    path: e2e/PersistedPortalWithHost
+- runScript:
+    file: ../scripts/compare-screenshots.js
+    env:
+      base: screenshots/${DEVICE}/PersistedPortalWithHost
+      target: PersistedPortalWithHost
+      diff: 0.4
+- assertTrue: ${output.matches}

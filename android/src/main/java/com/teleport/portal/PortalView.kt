@@ -12,30 +12,18 @@ class PortalView(
   context: Context,
 ) : ReactViewGroup(context) {
   private var hostName: String? = null
-  private var isWaitingForHost = false
   private val ownChildren: MutableList<View> = ArrayList()
 
   fun setHostName(name: String?) {
+    if (name == hostName) return
+
     val children = extractChildren()
 
-    if (isWaitingForHost) {
-      hostName?.let { PortalRegistry.unregisterPendingPortal(it, this) }
-      isWaitingForHost = false
-    }
+    hostName?.let { PortalRegistry.unregisterPendingPortal(it, this) }
 
     hostName = name
 
-    val target: ViewGroup =
-      hostName?.let { hostNameValue ->
-        val host = PortalRegistry.getHost(hostNameValue)
-        if (host != null) {
-          host
-        } else {
-          PortalRegistry.registerPendingPortal(hostNameValue, this)
-          isWaitingForHost = true
-          this
-        }
-      } ?: this
+    val target: ViewGroup = name?.let { PortalRegistry.getHost(it) } ?: this
 
     if (target is PortalHostView) {
       for (i in children.indices) {
@@ -48,20 +36,34 @@ class PortalView(
         target.addView(children[i], i)
       }
     }
+
+    name?.let { PortalRegistry.registerPendingPortal(it, this) }
   }
 
-  internal fun onHostAvailable() {
-    isWaitingForHost = false
-
+  internal fun onHostChanged() {
     val host = PortalRegistry.getHost(hostName)
     if (host != null) {
-      val children = extractPhysicalChildren()
+      // Host appeared (or was replaced). Move children into it, detaching
+      // from their current parent first — that may be `this` (initial mount
+      // or after host loss) or a stale, detached host view.
+      val children: List<View> =
+        if (ownChildren.isEmpty()) extractPhysicalChildren() else detachOwnChildren()
 
       for (i in children.indices) {
         val idx = host.nextInsertionIndexForChildAt(i)
         host.addView(children[i], idx)
       }
       ownChildren.addAll(children)
+    } else {
+      // Host went away. Pull children back to ourselves so they remain
+      // attached to a live view tree and React-driven mutations keep working.
+      if (ownChildren.isEmpty()) return
+      val list = detachOwnChildren()
+      // isTeleported() is now false, so super.addView and addView are equivalent;
+      // use super to be explicit that this is a physical re-attach.
+      for (i in list.indices) {
+        super.addView(list[i], i)
+      }
     }
   }
 
@@ -85,27 +87,24 @@ class PortalView(
     return children
   }
 
-  private fun extractTeleportedChildren(): List<View> {
-    val oldHost = hostName?.let { PortalRegistry.getHost(it) }
-    val temp = ownChildren.toList()
-    for (child in temp) {
-      oldHost?.removeView(child)
-    }
+  /**
+   * Detaches every view in [ownChildren] from its current parent (which may be
+   * `this`, the active host, or a stale/detached host) and clears the list.
+   * Returns the detached views in their original order so the caller can
+   * re-attach them somewhere else.
+   */
+  private fun detachOwnChildren(): List<View> {
+    val list = ownChildren.toList()
     ownChildren.clear()
-
-    return temp
+    for (child in list) {
+      (child.parent as? ViewGroup)?.removeView(child)
+    }
+    return list
   }
 
   private fun extractChildren(): List<View> {
     // Gather current children (logical if teleported, physical otherwise)
-    val children: List<View> =
-      if (isTeleported()) {
-        extractTeleportedChildren()
-      } else {
-        extractPhysicalChildren()
-      }
-
-    return children
+    return if (isTeleported()) detachOwnChildren() else extractPhysicalChildren()
   }
 
   /**
