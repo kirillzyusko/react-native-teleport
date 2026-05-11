@@ -1,0 +1,2090 @@
+# react-native-teleport
+
+> Documentation for react-native-teleport. Package that allows to teleport views across your component tree for seamless transitions and powerful UI patterns.
+
+
+## react-native-teleport
+
+
+### pr-preview
+
+
+#### pr-126
+
+Teleport views across your component tree for seamless transitions and powerful UI patterns
+
+- [Teleport](/index.md): Teleport views across your component tree for seamless transitions and powerful UI patterns
+- [Search the documentation](/search.md)
+- [Portal](/docs/api/components/portal.md): A component that moves its children to a different place in the view hierarchy.
+- [PortalHost](/docs/api/components/portal-host.md): A component that acts as an anchor for the portals.
+- [PortalProvider](/docs/api/components/portal-provider.md): A component that should wrap your app.
+- [usePortal](/docs/api/hooks/use-portal.md): Hook that allows to manage portals.
+- [📚 Components](/docs/category/-components.md): A set of JS components that helps you to render components outside of current component
+- [🎣 Hooks](/docs/category/-hooks.md): React hooks provided by this library
+- [API Reference](/docs/category/api-reference.md): API reference containing information about all public methods and their signatures
+- [Guides](/docs/category/guides.md): Basic concepts and most useful topics to start quickly.
+- [Recipes](/docs/category/recipes.md): Various tutorials to help you get the most out of the library.
+- [Lifecycle & behavior](/docs/guides/lifecycle.md): How Portal and PortalHost behave together over time - what gets rendered where, and how children move when components mount and unmount.
+- [Portal](/docs/guides/portal.md): Portal helps you to render a component in a different place in the view hierarchy.
+- [Teleport](/docs/guides/teleport.md): Teleport helps you to re-use existing component and render it in a different part of tree without remounting and resetting the internal state.
+- [Installation](/docs/installation.md): Guide dedicated to installation process
+- [Intro](/docs/intro.md): Intro into portal and teleport concepts
+- [Building Instagram-like Transitions](/docs/recipes/instagram-shared-transitions.md): Build Instagram-like shared transitions between a feed and full-screen reels viewer using react-native-teleport.
+- [Jest testing guide](/docs/recipes/jest-testing-guide.md): A testing-guide showing how to write unit-tests using jest
+- [Working with Modals](/docs/recipes/modals.md): Learn how modals work on iOS/Android and how to use Portal within modal screens.
+- [Pre-loading Heavy Components](/docs/recipes/preloading-heavy-components.md): Pre-load expensive components (WebViews, maps, charts) offscreen and teleport them in instantly when the user navigates to them.
+
+
+---
+
+# Full Documentation Content
+
+[Skip to main content](#__docusaurus_skipToContent_fallback)
+
+[![Teleport Logo](/react-native-teleport/pr-preview/pr-126/img/logo.svg)![Teleport Logo](/react-native-teleport/pr-preview/pr-126/img/logo.svg)](/react-native-teleport/pr-preview/pr-126/.md)
+
+[**Teleport**](/react-native-teleport/pr-preview/pr-126/.md)[Guides](/react-native-teleport/pr-preview/pr-126/docs/intro.md)[API](/react-native-teleport/pr-preview/pr-126/docs/category/api-reference.md)[Blog](/react-native-teleport/pr-preview/pr-126/blog)[Next](/react-native-teleport/pr-preview/pr-126/docs/intro.md)
+
+[Example App](https://github.com/kirillzyusko/react-native-teleport/tree/main/example)[GitHub](https://github.com/kirillzyusko/react-native-teleport)
+
+Search
+
+# Search the documentation
+
+Type your search here
+
+[](https://www.algolia.com/)
+
+Docs
+
+* [Guides](/react-native-teleport/pr-preview/pr-126/docs/installation.md)
+* [Recipes](/react-native-teleport/pr-preview/pr-126/docs/category/recipes.md)
+* [API](/react-native-teleport/pr-preview/pr-126/docs/category/api-reference.md)
+
+Community
+
+* [GitHub discussions](https://github.com/kirillzyusko/react-native-teleport/discussions)
+* [X](https://x.com/ziusko)
+
+More
+
+* [Blog](/react-native-teleport/pr-preview/pr-126/blog)
+* [GitHub](https://github.com/kirillzyusko/react-native-teleport)
+
+Copyright © 2026 Kirill Zyusko. Built with Docusaurus.
+
+
+---
+
+# Portal
+
+`Portal` is a component that moves its children to a different place in the native view hierarchy and preserves the react tree structure.
+
+View layout
+
+When a `Portal` is teleported to a new host, it automatically recalculates its layout using the host’s dimensions and **fills the entire available space by default**.
+
+You **do not need to specify any layout styles** (such as `flex: 1`) for this to work - the size is set internally when the portal is attached to the new host.
+
+## Props[​](#props "Direct link to Props")
+
+### `name`[​](#name "Direct link to name")
+
+The name of the portal. It's used to identify the portal in the context of the portal host.
+
+### `hostName`[​](#hostname "Direct link to hostname")
+
+The `name` of the `PortalHost`. It's used to identify the host where the content should be rendered.
+
+### `style`[​](#style "Direct link to style")
+
+The style of the portal. Accepts [ViewStyle](https://reactnative.dev/docs/view#style) props.
+
+### `children`[​](#children "Direct link to children")
+
+The content that should be rendered in the portal.
+
+## Example[​](#example "Direct link to Example")
+
+```
+import { useState } from "react";
+import { View, StyleSheet, Button } from "react-native";
+import { Portal } from "react-native-teleport";
+
+export default function InstantRootExample() {
+  const [shouldBeTeleported, setTeleported] = useState(true);
+
+  return (
+    <View style={styles.container}>
+      {shouldBeTeleported && (
+        <Portal hostName={"overlay"}>
+          <View style={styles.box} testID="touchable" />
+        </Portal>
+      )}
+      <Button
+        title={shouldBeTeleported ? "Hide" : "Show"}
+        onPress={() => setTeleported((t) => !t)}
+      />
+    </View>
+  );
+}
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  box: {
+    width: 160,
+    height: 160,
+    marginVertical: 20,
+    backgroundColor: "blue",
+  },
+});
+```
+
+
+---
+
+# PortalHost
+
+`PortalHost` is a component that acts as an anchor for the portals. You can define multiple portal hosts in your app and use them to render different portals. Each portal host has a unique name that you can use to identify a necessary one among the others.
+
+View dimensions
+
+`PortalHost` is just another view, so make sure that you set the correct dimensions for it. Otherwise, the portal ***may*** not be rendered correctly, especially if `Portal` relies on a flex layout and host has zero (i. e. `0x0`) dimensions.
+
+## Props[​](#props "Direct link to Props")
+
+### `name`[​](#name "Direct link to name")
+
+The name of the portal host. It's used to identify the host by `<Portal />` component.
+
+### `style`[​](#style "Direct link to style")
+
+The style of the portal host. Accepts [ViewStyle](https://reactnative.dev/docs/view#style) props.
+
+## Example[​](#example "Direct link to Example")
+
+```
+import { StyleSheet, View } from "react-native";
+import { PortalHost, PortalProvider } from "react-native-teleport";
+import {
+  initialWindowMetrics,
+  SafeAreaProvider,
+} from "react-native-safe-area-context";
+import RootStack from "./navigation";
+
+export default function App() {
+  return (
+    <SafeAreaProvider initialMetrics={initialWindowMetrics}>
+      <PortalProvider>
+        <RootStack />
+        <PortalHost style={StyleSheet.absoluteFillObject} name="overlay" />
+      </PortalProvider>
+    </SafeAreaProvider>
+  );
+}
+```
+
+
+---
+
+# PortalProvider
+
+Wrap your app with this component to use the portal API.
+
+This component provides a context/registry for all Portals so that you can use imperative API, such as `usePortal` hook to manage Portals.
+
+## Example[​](#example "Direct link to Example")
+
+```
+import { PortalProvider } from "react-native-teleport";
+
+export default function App() {
+  return (
+    <PortalProvider>
+      {/* your main application code goes here */}
+    </PortalProvider>
+  );
+}
+```
+
+
+---
+
+# usePortal
+
+The `usePortal` hook allows you to manage portals in imperative way.
+
+## Example[​](#example "Direct link to Example")
+
+```
+import { usePortal } from "react-native-teleport";
+
+export default function App() {
+  const { removePortal, isHostAvailable } = usePortal("root");
+
+  return (
+    <View style={{ flex: 1 }}>
+      <Text>{isHostAvailable ? "Host is available" : "Host is not available"}</Text>
+      <Button title="Remove" onPress={() => removePortal("portal")} />
+    </View>
+  );
+}
+```
+
+## Declaration[​](#declaration "Direct link to Declaration")
+
+```
+/**
+ * @param hostName - `name` of the `<PortalHost />` component
+ */
+type usePortal = (hostName: string = "root") => {
+  /**
+   * Whether a `<PortalHost />` with the given `hostName` is currently mounted.
+   */
+  isHostAvailable: boolean;
+  /**
+   * Remove portal from host container. Subsequent re-renders will not restore portal,
+   * but if you mount a new portal with the same name it will be shown (i. e. hook doesn't
+   * prevent new portal from being added).
+   * @param name - `name` of `<Portal />` component.
+   */
+  removePortal: (name: string) => void;
+};
+```
+
+
+---
+
+## [📄️<!-- --> <!-- -->PortalProvider](/react-native-teleport/pr-preview/pr-126/docs/api/components/portal-provider.md)
+
+[A component that should wrap your app.](/react-native-teleport/pr-preview/pr-126/docs/api/components/portal-provider.md)
+
+
+---
+
+## [📄️<!-- --> <!-- -->usePortal](/react-native-teleport/pr-preview/pr-126/docs/api/hooks/use-portal.md)
+
+[Hook that allows to manage portals.](/react-native-teleport/pr-preview/pr-126/docs/api/hooks/use-portal.md)
+
+
+---
+
+## [🗃️<!-- --> <!-- -->📚 Components](/react-native-teleport/pr-preview/pr-126/docs/category/-components.md)
+
+[3 items](/react-native-teleport/pr-preview/pr-126/docs/category/-components.md)
+
+
+---
+
+## [📄️<!-- --> <!-- -->Portal](/react-native-teleport/pr-preview/pr-126/docs/guides/portal.md)
+
+[Portal helps you to render a component in a different place in the view hierarchy.](/react-native-teleport/pr-preview/pr-126/docs/guides/portal.md)
+
+
+---
+
+## [📄️<!-- --> <!-- -->Jest testing guide](/react-native-teleport/pr-preview/pr-126/docs/recipes/jest-testing-guide.md)
+
+[A testing-guide showing how to write unit-tests using jest](/react-native-teleport/pr-preview/pr-126/docs/recipes/jest-testing-guide.md)
+
+
+---
+
+# Lifecycle & behavior
+
+This page describes the contract between [`Portal`](/react-native-teleport/pr-preview/pr-126/docs/api/components/portal.md) and [`PortalHost`](/react-native-teleport/pr-preview/pr-126/docs/api/components/portal-host.md) - what renders where, and how children move as components mount and unmount.
+
+The rules are designed to match what you'd intuitively expect from a portal system: children always end up *somewhere* visible, and they survive transient changes to the host.
+
+## 1. Static behavior[​](#1-static-behavior "Direct link to 1. Static behavior")
+
+Given a fixed configuration that doesn't change over time, this is where children render.
+
+| `Portal` configuration                                | Result                                                                                      |
+| ----------------------------------------------------- | ------------------------------------------------------------------------------------------- |
+| No `hostName` prop                                    | Children render **locally**, in place. `Portal` behaves like a transparent wrapper.         |
+| `hostName="x"` and a `<PortalHost name="x" />` exists | Children are **teleported** into that host.                                                 |
+| `hostName="x"` but no host with that name exists      | Children render **locally** as a fallback. As soon as a matching host mounts, they migrate. |
+
+The "render locally as fallback" rule means a `Portal` is never a black hole - children are always attached to a live view tree, even if the host is missing.
+
+Conditionally rendering when no host exists
+
+If you'd rather render *nothing* (or a different UI) while the host is missing instead of falling back locally, use the [`usePortal`](/react-native-teleport/pr-preview/pr-126/docs/api/hooks/use-portal.md) hook and read its `isHostAvailable` flag:
+
+```
+import { Portal, usePortal } from "react-native-teleport";
+
+function Toast() {
+  const { isHostAvailable } = usePortal("toast");
+  if (!isHostAvailable) return null;
+
+  return (
+    <Portal hostName="toast">
+      <ToastContent />
+    </Portal>
+  );
+}
+```
+
+This way the `<ToastContent />` tree is only mounted while the host exists, instead of rendering at the local position and migrating later.
+
+## 2. Dynamic behavior[​](#2-dynamic-behavior "Direct link to 2. Dynamic behavior")
+
+The interesting cases happen when something changes. The library guarantees the following transitions:
+
+### A host mounts after the Portal[​](#a-host-mounts-after-the-portal "Direct link to A host mounts after the Portal")
+
+Children that were rendering locally as a fallback are moved into the new host automatically. The React tree doesn't re-render - only the native views are re-parented.
+
+### A host unmounts while the Portal is still alive[​](#a-host-unmounts-while-the-portal-is-still-alive "Direct link to A host unmounts while the Portal is still alive")
+
+Children are pulled back to the Portal's local position so they remain attached to a live view tree. They are *not* destroyed. Component state, refs, and any imperative native state (animation values, video playback position, scroll offset, etc.) are preserved.
+
+### A host remounts (mount → unmount → mount)[​](#a-host-remounts-mount--unmount--mount "Direct link to A host remounts (mount → unmount → mount)")
+
+On each cycle, children follow the host. Mounting a host with the same name a second time picks up exactly where the first cycle left off - there's no special "first mount" logic.
+
+### Portal's `hostName` prop changes[​](#portals-hostname-prop-changes "Direct link to portals-hostname-prop-changes")
+
+Children migrate from the previous target (host or local) to the new target. If the new `hostName` has no matching host, children fall back to local rendering until that host appears.
+
+### Portal unmounts[​](#portal-unmounts "Direct link to Portal unmounts")
+
+Its children unmount with it, regardless of where they currently live. The host doesn't keep orphaned children - `Portal` owns its children's React lifecycle, the host only owns their physical attachment point.
+
+### Host unmounts[​](#host-unmounts "Direct link to Host unmounts")
+
+Only the host disappears. All Portals targeting it survive, with their children intact (rendering locally per the rule above).
+
+## 3. Identity and ordering[​](#3-identity-and-ordering "Direct link to 3. Identity and ordering")
+
+These are the rules that are easy to get wrong if you don't know them.
+
+* **Multiple Portals targeting the same host** preserve order, with one important nuance:
+
+  <!-- -->
+
+  * **When teleported in the same commit** (e.g. both rendered at the same time on initial mount), their children appear in the host in the same order they sit in the JSX tree. If `<Portal A />` comes before `<Portal B />` in source, `A`'s children gets mounted earlier in the host than `B`'s.
+  * **When teleported in different commits** (e.g. `B` mounts later, after `A` is already in the host), order is defined by *arrival time*, not JSX position. The newcomer is appended after whatever is already in the host, even if it appears earlier in the source.
+
+* **Host names are matched as strings.** Two `PortalHost` instances with the same `name` mounted at the same time is undefined behavior - only the most recently registered one will receive new portals. Unmounting either may leave children stranded. Use unique names per active host.
+
+* **React identity is preserved across host mount/unmount cycles.** A teleported `<Video />` does not reset its playback position when its host unmounts and remounts. This is the whole reason you'd reach for a Portal that outlives its host.
+
+Layout is not preserved at the original location
+
+`Portal` does not reserve space at its position. Once children are teleported into a host, they take their size and position from the **host's** layout - the original location collapses to zero.
+
+If you need to avoid surrounding content reflowing while children are teleported away, render a wrapper view at the original position with the same dimensions as the teleported children:
+
+```
+<View style={{ width: 200, height: 60 }}>
+  <Portal hostName="overlay">
+    <View style={{ width: 200, height: 60 }}>
+      <ChildContent />
+    </View>
+  </Portal>
+</View>
+```
+
+The outer `<View>` keeps its slot in the layout regardless of whether the inner content is currently teleported.
+
+## See also[​](#see-also "Direct link to See also")
+
+* [Portal API](/react-native-teleport/pr-preview/pr-126/docs/api/components/portal.md) - declarative component that teleports its children into a named host
+* [PortalHost API](/react-native-teleport/pr-preview/pr-126/docs/api/components/portal-host.md) - the destination where teleported children are mounted
+* [usePortal hook](/react-native-teleport/pr-preview/pr-126/docs/api/hooks/use-portal.md) - imperative access and `isHostAvailable` flag
+* [Teleport guide](/react-native-teleport/pr-preview/pr-126/docs/guides/teleport.md) - for moving an *existing* view without unmounting it
+
+
+---
+
+# Portal
+
+The **Portal** API allows you to render a component in a different place in the view hierarchy. This is useful when you need a view to visually “break out” of its parent container (for example: modals, toasts, floating UI, popovers).
+
+![Portal helps to render a new view in a different container](/react-native-teleport/pr-preview/pr-126/assets/images/portal-2b20b94e26669e61959d937697ed6dde.png)
+
+Unlike simple `zIndex` tricks, Portals actually move the native view to another container, which guarantees correct behavior across different platforms, stacking contexts, and clipping boundaries.
+
+## Why use Portal?[​](#why-use-portal "Direct link to Why use Portal?")
+
+* Escape parent clipping: Portals are not limited by `overflow: hidden` or scroll containers.
+* Native-level stacking: Works even where `zIndex` fails.
+* Cross-platform: Consistent on iOS, Android and web.
+* Dynamic UI: Great for modals, floating buttons, dropdowns, tooltips, and system-like overlays.
+
+## Example[​](#example "Direct link to Example")
+
+```
+import { useState } from "react";
+import { View, StyleSheet, Button } from "react-native";
+import { Portal } from "react-native-teleport";
+
+export default function InstantRootExample() {
+  const [shouldBeTeleported, setTeleported] = useState(true);
+
+  return (
+    <View style={styles.container}>
+      {shouldBeTeleported && (
+        <Portal hostName={"overlay"}>
+          <View style={styles.box} testID="touchable" />
+        </Portal>
+      )}
+      <Button
+        title={shouldBeTeleported ? "Hide" : "Show"}
+        onPress={() => setTeleported((t) => !t)}
+      />
+    </View>
+  );
+}
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  box: {
+    width: 160,
+    height: 160,
+    marginVertical: 20,
+    backgroundColor: "blue",
+  },
+});
+```
+
+## Best practices[​](#best-practices "Direct link to Best practices")
+
+* Always declare at least one `<PortalHost />` near your app root.
+* Use host names if you need multiple layers (e.g., modal, toast, tooltip).
+
+Teleportation
+
+⚡ **Tip**: If you need to move an **existing** view (without unmounting/remounting), check out [Teleport](/react-native-teleport/pr-preview/pr-126/docs/guides/teleport.md) guide.
+
+
+---
+
+# Teleport
+
+The **Teleport** concept allows you to move an **existing view** to a different place in the hierarchy **without unmounting or remounting** it. This means the component keeps its internal state (animations, scroll position, video progress, etc.) even after being visually moved. This pattern is also known as **re-parenting**.
+
+![Teleport helps to move existing view between different layers without losing state](/react-native-teleport/pr-preview/pr-126/assets/images/teleport-65785a9f1211bc6992db0cca2993d621.png)
+
+## Example[​](#example "Direct link to Example")
+
+App.tsx
+
+```
+import { StyleSheet, View } from "react-native";
+import { PortalHost, PortalProvider } from "react-native-teleport";
+import {
+  initialWindowMetrics,
+  SafeAreaProvider,
+} from "react-native-safe-area-context";
+import { NavigationContainer } from "@react-navigation/native";
+import RootStack from "./navigation";
+import { GestureHandlerRootView } from "react-native-gesture-handler";
+
+export default function App() {
+  return (
+    <SafeAreaProvider initialMetrics={initialWindowMetrics}>
+      <GestureHandlerRootView style={styles.container}>
+        <PortalProvider>
+          <>{/* Deeply nested <Teleport /> component goes here */}</>
+          <PortalHost style={StyleSheet.absoluteFillObject} name="overlay" />
+        </PortalProvider>
+      </GestureHandlerRootView>
+    </SafeAreaProvider>
+  );
+}
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+  },
+});
+```
+
+Teleport.tsx
+
+```
+import LottieView from "lottie-react-native";
+import { useRef, useState } from "react";
+import {
+  View,
+  Text,
+  ScrollView,
+  TouchableWithoutFeedback,
+  StyleSheet,
+  Animated,
+  useAnimatedValue,
+  Easing,
+  Pressable,
+} from "react-native";
+import { BlurView } from "@react-native-community/blur";
+import { Portal } from "react-native-teleport";
+
+const messages = [
+  { text: "Hello, how are you", sender: true },
+  { text: "Hello, not too bad! You?", sender: false },
+  { text: "I'm fine, thanks", sender: true },
+  { text: "What is your plan for evening today?", sender: true },
+  { text: "I'm not sure yet... Any ideas?", sender: false },
+  { text: "Sure, let's go for a walk?", sender: true },
+];
+
+const Message = ({ sender, text }) => {
+  return (
+    <View
+      style={{
+        flexDirection: "row",
+        width: "100%",
+        justifyContent: sender ? "flex-end" : "flex-start",
+      }}
+    >
+      <Text
+        style={{
+          opacity: 1,
+          color: "black",
+          padding: 10,
+          backgroundColor: sender ? "#38f269" : "#38c7f2",
+          margin: 10,
+          borderRadius: 10,
+        }}
+      >
+        {text}
+      </Text>
+    </View>
+  );
+};
+
+export default function Messenger() {
+  const viewRef = useRef<View | null>(null);
+  const opacity = useRef(new Animated.Value(0)).current;
+  const [teleport, setTeleported] = useState(false);
+  const [style, setStyle] = useState(null);
+
+  const handleClick = () => {
+    Animated.timing(opacity, {
+      toValue: 1,
+      duration: 250,
+      easing: Easing.inOut(Easing.ease),
+      useNativeDriver: true,
+    }).start();
+    viewRef.current?.measureInWindow((x, y) => {
+      setTeleported(true);
+      setStyle({
+        paddingTop: y,
+      });
+    });
+  };
+
+  return (
+    <View style={{ flex: 1 }}>
+      <ScrollView>
+        {messages.map((item) => (
+          <Message key={item.text} {...item} />
+        ))}
+        <View
+          ref={viewRef}
+          style={{
+            width: "100%",
+            justifyContent: "flex-start",
+            flexDirection: "row",
+          }}
+        >
+          <Portal hostName={teleport ? "overlay" : undefined}>
+            <Pressable onPress={handleClick} style={style ?? {}}>
+              <LottieView
+                source={require("../../assets/lottie/bear.json")}
+                style={[{ width: 200, height: 200 }]}
+                autoPlay
+                loop
+              />
+            </Pressable>
+          </Portal>
+        </View>
+      </ScrollView>
+      <Animated.View
+        style={[StyleSheet.absoluteFillObject, { opacity: opacity }]}
+        pointerEvents="none"
+      >
+        <BlurView
+          style={StyleSheet.absoluteFillObject}
+          pointerEvents="none"
+          blurType="light"
+          blurAmount={16}
+        />
+      </Animated.View>
+    </View>
+  );
+}
+```
+
+## Why use Teleport?[​](#why-use-teleport "Direct link to Why use Teleport?")
+
+* **Preserve state**: No unmount/remount — animations, scroll, video, inputs remain intact.
+* **Build advanced transitions**: Implement shared-element–style transitions between screens.
+* **Escape container limits**: Move a view to an overlay while keeping its internal logic alive.
+* **Power complex UI**: Great for photo galleries, YouTube-like mini players, context menu transitions, app tours, off-screen pre-rendering, etc.
+
+
+---
+
+# Installation
+
+## Adding a library to the project[​](#adding-a-library-to-the-project "Direct link to Adding a library to the project")
+
+New Architecture only
+
+This library is compatible **only** with the **new (Fabric)** architecture.
+
+Install the `react-native-teleport` package in your React Native project.
+
+* YARN
+* NPM
+* EXPO
+
+```
+yarn add react-native-teleport
+```
+
+```
+npm install react-native-teleport --save
+```
+
+```
+npx expo install react-native-teleport
+```
+
+Only Expo Dev client compatible
+
+This library has native code, so it **does not work** with *Expo Go* but it's fully compatible with [custom dev client](https://docs.expo.dev/development/getting-started/).
+
+### Linking[​](#linking "Direct link to Linking")
+
+This package supports [autolinking](https://github.com/react-native-community/cli/blob/master/docs/autolinking.md).
+
+Pods update
+
+After adding the package don't forget to **re-install** `pods` and **re-assemble** `android` and `ios` applications, since this library contains native code.
+
+If you still experience issues like **package doesn't seem to be linked** try performing a fresh build to clear any outdated cache.
+
+## Adding provider[​](#adding-provider "Direct link to Adding provider")
+
+In order to use it you'll need to wrap your app with `PortalProvider` component.
+
+```
+import { PortalProvider } from "react-native-teleport";
+
+export default function App() {
+  return (
+    <PortalProvider>
+      {/* your main application code goes here */}
+    </PortalProvider>
+  );
+}
+```
+
+Congratulations! 🎉 You've just finished installation process. Go to the [next section](/react-native-teleport/pr-preview/pr-126/docs/guides/portal.md) to get more insights of what you can do using this library. 😎
+
+
+---
+
+# Intro
+
+## What is the portal?[​](#what-is-the-portal "Direct link to What is the portal?")
+
+A **Portal** lets you render a component somewhere else in the UI tree, while keeping it logically inside its parent.<br /><!-- -->Typical use cases include **modals**, **tooltips**, **popovers**, and other overlays where the visual position differs from the React tree position.
+
+On the web this is done with [`createPortal`](https://react.dev/reference/react-dom/createPortal), but React Native has no built-in solution ([issue #36273](https://github.com/facebook/react-native/issues/36273)).
+
+## Existing solutions (and their limits)[​](#existing-solutions-and-their-limits "Direct link to Existing solutions (and their limits)")
+
+Community libraries like [@gorhom/portal](https://github.com/gorhom/react-native-portal) or [react-gateway](https://github.com/cloudflare/react-gateway) emulate portals in **JavaScript**. They work, but:
+
+❌ Components are **re-parented in JS**, not in the actual native view tree.<br /><!-- -->❌ This can break or block access to **React Context** values (theme, navigation, i18n, etc.).<br /><!-- -->❌ Rendering is still bound to the JS layer, which can limit **performance** and **platform-native behaviors**.
+
+## Introducing `react-native-teleport`[​](#introducing-react-native-teleport "Direct link to introducing-react-native-teleport")
+
+This library brings **true native portals** to React Native:
+
+✅ The component stays in the **original React tree** → contexts & state are preserved.<br /><!-- -->✅ The view is physically moved in the **native view hierarchy** → correct layout, z-order & performance.<br /><!-- -->✅ Works across **iOS, Android, and Web**.<br /><!-- -->✅ Supports not only portals but also **re-parenting (teleport)**: move an existing view without unmounting it.
+
+You can think of it as:
+
+> **"Teleport your view in native space, without breaking React logic."**
+
+## Comparison[​](#comparison "Direct link to Comparison")
+
+|                                                         | `react-native-teleport` | `@gorhom/portal` |
+| ------------------------------------------------------- | ----------------------- | ---------------- |
+| Render local component in a different place in the tree | ✅                      | ✅               |
+| Support multiple hosts/portals                          | ✅                      | ✅               |
+| Native implementation                                   | ✅                      | ❌               |
+| Keeps React tree continuity                             | ✅                      | ❌               |
+| Preserves React context                                 | ✅                      | ❌               |
+| Move views without losing state (teleport)              | ✅                      | ❌               |
+| Mirroring 1                                             | 🟠 2                    | ❌               |
+
+> 1 create a live copy of a view elsewhere in the tree (similar to a real-time snapshot).
+
+> 2 Is planned to be added in the future
+
+***
+
+## Next steps[​](#next-steps "Direct link to Next steps")
+
+Ready to get started? 🚀 Head over to the [Installation](/react-native-teleport/pr-preview/pr-126/docs/installation.md) guide.
+
+
+---
+
+# Building Instagram-like Transitions
+
+In this guide we'll recreate the transition Instagram uses when you tap a video in your feed and it smoothly expands into a full-screen Reels viewer. When you go back, the video shrinks back into its original position — all without interrupting playback.
+
+We'll use iOS as our reference and replicate the transition across iOS, Android, and web, so that navigation on all three platforms delivers the same polished experience.
+
+<!-- -->
+
+[](/react-native-teleport/pr-preview/pr-126/video/instagram.mp4)
+
+## How it works — the big picture[​](#how-it-works--the-big-picture "Direct link to How it works — the big picture")
+
+The core idea is simple: **there is only one video instance, and we move it between screens**.
+
+Traditional navigation would unmount the feed screen's video and mount a brand-new one on the Reels screen. That causes a visible flash, resets playback, and makes a smooth transition impossible.
+
+With `react-native-teleport`, we take a different approach:
+
+1. The video lives inside a `<Portal>` in the Feed screen.
+2. When the user taps, we **teleport** the video to an overlay layer that sits above all screens.
+3. While in the overlay, we animate the video from its card size to full-screen.
+4. Once the animation completes, we teleport the video into a `<PortalHost>` inside the Reels screen.
+5. Going back reverses the process: teleport to overlay → animate back to card size → return to feed.
+
+Because the video is **re-parented** (moved in the native view hierarchy) rather than unmounted/remounted, playback is never interrupted, animations stay alive, and the transition feels seamless.
+
+```
+Feed (in-place) ──tap──▶ Overlay (animating) ──done──▶ Reels (in-place)
+                                                              │
+                         Overlay (animating) ◀──back──────────┘
+                             │
+Feed (in-place) ◀──done──────┘
+```
+
+## Prerequisites[​](#prerequisites "Direct link to Prerequisites")
+
+This guide assumes you have a React Native project with the following libraries installed:
+
+* [`react-native-teleport`](/react-native-teleport/pr-preview/pr-126/docs/installation.md) — the star of the show
+* [`@react-navigation/native-stack`](https://reactnavigation.org/docs/native-stack-navigator/) — for navigation (but you can use **any** navigation library)
+* [`react-native-reanimated`](https://docs.swmansion.com/react-native-reanimated/) — for smooth animations
+* [`react-native-video`](https://docs.thewidlarzgroup.com/react-native-video) — for video playback (but you can use other libraries)
+* [`zustand`](https://zustand.docs.pmnd.rs/) — for lightweight state management
+
+## Step 1: Build the basic layout[​](#step-1-build-the-basic-layout "Direct link to Step 1: Build the basic layout")
+
+Let's start with a static feed — no navigation, no transitions, just layout.
+
+### Define constants[​](#define-constants "Direct link to Define constants")
+
+First, define the dimensions we'll use throughout:
+
+constants.ts
+
+```
+import { Dimensions } from "react-native";
+
+export const SCREEN_HEIGHT = Dimensions.get("screen").height;
+// instagram doesn't stretch video/images feed to full screen width on web
+// so `540` max width for web
+export const SCREEN_WIDTH = Math.min(Dimensions.get("screen").width, 540);
+export const ASPECT_RATIO = 3 / 4;
+export const VIDEO_HEIGHT = SCREEN_WIDTH / ASPECT_RATIO;
+export const CARD_HEIGHT = VIDEO_HEIGHT + 100; // video + social section below
+```
+
+### Define post data[​](#define-post-data "Direct link to Define post data")
+
+Create a simple data model for posts. Each post can have either a video or a photo:
+
+posts.ts
+
+```
+export type PostType = {
+  id: number;
+  author: string;
+  text: string;
+  likes: number;
+  comments: number;
+  video?: ReturnType<typeof require>;
+  photo?: string;
+  date: string;
+  sent: number;
+};
+
+export const posts: PostType[] = [
+  {
+    id: 1,
+    author: "kirillzyusko",
+    text: "Magic forest",
+    likes: 126,
+    comments: 12,
+    sent: 31,
+    video: require("./videos/forest.mp4"),
+    date: "29 October",
+  },
+  // ... more posts
+];
+```
+
+### Build the `Post` component[​](#build-the-post-component "Direct link to build-the-post-component")
+
+Each post card shows a video (or image) with a social section underneath:
+
+Post.tsx
+
+```
+import { View, StyleSheet, Image } from "react-native";
+import Video from "react-native-video";
+import {
+  VIDEO_HEIGHT,
+  SCREEN_WIDTH,
+  ASPECT_RATIO,
+  CARD_HEIGHT,
+} from "./constants";
+import SocialSection from "./components/SocialSection";
+
+const Post = ({ post, active }) => {
+  return (
+    <View style={{ height: CARD_HEIGHT }}>
+      <View style={styles.container}>
+        {post.video && (
+          <Video
+            source={{ uri: post.video }}
+            style={styles.video}
+            repeat
+            paused={!active}
+            controls={false}
+            resizeMode="cover"
+          />
+        )}
+        {post.photo && (
+          <Image
+            source={{ uri: post.photo }}
+            style={{
+              height: VIDEO_HEIGHT,
+              width: SCREEN_WIDTH,
+              aspectRatio: ASPECT_RATIO,
+            }}
+          />
+        )}
+      </View>
+      <SocialSection post={post} />
+    </View>
+  );
+};
+
+const styles = StyleSheet.create({
+  container: {
+    height: VIDEO_HEIGHT,
+    width: "100%",
+  },
+  video: {
+    flex: 1,
+    objectFit: "cover",
+  },
+});
+
+export default Post;
+```
+
+SocialSection.tsx
+
+```
+import { FontAwesome6 } from "@react-native-vector-icons/fontawesome6";
+import { View, Text, StyleSheet } from "react-native";
+import type { PostType } from "../posts";
+
+type SocialSectionProps = {
+  post: PostType;
+};
+
+function SocialSection({ post }: SocialSectionProps) {
+  return (
+    <View style={styles.container}>
+      <View style={styles.row}>
+        <View style={styles.iconGroup}>
+          <View style={styles.icon}>
+            <FontAwesome6 name="heart" size={24} />
+            <Text style={styles.iconText}>{post.likes}</Text>
+          </View>
+          <View style={styles.icon}>
+            <FontAwesome6 name="comments" size={24} />
+            <Text style={styles.iconText}>{post.comments}</Text>
+          </View>
+          <FontAwesome6 name="paper-plane" size={24} />
+        </View>
+        <FontAwesome6 name="bookmark" size={24} />
+      </View>
+      <View style={styles.authorSection}>
+        <Text style={styles.author}>{post.author}</Text>
+        <Text style={styles.description}>{post.text}</Text>
+      </View>
+      <Text style={styles.date}>{post.date}</Text>
+    </View>
+  );
+}
+
+const styles = StyleSheet.create({
+  container: {
+    margin: 12,
+  },
+  row: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+  },
+  iconGroup: {
+    flexDirection: "row",
+    gap: 14,
+    alignItems: "center",
+  },
+  icon: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+  },
+  iconText: {
+    fontWeight: "600",
+  },
+  description: {
+    fontWeight: "400",
+    color: "black",
+  },
+  date: { paddingTop: 4, color: "#5c5c5c" },
+  authorSection: {
+    paddingTop: 8,
+    flexDirection: "row",
+  },
+  author: {
+    fontWeight: "700",
+    paddingRight: 4,
+  },
+});
+
+export default SocialSection;
+```
+
+### Build the `Feed` screen[​](#build-the-feed-screen "Direct link to build-the-feed-screen")
+
+For simplicity, we'll use a plain `ScrollView` without any virtualization. In a real app you'd most likely use `FlatList`/`FlashList`/`LegendList` for better performance, but the goal of this tutorial is to demonstrate the idea behind the transition.
+
+So let's create a simple scrollable list of posts:
+
+Feed.tsx
+
+```
+import { useState } from "react";
+import { View, ScrollView, StyleSheet } from "react-native";
+import { CARD_HEIGHT } from "./constants";
+import { posts } from "./posts";
+import Post from "./Post";
+
+export default function Feed() {
+  const [index, setIndex] = useState(0);
+
+  const onScroll = (e) => {
+    const { y } = e.nativeEvent.contentOffset;
+    setIndex(Math.floor(y / (CARD_HEIGHT * 0.75)));
+  };
+
+  return (
+    <View style={styles.container}>
+      <ScrollView onScroll={onScroll}>
+        {posts.map((post, i) => (
+          <Post active={index === i} key={post.id} post={post} />
+        ))}
+      </ScrollView>
+    </View>
+  );
+}
+```
+
+Play only one video at a time
+
+The `index` tracks which post is currently visible so we only play one video at a time (the `active` prop pauses off-screen videos to save resources).
+
+### Build the `Reels` screen[​](#build-the-reels-screen "Direct link to build-the-reels-screen")
+
+The Reels screen is a vertical pager — each reel takes up the full screen and snaps into place:
+
+Reels.tsx
+
+```
+import { useState } from "react";
+import { View, ScrollView, StyleSheet } from "react-native";
+import { SCREEN_HEIGHT } from "./constants";
+import { posts } from "./posts";
+import FullScreenReel from "./components/FullScreenReel";
+
+export default function Reels({ route }) {
+  const post = route.params.post;
+  const reels = posts.filter((p) => p.id !== post.id && p.video);
+  const [index, setIndex] = useState(0);
+
+  const onScroll = (e) => {
+    const { y } = e.nativeEvent.contentOffset;
+    setIndex(Math.round(y / SCREEN_HEIGHT));
+  };
+
+  return (
+    <View style={styles.container}>
+      <ScrollView
+        snapToInterval={SCREEN_HEIGHT}
+        decelerationRate="fast"
+        showsVerticalScrollIndicator={false}
+        onScroll={onScroll}
+        bounces={false}
+      >
+        <FullScreenReel post={post} active={index === 0} />
+        {reels.map((p, i) => (
+          <FullScreenReel key={p.id} post={p} active={index === i + 1} />
+        ))}
+      </ScrollView>
+    </View>
+  );
+}
+```
+
+Default snapping behavior
+
+We use `decelerationRate="fast"`, `snapToInterval={SCREEN_HEIGHT}`, and `bounces={false}` to get a snapping effect without writing much code. The result may not feel exactly like the real Instagram app, but the goal of this tutorial is to focus on transitions, not on perfecting the snapping behavior.
+
+The tapped post is always first in the list, followed by other video posts.
+
+## Step 2: Add navigation (without shared transitions)[​](#step-2-add-navigation-without-shared-transitions "Direct link to Step 2: Add navigation (without shared transitions)")
+
+Now let's wire up the screens with `react-navigation`. The key decision here is the **presentation mode** for the Reels screen.
+
+### Why `transparentModal`?[​](#why-transparentmodal "Direct link to why-transparentmodal")
+
+We use `presentation: "transparentModal"` for the Reels screen for two important reasons:
+
+1. **Visible background during transitions** — When the video animates from its card position to full-screen, the feed is still visible behind it. A regular screen push would show a solid background, which isn't what we want.
+2. **Future gesture support** — If you later add a swipe-down-to-dismiss gesture, the user needs to see the feed screen underneath while dragging. A `transparentModal` keeps the previous screen rendered and visible.
+
+<!-- -->
+
+![Instagram modal](/react-native-teleport/pr-preview/pr-126/img/instagram-transparent-modal.png)
+
+### Configure the navigator[​](#configure-the-navigator "Direct link to Configure the navigator")
+
+Navigation setup
+
+```
+// Screen options
+const options = {
+  Feed: {
+    headerShown: false,
+  },
+  Reels: {
+    headerShown: false,
+    animation: "none", // we handle animations ourselves
+    presentation: "transparentModal", // keeps feed visible behind
+  },
+};
+```
+
+Setting `animation: "none"` disables the default slide/fade transition because we'll drive the animation ourselves with Reanimated.
+
+### Add tap handling to `Post`[​](#add-tap-handling-to-post "Direct link to add-tap-handling-to-post")
+
+Make each video post navigable:
+
+Post.tsx (updated)
+
+```
+import { useNavigation } from "@react-navigation/native";
+import { TouchableWithoutFeedback } from "react-native";
+
+const Post = ({ post, active }) => {
+  const navigation = useNavigation();
+
+  const onPress = () => {
+    if (post.photo) return; // only videos open Reels
+    navigation.navigate("Reels", { post });
+  };
+
+  return (
+    <View style={{ height: CARD_HEIGHT }}>
+      <TouchableWithoutFeedback onPress={onPress}>
+        <View style={styles.container}>
+          {/* old code that displays the video/image content */}
+        </View>
+      </TouchableWithoutFeedback>
+      <SocialSection post={post} />
+    </View>
+  );
+};
+```
+
+[](/react-native-teleport/pr-preview/pr-126/video/instagram-no-shared-transition.mp4)
+
+At this point you have a working app — tapping a video opens the `Reels` screen, and calling `navigation.goBack()` returns to `Feed`. But there are two problems:
+
+* there's no transition animation for the video;
+* the video starts playing from the beginning on the new screen.
+
+Let's fix that!
+
+## Step 3: Add the `teleport` infrastructure[​](#step-3-add-the-teleport-infrastructure "Direct link to step-3-add-the-teleport-infrastructure")
+
+This is where the magic happens. We need three things:
+
+1. **A Zustand store** to coordinate the transition state between screens
+2. **A root-level `PortalHost`** to render content above all screens
+3. **A `useMeasure` hook** to get the tapped video's position on screen
+
+### The transition store[​](#the-transition-store "Direct link to The transition store")
+
+The store tracks everything needed to orchestrate the animation:
+
+hooks/useTransition.ts
+
+```
+import {
+  makeMutable,
+  withSpring,
+  type SharedValue,
+} from "react-native-reanimated";
+import { scheduleOnRN } from "react-native-worklets";
+import { create } from "zustand";
+
+interface Transition {
+  destination?: string; // where the portal renders: undefined | "overlay" | "reels"
+  id?: number; // which post is currently animating
+  y: number; // the tapped video's Y position on screen
+  progress: SharedValue<number>; // 0 = feed position, 1 = full-screen
+  setDestination: (destination?: string) => void;
+  setId: (id: number) => void;
+  goToReels: (y: number) => void;
+  goToFeed: (onFinish?: () => void) => void;
+}
+
+const SPRING_CONFIG = { mass: 3, damping: 500, stiffness: 1000 };
+
+export const useTransition = create<Transition>((set, get) => ({
+  destination: undefined,
+  id: undefined,
+  y: 0,
+  progress: makeMutable(0),
+  setDestination: (destination) => set({ destination }),
+  setId: (id) => set({ id }),
+  goToReels: (y) => {
+    set({ destination: "overlay", y });
+    const moveToReels = () => {
+      set({ destination: "reels" });
+    };
+    get().progress.set(
+      withSpring(1, SPRING_CONFIG, () => {
+        scheduleOnRN(moveToReels);
+      }),
+    );
+  },
+  goToFeed: (onFinish) => {
+    set({ destination: "overlay" });
+    const moveToFeed = () => {
+      set({ destination: undefined, y: 0 });
+      onFinish?.();
+    };
+    get().progress.set(
+      withSpring(0, SPRING_CONFIG, () => {
+        scheduleOnRN(moveToFeed);
+      }),
+    );
+  },
+}));
+```
+
+Let's break down each field:
+
+| Field         | Purpose                                                                                                                                                                                                                           |
+| ------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `destination` | Controls where the `<Portal>` renders. `undefined` = in-place (feed), `"overlay"` = floating above everything (during animation), `"reels"` = inside the Reels screen.                                                            |
+| `id`          | Which post is being transitioned. Only the matching `<Post>` will teleport its content.                                                                                                                                           |
+| `y`           | The Y coordinate of the tapped video. Needed to animate `translateY` so the video slides from its feed position to the top of the screen.                                                                                         |
+| `progress`    | A Reanimated `SharedValue` from `0` to `1`. Drives all animations: `height`, `translateY`, `opacity`, etc. Using a shared value means animations run on the UI thread at 60fps and we can animate non-UI props, such as `height`. |
+
+The two key methods orchestrate the transition:
+
+* **`goToReels(y)`** — Sets destination to `"overlay"` so the video escapes the feed's scroll container, then animates `progress` from 0→1. When the spring finishes, switches destination to `"reels"` so the video becomes part of the Reels screen.
+* **`goToFeed(onFinish)`** — Reverses the process: destination back to `"overlay"`, animate progress from 1→0, then clear everything and call `onFinish` (which triggers `navigation.goBack()`).
+
+Why Zustand?
+
+We use Zustand instead of React Context because it gives us **granular subscriptions**. Each component selects only the slice of state it needs (`state.id === post.id`, `state.progress`, etc.), so only the relevant components re-render. This is critical for performance during animations.
+
+### Set up the root `PortalHost`[​](#set-up-the-root-portalhost "Direct link to set-up-the-root-portalhost")
+
+The `"overlay"` `PortalHost` must be placed at the root of your app, **after** the navigation container, so it renders on top of all screens:
+
+App.tsx
+
+```
+import { StyleSheet } from "react-native";
+import { PortalHost, PortalProvider } from "react-native-teleport";
+import { NavigationContainer } from "@react-navigation/native";
+import { GestureHandlerRootView } from "react-native-gesture-handler";
+
+export default function App() {
+  return (
+    <GestureHandlerRootView style={styles.container}>
+      <PortalProvider>
+        <NavigationContainer>
+          <RootStack />
+        </NavigationContainer>
+        {/* This host renders ABOVE all screens — perfect for the transition */}
+        <PortalHost name="overlay" style={StyleSheet.absoluteFillObject} />
+      </PortalProvider>
+    </GestureHandlerRootView>
+  );
+}
+```
+
+### The `useMeasure` hook[​](#the-usemeasure-hook "Direct link to the-usemeasure-hook")
+
+Before animating, we need to know **where** the tapped video is on screen. `measureInWindow` gives us the absolute coordinates:
+
+hooks/useMeasure.ts
+
+```
+import { Platform, type View } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
+
+const useMeasure = (viewRef: React.RefObject<View | null>) => {
+  const insets = useSafeAreaInsets();
+
+  return (callback: (x: number, y: number) => void) => {
+    viewRef.current?.measureInWindow((x, y) => {
+      // Android edge-to-edge mode can produce incorrect offsets
+      if (Platform.OS === "android") {
+        return callback(x, y + insets.top);
+      }
+      return callback(x, y);
+    });
+  };
+};
+
+export default useMeasure;
+```
+
+The measured `y` value tells the animation system how far the video needs to translate vertically to reach the top of the screen.
+
+## Step 4: Add the `<Portal>` to share videos between screens[​](#step-4-add-the-portal-to-share-videos-between-screens "Direct link to step-4-add-the-portal-to-share-videos-between-screens")
+
+Now we connect everything. This is where `<Portal>` and `<PortalHost>` bring the transition to life.
+
+### Update the `Post` component[​](#update-the-post-component "Direct link to update-the-post-component")
+
+The `Post` component is the heart of the transition. It wraps the video in a `<Portal>` whose destination changes based on the transition state:
+
+Post.tsx (final)
+
+```
+import { View, StyleSheet, Image } from "react-native";
+import Video, { ViewType } from "react-native-video";
+import { Portal } from "react-native-teleport";
+import { TouchableWithoutFeedback } from "react-native-gesture-handler";
+import Reanimated, {
+  interpolate,
+  useAnimatedStyle,
+} from "react-native-reanimated";
+import { useNavigation } from "@react-navigation/native";
+import { useRef } from "react";
+import { useTransition } from "./hooks/useTransition";
+import useMeasure from "../../hooks/useMeasure";
+import { VIDEO_HEIGHT, SCREEN_HEIGHT, CARD_HEIGHT } from "./constants";
+import SocialSection from "./components/SocialSection";
+
+const Post = ({ post, active }) => {
+  const videoRef = useRef(null);
+  const navigation = useNavigation();
+  const measure = useMeasure(videoRef);
+
+  // Subscribe to only the state slices this post needs
+  const shouldMove = useTransition((state) => state.id === post.id);
+  const setId = useTransition((state) => state.setId);
+  const progress = useTransition((state) => state.progress);
+  const goToReels = useTransition((state) => state.goToReels);
+  const destination = useTransition((state) =>
+    shouldMove ? state.destination : undefined,
+  );
+  const y = useTransition((state) => (shouldMove ? state.y : 0));
+
+  const onPress = () => {
+    if (post.photo) return;
+    setId(post.id);
+    measure((_x, _y) => {
+      navigation.navigate("Reels", { post });
+      goToReels(_y);
+    });
+  };
+
+  // Animate height and position based on progress
+  const frame = useAnimatedStyle(
+    () => ({
+      height: shouldMove
+        ? interpolate(progress.value, [0, 1], [VIDEO_HEIGHT, SCREEN_HEIGHT])
+        : VIDEO_HEIGHT,
+      transform: [
+        {
+          translateY: shouldMove
+            ? interpolate(progress.value, [0, 1], [0, -y])
+            : 0,
+        },
+      ],
+    }),
+    [shouldMove, y],
+  );
+
+  return (
+    <View style={{ height: CARD_HEIGHT }}>
+      <TouchableWithoutFeedback onPress={onPress}>
+        <View ref={videoRef} style={styles.container}>
+          <Portal hostName={shouldMove ? destination : undefined}>
+            <Reanimated.View style={[{ width: "100%" }, frame]}>
+              {post.video && (
+                <Video
+                  source={{ uri: post.video }}
+                  style={[styles.video, { top: shouldMove ? y : 0 }]}
+                  repeat
+                  paused={!active}
+                  controls={false}
+                  resizeMode="cover"
+                  viewType={ViewType.TEXTURE}
+                />
+              )}
+              {post.photo && (
+                <Image source={{ uri: post.photo }} style={styles.photo} />
+              )}
+            </Reanimated.View>
+          </Portal>
+        </View>
+      </TouchableWithoutFeedback>
+      <SocialSection post={post} />
+    </View>
+  );
+};
+
+export default Post;
+```
+
+Here's what happens step by step when the user taps a video:
+
+1. **`setId(post.id)`** — Marks this post as the one being transitioned. Only this post's `shouldMove` becomes `true`.
+2. **`measure()`** — Gets the video's current Y position on screen.
+3. **`navigation.navigate("Reels", { post })`** — Opens the Reels screen (with `animation: "none"` so nothing visible happens yet).
+4. **`goToReels(_y)`** — Sets `destination: "overlay"` and starts the spring animation.
+5. The `<Portal>` now has `hostName="overlay"`, so the video **teleports** from the feed to the root overlay.
+6. The `frame` animated style grows the video from `VIDEO_HEIGHT` to `SCREEN_HEIGHT` and translates it upward by `y` pixels.
+7. When the spring finishes, `destination` becomes `"reels"` and the video teleports into the Reels screen's `<PortalHost>`.
+
+### Why keep the container height fixed?[​](#why-keep-the-container-height-fixed "Direct link to Why keep the container height fixed?")
+
+```
+<View style={{ height: CARD_HEIGHT }}>
+```
+
+Notice that the outer `<View>` always has a fixed `CARD_HEIGHT`, even after the video teleports away. This is crucial — without it, the feed's `ScrollView` would reflow and jump when the video disappears, changing the scroll position and potentially switching which video is considered "active."
+
+### Add a `PortalHost` in the `Reels` screen[​](#add-a-portalhost-in-the-reels-screen "Direct link to add-a-portalhost-in-the-reels-screen")
+
+The first reel (the one the user tapped) needs a `<PortalHost>` to receive the teleported video:
+
+components/FullScreenReel.tsx
+
+```
+import { View, StyleSheet } from "react-native";
+import Video from "react-native-video";
+import { Portal, PortalHost } from "react-native-teleport";
+import {
+  SCREEN_HEIGHT,
+  SCREEN_WIDTH,
+  FLOATING_ELEMENTS_DESTINATION,
+} from "../constants";
+import { useTransition } from "../hooks/useTransition";
+import Reanimated, { useAnimatedStyle } from "react-native-reanimated";
+
+function FullScreenReel({ post, active, portal = false }) {
+  const progress = useTransition((state) => state.progress);
+  const destination = useTransition((state) => state.destination);
+
+  const icons = useAnimatedStyle(
+    () => ({
+      opacity: progress.value,
+    }),
+    [],
+  );
+
+  return (
+    <View style={styles.container}>
+      {portal ? (
+        // This host RECEIVES the teleported video from the feed
+        <PortalHost name="reels" style={styles.container} />
+      ) : (
+        // Other reels render their own video directly
+        <Video
+          source={{ uri: post.video }}
+          style={styles.video}
+          paused={!active}
+          resizeMode="cover"
+        />
+      )}
+      {/* Action buttons (like, comment, share) */}
+      <Portal
+        hostName={
+          portal && destination === "overlay"
+            ? FLOATING_ELEMENTS_DESTINATION
+            : undefined
+        }
+      >
+        <Reanimated.View style={[styles.icons, icons]}>
+          {/* ... like, comment, share buttons ... */}
+        </Reanimated.View>
+      </Portal>
+    </View>
+  );
+}
+
+export default FullScreenReel;
+```
+
+The `portal` prop distinguishes the first reel (which receives the teleported video) from subsequent reels (which render their own inline video). Only the first `FullScreenReel` renders a `<PortalHost name="reels">` instead of a `<Video>`.
+
+The action buttons (like, comment, share) are also portaled to the overlay during the transition so they fade in correctly on top of the animating video.
+
+### Update the `Feed` and `Reels` screens to disable scroll during transitions[​](#update-the-feed-and-reels-screens-to-disable-scroll-during-transitions "Direct link to update-the-feed-and-reels-screens-to-disable-scroll-during-transitions")
+
+Both screens need to lock scrolling while the animation is in progress. Otherwise, the user could scroll the feed while the video is mid-flight:
+
+Feed.tsx (updated)
+
+```
+import Reanimated, { useAnimatedProps } from "react-native-reanimated";
+import { useTransition } from "./hooks/useTransition";
+
+export default function Feed() {
+  const progress = useTransition((state) => state.progress);
+
+  const animatedProps = useAnimatedProps(
+    () => ({
+      scrollEnabled: progress.value === 0, // only scroll when fully on feed
+    }),
+    [],
+  );
+
+  return (
+    <Reanimated.ScrollView animatedProps={animatedProps}>
+      {/* posts */}
+    </Reanimated.ScrollView>
+  );
+}
+```
+
+Reels.tsx (updated)
+
+```
+const animatedProps = useAnimatedProps(
+  () => ({
+    scrollEnabled: progress.value === 1, // only scroll when fully on reels
+  }),
+  [],
+);
+```
+
+### Add the `ReelsHeader` with back navigation[​](#add-the-reelsheader-with-back-navigation "Direct link to add-the-reelsheader-with-back-navigation")
+
+Instagram uses a custom header in its app, and we'll build one too. The header animates alongside the video — it fades in and slides down from the video's original position:
+
+components/ReelsHeader.tsx
+
+```
+import {
+  View,
+  Text,
+  TouchableOpacity,
+  StyleSheet,
+  BackHandler,
+} from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { useNavigation } from "@react-navigation/native";
+import Reanimated, {
+  interpolate,
+  useAnimatedStyle,
+} from "react-native-reanimated";
+import { Portal } from "react-native-teleport";
+import { FLOATING_ELEMENTS_DESTINATION } from "../constants";
+import { useTransition } from "../hooks/useTransition";
+import { useCallback, useEffect } from "react";
+
+function ReelsHeader() {
+  const insets = useSafeAreaInsets();
+  const navigation = useNavigation();
+  const { goToFeed, progress, y } = useTransition();
+
+  const onGoBack = useCallback(() => {
+    goToFeed(navigation.goBack);
+  }, [goToFeed, navigation]);
+
+  // Handle Android hardware back button
+  useEffect(() => {
+    const subscription = BackHandler.addEventListener(
+      "hardwareBackPress",
+      () => {
+        onGoBack();
+        return true; // prevent default behavior
+      },
+    );
+    return () => subscription.remove();
+  }, [onGoBack]);
+
+  const style = useAnimatedStyle(
+    () => ({
+      opacity: progress.value,
+      transform: [{ translateY: interpolate(progress.value, [0, 1], [y, 0]) }],
+    }),
+    [y],
+  );
+
+  return (
+    <Portal hostName={FLOATING_ELEMENTS_DESTINATION} style={styles.container}>
+      <Reanimated.View style={[{ paddingTop: insets.top }, style]}>
+        <View style={styles.header}>
+          <Text style={styles.title}>Reels</Text>
+          <TouchableOpacity onPress={onGoBack}>
+            {/* back chevron icon */}
+          </TouchableOpacity>
+        </View>
+      </Reanimated.View>
+    </Portal>
+  );
+}
+
+export default ReelsHeader;
+```
+
+Notice how `goToFeed` receives `navigation.goBack` as the `onFinish` callback. This means the actual navigation back only happens **after** the reverse animation completes, keeping everything perfectly synchronized.
+
+And we need to add rendering of the header on our screen:
+
+Reels.tsx (updated)
+
+```
+function Reels({ route }: Props) {
+  return (
+    <View style={styles.container}>
+      {/* Old content, draw header on top of all elements */}
+      <ReelsHeader />
+    </View>
+  );
+}
+```
+
+### Platform-specific rendering for floating elements[​](#platform-specific-rendering-for-floating-elements "Direct link to Platform-specific rendering for floating elements")
+
+On iOS, `transparentModal` presentation allows UI elements to render naturally on top of the modal. On Android, we need to portal them to the root overlay explicitly:
+
+constants.ts
+
+```
+import { Platform } from "react-native";
+
+export const FLOATING_ELEMENTS_DESTINATION = Platform.select({
+  ios: undefined, // renders naturally above the modal
+  default: "root", // needs explicit portaling on Android
+});
+```
+
+And now we can see how all pieces work together!
+
+[](/react-native-teleport/pr-preview/pr-126/video/instagram.mp4)
+
+## The complete transition flow[​](#the-complete-transition-flow "Direct link to The complete transition flow")
+
+Here's the full lifecycle when a user taps a video and then goes back:
+
+```
+1. User taps video in Feed
+   ├─ setId(post.id)          → marks which post to animate
+   ├─ measure()               → gets video's Y coordinate
+   ├─ navigate("Reels")       → opens Reels (no visible animation)
+   └─ goToReels(y)            → starts the transition:
+       ├─ destination = "overlay"  → video teleports to overlay
+       └─ progress: 0 → 1         → height grows, translateY moves up
+
+2. Spring animation completes
+   └─ destination = "reels"   → video teleports into Reels PortalHost
+
+3. User is now on full-screen Reels
+   └─ Can scroll to other reels normally
+
+4. User taps back button
+   └─ goToFeed(goBack):
+       ├─ destination = "overlay"  → video teleports back to overlay
+       └─ progress: 1 → 0         → height shrinks, translateY moves down
+
+5. Reverse animation completes
+   ├─ destination = undefined  → video returns to its feed position
+   ├─ y = 0                    → reset
+   └─ navigation.goBack()     → Reels screen closes
+```
+
+## Summary[​](#summary "Direct link to Summary")
+
+The key patterns used in this implementation:
+
+* **`<Portal>`** dynamically changes its `hostName` to move the video between the feed, an overlay, and the Reels screen — all without unmounting it.
+* **A fixed-height container** in the feed preserves scroll position while the video is teleported away.
+* **`transparentModal` presentation** keeps the feed visible during the transition and enables future gesture support.
+* **A Zustand store with Reanimated `SharedValue`** coordinates animation state across components while keeping everything on the UI thread.
+* **`measureInWindow`** captures the video's screen position so the animation starts from exactly the right place.
+
+With these building blocks you can create fluid, Instagram-quality shared transitions in your own app. The same pattern works for any content — images, cards, avatars — anywhere you want seamless movement between screens.
+
+If you'd like to see the complete working code, check out the [example app](https://github.com/kirillzyusko/react-native-teleport/tree/main/example/src/screens/Instagram).
+
+
+---
+
+# Jest testing guide
+
+## Setting up a mock[​](#setting-up-a-mock "Direct link to Setting up a mock")
+
+This library includes a built in mock for Jest. To use it, add the following code to the [jest setup](https://jestjs.io/docs/configuration#setupfiles-array) file:
+
+```
+jest.mock("react-native-teleport", () => require("react-native-teleport/jest"));
+```
+
+## Test case example[​](#test-case-example "Direct link to Test case example")
+
+Once you've set up mock - you can write your first test 😊. A sample of test case is shown below. For more test cases please see [this](https://github.com/kirillzyusko/react-native-teleport/tree/main/example/__tests__) link.
+
+```
+import { render, screen } from "@testing-library/react-native";
+
+import { View } from "react-native";
+
+import { PortalProvider, PortalHost, Portal } from "react-native-teleport";
+
+function TestComponent() {
+  return (
+    <PortalProvider>
+      <PortalHost name="app" />
+      <View>
+        <Portal hostName="app" name="modal">
+          <View />
+        </Portal>
+      </View>
+    </PortalProvider>
+  );
+}
+
+describe("portal rendering", () => {
+  it("should render without errors", () => {
+    render(<TestComponent />);
+
+    expect(screen.toJSON()).toMatchSnapshot();
+  });
+});
+```
+
+
+---
+
+# Working with Modals
+
+When using `react-native-teleport` with modal screens (e.g., screens presented with `presentation: 'transparentModal'` or `presentation: 'modal'`) or the `Modal` component, you may notice that teleported components don't appear at all. This happens because **modals create a separate native window hierarchy**, and your `PortalHost` is attached to a **different window**.
+
+## How Modals work?[​](#how-modals-work "Direct link to How Modals work?")
+
+### iOS[​](#ios "Direct link to iOS")
+
+On iOS, React Native's modal implementation uses `UIWindow`/`UITransitionView` to present content. When a modal screen is shown, React Native creates a new `UIWindow`/`UITransitionView` that sits above your app's main window in the z-order. This ensures that modal content always appears on top of other app content.
+
+<!-- -->
+
+![iOS Modal Windows Diagram. The modal UITransitionView sits above the main UITransitionView, and the teleported content is rendered behind the modal.](/react-native-teleport/pr-preview/pr-126/assets/images/ios-adb18e2a599c269a7b047504c4c7efcf.png)
+
+Since the `PortalHost` is in the main window and the `Portal` is trying to render from the modal window, the teleported content ends up being rendered **behind** the modal - invisible to the user.
+
+### Android[​](#android "Direct link to Android")
+
+Android works similarly. When a modal is presented, React Native uses a `Dialog` or `DialogFragment` which creates a new window layer (`Window`) that floats above the main activity's content. The view hierarchy inside the dialog is separate from the main activity's view tree.
+
+<!-- -->
+
+![Android Modal Windows Diagram. The DialogRootViewGroup sits above the main ReactSurfaceView, and the teleported content is rendered behind the modal.](/react-native-teleport/pr-preview/pr-126/assets/images/android-31d18cc723515cad057b047c5a95680a.png)
+
+## The Solution[​](#the-solution "Direct link to The Solution")
+
+The solution is straightforward: **add a `PortalHost` inside your modal screen**. This creates a portal destination within the modal's window hierarchy, allowing teleported content to render correctly.
+
+```
+import { StyleSheet, View } from "react-native";
+import { PortalHost } from "react-native-teleport";
+
+function ModalScreen() {
+  return (
+    <View style={styles.container}>
+      {/* Your modal content */}
+      <YourModalContent />
+
+      {/* Add a PortalHost for this modal's window */}
+      <PortalHost style={StyleSheet.absoluteFillObject} name="modal-overlay" />
+    </View>
+  );
+}
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+  },
+});
+```
+
+## Best Practices[​](#best-practices "Direct link to Best Practices")
+
+### Use Unique Host Names[​](#use-unique-host-names "Direct link to Use Unique Host Names")
+
+When you have multiple modals or screens with their own `PortalHost`, use unique names to avoid conflicts:
+
+```
+// In ModalA
+<PortalHost name="modal-a-overlay" />
+
+// In ModalB
+<PortalHost name="modal-b-overlay" />
+```
+
+### Create a Reusable Modal Wrapper[​](#create-a-reusable-modal-wrapper "Direct link to Create a Reusable Modal Wrapper")
+
+To avoid repetition, create a reusable component that includes the `PortalHost`:
+
+components/ModalContainer.tsx
+
+```
+import { StyleSheet, View, ViewProps } from "react-native";
+import { PortalHost } from "react-native-teleport";
+
+interface ModalContainerProps extends ViewProps {
+  portalHostName: string;
+  children: React.ReactNode;
+}
+
+export function ModalContainer({
+  portalHostName,
+  children,
+  style,
+  ...props
+}: ModalContainerProps) {
+  return (
+    <View style={[styles.container, style]} {...props}>
+      {children}
+      <PortalHost style={StyleSheet.absoluteFillObject} name={portalHostName} />
+    </View>
+  );
+}
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+  },
+});
+```
+
+Usage:
+
+```
+import { ModalContainer } from "./components/ModalContainer";
+
+function MyModal() {
+  return (
+    <ModalContainer portalHostName="my-modal-overlay">
+      <Text>Modal content here</Text>
+      <Portal hostName="my-modal-overlay">
+        <TooltipComponent />
+      </Portal>
+    </ModalContainer>
+  );
+}
+```
+
+Remember
+
+The key insight is that **modals create separate native windows**. Your `PortalHost` must be in the same window hierarchy as the `Portal` that targets it.
+
+
+---
+
+# Pre-loading Heavy Components
+
+Some components are expensive to initialize. A WebView-based rich text editor, for example, must download JavaScript from a CDN, parse it, and run initialization logic before the user can interact with it. The same applies to maps, charts, and other third-party views rendered inside WebViews.
+
+The result is a loading spinner every time the user opens the screen - even though the component's content doesn't depend on anything screen-specific.
+
+<!-- -->
+
+|                                                                                                                    |                                                                  |
+| ------------------------------------------------------------------------------------------------------------------ | ---------------------------------------------------------------- |
+| [](/react-native-teleport/pr-preview/pr-126/video/not-preloaded.mp4)                                               | [](/react-native-teleport/pr-preview/pr-126/video/preloaded.mp4) |
+| *Not preloaded component - need to download JS from CDN, parse it, run initialization and do a layout in the end.* | *Preloaded component - instant rendering*                        |
+
+With `react-native-teleport`, you can **render these components offscreen at app startup** and **teleport them on-screen when the user needs them**. Because the native view is **re-parented** (moved in the view hierarchy) rather than **re-mounted**, the component keeps its fully initialized state and appears instantly.
+
+## The pattern[​](#the-pattern "Direct link to The pattern")
+
+<!-- -->
+
+![](/react-native-teleport/pr-preview/pr-126/img/preloading.svg)
+
+1. At app startup, mount the heavy component inside a `<Portal>` in a hidden offscreen container. Give the Portal a fixed `hostName`.
+2. The component loads and initializes in the background while the user is on other screens. Since no matching `<PortalHost>` exists yet, the Portal renders its children in place - offscreen.
+3. When the user navigates to the target screen, mount a `<PortalHost>` with the matching name.
+4. The component teleports in - fully loaded, zero wait. When the host unmounts, the content automatically returns to the offscreen Portal.
+
+## Example: WebView rich text editor[​](#example-webview-rich-text-editor "Direct link to Example: WebView rich text editor")
+
+We'll build a WebView-based editor using [Quill](https://quilljs.com) that pre-loads at startup and appears instantly when the user opens the editor screen.
+
+### Prerequisites[​](#prerequisites "Direct link to Prerequisites")
+
+* [`react-native-teleport`](/react-native-teleport/pr-preview/pr-126/docs/installation.md)
+* [`react-native-webview`](https://github.com/nicolestandifer3/react-native-webview)
+
+### Step 1: Define the editor HTML[​](#step-1-define-the-editor-html "Direct link to Step 1: Define the editor HTML")
+
+Create an HTML string that loads Quill from a CDN and signals readiness via `postMessage`:
+
+editorHtml.ts
+
+```
+export const EDITOR_HTML = `<!DOCTYPE html>
+<html>
+<head>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+  <link href="https://cdn.quilljs.com/1.3.7/quill.snow.css" rel="stylesheet">
+  <style>
+    body { margin: 0; font-family: -apple-system, BlinkMacSystemFont, sans-serif; }
+    .ql-toolbar { border-left: none !important; border-right: none !important; border-top: none !important; }
+    .ql-container { border: none !important; font-size: 16px; }
+  </style>
+</head>
+<body>
+  <div id="editor">
+    <p>Start writing...</p>
+  </div>
+  <script src="https://cdn.quilljs.com/1.3.7/quill.min.js"></script>
+  <script>
+    var quill = new Quill('#editor', {
+      theme: 'snow',
+      modules: {
+        toolbar: [
+          [{ header: [1, 2, 3, false] }],
+          ['bold', 'italic', 'underline'],
+          [{ list: 'ordered' }, { list: 'bullet' }],
+          ['link', 'clean']
+        ]
+      }
+    });
+    // Signal that the editor is fully ready
+    window.ReactNativeWebView.postMessage(JSON.stringify({ type: 'ready' }));
+  </script>
+</body>
+</html>`;
+```
+
+### Step 2: Create the preloaded editor component[​](#step-2-create-the-preloaded-editor-component "Direct link to Step 2: Create the preloaded editor component")
+
+This component renders at the app root. It contains a `Portal` wrapping the WebView:
+
+PreloadedEditor.tsx
+
+```
+import { View, StyleSheet, Dimensions } from "react-native";
+import { Portal } from "react-native-teleport";
+import { WebView } from "react-native-webview";
+
+import { EDITOR_HTML } from "./editorHtml";
+
+const { width, height } = Dimensions.get("window");
+
+export default function PreloadedEditor() {
+  return (
+    <View style={styles.offscreen}>
+      <Portal hostName="editor" style={styles.portal}>
+        <WebView source={{ html: EDITOR_HTML }} style={styles.webview} />
+      </Portal>
+    </View>
+  );
+}
+
+const styles = StyleSheet.create({
+  offscreen: {
+    position: "absolute",
+    top: -9999,
+  },
+  portal: {
+    width: width,
+    height: height,
+  },
+  webview: {
+    flex: 1,
+  },
+});
+```
+
+**How it works:**
+
+* The Portal's `hostName` is set to `"editor"` from the start. As long as no `<PortalHost name="editor">` is mounted, the Portal renders its children in place - inside the offscreen container. The WebView loads and initializes invisibly.
+* When a `<PortalHost name="editor">` mounts on a screen, the Portal teleports the WebView to it. The native view is **moved, not recreated** - so the editor keeps its fully loaded state.
+* When the host unmounts (the user leaves the screen), the WebView teleports back to the offscreen Portal, preserving any content the user typed.
+
+### Step 3: Mount at the app root[​](#step-3-mount-at-the-app-root "Direct link to Step 3: Mount at the app root")
+
+Add `<PreloadedEditor />` inside your `PortalProvider` so it starts loading immediately:
+
+App.tsx
+
+```
+import { StyleSheet } from "react-native";
+import { PortalProvider } from "react-native-teleport";
+import PreloadedEditor from "./screens/RichTextEditor/PreloadedEditor";
+
+export default function App() {
+  return (
+    <PortalProvider>
+      <NavigationContainer>
+        <RootStack />
+      </NavigationContainer>
+      <PreloadedEditor />
+    </PortalProvider>
+  );
+}
+```
+
+### Step 4: Build the editor screen[​](#step-4-build-the-editor-screen "Direct link to Step 4: Build the editor screen")
+
+The screen provides a `<PortalHost>` as the teleport destination. No coordination is needed - simply mounting the host with the matching name pulls the preloaded WebView in:
+
+EditorScreen.tsx
+
+```
+import { View, StyleSheet } from "react-native";
+import { PortalHost } from "react-native-teleport";
+
+export default function EditorScreen() {
+  return (
+    <View style={styles.container}>
+      <PortalHost name="editor" style={styles.editor} />
+    </View>
+  );
+}
+
+const styles = StyleSheet.create({
+  container: { flex: 1 },
+  editor: { flex: 1 },
+});
+```
+
+That's it! When the user navigates to this screen, the editor appears instantly because it was already loaded offscreen. When the screen unmounts, the WebView teleports back to the offscreen Portal automatically.
+
+## Why this works[​](#why-this-works "Direct link to Why this works")
+
+Traditional approach:
+
+```
+Navigate → Mount WebView → Download JS → Parse → Initialize → Ready
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+                        User waits through all of this
+```
+
+With teleport pre-loading:
+
+```
+App startup → Mount WebView offscreen → Download JS → Parse → Initialize → Ready
+              (happens in background while user is on other screens)
+
+Navigate → Teleport WebView on-screen → Ready!
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^
+             Instant - no waiting
+```
+
+The key insight is that `react-native-teleport` **moves native views** rather than unmounting and remounting them. The WebView's internal state - loaded scripts, DOM, scroll position, user input - all survives the teleport.
+
+## When to use this pattern[​](#when-to-use-this-pattern "Direct link to When to use this pattern")
+
+This pattern is most valuable when:
+
+* **A component has expensive initialization** - WebView-based editors, maps, payment forms, or chart libraries that load JavaScript from CDNs.
+* **The initialization doesn't depend on screen-specific data** - the component can be pre-loaded with a generic configuration.
+* **The user will likely visit the screen** - pre-loading a component the user never sees wastes resources. Use this for screens that are part of the core flow.
+
+Content preservation
+
+Because the native view is **re-parented** rather than **re-mounted,** user input is preserved across teleports. If the user types something in the editor, navigates away, and comes back - their text is still there.
+
+## See it in action[​](#see-it-in-action "Direct link to See it in action")
+
+Check out the [Rich Text Editor example](https://github.com/kirillzyusko/react-native-teleport/tree/main/example/src/screens/RichTextEditor) in the example app, which includes a side-by-side comparison of the standard vs. pre-loaded approach.
+
+
+---
+
+[Skip to main content](#__docusaurus_skipToContent_fallback)
+
+[![Teleport Logo](/react-native-teleport/pr-preview/pr-126/img/logo.svg)![Teleport Logo](/react-native-teleport/pr-preview/pr-126/img/logo.svg)](/react-native-teleport/pr-preview/pr-126/.md)
+
+[**Teleport**](/react-native-teleport/pr-preview/pr-126/.md)[Guides](/react-native-teleport/pr-preview/pr-126/docs/intro.md)[API](/react-native-teleport/pr-preview/pr-126/docs/category/api-reference.md)[Blog](/react-native-teleport/pr-preview/pr-126/blog)[Next](/react-native-teleport/pr-preview/pr-126/docs/intro.md)
+
+[Example App](https://github.com/kirillzyusko/react-native-teleport/tree/main/example)[GitHub](https://github.com/kirillzyusko/react-native-teleport)
+
+Search
+
+# Teleport
+
+Missing native portal implementation for react-native
+
+[Get started](/react-native-teleport/pr-preview/pr-126/docs/intro.md)
+
+Docs
+
+* [Guides](/react-native-teleport/pr-preview/pr-126/docs/installation.md)
+* [Recipes](/react-native-teleport/pr-preview/pr-126/docs/category/recipes.md)
+* [API](/react-native-teleport/pr-preview/pr-126/docs/category/api-reference.md)
+
+Community
+
+* [GitHub discussions](https://github.com/kirillzyusko/react-native-teleport/discussions)
+* [X](https://x.com/ziusko)
+
+More
+
+* [Blog](/react-native-teleport/pr-preview/pr-126/blog)
+* [GitHub](https://github.com/kirillzyusko/react-native-teleport)
+
+Copyright © 2026 Kirill Zyusko. Built with Docusaurus.
+
+
+---
+
