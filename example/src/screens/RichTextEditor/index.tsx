@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useState } from "react";
 import {
   View,
   Text,
@@ -9,7 +9,6 @@ import {
 import { PortalHost } from "react-native-teleport";
 import { WebView } from "react-native-webview";
 
-import { useEditorStore } from "./useEditorStore";
 import { EDITOR_HTML } from "./editorHtml";
 
 type Mode = "idle" | "standard" | "preloaded";
@@ -17,19 +16,10 @@ type Mode = "idle" | "standard" | "preloaded";
 export default function RichTextEditorExample() {
   const [mode, setMode] = useState<Mode>("idle");
   const [standardReady, setStandardReady] = useState(false);
-  const preloadReady = useEditorStore((s) => s.ready);
-  const setHostName = useEditorStore((s) => s.setHostName);
-
-  useEffect(() => {
-    return () => {
-      setHostName(undefined);
-    };
-  }, [setHostName]);
 
   const openPreloaded = useCallback(() => {
     setMode("preloaded");
-    setHostName("editor");
-  }, [setHostName]);
+  }, []);
 
   const openStandard = useCallback(() => {
     setMode("standard");
@@ -38,8 +28,7 @@ export default function RichTextEditorExample() {
 
   const close = useCallback(() => {
     setMode("idle");
-    setHostName(undefined);
-  }, [setHostName]);
+  }, []);
 
   if (mode === "idle") {
     return (
@@ -52,13 +41,9 @@ export default function RichTextEditorExample() {
             WebView from scratch.
           </Text>
           <View style={styles.statusRow}>
-            <View
-              style={[styles.dot, preloadReady ? styles.dotReady : undefined]}
-            />
+            <View style={[styles.dot, styles.dotReady]} />
             <Text style={styles.statusText}>
-              {preloadReady
-                ? "Editor pre-loaded and ready"
-                : "Pre-loading editor in background\u2026"}
+              {"Editor pre-loaded and ready"}
             </Text>
           </View>
         </View>
@@ -73,13 +58,8 @@ export default function RichTextEditorExample() {
           </TouchableOpacity>
 
           <TouchableOpacity
-            style={[
-              styles.card,
-              styles.cardHighlight,
-              !preloadReady ? styles.cardDisabled : undefined,
-            ]}
+            style={[styles.card, styles.cardHighlight]}
             onPress={openPreloaded}
-            disabled={!preloadReady}
           >
             <Text style={[styles.cardTitle, styles.cardTitleHighlight]}>
               Pre-loaded (Teleport)

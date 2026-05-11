@@ -45,10 +45,10 @@ import useBaseUrl from "@docusaurus/useBaseUrl";
   <img src={useBaseUrl("/img/preloading.svg")} />
 </div>
 
-1. At app startup, mount the heavy component inside a `<Portal>` in a hidden offscreen container.
-2. The component loads and initializes in the background while the user is on other screens.
-3. When the user navigates to the target screen, change the Portal's `hostName` to point at a `<PortalHost>` on that screen.
-4. The component teleports in - fully loaded, zero wait.
+1. At app startup, mount the heavy component inside a `<Portal>` in a hidden offscreen container. Give the Portal a fixed `hostName`.
+2. The component loads and initializes in the background while the user is on other screens. Since no matching `<PortalHost>` exists yet, the Portal renders its children in place - offscreen.
+3. When the user navigates to the target screen, mount a `<PortalHost>` with the matching name.
+4. The component teleports in - fully loaded, zero wait. When the host unmounts, the content automatically returns to the offscreen Portal.
 
 ## Example: WebView rich text editor
 
@@ -58,7 +58,6 @@ We'll build a WebView-based editor using [Quill](https://quilljs.com) that pre-l
 
 - [`react-native-teleport`](../installation)
 - [`react-native-webview`](https://github.com/nicolestandifer3/react-native-webview)
-- [`zustand`](https://zustand.docs.pmnd.rs/) - for lightweight state coordination (you can use any state management)
 
 ### Step 1: Define the editor HTML
 
@@ -100,29 +99,7 @@ export const EDITOR_HTML = `<!DOCTYPE html>
 </html>`;
 ```
 
-### Step 2: Create a store for coordination
-
-The store tracks two things: whether the editor is ready, and where it should be rendered:
-
-```tsx title="useEditorStore.ts"
-import { create } from "zustand";
-
-interface EditorStore {
-  hostName: string | undefined; // undefined = offscreen, "editor" = on-screen
-  ready: boolean;
-  setHostName: (hostName: string | undefined) => void;
-  setReady: (ready: boolean) => void;
-}
-
-export const useEditorStore = create<EditorStore>((set) => ({
-  hostName: undefined,
-  ready: false,
-  setHostName: (hostName) => set({ hostName }),
-  setReady: (ready) => set({ ready }),
-}));
-```
-
-### Step 3: Create the preloaded editor component
+### Step 2: Create the preloaded editor component
 
 This component renders at the app root. It contains a `Portal` wrapping the WebView:
 
@@ -130,23 +107,16 @@ This component renders at the app root. It contains a `Portal` wrapping the WebV
 import { View, StyleSheet, Dimensions } from "react-native";
 import { Portal } from "react-native-teleport";
 import { WebView } from "react-native-webview";
-import { useEditorStore } from "./useEditorStore";
+
 import { EDITOR_HTML } from "./editorHtml";
 
 const { width, height } = Dimensions.get("window");
 
 export default function PreloadedEditor() {
-  const hostName = useEditorStore((s) => s.hostName);
-  const setReady = useEditorStore((s) => s.setReady);
-
   return (
     <View style={styles.offscreen}>
-      <Portal hostName={hostName} style={styles.portal}>
-        <WebView
-          source={{ html: EDITOR_HTML }}
-          style={styles.webview}
-          onLoadEnd={() => setReady(true)}
-        />
+      <Portal hostName="editor" style={styles.portal}>
+        <WebView source={{ html: EDITOR_HTML }} style={styles.webview} />
       </Portal>
     </View>
   );
@@ -169,11 +139,11 @@ const styles = StyleSheet.create({
 
 **How it works:**
 
-- When `hostName` is `undefined`, the Portal renders in-place - inside the offscreen container. The WebView loads and initializes invisibly.
-- When `hostName` changes to `"editor"`, the Portal teleports the WebView to the matching `<PortalHost>`. The native view is **moved, not recreated** - so the editor keeps its fully loaded state.
-- When the user leaves the editor screen and `hostName` returns to `undefined`, the WebView teleports back to the offscreen container, preserving any content the user typed.
+- The Portal's `hostName` is set to `"editor"` from the start. As long as no `<PortalHost name="editor">` is mounted, the Portal renders its children in place - inside the offscreen container. The WebView loads and initializes invisibly.
+- When a `<PortalHost name="editor">` mounts on a screen, the Portal teleports the WebView to it. The native view is **moved, not recreated** - so the editor keeps its fully loaded state.
+- When the host unmounts (the user leaves the screen), the WebView teleports back to the offscreen Portal, preserving any content the user typed.
 
-### Step 4: Mount at the app root
+### Step 3: Mount at the app root
 
 Add `<PreloadedEditor />` inside your `PortalProvider` so it starts loading immediately:
 
@@ -196,43 +166,17 @@ export default function App() {
 }
 ```
 
-### Step 5: Build the editor screen
+### Step 4: Build the editor screen
 
-The screen provides a `<PortalHost>` as the teleport destination:
+The screen provides a `<PortalHost>` as the teleport destination. No coordination is needed - simply mounting the host with the matching name pulls the preloaded WebView in:
 
 ```tsx title="EditorScreen.tsx"
-import { useEffect, useCallback, useState } from "react";
-import {
-  View,
-  Text,
-  TouchableOpacity,
-  StyleSheet,
-  ActivityIndicator,
-} from "react-native";
+import { View, StyleSheet } from "react-native";
 import { PortalHost } from "react-native-teleport";
-import { useEditorStore } from "./useEditorStore";
 
 export default function EditorScreen() {
-  const preloadReady = useEditorStore((s) => s.ready);
-  const setHostName = useEditorStore((s) => s.setHostName);
-
-  // Teleport the editor in when the screen mounts
-  useEffect(() => {
-    if (preloadReady) {
-      setHostName("editor");
-    }
-    // Teleport it back offscreen when leaving
-    return () => setHostName(undefined);
-  }, [preloadReady, setHostName]);
-
   return (
     <View style={styles.container}>
-      {!preloadReady && (
-        <View style={styles.loading}>
-          <ActivityIndicator size="large" />
-          <Text>Loading editor...</Text>
-        </View>
-      )}
       <PortalHost name="editor" style={styles.editor} />
     </View>
   );
@@ -241,11 +185,10 @@ export default function EditorScreen() {
 const styles = StyleSheet.create({
   container: { flex: 1 },
   editor: { flex: 1 },
-  loading: { flex: 1, justifyContent: "center", alignItems: "center" },
 });
 ```
 
-That's it! When the user navigates to this screen, the editor appears instantly because it was already loaded offscreen.
+That's it! When the user navigates to this screen, the editor appears instantly because it was already loaded offscreen. When the screen unmounts, the WebView teleports back to the offscreen Portal automatically.
 
 ## Why this works
 
