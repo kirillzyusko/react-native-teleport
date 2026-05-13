@@ -105,4 +105,10 @@ export const examples: Example[] = [
     info: ScreenNames.PHOTO_GALLERY,
     icons: "📸",
   },
+  {
+    title: "App Tour",
+    testID: "app_tour",
+    info: ScreenNames.APP_TOUR,
+    icons: "🪄",
+  },
 ];

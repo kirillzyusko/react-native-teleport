@@ -21,6 +21,7 @@ export enum ScreenNames {
   PERSISTED_PORTAL = "PERSISTED_PORTAL",
   PHOTO_GALLERY = "PHOTO_GALLERY",
   PHOTO_DETAIL = "PHOTO_DETAIL",
+  APP_TOUR = "APP_TOUR",
 }
 
 export enum StackNames {

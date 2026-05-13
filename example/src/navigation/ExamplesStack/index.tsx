@@ -29,6 +29,7 @@ import PersistedPortal from "../../screens/PersistedPortal";
 import PhotoGallery from "../../screens/PhotoGallery/PhotoGallery";
 import PhotoDetail from "../../screens/PhotoGallery/PhotoDetail";
 import type { Photo } from "../../screens/PhotoGallery/photos";
+import AppTour from "../../screens/AppTour";
 
 export type ExamplesStackParamList = {
   [ScreenNames.GESTURE_HANDLER_TOUCHABLE]: undefined;
@@ -64,6 +65,7 @@ export type ExamplesStackParamList = {
   [ScreenNames.PERSISTED_PORTAL]: undefined;
   [ScreenNames.PHOTO_GALLERY]: undefined;
   [ScreenNames.PHOTO_DETAIL]: { photo: Photo };
+  [ScreenNames.APP_TOUR]: undefined;
 };
 
 const Stack = createNativeStackNavigator<ExamplesStackParamList>();
@@ -140,6 +142,10 @@ const options = {
     headerShown: false,
     animation: "none" as const,
     presentation: "containedTransparentModal" as const,
+  },
+  [ScreenNames.APP_TOUR]: {
+    title: "App Tour",
+    headerShown: false,
   },
 };
 
@@ -254,6 +260,11 @@ const ExamplesStack = () => (
       component={PhotoDetail}
       name={ScreenNames.PHOTO_DETAIL}
       options={options[ScreenNames.PHOTO_DETAIL]}
+    />
+    <Stack.Screen
+      component={AppTour}
+      name={ScreenNames.APP_TOUR}
+      options={options[ScreenNames.APP_TOUR]}
     />
   </Stack.Navigator>
 );
