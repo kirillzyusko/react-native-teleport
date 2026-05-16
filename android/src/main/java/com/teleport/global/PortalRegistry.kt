@@ -44,6 +44,7 @@ object PortalRegistry {
     portal: PortalView,
   ) {
     val portals = pendingPortals.getOrPut(hostName) { mutableListOf() }
+    portals.removeAll { it.get() == null || it.get() == portal }
     portals.add(WeakReference(portal))
   }
 
