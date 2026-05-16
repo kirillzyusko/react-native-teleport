@@ -41,5 +41,8 @@ class PortalHostView(
 
   fun cleanup(viewId: Int) {
     name?.let { PortalRegistry.unregisterHost(it, viewId) }
+    name = null
+    isInBatch = false
+    batchBaseIndex = 0
   }
 }
