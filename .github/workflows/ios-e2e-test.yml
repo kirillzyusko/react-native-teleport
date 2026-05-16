@@ -147,6 +147,17 @@ jobs:
           export MAESTRO_DRIVER_STARTUP_TIMEOUT=600000
           maestro --platform ios test -e DEVICE="iPhone 16 Pro" e2e/flows/* --format html ./e2e/reports/debug --debug-output ./e2e/reports/debug --flatten-debug-output
           kill $SERVER_PID
+      - name: Collect iOS crash & simulator logs
+        if: failure()
+        run: |
+          mkdir -p ./e2e/reports/crash-logs
+          mkdir -p ./e2e/reports/simulator-logs
+
+          cp -R ~/Library/Logs/DiagnosticReports/* ./e2e/reports/crash-logs || true
+
+          xcrun simctl spawn booted log collect --output ./e2e/reports/simulator-logs/system.logarchive || true
+
+          xcrun simctl spawn booted log show --style syslog --last 10m > ./e2e/reports/simulator-logs/recent.log || true
       - name: Upload test report
         if: failure()
         uses: actions/upload-artifact@v4
