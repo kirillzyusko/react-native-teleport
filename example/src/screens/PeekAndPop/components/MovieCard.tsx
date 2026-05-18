@@ -25,11 +25,15 @@ export default function MovieCard({ movie }: Props) {
   const destination = usePeekTransition((state) =>
     state.movieId === movie.id ? state.destination : undefined,
   );
+  const phase = usePeekTransition((state) =>
+    state.movieId === movie.id ? state.phase : "idle",
+  );
   const layout = usePeekTransition((state) =>
     state.movieId === movie.id ? state.layout : undefined,
   );
   const peek = usePeekTransition((state) => state.peek);
   const cancelPeek = usePeekTransition((state) => state.cancelPeek);
+  const shouldRenderPortal = selected && phase !== "restoring";
 
   const openDetails = useCallback(() => {
     didLongPressRef.current = false;
@@ -88,12 +92,12 @@ export default function MovieCard({ movie }: Props) {
         onPressOut={onPressOut}
         style={styles.pressable}
       >
-        <Portal
-          hostName={selected ? destination : undefined}
-          name={`peek-pop-${movie.id}`}
-        >
-          <MovieSurface layout={layout} moving={selected} movie={movie} />
-        </Portal>
+        {!shouldRenderPortal && <MovieSurface moving={false} movie={movie} />}
+        {shouldRenderPortal && (
+          <Portal hostName={destination} name={`peek-pop-${movie.id}`}>
+            <MovieSurface layout={layout} moving movie={movie} />
+          </Portal>
+        )}
       </Pressable>
     </View>
   );

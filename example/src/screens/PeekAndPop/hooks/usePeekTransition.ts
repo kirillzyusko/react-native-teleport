@@ -20,7 +20,7 @@ type Destination =
   | typeof DETAILS_DESTINATION
   | undefined;
 
-type Phase = "idle" | "peek" | "popping" | "details" | "closing";
+type Phase = "idle" | "peek" | "popping" | "details" | "closing" | "restoring";
 
 type PeekTransition = {
   destination: Destination;
@@ -45,6 +45,14 @@ const SPRING_CONFIG = {
   mass: 1,
   damping: 32,
   stiffness: 260,
+};
+
+const afterNextPaint = (callback?: () => void) => {
+  requestAnimationFrame(() => {
+    requestAnimationFrame(() => {
+      callback?.();
+    });
+  });
 };
 
 export const usePeekTransition = create<PeekTransition>((set, get) => ({
@@ -83,19 +91,23 @@ export const usePeekTransition = create<PeekTransition>((set, get) => ({
 
     set({ destination: OVERLAY_DESTINATION, phase: "closing" });
 
-    const finish = () => {
-      set({
-        destination: undefined,
-        layout: EMPTY_LAYOUT,
-        movieId: undefined,
-        phase: "idle",
+    const restorePortalHome = () => {
+      set({ destination: undefined, phase: "restoring" });
+
+      afterNextPaint(() => {
+        set({
+          destination: undefined,
+          layout: EMPTY_LAYOUT,
+          movieId: undefined,
+          phase: "idle",
+        });
+        onFinish?.();
       });
-      onFinish?.();
     };
 
     get().progress.set(
       withSpring(0, SPRING_CONFIG, () => {
-        scheduleOnRN(finish);
+        scheduleOnRN(restorePortalHome);
       }),
     );
   },

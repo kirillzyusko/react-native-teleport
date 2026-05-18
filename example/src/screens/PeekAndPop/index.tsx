@@ -27,8 +27,7 @@ export default function PeekAndPop() {
         showsVerticalScrollIndicator={false}
       >
         <View style={styles.header}>
-          <Text style={styles.eyebrow}>Tonight</Text>
-          <Text style={styles.title}>Movies</Text>
+          <Text style={styles.title}>Movies library</Text>
         </View>
         {movies.map((movie) => (
           <MovieCard key={movie.id} movie={movie} />

@@ -52,17 +52,17 @@ export const movies: [Movie, ...Movie[]] = [
       "Batman, Gordon, and Harvey Dent face Gotham's criminal underworld as the Joker turns order into chaos.",
   },
   {
-    id: "fight-club",
-    title: "Fight Club",
-    year: "1999",
-    duration: "2h 19m",
-    genre: "Drama / Thriller",
-    rating: "8.4",
+    id: "alien",
+    title: "Alien",
+    year: "1979",
+    duration: "1h 57m",
+    genre: "Horror / Sci-Fi",
+    rating: "8.2",
     poster: {
-      uri: "https://image.tmdb.org/t/p/w780/pB8BM7pdSp6B6Ih7QZ4DrQ3PmJK.jpg",
+      uri: "https://image.tmdb.org/t/p/w780/vfrQk5IPloGg1v9Rzbh2Eg3VGyM.jpg",
     },
     description:
-      "An insomniac office worker and a soap salesman build an underground outlet that spirals out of control.",
+      "A deep-space crew answers a distress signal and brings a deadly passenger aboard their ship.",
   },
   {
     id: "the-matrix",
