@@ -30,6 +30,8 @@ import PhotoGallery from "../../screens/PhotoGallery/PhotoGallery";
 import PhotoDetail from "../../screens/PhotoGallery/PhotoDetail";
 import type { Photo } from "../../screens/PhotoGallery/photos";
 import AppTour from "../../screens/AppTour";
+import PeekAndPop from "../../screens/PeekAndPop";
+import PeekAndPopDetails from "../../screens/PeekAndPop/Details";
 
 export type ExamplesStackParamList = {
   [ScreenNames.GESTURE_HANDLER_TOUCHABLE]: undefined;
@@ -66,6 +68,10 @@ export type ExamplesStackParamList = {
   [ScreenNames.PHOTO_GALLERY]: undefined;
   [ScreenNames.PHOTO_DETAIL]: { photo: Photo };
   [ScreenNames.APP_TOUR]: undefined;
+  [ScreenNames.PEEK_AND_POP]: undefined;
+  [ScreenNames.PEEK_AND_POP_DETAILS]: {
+    movieId: string;
+  };
 };
 
 const Stack = createNativeStackNavigator<ExamplesStackParamList>();
@@ -146,6 +152,15 @@ const options = {
   [ScreenNames.APP_TOUR]: {
     title: "App Tour",
     headerShown: false,
+  },
+  [ScreenNames.PEEK_AND_POP]: {
+    headerShown: false,
+  },
+  [ScreenNames.PEEK_AND_POP_DETAILS]: {
+    headerShown: false,
+    animation: "none" as const,
+    gestureEnabled: false,
+    presentation: "transparentModal" as const,
   },
 };
 
@@ -265,6 +280,16 @@ const ExamplesStack = () => (
       component={AppTour}
       name={ScreenNames.APP_TOUR}
       options={options[ScreenNames.APP_TOUR]}
+    />
+    <Stack.Screen
+      component={PeekAndPop}
+      name={ScreenNames.PEEK_AND_POP}
+      options={options[ScreenNames.PEEK_AND_POP]}
+    />
+    <Stack.Screen
+      component={PeekAndPopDetails}
+      name={ScreenNames.PEEK_AND_POP_DETAILS}
+      options={options[ScreenNames.PEEK_AND_POP_DETAILS]}
     />
   </Stack.Navigator>
 );

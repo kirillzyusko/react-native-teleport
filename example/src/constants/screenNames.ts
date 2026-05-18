@@ -22,6 +22,8 @@ export enum ScreenNames {
   PHOTO_GALLERY = "PHOTO_GALLERY",
   PHOTO_DETAIL = "PHOTO_DETAIL",
   APP_TOUR = "APP_TOUR",
+  PEEK_AND_POP = "PEEK_AND_POP",
+  PEEK_AND_POP_DETAILS = "PEEK_AND_POP_DETAILS",
 }
 
 export enum StackNames {

@@ -111,4 +111,10 @@ export const examples: Example[] = [
     info: ScreenNames.APP_TOUR,
     icons: "🪄",
   },
+  {
+    title: "Peek and Pop",
+    testID: "peek_and_pop",
+    info: ScreenNames.PEEK_AND_POP,
+    icons: "🍿",
+  },
 ];
