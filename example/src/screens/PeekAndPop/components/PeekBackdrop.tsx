@@ -3,9 +3,7 @@ import Animated, {
   interpolate,
   useAnimatedStyle,
 } from "react-native-reanimated";
-import { Portal } from "react-native-teleport";
 
-import { OVERLAY_DESTINATION } from "../constants";
 import { usePeekTransition } from "../hooks/usePeekTransition";
 
 export default function PeekBackdrop() {
@@ -24,9 +22,7 @@ export default function PeekBackdrop() {
   }
 
   return (
-    <Portal hostName={OVERLAY_DESTINATION} name="peek-pop-backdrop">
-      <Animated.View pointerEvents="none" style={[styles.backdrop, style]} />
-    </Portal>
+    <Animated.View pointerEvents="none" style={[styles.backdrop, style]} />
   );
 }
 
@@ -34,5 +30,7 @@ const styles = StyleSheet.create({
   backdrop: {
     ...StyleSheet.absoluteFillObject,
     backgroundColor: "rgba(6, 10, 22, 0.54)",
+    elevation: 1,
+    zIndex: 1,
   },
 });

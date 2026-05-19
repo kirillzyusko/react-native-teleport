@@ -1,11 +1,11 @@
-import { useCallback, useRef, type ComponentRef } from "react";
-import { Platform, Pressable, StyleSheet, View } from "react-native";
+import { useCallback, useRef } from "react";
+import { Pressable, StyleSheet, View } from "react-native";
 import { useNavigation } from "@react-navigation/native";
 import { Portal } from "react-native-teleport";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { ScreenNames } from "../../../constants/screenNames";
 import type { ExamplesStackNavigation } from "../../../navigation/ExamplesStack";
+import useMeasure from "../../../hooks/useMeasure";
 import { CARD_HEIGHT } from "../constants";
 import { usePeekTransition } from "../hooks/usePeekTransition";
 import type { Movie } from "../movies";
@@ -16,11 +16,11 @@ type Props = {
 };
 
 export default function MovieCard({ movie }: Props) {
-  const cardRef = useRef<ComponentRef<typeof View>>(null);
+  const cardRef = useRef<View>(null);
   const didLongPressRef = useRef(false);
   const isPressingRef = useRef(false);
-  const insets = useSafeAreaInsets();
   const navigation = useNavigation<ExamplesStackNavigation>();
+  const measure = useMeasure(cardRef);
   const selected = usePeekTransition((state) => state.movieId === movie.id);
   const destination = usePeekTransition((state) =>
     state.movieId === movie.id ? state.destination : undefined,
@@ -46,7 +46,7 @@ export default function MovieCard({ movie }: Props) {
     didLongPressRef.current = true;
 
     requestAnimationFrame(() => {
-      cardRef.current?.measure((_x, _y, width, height, pageX, pageY) => {
+      measure((x, y, width, height) => {
         if (!Number.isFinite(width) || width === 0) {
           didLongPressRef.current = false;
           cancelPeek();
@@ -54,8 +54,8 @@ export default function MovieCard({ movie }: Props) {
         }
 
         peek(movie.id, {
-          x: pageX,
-          y: Platform.OS === "android" ? pageY + insets.top : pageY,
+          x,
+          y,
           width,
           height,
         });
@@ -65,7 +65,7 @@ export default function MovieCard({ movie }: Props) {
         }
       });
     });
-  }, [cancelPeek, insets.top, movie.id, openDetails, peek]);
+  }, [cancelPeek, measure, movie.id, openDetails, peek]);
 
   const onPressIn = useCallback(() => {
     isPressingRef.current = true;
@@ -84,7 +84,12 @@ export default function MovieCard({ movie }: Props) {
   }, [movie.id, openDetails]);
 
   return (
-    <View ref={cardRef} collapsable={false} style={styles.slot}>
+    <View
+      // @ts-expect-error React Native host refs expose measureInWindow.
+      ref={cardRef}
+      collapsable={false}
+      style={styles.slot}
+    >
       <Pressable
         delayLongPress={240}
         onLongPress={onLongPress}
@@ -94,7 +99,11 @@ export default function MovieCard({ movie }: Props) {
       >
         {!shouldRenderPortal && <MovieSurface moving={false} movie={movie} />}
         {shouldRenderPortal && (
-          <Portal hostName={destination} name={`peek-pop-${movie.id}`}>
+          <Portal
+            hostName={destination}
+            name={`peek-pop-${movie.id}`}
+            style={styles.portal}
+          >
             <MovieSurface layout={layout} moving movie={movie} />
           </Portal>
         )}
@@ -110,5 +119,9 @@ const styles = StyleSheet.create({
   },
   pressable: {
     height: CARD_HEIGHT,
+  },
+  portal: {
+    elevation: 20,
+    zIndex: 20,
   },
 });

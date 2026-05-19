@@ -20,11 +20,11 @@ export default function PeekAndPop() {
 
   return (
     <SafeAreaView edges={["top"]} style={styles.screen}>
-      <PeekBackdrop />
       <Animated.ScrollView
         animatedProps={animatedProps}
         contentContainerStyle={styles.content}
         showsVerticalScrollIndicator={false}
+        style={styles.list}
       >
         <View style={styles.header}>
           <Text style={styles.title}>Movies library</Text>
@@ -33,6 +33,7 @@ export default function PeekAndPop() {
           <MovieCard key={movie.id} movie={movie} />
         ))}
       </Animated.ScrollView>
+      <PeekBackdrop />
     </SafeAreaView>
   );
 }
@@ -41,6 +42,9 @@ const styles = StyleSheet.create({
   screen: {
     backgroundColor: "#EFEFF4",
     flex: 1,
+  },
+  list: {
+    zIndex: 0,
   },
   content: {
     paddingBottom: 36,
