@@ -14,3 +14,12 @@ export type PortalProps = {
   style?: StyleProp<ViewStyle>;
   children?: React.ReactNode;
 };
+
+export type MirrorProps = {
+  name: string;
+  style?: StyleProp<ViewStyle>;
+  hidesSourceView?: boolean;
+  matchesAlpha?: boolean;
+  matchesTransform?: boolean;
+  matchesPosition?: boolean;
+};

@@ -28,6 +28,7 @@ import RichTextEditor from "../../screens/RichTextEditor";
 import PersistedPortal from "../../screens/PersistedPortal";
 import PhotoGallery from "../../screens/PhotoGallery/PhotoGallery";
 import PhotoDetail from "../../screens/PhotoGallery/PhotoDetail";
+import Mirror from "../../screens/Mirror";
 import type { Photo } from "../../screens/PhotoGallery/photos";
 import Orientation from "../../screens/Orientation";
 import ScaledHost from "../../screens/ScaledHost";
@@ -64,6 +65,7 @@ export type ExamplesStackParamList = {
   [ScreenNames.PHOTO_DETAIL]: { photo: Photo };
   [ScreenNames.ORIENTATION]: undefined;
   [ScreenNames.SCALED_HOST]: undefined;
+  [ScreenNames.MIRROR]: undefined;
 };
 
 const Stack = createNativeStackNavigator<ExamplesStackParamList>();
@@ -138,6 +140,9 @@ const options = {
   },
   [ScreenNames.ORIENTATION]: { title: "Orientation" },
   [ScreenNames.SCALED_HOST]: { title: "Context menu (scaled host)" },
+  [ScreenNames.MIRROR]: {
+    headerShown: false,
+  },
 };
 
 const ExamplesStack = () => (
@@ -266,6 +271,11 @@ const ExamplesStack = () => (
       component={ScaledHost}
       name={ScreenNames.SCALED_HOST}
       options={options[ScreenNames.SCALED_HOST]}
+    />
+    <Stack.Screen
+      component={Mirror}
+      name={ScreenNames.MIRROR}
+      options={options[ScreenNames.MIRROR]}
     />
   </Stack.Navigator>
 );

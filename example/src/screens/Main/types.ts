@@ -20,6 +20,7 @@ export type ExampleScreen =
   | ScreenNames.PHOTO_GALLERY
   | ScreenNames.ORIENTATION
   | ScreenNames.SCALED_HOST;
+  | ScreenNames.MIRROR;
 
 export type Example = {
   testID: string;

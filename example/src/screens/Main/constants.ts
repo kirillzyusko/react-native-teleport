@@ -117,4 +117,10 @@ export const examples: Example[] = [
     info: ScreenNames.SCALED_HOST,
     icons: "📐",
   },
+  {
+    title: "Adaptive Shadow",
+    testID: "mirror",
+    info: ScreenNames.MIRROR,
+    icons: "🪞",
+  },
 ];
