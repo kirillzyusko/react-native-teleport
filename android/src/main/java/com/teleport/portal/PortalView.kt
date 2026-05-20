@@ -67,6 +67,12 @@ class PortalView(
     }
   }
 
+  fun cleanup() {
+    hostName?.let { PortalRegistry.unregisterPendingPortal(it, this) }
+    detachOwnChildren()
+    hostName = null
+  }
+
   private fun isTeleported(): Boolean = hostName != null && PortalRegistry.getHost(hostName) != null
 
   private fun extractPhysicalChildren(): List<View> {
@@ -94,10 +100,20 @@ class PortalView(
    * re-attach them somewhere else.
    */
   private fun detachOwnChildren(): List<View> {
-    val list = ownChildren.toList()
+    val list = ArrayList<View>(ownChildren.size)
+    for (child in ownChildren) {
+      if (!list.contains(child)) {
+        list.add(child)
+      }
+    }
     ownChildren.clear()
     for (child in list) {
-      (child.parent as? ViewGroup)?.removeView(child)
+      val parent = child.parent as? ViewGroup
+      if (parent === this) {
+        super.removeView(child)
+      } else {
+        parent?.removeView(child)
+      }
     }
     return list
   }
