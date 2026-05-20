@@ -46,7 +46,6 @@ const BlurredBackground: React.FC<Props> = () => {
   );
 
   useEffect(() => {
-    // https://app.asana.com/0/1201479125182522/1203474957902936
     StatusBar.setHidden(true, "fade");
 
     return () => {
