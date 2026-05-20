@@ -99,8 +99,6 @@ type DestinationPointFunction = (
 
 /**
  * Allows to select only one direction of the view.
- * See https://app.asana.com/0/1201479125182522/1203465316518559 for more details
- * why it's needed and which cases it handles.
  */
 const getOneDirectionMovement = (
   movement: number,
