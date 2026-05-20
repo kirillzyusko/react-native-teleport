@@ -76,6 +76,12 @@ export const examples: Example[] = [
     icons: "💬",
   },
   {
+    title: "Message Animation",
+    testID: "message_animation",
+    info: ScreenNames.MESSAGE_ANIMATION,
+    icons: "💬✈️",
+  },
+  {
     title: "Travel",
     testID: "travel",
     info: ScreenNames.TRAVEL_EXPLORE,

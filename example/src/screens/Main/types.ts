@@ -13,6 +13,7 @@ export type ExampleScreen =
   | ScreenNames.INSTAGRAM_FEED
   | ScreenNames.BOTTOM_SHEET
   | ScreenNames.MESSENGER_LIST
+  | ScreenNames.MESSAGE_ANIMATION
   | ScreenNames.TRAVEL_EXPLORE
   | ScreenNames.TELEPORTATION_ORDER
   | ScreenNames.RICH_TEXT_EDITOR

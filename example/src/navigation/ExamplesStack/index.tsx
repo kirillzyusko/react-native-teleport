@@ -13,6 +13,7 @@ import FlexibleStyles from "../../screens/FlexibleStyles";
 import BottomSheet from "../../screens/BottomSheet";
 import MessengerList from "../../screens/Messenger/List";
 import Messenger from "../../screens/Messenger";
+import MessageAnimation from "../../screens/MessageAnimation";
 import PortalBeforeHost from "../../screens/PortalBeforeHost";
 import RecycleRepro from "../../screens/RecycleRepro";
 import InstagramFeed from "../../screens/Instagram/Feed";
@@ -46,6 +47,7 @@ export type ExamplesStackParamList = {
     chatId: string;
     title: string;
   };
+  [ScreenNames.MESSAGE_ANIMATION]: undefined;
   [ScreenNames.PORTAL_BEFORE_HOST]: undefined;
   [ScreenNames.RECYCLING]: undefined;
   [ScreenNames.INSTAGRAM_FEED]: undefined;
@@ -105,6 +107,10 @@ const options = {
   [ScreenNames.MESSENGER]: {
     title: "Messenger",
     headerBackTitle: "Back",
+  },
+  [ScreenNames.MESSAGE_ANIMATION]: {
+    title: "Message Animation",
+    headerShown: false,
   },
   [ScreenNames.PORTAL_BEFORE_HOST]: {
     title: "Portal Before Host",
@@ -210,6 +216,11 @@ const ExamplesStack = () => (
       component={Messenger}
       name={ScreenNames.MESSENGER}
       options={options[ScreenNames.MESSENGER]}
+    />
+    <Stack.Screen
+      component={MessageAnimation}
+      name={ScreenNames.MESSAGE_ANIMATION}
+      options={options[ScreenNames.MESSAGE_ANIMATION]}
     />
     <Stack.Screen
       component={PortalBeforeHost}
