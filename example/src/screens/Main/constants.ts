@@ -105,4 +105,10 @@ export const examples: Example[] = [
     info: ScreenNames.PHOTO_GALLERY,
     icons: "📸",
   },
+  {
+    title: "Adaptive Shadow",
+    testID: "mirror",
+    info: ScreenNames.MIRROR,
+    icons: "🪞",
+  },
 ];

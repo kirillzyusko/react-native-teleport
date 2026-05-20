@@ -12,6 +12,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 @class PortalHostView;
 @class PortalView;
+@class MirrorView;
 
 @interface PortalRegistry : NSObject
 
@@ -24,6 +25,15 @@ NS_ASSUME_NONNULL_BEGIN
 
 - (void)registerPendingPortal:(PortalView *)portal withHostName:(NSString *)hostName;
 - (void)unregisterPendingPortal:(PortalView *)portal withHostName:(NSString *)hostName;
+
+- (void)registerPortalSource:(UIView *)source withName:(NSString *)name;
+- (void)unregisterPortalSourceWithName:(NSString *)name viewTag:(NSInteger)viewTag;
+- (void)unregisterPortalSourceWithName:(NSString *)name source:(UIView *)source;
+- (nullable UIView *)getPortalSourceWithName:(NSString *)name;
+- (void)notifyMirrorsForPortalSourceName:(NSString *)name;
+
+- (void)registerPendingMirror:(MirrorView *)mirror withName:(NSString *)name;
+- (void)unregisterPendingMirror:(MirrorView *)mirror withName:(NSString *)name;
 
 @end
 

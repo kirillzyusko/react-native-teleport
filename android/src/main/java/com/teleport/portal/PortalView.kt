@@ -13,6 +13,7 @@ class PortalView(
   context: Context,
 ) : ReactViewGroup(context) {
   private var hostName: String? = null
+  private var sourceName: String? = null
   private val layoutStateController = PortalLayoutStateController(this)
   private val ownChildren: MutableList<View> = ArrayList()
 
@@ -23,6 +24,14 @@ class PortalView(
   fun setStateWrapper(wrapper: StateWrapper?) {
     layoutStateController.setStateWrapper(wrapper)
     layoutStateController.updateIfNeeded(hostName, PortalRegistry.getHost(hostName))
+  }
+
+  fun setName(name: String?) {
+    if (name == sourceName) return
+
+    sourceName?.let { PortalRegistry.unregisterPortalSource(it, this) }
+    sourceName = name
+    notifyMirrorsIfRegistered()
   }
 
   fun setHostName(name: String?) {
@@ -49,6 +58,7 @@ class PortalView(
     }
 
     name?.let { PortalRegistry.registerPendingPortal(it, this) }
+    notifyMirrorsIfRegistered()
     layoutStateController.updateIfNeeded(hostName, PortalRegistry.getHost(hostName))
   }
 
@@ -91,6 +101,20 @@ class PortalView(
       }
       layoutStateController.resetIfNeeded()
     }
+    notifyMirrorsIfRegistered()
+  }
+
+  private fun notifyMirrorsIfRegistered() {
+    if (isAttachedToWindow) {
+      sourceName?.let { PortalRegistry.registerPortalSource(it, this) }
+    }
+  }
+
+  fun cleanup() {
+    hostName?.let { PortalRegistry.unregisterPendingPortal(it, this) }
+    sourceName?.let { PortalRegistry.unregisterPortalSource(it, this) }
+    hostName = null
+    sourceName = null
   }
 
   internal fun onHostLayoutChanged() {
@@ -204,6 +228,7 @@ class PortalView(
     } else {
       super.addView(child, index)
     }
+    notifyMirrorsIfRegistered()
   }
 
   override fun addView(
@@ -225,6 +250,7 @@ class PortalView(
     } else {
       super.addView(child, index, params)
     }
+    notifyMirrorsIfRegistered()
   }
 
   override fun removeView(view: View?) {
@@ -236,6 +262,7 @@ class PortalView(
     } else {
       super.removeView(view)
     }
+    notifyMirrorsIfRegistered()
   }
 
   override fun removeViewAt(index: Int) {
@@ -249,6 +276,7 @@ class PortalView(
     } else {
       super.removeViewAt(index)
     }
+    notifyMirrorsIfRegistered()
   }
   // endregion
 
@@ -264,6 +292,25 @@ class PortalView(
     layoutStateController.updateIfNeeded(hostName, PortalRegistry.getHost(hostName))
   }
 
+  override fun onAttachedToWindow() {
+    super.onAttachedToWindow()
+    notifyMirrorsIfRegistered()
+  }
+
+  override fun onDetachedFromWindow() {
+    sourceName?.let { PortalRegistry.unregisterPortalSource(it, this) }
+    super.onDetachedFromWindow()
+  }
+
+  override fun onSizeChanged(
+    w: Int,
+    h: Int,
+    oldw: Int,
+    oldh: Int,
+  ) {
+    super.onSizeChanged(w, h, oldw, oldh)
+    notifyMirrorsIfRegistered()
+  }
   // endregion
 
   // region Accessibility

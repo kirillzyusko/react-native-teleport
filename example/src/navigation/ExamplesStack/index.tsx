@@ -28,6 +28,7 @@ import RichTextEditor from "../../screens/RichTextEditor";
 import PersistedPortal from "../../screens/PersistedPortal";
 import PhotoGallery from "../../screens/PhotoGallery/PhotoGallery";
 import PhotoDetail from "../../screens/PhotoGallery/PhotoDetail";
+import Mirror from "../../screens/Mirror";
 import type { Photo } from "../../screens/PhotoGallery/photos";
 
 export type ExamplesStackParamList = {
@@ -60,6 +61,7 @@ export type ExamplesStackParamList = {
   [ScreenNames.PERSISTED_PORTAL]: undefined;
   [ScreenNames.PHOTO_GALLERY]: undefined;
   [ScreenNames.PHOTO_DETAIL]: { photo: Photo };
+  [ScreenNames.MIRROR]: undefined;
 };
 
 const Stack = createNativeStackNavigator<ExamplesStackParamList>();
@@ -131,6 +133,9 @@ const options = {
     headerShown: false,
     animation: "none" as const,
     presentation: "containedTransparentModal" as const,
+  },
+  [ScreenNames.MIRROR]: {
+    headerShown: false,
   },
 };
 
@@ -250,6 +255,11 @@ const ExamplesStack = () => (
       component={PhotoDetail}
       name={ScreenNames.PHOTO_DETAIL}
       options={options[ScreenNames.PHOTO_DETAIL]}
+    />
+    <Stack.Screen
+      component={Mirror}
+      name={ScreenNames.MIRROR}
+      options={options[ScreenNames.MIRROR]}
     />
   </Stack.Navigator>
 );

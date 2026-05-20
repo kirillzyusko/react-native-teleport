@@ -6,6 +6,7 @@
 //
 
 #import "PortalRegistry.h"
+#import "MirrorView.h"
 #import "PortalHostView.h"
 #import "PortalView.h"
 
@@ -13,6 +14,8 @@
 
 @property (nonatomic, strong) NSMapTable<NSString *, PortalHostView *> *hosts;
 @property (nonatomic, strong) NSMutableDictionary<NSString *, NSPointerArray *> *pendingPortals;
+@property (nonatomic, strong) NSMapTable<NSString *, UIView *> *portalSources;
+@property (nonatomic, strong) NSMutableDictionary<NSString *, NSPointerArray *> *pendingMirrors;
 
 @end
 
@@ -34,6 +37,8 @@
   if (self) {
     _hosts = [NSMapTable strongToWeakObjectsMapTable];
     _pendingPortals = [NSMutableDictionary dictionary];
+    _portalSources = [NSMapTable strongToWeakObjectsMapTable];
+    _pendingMirrors = [NSMutableDictionary dictionary];
   }
   return self;
 }
@@ -53,6 +58,23 @@
     if (registered && registered.tag == viewTag) {
       [self.hosts removeObjectForKey:name];
       [self notifySubscribersForName:name];
+    }
+  }
+}
+
+- (void)notifyMirrorsForName:(NSString *)name
+{
+  NSPointerArray *mirrors = self.pendingMirrors[name];
+  if (!mirrors) {
+    return;
+  }
+
+  [mirrors compact];
+
+  for (NSUInteger i = 0; i < mirrors.count; i++) {
+    MirrorView *mirror = (__bridge MirrorView *)[mirrors pointerAtIndex:i];
+    if (mirror) {
+      [mirror onSourceChanged];
     }
   }
 }
@@ -79,6 +101,55 @@
   if (!name)
     return nil;
   return [self.hosts objectForKey:name];
+}
+
+- (void)registerPortalSource:(UIView *)source withName:(NSString *)name
+{
+  if (name && source) {
+    [self.portalSources setObject:source forKey:name];
+    [self notifyMirrorsForPortalSourceName:name];
+  }
+}
+
+- (void)unregisterPortalSourceWithName:(NSString *)name viewTag:(NSInteger)viewTag
+{
+  if (name) {
+    UIView *registered = [self.portalSources objectForKey:name];
+    if (registered && registered.tag == viewTag) {
+      [self.portalSources removeObjectForKey:name];
+      [self notifyMirrorsForName:name];
+    }
+  }
+}
+
+- (void)unregisterPortalSourceWithName:(NSString *)name source:(UIView *)source
+{
+  if (name && source) {
+    UIView *registered = [self.portalSources objectForKey:name];
+    if (registered == source) {
+      [self.portalSources removeObjectForKey:name];
+      [self notifyMirrorsForName:name];
+    }
+  }
+}
+
+- (nullable UIView *)getPortalSourceWithName:(NSString *)name
+{
+  if (!name)
+    return nil;
+  return [self.portalSources objectForKey:name];
+}
+
+- (void)notifyMirrorsForPortalSourceName:(NSString *)name
+{
+  if (!name) {
+    return;
+  }
+
+  NSString *nameCopy = [name copy];
+  dispatch_async(dispatch_get_main_queue(), ^{
+    [self notifyMirrorsForName:nameCopy];
+  });
 }
 
 - (void)notifyHostLayoutChangedWithName:(NSString *)name
@@ -141,6 +212,46 @@
   [portals compact];
   if (portals.count == 0) {
     [self.pendingPortals removeObjectForKey:hostName];
+  }
+}
+
+- (void)registerPendingMirror:(MirrorView *)mirror withName:(NSString *)name
+{
+  if (!name || !mirror) {
+    return;
+  }
+
+  NSPointerArray *mirrors = self.pendingMirrors[name];
+  if (!mirrors) {
+    mirrors = [NSPointerArray weakObjectsPointerArray];
+    self.pendingMirrors[name] = mirrors;
+  }
+
+  [mirrors addPointer:(__bridge void *)mirror];
+}
+
+- (void)unregisterPendingMirror:(MirrorView *)mirror withName:(NSString *)name
+{
+  if (!name || !mirror) {
+    return;
+  }
+
+  NSPointerArray *mirrors = self.pendingMirrors[name];
+  if (!mirrors) {
+    return;
+  }
+
+  for (NSUInteger i = 0; i < mirrors.count; i++) {
+    MirrorView *existingMirror = (__bridge MirrorView *)[mirrors pointerAtIndex:i];
+    if (existingMirror == mirror) {
+      [mirrors removePointerAtIndex:i];
+      break;
+    }
+  }
+
+  [mirrors compact];
+  if (mirrors.count == 0) {
+    [self.pendingMirrors removeObjectForKey:name];
   }
 }
 

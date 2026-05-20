@@ -173,6 +173,7 @@
     },
     "ios": {
       "componentProvider": {
+        "MirrorView": "MirrorView",
         "PortalView": "PortalView",
         "PortalHostView": "PortalHostView"
       }
