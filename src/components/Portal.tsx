@@ -1,5 +1,6 @@
-import { useEffect } from "react";
+import { useContext, useEffect } from "react";
 import { usePortalManagerContext } from "../contexts/PortalManager";
+import ScrollViewContext from "../contexts/ScrollViewContext";
 import PortalView from "../views/Portal";
 import useId from "../hooks/useId";
 import type { PortalProps } from "../types";
@@ -49,6 +50,7 @@ import type { PortalProps } from "../types";
  * ```
  */
 const PortalComponent = ({ hostName, name, style, children }: PortalProps) => {
+  const value = useContext(ScrollViewContext);
   const { state, dispatch } = usePortalManagerContext();
   const instanceId = useId();
 
@@ -72,14 +74,12 @@ const PortalComponent = ({ hostName, name, style, children }: PortalProps) => {
     };
   }, [dispatch, hostName, name, instanceId]);
 
-  if (isRemoved) {
-    return <PortalView hostName={hostName} name={name} />;
-  }
-
   return (
-    <PortalView hostName={hostName} name={name} style={style}>
-      {children}
-    </PortalView>
+    <ScrollViewContext.Provider value={hostName ? null : value}>
+      <PortalView hostName={hostName} name={name} style={style}>
+        {isRemoved ? null : children}
+      </PortalView>
+    </ScrollViewContext.Provider>
   );
 };
 
