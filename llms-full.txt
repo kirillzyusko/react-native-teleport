@@ -1645,31 +1645,7 @@ And now we can see how all pieces work together!
 
 Here's the full lifecycle when a user taps a video and then goes back:
 
-```
-1. User taps video in Feed
-   ├─ setId(post.id)          → marks which post to animate
-   ├─ measure()               → gets video's Y coordinate
-   ├─ navigate("Reels")       → opens Reels (no visible animation)
-   └─ goToReels(y)            → starts the transition:
-       ├─ destination = "overlay"  → video teleports to overlay
-       └─ progress: 0 → 1         → height grows, translateY moves up
-
-2. Spring animation completes
-   └─ destination = "reels"   → video teleports into Reels PortalHost
-
-3. User is now on full-screen Reels
-   └─ Can scroll to other reels normally
-
-4. User taps back button
-   └─ goToFeed(goBack):
-       ├─ destination = "overlay"  → video teleports back to overlay
-       └─ progress: 1 → 0         → height shrinks, translateY moves down
-
-5. Reverse animation completes
-   ├─ destination = undefined  → video returns to its feed position
-   ├─ y = 0                    → reset
-   └─ navigation.goBack()     → Reels screen closes
-```
+![Illustrated lifecycle of the Instagram shared transition: tap a feed video, move it through the overlay into Reels, then reverse the same path back to the feed.](/react-native-teleport/img/instagram-visualization.jpeg)
 
 ## Summary[​](#summary "Direct link to Summary")
 
