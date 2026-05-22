@@ -64,6 +64,12 @@ export const examples: Example[] = [
     icons: "🎞",
   },
   {
+    title: "Instagram View Transitions",
+    testID: "reels_view_transitions",
+    info: ScreenNames.INSTAGRAM_VIEW_TRANSITIONS_FEED,
+    icons: "🎞",
+  },
+  {
     title: "Bottom sheet",
     testID: "bottom_sheet",
     info: ScreenNames.BOTTOM_SHEET,

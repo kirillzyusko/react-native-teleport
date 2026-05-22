@@ -18,11 +18,14 @@ import PortalBeforeHost from "../../screens/PortalBeforeHost";
 import RecycleRepro from "../../screens/RecycleRepro";
 import InstagramFeed from "../../screens/Instagram/Feed";
 import InstagramReels from "../../screens/Instagram/Reels";
+import InstagramViewTransitionsFeed from "../../screens/Instagram/ViewTransitions/Feed";
+import InstagramViewTransitionsReels from "../../screens/Instagram/ViewTransitions/Reels";
 import DeepNavigation from "../../screens/DeepNavigation/Screen1";
 import DeepNavigationNested from "../../screens/DeepNavigation/Screen2";
 import TravelExplore from "../../screens/Travel/Explore";
 import TravelDetails from "../../screens/Travel/Details";
 import type { PostType } from "../../screens/Instagram/posts";
+import type { PostType as ViewTransitionPostType } from "../../screens/Instagram/ViewTransitions/posts";
 import type { ImageProps } from "react-native";
 import TeleportationOrder from "../../screens/TeleportationOrder";
 import RichTextEditor from "../../screens/RichTextEditor";
@@ -53,6 +56,10 @@ export type ExamplesStackParamList = {
   [ScreenNames.INSTAGRAM_FEED]: undefined;
   [ScreenNames.INSTAGRAM_REELS]: {
     post: PostType;
+  };
+  [ScreenNames.INSTAGRAM_VIEW_TRANSITIONS_FEED]: undefined;
+  [ScreenNames.INSTAGRAM_VIEW_TRANSITIONS_REELS]: {
+    post: ViewTransitionPostType;
   };
   [ScreenNames.NAVIGATION_LIFECYCLE]: undefined;
   [ScreenNames.NAVIGATION_LIFECYCLE_NESTED]: undefined;
@@ -122,6 +129,14 @@ const options = {
     headerShown: false,
   },
   [ScreenNames.INSTAGRAM_REELS]: {
+    headerShown: false,
+    animation: "none" as const,
+    presentation: "transparentModal" as const,
+  },
+  [ScreenNames.INSTAGRAM_VIEW_TRANSITIONS_FEED]: {
+    headerShown: false,
+  },
+  [ScreenNames.INSTAGRAM_VIEW_TRANSITIONS_REELS]: {
     headerShown: false,
     animation: "none" as const,
     presentation: "transparentModal" as const,
@@ -241,6 +256,16 @@ const ExamplesStack = () => (
       component={InstagramReels}
       name={ScreenNames.INSTAGRAM_REELS}
       options={options[ScreenNames.INSTAGRAM_REELS]}
+    />
+    <Stack.Screen
+      component={InstagramViewTransitionsFeed}
+      name={ScreenNames.INSTAGRAM_VIEW_TRANSITIONS_FEED}
+      options={options[ScreenNames.INSTAGRAM_VIEW_TRANSITIONS_FEED]}
+    />
+    <Stack.Screen
+      component={InstagramViewTransitionsReels}
+      name={ScreenNames.INSTAGRAM_VIEW_TRANSITIONS_REELS}
+      options={options[ScreenNames.INSTAGRAM_VIEW_TRANSITIONS_REELS]}
     />
     <Stack.Screen
       component={DeepNavigation}

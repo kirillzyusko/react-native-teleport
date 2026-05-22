@@ -1,0 +1,64 @@
+export type PostType = {
+  id: number;
+  author: string;
+  text: string;
+  likes: number;
+  comments: number;
+  video?: ReturnType<typeof require>;
+  photo?: string;
+  date: string;
+  sent: number;
+};
+
+export const posts: PostType[] = [
+  {
+    id: 1,
+    author: "kirillzyusko",
+    text: "Countdown video",
+    likes: 126,
+    comments: 12,
+    sent: 31,
+    video: require("./videos/countdown.mp4"),
+    date: "29 October",
+  },
+  {
+    id: 2,
+    author: "kirillzyusko",
+    text: "Mountains and lake",
+    likes: 271,
+    comments: 96,
+    sent: 182,
+    photo: "https://images.pexels.com/photos/1526713/pexels-photo-1526713.jpeg",
+    date: "28 October",
+  },
+  {
+    id: 3,
+    author: "kirillzyusko",
+    text: "Countdown video",
+    likes: 34,
+    sent: 12,
+    comments: 3,
+    video: require("./videos/countdown.mp4"),
+    date: "27 October",
+  },
+  {
+    id: 4,
+    author: "kirillzyusko",
+    text: "Countdown video",
+    likes: 65,
+    sent: 37,
+    comments: 14,
+    video: require("./videos/countdown.mp4"),
+    date: "26 October",
+  },
+  {
+    id: 5,
+    author: "kirillzyusko",
+    text: "Last Norway trip",
+    likes: 189,
+    comments: 44,
+    sent: 108,
+    photo: "https://images.pexels.com/photos/3791466/pexels-photo-3791466.jpeg",
+    date: "25 October",
+  },
+];

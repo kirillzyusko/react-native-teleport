@@ -11,6 +11,7 @@ export type ExampleScreen =
   | ScreenNames.RECYCLING
   | ScreenNames.NAVIGATION_LIFECYCLE
   | ScreenNames.INSTAGRAM_FEED
+  | ScreenNames.INSTAGRAM_VIEW_TRANSITIONS_FEED
   | ScreenNames.BOTTOM_SHEET
   | ScreenNames.MESSENGER_LIST
   | ScreenNames.MESSAGE_ANIMATION
