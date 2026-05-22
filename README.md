@@ -1,8 +1,10 @@
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="./gifs/banner-dark.png" />
-  <source media="(prefers-color-scheme: light)" srcset="./docs/img/banner-light.png" />
+  <source media="(prefers-color-scheme: light)" srcset="./gifs/banner-light.png" />
   <img alt="react-native-teleport" src="./gifs/banner-light.png" />
 </picture>
+
+<br />
 
 Missing native portal implementation for react-native. Teleport views across your component tree for seamless transitions and powerful UI patterns.
 
