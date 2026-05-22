@@ -1,3 +1,5 @@
+<img width="100%" src="./gifs/banner.png">
+
 # react-native-teleport
 
 Missing native portal implementation for react-native. Teleport views across your component tree for seamless transitions and powerful UI patterns.
