@@ -1,5 +1,6 @@
-import { useEffect } from "react";
+import { useContext, useEffect } from "react";
 import { usePortalManagerContext } from "../contexts/PortalManager";
+import ScrollViewContext from "../contexts/ScrollViewContext";
 import type { PortalHostProps } from "../types";
 import PortalHost from "../views/PortalHost";
 
@@ -26,6 +27,7 @@ import PortalHost from "../views/PortalHost";
  */
 const PortalHostComponent = ({ name, children, style }: PortalHostProps) => {
   const { dispatch } = usePortalManagerContext();
+  const scrollViewContext = useContext(ScrollViewContext);
 
   useEffect(() => {
     dispatch({ type: "REGISTER_HOST", hostName: name });
@@ -34,6 +36,14 @@ const PortalHostComponent = ({ name, children, style }: PortalHostProps) => {
       dispatch({ type: "UNREGISTER_HOST", hostName: name });
     };
   }, [name, dispatch]);
+
+  useEffect(() => {
+    dispatch({
+      type: "SET_HOST_SCROLL_VIEW_CONTEXT",
+      hostName: name,
+      value: scrollViewContext,
+    });
+  }, [name, dispatch, scrollViewContext]);
 
   return (
     <PortalHost name={name} style={style}>
