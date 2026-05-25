@@ -14,7 +14,7 @@ export const posts: PostType[] = [
   {
     id: 1,
     author: "kirillzyusko",
-    text: "Countdown video",
+    text: "Snapshot freezes mid-transition",
     likes: 126,
     comments: 12,
     sent: 31,
@@ -34,7 +34,7 @@ export const posts: PostType[] = [
   {
     id: 3,
     author: "kirillzyusko",
-    text: "Countdown video",
+    text: "Fullscreen video starts over",
     likes: 34,
     sent: 12,
     comments: 3,
@@ -44,7 +44,7 @@ export const posts: PostType[] = [
   {
     id: 4,
     author: "kirillzyusko",
-    text: "Countdown video",
+    text: "Browser animates an image",
     likes: 65,
     sent: 37,
     comments: 14,

@@ -10,13 +10,14 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useNavigation } from "@react-navigation/native";
 import { useCallback, useEffect } from "react";
 import { useViewTransition } from "../hooks/useViewTransition";
-import { runViewTransition } from "../viewTransition";
+import { prepareViewTransition, runViewTransition } from "../viewTransition";
 
 function ReelsHeader() {
   const insets = useSafeAreaInsets();
   const navigation = useNavigation();
   const clearTarget = useViewTransition((state) => state.clearTarget);
   const postId = useViewTransition((state) => state.postId);
+  const setRunning = useViewTransition((state) => state.setRunning);
   const setTarget = useViewTransition((state) => state.setTarget);
 
   const onGoBack = useCallback(() => {
@@ -24,6 +25,10 @@ function ReelsHeader() {
       navigation.goBack();
       return;
     }
+
+    prepareViewTransition(() => {
+      setRunning(true);
+    });
 
     runViewTransition(
       () => {
@@ -33,7 +38,7 @@ function ReelsHeader() {
       "to-feed",
       clearTarget,
     );
-  }, [clearTarget, navigation, postId, setTarget]);
+  }, [clearTarget, navigation, postId, setRunning, setTarget]);
 
   useEffect(() => {
     const subscription = BackHandler.addEventListener(

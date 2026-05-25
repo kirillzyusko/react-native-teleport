@@ -26,6 +26,8 @@ type PostProps = {
 };
 
 const Post = ({ post, active }: PostProps) => {
+  const finishTransition = useViewTransition((state) => state.finishTransition);
+  const setRunning = useViewTransition((state) => state.setRunning);
   const setTarget = useViewTransition((state) => state.setTarget);
   const transitionName = useViewTransition((state) =>
     state.owner === "feed" && state.postId === post.id
@@ -41,15 +43,20 @@ const Post = ({ post, active }: PostProps) => {
     }
 
     prepareViewTransition(() => {
+      setRunning(true);
       setTarget(post.id, "feed");
     });
 
-    runViewTransition(() => {
-      setTarget(post.id, "reels");
-      navigation.navigate(ScreenNames.INSTAGRAM_VIEW_TRANSITIONS_REELS, {
-        post,
-      });
-    }, "to-reels");
+    runViewTransition(
+      () => {
+        setTarget(post.id, "reels");
+        navigation.navigate(ScreenNames.INSTAGRAM_VIEW_TRANSITIONS_REELS, {
+          post,
+        });
+      },
+      "to-reels",
+      finishTransition,
+    );
   };
 
   return (

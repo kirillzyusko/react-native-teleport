@@ -5,6 +5,7 @@ import { SCREEN_HEIGHT, SCREEN_WIDTH } from "../constants";
 import type { PostType } from "../posts";
 import { useState } from "react";
 import { getViewTransitionStyle } from "../viewTransition";
+import { useViewTransition } from "../hooks/useViewTransition";
 
 type FullScreenReelProps = {
   post: PostType;
@@ -14,6 +15,9 @@ type FullScreenReelProps = {
 
 function FullScreenReel({ post, active, transitionName }: FullScreenReelProps) {
   const [isLiked, setLiked] = useState(false);
+  const isTransitioning = useViewTransition(
+    (state) => state.isRunning && state.postId === post.id,
+  );
 
   const onToggleLike = () => {
     setLiked((l) => !l);
@@ -25,7 +29,7 @@ function FullScreenReel({ post, active, transitionName }: FullScreenReelProps) {
         <Video
           source={{ uri: post.video }}
           style={styles.video}
-          paused={!active}
+          paused={!active || isTransitioning}
           repeat
           resizeMode="cover"
         />

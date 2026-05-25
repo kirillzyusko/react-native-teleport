@@ -41,20 +41,20 @@ const css = `
 }
 
 html.${FORWARD_CLASS}::view-transition-group(${ACTIVE_REEL_TRANSITION_NAME}) {
-  animation-duration: 5s;
+  animation-duration: 2.5s;
   animation-timing-function: linear;
   z-index: 10;
 }
 
 html.${BACK_CLASS}::view-transition-group(${ACTIVE_REEL_TRANSITION_NAME}) {
-  animation-duration: 3s;
+  animation-duration: 2s;
   animation-timing-function: linear;
   z-index: 10;
 }
 
 html.${FORWARD_CLASS}::view-transition-old(${ACTIVE_REEL_TRANSITION_NAME}),
 html.${FORWARD_CLASS}::view-transition-new(${ACTIVE_REEL_TRANSITION_NAME}) {
-  animation-duration: 5s;
+  animation-duration: 2.5s;
   animation-timing-function: linear;
   mix-blend-mode: normal;
   object-fit: fill;
@@ -64,7 +64,7 @@ html.${FORWARD_CLASS}::view-transition-new(${ACTIVE_REEL_TRANSITION_NAME}) {
 
 html.${BACK_CLASS}::view-transition-old(${ACTIVE_REEL_TRANSITION_NAME}),
 html.${BACK_CLASS}::view-transition-new(${ACTIVE_REEL_TRANSITION_NAME}) {
-  animation-duration: 3s;
+  animation-duration: 2s;
   animation-timing-function: linear;
   mix-blend-mode: normal;
   object-fit: fill;
@@ -93,7 +93,7 @@ html.${BACK_CLASS}::view-transition-new(${ACTIVE_REEL_TRANSITION_NAME}) {
     opacity: 1;
   }
   100% {
-    opacity: 0;
+    opacity: 1;
   }
 }
 
@@ -102,7 +102,7 @@ html.${BACK_CLASS}::view-transition-new(${ACTIVE_REEL_TRANSITION_NAME}) {
     opacity: 0;
   }
   100% {
-    opacity: 1;
+    opacity: 0;
   }
 }
 
@@ -111,7 +111,7 @@ html.${BACK_CLASS}::view-transition-new(${ACTIVE_REEL_TRANSITION_NAME}) {
     opacity: 1;
   }
   100% {
-    opacity: 0;
+    opacity: 1;
   }
 }
 
@@ -120,7 +120,7 @@ html.${BACK_CLASS}::view-transition-new(${ACTIVE_REEL_TRANSITION_NAME}) {
     opacity: 0;
   }
   100% {
-    opacity: 1;
+    opacity: 0;
   }
 }
 `;
