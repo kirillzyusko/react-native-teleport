@@ -18,9 +18,11 @@ import {
   Text,
   TextInput,
   View,
+  Image,
 } from "react-native";
 import { Portal, PortalHost } from "react-native-teleport";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { WebView } from "react-native-webview";
 
 const FLIGHT_HOST = "message-animation-flight";
 const ATTACHMENT_PREVIEW_HOST = "message-animation-attachment-preview";
@@ -28,6 +30,168 @@ const DRAFT_PORTAL = "message-animation-draft";
 const MESSAGE_FONT_SIZE = 17;
 const MESSAGE_LINE_HEIGHT = 22;
 const ATTACHMENT_CARD_WIDTH = 292;
+const SAMPLE_PDF_BASE64 =
+  "JVBERi0xLjQKMSAwIG9iago8PCAvVHlwZSAvQ2F0YWxvZyAvUGFnZXMgMiAwIFIgPj4KZW5kb2JqCjIgMCBvYmoKPDwgL1R5cGUgL1BhZ2VzIC9LaWRzIFszIDAgUl0gL0NvdW50IDEgPj4KZW5kb2JqCjMgMCBvYmoKPDwgL1R5cGUgL1BhZ2UgL1BhcmVudCAyIDAgUiAvTWVkaWFCb3ggWzAgMCA2MTIgNzkyXSAvUmVzb3VyY2VzIDw8IC9Gb250IDw8IC9GMSA0IDAgUiA+PiA+PiAvQ29udGVudHMgNSAwIFIgPj4KZW5kb2JqCjQgMCBvYmoKPDwgL1R5cGUgL0ZvbnQgL1N1YnR5cGUgL1R5cGUxIC9CYXNlRm9udCAvSGVsdmV0aWNhID4+CmVuZG9iago1IDAgb2JqCjw8IC9MZW5ndGggMzAwID4+CnN0cmVhbQpCVAovRjEgMjQgVGYKNTYgNzQ0IFRkCihQcmFnYSBMdW5jaCBNZW51KSBUagowIC00MiBUZAovRjEgMTQgVGYKKFRvZGF5J3Mgc2FtcGxlIGF0dGFjaG1lbnQpIFRqCjAgLTM4IFRkCi9GMSAxNiBUZgooMS4gVG9tYXRvIHNvdXAgLSAxOCBQTE4pIFRqCjAgLTI4IFRkCigyLiBQaWVyb2dpIHdpdGggaGVyYnMgLSAzMiBQTE4pIFRqCjAgLTI4IFRkCigzLiBBcHBsZSBjYWtlIC0gMTkgUExOKSBUagowIC00MiBUZAovRjEgMTIgVGYKKEdlbmVyYXRlZCBzYW1wbGUgUERGIGZvciB0aGUgdGVsZXBvcnQgY2hhdCBkZW1vLikgVGoKRVQKZW5kc3RyZWFtCmVuZG9iagp4cmVmCjAgNgowMDAwMDAwMDAwIDY1NTM1IGYgCjAwMDAwMDAwMDkgMDAwMDAgbiAKMDAwMDAwMDA1OCAwMDAwMCBuIAowMDAwMDAwMTE1IDAwMDAwIG4gCjAwMDAwMDAyNDEgMDAwMDAgbiAKMDAwMDAwMDMxMSAwMDAwMCBuIAp0cmFpbGVyCjw8IC9TaXplIDYgL1Jvb3QgMSAwIFIgPj4Kc3RhcnR4cmVmCjY2MgolJUVPRgo=";
+const MAP_HTML = `
+<!doctype html>
+<html>
+  <head>
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <style>
+      html, body, #map { height: 100%; margin: 0; width: 100%; }
+      .leaflet-control-attribution { display: none; }
+      .leaflet-container { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; }
+      .leaflet-top.leaflet-left { top: 72px; }
+      .leaflet-control-zoom {
+        border: 0;
+        border-radius: 12px;
+        box-shadow: 0 8px 24px rgba(15, 23, 42, 0.22);
+        overflow: hidden;
+      }
+      .leaflet-control-zoom a {
+        border: 0;
+        color: #0f172a;
+        height: 36px;
+        line-height: 36px;
+        width: 36px;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="map"></div>
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script>
+      const map = L.map("map", { zoomControl: true }).setView([52.2531, 21.0446], 17);
+      L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+        maxZoom: 19
+      }).addTo(map);
+      L.marker([52.2531, 21.0446]).addTo(map).bindPopup("Koneser");
+      let resizeTicks = 0;
+      const resizeTimer = setInterval(() => {
+        map.invalidateSize({ pan: false });
+        resizeTicks += 1;
+
+        if (resizeTicks > 14) {
+          clearInterval(resizeTimer);
+        }
+      }, 80);
+      window.addEventListener("resize", () => map.invalidateSize());
+    </script>
+  </body>
+</html>`;
+const PDF_HTML = `
+<!doctype html>
+<html>
+  <head>
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1" />
+    <style>
+      html, body { height: 100%; margin: 0; width: 100%; }
+      body {
+        align-items: center;
+        background: #f1f5f9;
+        display: flex;
+        justify-content: center;
+        overflow: hidden;
+      }
+      #viewer {
+        align-items: center;
+        display: flex;
+        height: 100%;
+        justify-content: center;
+        width: 100%;
+      }
+      canvas {
+        background: #ffffff;
+        box-shadow: 0 10px 28px rgba(15, 23, 42, 0.16);
+        display: block;
+      }
+      #fallback {
+        color: #64748b;
+        display: none;
+        font: 14px -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      }
+    </style>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+  </head>
+  <body>
+    <div id="viewer">
+      <canvas id="page"></canvas>
+      <div id="fallback">Unable to render PDF preview</div>
+    </div>
+    <script>
+      pdfjsLib.GlobalWorkerOptions.workerSrc =
+        "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js";
+
+      const pdfBytes = Uint8Array.from(
+        atob("${SAMPLE_PDF_BASE64}"),
+        (character) => character.charCodeAt(0),
+      );
+      let pdfPage = null;
+      let renderTask = null;
+
+      async function renderPage() {
+        const canvas = document.getElementById("page");
+        const viewer = document.getElementById("viewer");
+        const context = canvas.getContext("2d");
+        const sourceViewport = pdfPage.getViewport({ scale: 1 });
+        const scale =
+          Math.min(
+            viewer.clientWidth / sourceViewport.width,
+            viewer.clientHeight / sourceViewport.height,
+          ) * 0.88;
+        const viewport = pdfPage.getViewport({ scale });
+        const pixelRatio = window.devicePixelRatio || 1;
+
+        if (renderTask) {
+          renderTask.cancel();
+          try {
+            await renderTask.promise;
+          } catch (_error) {}
+          renderTask = null;
+        }
+
+        canvas.style.height = viewport.height + "px";
+        canvas.style.width = viewport.width + "px";
+        canvas.height = Math.floor(viewport.height * pixelRatio);
+        canvas.width = Math.floor(viewport.width * pixelRatio);
+        context.setTransform(pixelRatio, 0, 0, pixelRatio, 0, 0);
+        const currentRenderTask = pdfPage.render({ canvasContext: context, viewport });
+        renderTask = currentRenderTask;
+
+        try {
+          await currentRenderTask.promise;
+        } catch (error) {
+          if (error?.name !== "RenderingCancelledException") {
+            throw error;
+          }
+        } finally {
+          if (renderTask === currentRenderTask) {
+            renderTask = null;
+          }
+        }
+      }
+
+      async function start() {
+        try {
+          const pdf = await pdfjsLib.getDocument({ data: pdfBytes }).promise;
+          pdfPage = await pdf.getPage(1);
+          await renderPage();
+        } catch (_error) {
+          document.getElementById("page").style.display = "none";
+          document.getElementById("fallback").style.display = "block";
+        }
+      }
+
+      window.addEventListener("resize", () => {
+        if (pdfPage) {
+          renderPage().catch(() => {});
+        }
+      });
+      start();
+    </script>
+  </body>
+</html>`;
 
 const INITIAL_MESSAGES: ChatMessage[] = [
   {
@@ -217,45 +381,21 @@ function DraftSurface({ frames, phase, progress, text }: DraftSurfaceProps) {
 
 function PdfArtwork() {
   return (
-    <View style={styles.pdfArtwork}>
-      <View style={styles.pdfPage}>
-        <View style={styles.pdfHeaderLine} />
-        <View style={styles.pdfLine} />
-        <View style={[styles.pdfLine, styles.pdfLineShort]} />
-        <View style={styles.pdfSection} />
-        <View style={styles.pdfLine} />
-        <View style={[styles.pdfLine, styles.pdfLineTiny]} />
-      </View>
-      <View style={styles.pdfBadge}>
-        <Text style={styles.pdfBadgeText}>PDF</Text>
-      </View>
-    </View>
+    <WebView
+      originWhitelist={["*"]}
+      source={{ html: PDF_HTML }}
+      style={styles.attachmentWebView}
+    />
   );
 }
 
 function MapArtwork() {
   return (
-    <View style={styles.mapArtwork}>
-      <View style={styles.mapCanvas}>
-        <View style={[styles.mapBlock, styles.mapBlockOne]} />
-        <View style={[styles.mapBlock, styles.mapBlockTwo]} />
-        <View style={[styles.mapBlock, styles.mapBlockThree]} />
-        <View style={[styles.mapRoad, styles.mapRoadOne]} />
-        <View style={[styles.mapRoad, styles.mapRoadTwo]} />
-        <View style={[styles.mapRoad, styles.mapRoadThree]} />
-        <View style={[styles.mapRoad, styles.mapRoadFour]} />
-        <View style={styles.mapPark} />
-        <View style={styles.mapWater} />
-        <View style={styles.mapPin}>
-          <FontAwesome6
-            color="#ffffff"
-            iconStyle="solid"
-            name="location-dot"
-            size={13}
-          />
-        </View>
-      </View>
-    </View>
+    <WebView
+      originWhitelist={["*"]}
+      source={{ html: MAP_HTML }}
+      style={styles.attachmentWebView}
+    />
   );
 }
 
@@ -300,6 +440,14 @@ function AttachmentCard({
           }),
         }
       : undefined;
+  const closeButtonOpacity =
+    isPreview && progress
+      ? progress.interpolate({
+          extrapolate: "clamp",
+          inputRange: [0.55, 1],
+          outputRange: [0, 1],
+        })
+      : 1;
 
   const content = (
     <>
@@ -329,14 +477,16 @@ function AttachmentCard({
           </Text>
         </View>
         {isPreview && onClose && (
-          <Pressable onPress={onClose} style={styles.attachmentCloseButton}>
-            <FontAwesome6
-              color="#0f172a"
-              iconStyle="solid"
-              name="xmark"
-              size={16}
-            />
-          </Pressable>
+          <Animated.View style={{ opacity: closeButtonOpacity }}>
+            <Pressable onPress={onClose} style={styles.attachmentCloseButton}>
+              <FontAwesome6
+                color="#0f172a"
+                iconStyle="solid"
+                name="xmark"
+                size={16}
+              />
+            </Pressable>
+          </Animated.View>
         )}
       </View>
     </>
@@ -788,7 +938,10 @@ export default function MessageAnimation() {
       >
         <View style={styles.conversationHeader}>
           <View style={styles.avatar}>
-            <Text style={styles.avatarText}>K</Text>
+            <Image
+              source={require("./avatar.jpeg")}
+              style={styles.avatarText}
+            />
           </View>
           <View>
             <Text style={styles.contactName}>Ksenia</Text>
@@ -964,6 +1117,10 @@ const styles = StyleSheet.create({
     fontWeight: "700",
     lineHeight: 19,
   },
+  attachmentWebView: {
+    backgroundColor: "#f1f5f9",
+    flex: 1,
+  },
   avatar: {
     alignItems: "center",
     backgroundColor: "#111827",
@@ -973,6 +1130,9 @@ const styles = StyleSheet.create({
     width: 40,
   },
   avatarText: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
     color: "#ffffff",
     fontSize: 17,
     fontWeight: "800",
@@ -1076,229 +1236,12 @@ const styles = StyleSheet.create({
     paddingHorizontal: 14,
     paddingTop: 18,
   },
-  mapArtwork: {
-    backgroundColor: "#dff5e7",
-    flex: 1,
-    overflow: "hidden",
-  },
-  mapBlock: {
-    backgroundColor: "rgba(255,255,255,0.58)",
-    borderColor: "#cbd5e1",
-    borderRadius: 18,
-    borderWidth: StyleSheet.hairlineWidth,
-    position: "absolute",
-  },
-  mapBlockOne: {
-    height: 138,
-    left: 124,
-    top: 142,
-    transform: [{ rotate: "-8deg" }],
-    width: 180,
-  },
-  mapBlockThree: {
-    height: 150,
-    left: 560,
-    top: 336,
-    transform: [{ rotate: "12deg" }],
-    width: 238,
-  },
-  mapBlockTwo: {
-    height: 184,
-    left: 384,
-    top: 112,
-    transform: [{ rotate: "7deg" }],
-    width: 246,
-  },
-  mapCanvas: {
-    backgroundColor: "#dff5e7",
-    height: 1100,
-    left: -420,
-    position: "absolute",
-    top: -320,
-    width: 1200,
-  },
-  mapPark: {
-    backgroundColor: "#b7e6c8",
-    borderRadius: 999,
-    height: 212,
-    left: 392,
-    position: "absolute",
-    top: 244,
-    width: 276,
-  },
-  mapPin: {
-    alignItems: "center",
-    backgroundColor: "#ef4444",
-    borderColor: "#ffffff",
-    borderRadius: 16,
-    borderWidth: 3,
-    height: 32,
-    justifyContent: "center",
-    left: 548,
-    position: "absolute",
-    top: 366,
-    width: 32,
-  },
-  mapRoad: {
-    backgroundColor: "#ffffff",
-    borderColor: "#cbd5e1",
-    borderRadius: 999,
-    borderWidth: StyleSheet.hairlineWidth,
-    height: 18,
-    position: "absolute",
-    width: 780,
-  },
-  mapRoadFour: {
-    left: 196,
-    top: 528,
-    transform: [{ rotate: "-31deg" }],
-  },
-  mapRoadOne: {
-    left: 250,
-    top: 340,
-    transform: [{ rotate: "-18deg" }],
-  },
-  mapRoadThree: {
-    left: 238,
-    top: 452,
-    transform: [{ rotate: "22deg" }],
-  },
-  mapRoadTwo: {
-    left: 364,
-    top: 398,
-    transform: [{ rotate: "7deg" }],
-  },
-  mapWater: {
-    backgroundColor: "#93c5fd",
-    borderRadius: 999,
-    height: 250,
-    left: 734,
-    position: "absolute",
-    top: 466,
-    transform: [{ rotate: "-20deg" }],
-    width: 360,
-  },
-  pdfArtwork: {
-    alignItems: "center",
-    backgroundColor: "#f1f5f9",
-    flex: 1,
-    justifyContent: "center",
-  },
-  pdfBadge: {
-    backgroundColor: "#dc2626",
-    borderRadius: 8,
-    bottom: 16,
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    position: "absolute",
-    right: 16,
-  },
-  pdfBadgeText: {
-    color: "#ffffff",
-    fontSize: 11,
-    fontWeight: "800",
-    letterSpacing: 0,
-  },
-  pdfHeaderLine: {
-    backgroundColor: "#dc2626",
-    borderRadius: 999,
-    height: 10,
-    marginBottom: 14,
-    width: "58%",
-  },
-  pdfLine: {
-    backgroundColor: "#cbd5e1",
-    borderRadius: 999,
-    height: 7,
-    marginBottom: 9,
-    width: "100%",
-  },
-  pdfLineShort: {
-    width: "72%",
-  },
-  pdfLineTiny: {
-    width: "46%",
-  },
-  pdfPage: {
-    backgroundColor: "#ffffff",
-    borderColor: "#e2e8f0",
-    borderRadius: 8,
-    borderWidth: StyleSheet.hairlineWidth,
-    height: "76%",
-    overflow: "hidden",
-    padding: 14,
-    width: "48%",
-  },
-  pdfSection: {
-    backgroundColor: "#e0f2fe",
-    borderRadius: 6,
-    height: 28,
-    marginBottom: 11,
-    width: "100%",
-  },
   placeholder: {
     color: "#94a3b8",
     fontSize: MESSAGE_FONT_SIZE,
     lineHeight: MESSAGE_LINE_HEIGHT,
     paddingHorizontal: 16,
     paddingTop: 10,
-  },
-  previewArtwork: {
-    flex: 1,
-    padding: 18,
-  },
-  previewBackdrop: {
-    ...StyleSheet.absoluteFillObject,
-    backgroundColor: "#020617",
-  },
-  previewCloseButton: {
-    alignItems: "center",
-    backgroundColor: "#e2e8f0",
-    borderRadius: 20,
-    height: 40,
-    justifyContent: "center",
-    width: 40,
-  },
-  previewFullContent: {
-    ...StyleSheet.absoluteFillObject,
-    backgroundColor: "#f8fafc",
-  },
-  previewHeader: {
-    alignItems: "center",
-    borderBottomColor: "#e2e8f0",
-    borderBottomWidth: StyleSheet.hairlineWidth,
-    flexDirection: "row",
-    gap: 14,
-    paddingHorizontal: 18,
-    paddingVertical: 14,
-  },
-  previewHeaderCopy: {
-    flex: 1,
-  },
-  previewSafeArea: {
-    flex: 1,
-  },
-  previewSubtitle: {
-    color: "#64748b",
-    fontSize: 14,
-    lineHeight: 18,
-    marginTop: 3,
-  },
-  previewSurface: {
-    backgroundColor: "#ffffff",
-    elevation: 10,
-    overflow: "hidden",
-    position: "absolute",
-    shadowColor: "#020617",
-    shadowOffset: { height: 12, width: 0 },
-    shadowOpacity: 0.18,
-    shadowRadius: 24,
-  },
-  previewTitle: {
-    color: "#0f172a",
-    fontSize: 20,
-    fontWeight: "800",
-    lineHeight: 25,
   },
   receivedBubble: {
     backgroundColor: "#ffffff",
