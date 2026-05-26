@@ -22,7 +22,7 @@ import {
 } from "react-native";
 import { Portal, PortalHost } from "react-native-teleport";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { WebView } from "react-native-webview";
+import { AttachmentArtwork, type AttachmentKind } from "./AttachmentArtwork";
 
 const FLIGHT_HOST = "message-animation-flight";
 const ATTACHMENT_PREVIEW_HOST = "message-animation-attachment-preview";
@@ -30,168 +30,6 @@ const DRAFT_PORTAL = "message-animation-draft";
 const MESSAGE_FONT_SIZE = 17;
 const MESSAGE_LINE_HEIGHT = 22;
 const ATTACHMENT_CARD_WIDTH = 292;
-const SAMPLE_PDF_BASE64 =
-  "JVBERi0xLjQKMSAwIG9iago8PCAvVHlwZSAvQ2F0YWxvZyAvUGFnZXMgMiAwIFIgPj4KZW5kb2JqCjIgMCBvYmoKPDwgL1R5cGUgL1BhZ2VzIC9LaWRzIFszIDAgUl0gL0NvdW50IDEgPj4KZW5kb2JqCjMgMCBvYmoKPDwgL1R5cGUgL1BhZ2UgL1BhcmVudCAyIDAgUiAvTWVkaWFCb3ggWzAgMCA2MTIgNzkyXSAvUmVzb3VyY2VzIDw8IC9Gb250IDw8IC9GMSA0IDAgUiA+PiA+PiAvQ29udGVudHMgNSAwIFIgPj4KZW5kb2JqCjQgMCBvYmoKPDwgL1R5cGUgL0ZvbnQgL1N1YnR5cGUgL1R5cGUxIC9CYXNlRm9udCAvSGVsdmV0aWNhID4+CmVuZG9iago1IDAgb2JqCjw8IC9MZW5ndGggMzAwID4+CnN0cmVhbQpCVAovRjEgMjQgVGYKNTYgNzQ0IFRkCihQcmFnYSBMdW5jaCBNZW51KSBUagowIC00MiBUZAovRjEgMTQgVGYKKFRvZGF5J3Mgc2FtcGxlIGF0dGFjaG1lbnQpIFRqCjAgLTM4IFRkCi9GMSAxNiBUZgooMS4gVG9tYXRvIHNvdXAgLSAxOCBQTE4pIFRqCjAgLTI4IFRkCigyLiBQaWVyb2dpIHdpdGggaGVyYnMgLSAzMiBQTE4pIFRqCjAgLTI4IFRkCigzLiBBcHBsZSBjYWtlIC0gMTkgUExOKSBUagowIC00MiBUZAovRjEgMTIgVGYKKEdlbmVyYXRlZCBzYW1wbGUgUERGIGZvciB0aGUgdGVsZXBvcnQgY2hhdCBkZW1vLikgVGoKRVQKZW5kc3RyZWFtCmVuZG9iagp4cmVmCjAgNgowMDAwMDAwMDAwIDY1NTM1IGYgCjAwMDAwMDAwMDkgMDAwMDAgbiAKMDAwMDAwMDA1OCAwMDAwMCBuIAowMDAwMDAwMTE1IDAwMDAwIG4gCjAwMDAwMDAyNDEgMDAwMDAgbiAKMDAwMDAwMDMxMSAwMDAwMCBuIAp0cmFpbGVyCjw8IC9TaXplIDYgL1Jvb3QgMSAwIFIgPj4Kc3RhcnR4cmVmCjY2MgolJUVPRgo=";
-const MAP_HTML = `
-<!doctype html>
-<html>
-  <head>
-    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
-    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-    <style>
-      html, body, #map { height: 100%; margin: 0; width: 100%; }
-      .leaflet-control-attribution { display: none; }
-      .leaflet-container { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; }
-      .leaflet-top.leaflet-left { top: 72px; }
-      .leaflet-control-zoom {
-        border: 0;
-        border-radius: 12px;
-        box-shadow: 0 8px 24px rgba(15, 23, 42, 0.22);
-        overflow: hidden;
-      }
-      .leaflet-control-zoom a {
-        border: 0;
-        color: #0f172a;
-        height: 36px;
-        line-height: 36px;
-        width: 36px;
-      }
-    </style>
-  </head>
-  <body>
-    <div id="map"></div>
-    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-    <script>
-      const map = L.map("map", { zoomControl: true }).setView([52.2531, 21.0446], 17);
-      L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
-        maxZoom: 19
-      }).addTo(map);
-      L.marker([52.2531, 21.0446]).addTo(map).bindPopup("Koneser");
-      let resizeTicks = 0;
-      const resizeTimer = setInterval(() => {
-        map.invalidateSize({ pan: false });
-        resizeTicks += 1;
-
-        if (resizeTicks > 14) {
-          clearInterval(resizeTimer);
-        }
-      }, 80);
-      window.addEventListener("resize", () => map.invalidateSize());
-    </script>
-  </body>
-</html>`;
-const PDF_HTML = `
-<!doctype html>
-<html>
-  <head>
-    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1" />
-    <style>
-      html, body { height: 100%; margin: 0; width: 100%; }
-      body {
-        align-items: center;
-        background: #f1f5f9;
-        display: flex;
-        justify-content: center;
-        overflow: hidden;
-      }
-      #viewer {
-        align-items: center;
-        display: flex;
-        height: 100%;
-        justify-content: center;
-        width: 100%;
-      }
-      canvas {
-        background: #ffffff;
-        box-shadow: 0 10px 28px rgba(15, 23, 42, 0.16);
-        display: block;
-      }
-      #fallback {
-        color: #64748b;
-        display: none;
-        font: 14px -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-      }
-    </style>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
-  </head>
-  <body>
-    <div id="viewer">
-      <canvas id="page"></canvas>
-      <div id="fallback">Unable to render PDF preview</div>
-    </div>
-    <script>
-      pdfjsLib.GlobalWorkerOptions.workerSrc =
-        "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js";
-
-      const pdfBytes = Uint8Array.from(
-        atob("${SAMPLE_PDF_BASE64}"),
-        (character) => character.charCodeAt(0),
-      );
-      let pdfPage = null;
-      let renderTask = null;
-
-      async function renderPage() {
-        const canvas = document.getElementById("page");
-        const viewer = document.getElementById("viewer");
-        const context = canvas.getContext("2d");
-        const sourceViewport = pdfPage.getViewport({ scale: 1 });
-        const scale =
-          Math.min(
-            viewer.clientWidth / sourceViewport.width,
-            viewer.clientHeight / sourceViewport.height,
-          ) * 0.88;
-        const viewport = pdfPage.getViewport({ scale });
-        const pixelRatio = window.devicePixelRatio || 1;
-
-        if (renderTask) {
-          renderTask.cancel();
-          try {
-            await renderTask.promise;
-          } catch (_error) {}
-          renderTask = null;
-        }
-
-        canvas.style.height = viewport.height + "px";
-        canvas.style.width = viewport.width + "px";
-        canvas.height = Math.floor(viewport.height * pixelRatio);
-        canvas.width = Math.floor(viewport.width * pixelRatio);
-        context.setTransform(pixelRatio, 0, 0, pixelRatio, 0, 0);
-        const currentRenderTask = pdfPage.render({ canvasContext: context, viewport });
-        renderTask = currentRenderTask;
-
-        try {
-          await currentRenderTask.promise;
-        } catch (error) {
-          if (error?.name !== "RenderingCancelledException") {
-            throw error;
-          }
-        } finally {
-          if (renderTask === currentRenderTask) {
-            renderTask = null;
-          }
-        }
-      }
-
-      async function start() {
-        try {
-          const pdf = await pdfjsLib.getDocument({ data: pdfBytes }).promise;
-          pdfPage = await pdf.getPage(1);
-          await renderPage();
-        } catch (_error) {
-          document.getElementById("page").style.display = "none";
-          document.getElementById("fallback").style.display = "block";
-        }
-      }
-
-      window.addEventListener("resize", () => {
-        if (pdfPage) {
-          renderPage().catch(() => {});
-        }
-      });
-      start();
-    </script>
-  </body>
-</html>`;
 
 const INITIAL_MESSAGES: ChatMessage[] = [
   {
@@ -213,9 +51,9 @@ const INITIAL_MESSAGES: ChatMessage[] = [
     attachment: {
       id: "menu-pdf",
       kind: "pdf",
-      meta: "2 pages · 1.2 MB",
-      subtitle: "Restaurant menu",
-      title: "Lunch menu.pdf",
+      meta: "1 page · 480 KB",
+      subtitle: "Bistro",
+      title: "Koneser menu.pdf",
     },
     id: "msg-4",
     sender: "me",
@@ -256,7 +94,7 @@ type ActiveDraft = {
 
 type Attachment = {
   id: string;
-  kind: "map" | "pdf";
+  kind: AttachmentKind;
   meta: string;
   subtitle: string;
   title: string;
@@ -379,30 +217,6 @@ function DraftSurface({ frames, phase, progress, text }: DraftSurfaceProps) {
   );
 }
 
-function PdfArtwork() {
-  return (
-    <WebView
-      originWhitelist={["*"]}
-      source={{ html: PDF_HTML }}
-      style={styles.attachmentWebView}
-    />
-  );
-}
-
-function MapArtwork() {
-  return (
-    <WebView
-      originWhitelist={["*"]}
-      source={{ html: MAP_HTML }}
-      style={styles.attachmentWebView}
-    />
-  );
-}
-
-function AttachmentArtwork({ kind }: Pick<Attachment, "kind">) {
-  return kind === "pdf" ? <PdfArtwork /> : <MapArtwork />;
-}
-
 function AttachmentCard({
   activeAttachment,
   attachment,
@@ -501,8 +315,8 @@ function AttachmentCard({
         previewFrameStyle,
       ]}
     >
-      {content}
-      {onPress && !isPreview && !hidden && (
+      {!hidden && content}
+      {!hidden && onPress && !isPreview && (
         <Pressable
           disabled={disabled}
           onPress={() => onPress(attachment)}
@@ -1116,10 +930,6 @@ const styles = StyleSheet.create({
     fontSize: 15,
     fontWeight: "700",
     lineHeight: 19,
-  },
-  attachmentWebView: {
-    backgroundColor: "#f1f5f9",
-    flex: 1,
   },
   avatar: {
     alignItems: "center",
