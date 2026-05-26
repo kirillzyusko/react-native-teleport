@@ -20,12 +20,14 @@ import {
   View,
 } from "react-native";
 import { Portal, PortalHost } from "react-native-teleport";
-import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 const FLIGHT_HOST = "message-animation-flight";
+const ATTACHMENT_PREVIEW_HOST = "message-animation-attachment-preview";
 const DRAFT_PORTAL = "message-animation-draft";
 const MESSAGE_FONT_SIZE = 17;
 const MESSAGE_LINE_HEIGHT = 22;
+const ATTACHMENT_CARD_WIDTH = 292;
 
 const INITIAL_MESSAGES: ChatMessage[] = [
   {
@@ -42,6 +44,28 @@ const INITIAL_MESSAGES: ChatMessage[] = [
     id: "msg-3",
     sender: "them",
     text: "Send the address when you have it.",
+  },
+  {
+    attachment: {
+      id: "menu-pdf",
+      kind: "pdf",
+      meta: "2 pages · 1.2 MB",
+      subtitle: "Restaurant menu",
+      title: "Lunch menu.pdf",
+    },
+    id: "msg-4",
+    sender: "me",
+  },
+  {
+    attachment: {
+      id: "route-map",
+      kind: "map",
+      meta: "8 min walk",
+      subtitle: "Warsaw · 1.1 km",
+      title: "Route to Koneser",
+    },
+    id: "msg-5",
+    sender: "me",
   },
 ];
 
@@ -66,10 +90,26 @@ type ActiveDraft = {
   text: string;
 };
 
+type Attachment = {
+  id: string;
+  kind: "map" | "pdf";
+  meta: string;
+  subtitle: string;
+  title: string;
+};
+
+type ActiveAttachment = {
+  attachment: Attachment;
+  from: Frame;
+  phase: "closing" | "open" | "opening";
+  to: Frame;
+};
+
 type ChatMessage = {
+  attachment?: Attachment;
   id: string;
   sender: "me" | "them";
-  text: string;
+  text?: string;
 };
 
 type RenderMessage = ChatMessage & {
@@ -83,7 +123,29 @@ type DraftSurfaceProps = {
   text: string;
 };
 
+type AttachmentCardProps = {
+  activeAttachment?: ActiveAttachment | null;
+  attachment: Attachment;
+  disabled?: boolean;
+  hidden?: boolean;
+  onClose?: () => void;
+  onPress?: (attachment: Attachment) => void;
+  previewProgress?: Animated.Value;
+};
+
+type AttachmentMessageProps = {
+  activeAttachment: ActiveAttachment | null;
+  attachment: Attachment;
+  onClose: () => void;
+  onOpen: (attachment: Attachment) => void;
+  previewProgress: Animated.Value;
+  registerRef: (node: ViewRef | null) => void;
+  sender: ChatMessage["sender"];
+};
+
 const messageHostName = (id: string) => `message-animation-row-${id}`;
+const attachmentPortalName = (id: string) =>
+  `message-animation-attachment-${id}`;
 
 function DraftSurface({ frames, phase, progress, text }: DraftSurfaceProps) {
   if (phase === "flying" && frames) {
@@ -153,7 +215,197 @@ function DraftSurface({ frames, phase, progress, text }: DraftSurfaceProps) {
   );
 }
 
-function MessageBubble({ sender, text }: ChatMessage) {
+function PdfArtwork() {
+  return (
+    <View style={styles.pdfArtwork}>
+      <View style={styles.pdfPage}>
+        <View style={styles.pdfHeaderLine} />
+        <View style={styles.pdfLine} />
+        <View style={[styles.pdfLine, styles.pdfLineShort]} />
+        <View style={styles.pdfSection} />
+        <View style={styles.pdfLine} />
+        <View style={[styles.pdfLine, styles.pdfLineTiny]} />
+      </View>
+      <View style={styles.pdfBadge}>
+        <Text style={styles.pdfBadgeText}>PDF</Text>
+      </View>
+    </View>
+  );
+}
+
+function MapArtwork() {
+  return (
+    <View style={styles.mapArtwork}>
+      <View style={styles.mapCanvas}>
+        <View style={[styles.mapBlock, styles.mapBlockOne]} />
+        <View style={[styles.mapBlock, styles.mapBlockTwo]} />
+        <View style={[styles.mapBlock, styles.mapBlockThree]} />
+        <View style={[styles.mapRoad, styles.mapRoadOne]} />
+        <View style={[styles.mapRoad, styles.mapRoadTwo]} />
+        <View style={[styles.mapRoad, styles.mapRoadThree]} />
+        <View style={[styles.mapRoad, styles.mapRoadFour]} />
+        <View style={styles.mapPark} />
+        <View style={styles.mapWater} />
+        <View style={styles.mapPin}>
+          <FontAwesome6
+            color="#ffffff"
+            iconStyle="solid"
+            name="location-dot"
+            size={13}
+          />
+        </View>
+      </View>
+    </View>
+  );
+}
+
+function AttachmentArtwork({ kind }: Pick<Attachment, "kind">) {
+  return kind === "pdf" ? <PdfArtwork /> : <MapArtwork />;
+}
+
+function AttachmentCard({
+  activeAttachment,
+  attachment,
+  disabled,
+  hidden,
+  onClose,
+  onPress,
+  previewProgress,
+}: AttachmentCardProps) {
+  const isPreview = activeAttachment?.attachment.id === attachment.id;
+  const frame = activeAttachment;
+  const progress = previewProgress;
+  const previewFrameStyle =
+    isPreview && frame && progress
+      ? {
+          borderRadius: progress.interpolate({
+            inputRange: [0, 1],
+            outputRange: [18, 0],
+          }),
+          height: progress.interpolate({
+            inputRange: [0, 1],
+            outputRange: [frame.from.height, frame.to.height],
+          }),
+          left: progress.interpolate({
+            inputRange: [0, 1],
+            outputRange: [frame.from.x, frame.to.x],
+          }),
+          top: progress.interpolate({
+            inputRange: [0, 1],
+            outputRange: [frame.from.y, frame.to.y],
+          }),
+          width: progress.interpolate({
+            inputRange: [0, 1],
+            outputRange: [frame.from.width, frame.to.width],
+          }),
+        }
+      : undefined;
+
+  const content = (
+    <>
+      <AttachmentArtwork kind={attachment.kind} />
+      <View style={styles.attachmentFooter}>
+        <View
+          style={[
+            styles.attachmentIcon,
+            attachment.kind === "map"
+              ? styles.attachmentIconMap
+              : styles.attachmentIconPdf,
+          ]}
+        >
+          <FontAwesome6
+            color="#ffffff"
+            iconStyle="solid"
+            name={attachment.kind === "map" ? "map-location-dot" : "file-pdf"}
+            size={16}
+          />
+        </View>
+        <View style={styles.attachmentCopy}>
+          <Text numberOfLines={1} style={styles.attachmentTitle}>
+            {attachment.title}
+          </Text>
+          <Text numberOfLines={1} style={styles.attachmentSubtitle}>
+            {attachment.subtitle} · {attachment.meta}
+          </Text>
+        </View>
+        {isPreview && onClose && (
+          <Pressable onPress={onClose} style={styles.attachmentCloseButton}>
+            <FontAwesome6
+              color="#0f172a"
+              iconStyle="solid"
+              name="xmark"
+              size={16}
+            />
+          </Pressable>
+        )}
+      </View>
+    </>
+  );
+
+  return (
+    <Animated.View
+      style={[
+        styles.attachmentCard,
+        hidden && styles.hidden,
+        isPreview && styles.attachmentPreviewCard,
+        previewFrameStyle,
+      ]}
+    >
+      {content}
+      {onPress && !isPreview && !hidden && (
+        <Pressable
+          disabled={disabled}
+          onPress={() => onPress(attachment)}
+          style={({ pressed }) => [
+            styles.attachmentPressTarget,
+            pressed && !disabled && styles.attachmentCardPressed,
+          ]}
+        />
+      )}
+    </Animated.View>
+  );
+}
+
+function AttachmentMessage({
+  activeAttachment,
+  attachment,
+  onClose,
+  onOpen,
+  previewProgress,
+  registerRef,
+  sender,
+}: AttachmentMessageProps) {
+  const isActive = activeAttachment?.attachment.id === attachment.id;
+
+  return (
+    <View
+      style={[
+        styles.messageRow,
+        sender === "me" ? styles.messageRowRight : styles.messageRowLeft,
+      ]}
+    >
+      <View ref={registerRef} collapsable={false} style={styles.attachmentSlot}>
+        {isActive && <AttachmentCard attachment={attachment} hidden />}
+        <Portal
+          hostName={isActive ? ATTACHMENT_PREVIEW_HOST : undefined}
+          name={attachmentPortalName(attachment.id)}
+          style={isActive ? StyleSheet.absoluteFillObject : undefined}
+        >
+          <AttachmentCard
+            activeAttachment={activeAttachment}
+            attachment={attachment}
+            disabled={Boolean(activeAttachment)}
+            onClose={onClose}
+            onPress={onOpen}
+            previewProgress={previewProgress}
+          />
+        </Portal>
+      </View>
+    </View>
+  );
+}
+
+function MessageBubble({ sender, text }: ChatMessage & { text: string }) {
   return (
     <View
       style={[
@@ -177,11 +429,13 @@ function MessageBubble({ sender, text }: ChatMessage) {
 
 export default function MessageAnimation() {
   const insets = useSafeAreaInsets();
+  const attachmentRefs = useRef<Record<string, ViewRef | null>>({});
   const composerBubbleRef = useRef<ViewRef>(null);
   const rootRef = useRef<ViewRef>(null);
   const inputSlotRef = useRef<ViewRef>(null);
   const destinationSlotRef = useRef<ViewRef>(null);
   const scrollRef = useRef<ScrollViewRef>(null);
+  const attachmentProgress = useRef(new Animated.Value(0)).current;
   const settleTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const placeholderOpacity = useRef(new Animated.Value(1)).current;
   const progress = useRef(new Animated.Value(0)).current;
@@ -189,7 +443,15 @@ export default function MessageAnimation() {
   const [messages, setMessages] = useState(INITIAL_MESSAGES);
   const [inputText, setInputText] = useState("");
   const [activeDraft, setActiveDraft] = useState<ActiveDraft | null>(null);
+  const [activeAttachment, setActiveAttachment] =
+    useState<ActiveAttachment | null>(null);
   const [frames, setFrames] = useState<FlightFrames | null>(null);
+  const [rootFrame, setRootFrame] = useState<Frame>({
+    height: 0,
+    width: 0,
+    x: 0,
+    y: 0,
+  });
 
   const canSend = inputText.trim().length > 0 && !activeDraft;
   const shouldShowPlaceholder =
@@ -274,6 +536,88 @@ export default function MessageAnimation() {
     });
   }, []);
 
+  const registerAttachmentRef = useCallback(
+    (id: string) => (node: ViewRef | null) => {
+      attachmentRefs.current[id] = node;
+    },
+    [],
+  );
+
+  const handleAttachmentOpen = useCallback(
+    async (attachment: Attachment) => {
+      if (activeAttachment || rootFrame.width === 0 || rootFrame.height === 0) {
+        return;
+      }
+
+      const from = await measureInRoot(
+        attachmentRefs.current[attachment.id] ?? null,
+      );
+
+      if (!from) {
+        return;
+      }
+
+      attachmentProgress.stopAnimation();
+      attachmentProgress.setValue(0);
+      setActiveAttachment({
+        attachment,
+        from,
+        phase: "opening",
+        to: rootFrame,
+      });
+
+      requestAnimationFrame(() => {
+        Animated.timing(attachmentProgress, {
+          duration: 460,
+          easing: Easing.out(Easing.cubic),
+          toValue: 1,
+          useNativeDriver: false,
+        }).start(({ finished }) => {
+          if (!finished) {
+            return;
+          }
+
+          setActiveAttachment((current) =>
+            current?.attachment.id === attachment.id
+              ? { ...current, phase: "open" }
+              : current,
+          );
+        });
+      });
+    },
+    [activeAttachment, attachmentProgress, measureInRoot, rootFrame],
+  );
+
+  const handleAttachmentClose = useCallback(() => {
+    if (!activeAttachment || activeAttachment.phase === "closing") {
+      return;
+    }
+
+    const id = activeAttachment.attachment.id;
+
+    setActiveAttachment((current) =>
+      current?.attachment.id === id
+        ? { ...current, phase: "closing" }
+        : current,
+    );
+    attachmentProgress.stopAnimation();
+
+    Animated.timing(attachmentProgress, {
+      duration: 360,
+      easing: Easing.out(Easing.cubic),
+      toValue: 0,
+      useNativeDriver: false,
+    }).start(({ finished }) => {
+      if (!finished) {
+        return;
+      }
+
+      setActiveAttachment((current) =>
+        current?.attachment.id === id ? null : current,
+      );
+    });
+  }, [activeAttachment, attachmentProgress]);
+
   const handleSend = useCallback(() => {
     const text = inputText.trim();
 
@@ -293,8 +637,29 @@ export default function MessageAnimation() {
 
   const renderMessage = useCallback(
     (message: RenderMessage) => {
+      if (message.attachment) {
+        return (
+          <AttachmentMessage
+            key={message.id}
+            activeAttachment={activeAttachment}
+            attachment={message.attachment}
+            onClose={handleAttachmentClose}
+            onOpen={handleAttachmentOpen}
+            previewProgress={attachmentProgress}
+            registerRef={registerAttachmentRef(message.attachment.id)}
+            sender={message.sender}
+          />
+        );
+      }
+
       if (!message.pending || !activeDraft) {
-        return <MessageBubble key={message.id} {...message} />;
+        if (!message.text) {
+          return null;
+        }
+
+        return (
+          <MessageBubble key={message.id} {...message} text={message.text} />
+        );
       }
 
       return (
@@ -322,7 +687,14 @@ export default function MessageAnimation() {
         </View>
       );
     },
-    [activeDraft],
+    [
+      activeAttachment,
+      activeDraft,
+      attachmentProgress,
+      handleAttachmentClose,
+      handleAttachmentOpen,
+      registerAttachmentRef,
+    ],
   );
 
   useEffect(() => {
@@ -404,7 +776,16 @@ export default function MessageAnimation() {
       behavior={Platform.OS === "ios" ? "padding" : undefined}
       style={styles.container}
     >
-      <View ref={rootRef} collapsable={false} style={styles.root}>
+      <View
+        ref={rootRef}
+        collapsable={false}
+        onLayout={({ nativeEvent }) => {
+          const { height, width } = nativeEvent.layout;
+
+          setRootFrame({ height, width, x: 0, y: 0 });
+        }}
+        style={styles.root}
+      >
         <View style={styles.conversationHeader}>
           <View style={styles.avatar}>
             <Text style={styles.avatarText}>K</Text>
@@ -495,12 +876,94 @@ export default function MessageAnimation() {
             style={StyleSheet.absoluteFillObject}
           />
         </View>
+        <View
+          pointerEvents={activeAttachment ? "box-none" : "none"}
+          style={StyleSheet.absoluteFillObject}
+        >
+          <PortalHost
+            name={ATTACHMENT_PREVIEW_HOST}
+            style={StyleSheet.absoluteFillObject}
+          />
+        </View>
       </View>
     </KeyboardAvoidingView>
   );
 }
 
 const styles = StyleSheet.create({
+  attachmentCard: {
+    backgroundColor: "#ffffff",
+    borderColor: "#dbe4ef",
+    borderRadius: 18,
+    borderWidth: StyleSheet.hairlineWidth,
+    height: 206,
+    maxWidth: "100%",
+    overflow: "hidden",
+    width: ATTACHMENT_CARD_WIDTH,
+  },
+  attachmentCardPressed: {
+    backgroundColor: "rgba(15, 23, 42, 0.04)",
+  },
+  attachmentCloseButton: {
+    alignItems: "center",
+    backgroundColor: "#e2e8f0",
+    borderRadius: 18,
+    height: 36,
+    justifyContent: "center",
+    width: 36,
+  },
+  attachmentCopy: {
+    flex: 1,
+  },
+  attachmentFooter: {
+    alignItems: "center",
+    backgroundColor: "#ffffff",
+    flexDirection: "row",
+    gap: 10,
+    height: 64,
+    paddingHorizontal: 12,
+  },
+  attachmentIcon: {
+    alignItems: "center",
+    borderRadius: 11,
+    height: 36,
+    justifyContent: "center",
+    width: 36,
+  },
+  attachmentIconMap: {
+    backgroundColor: "#16a34a",
+  },
+  attachmentIconPdf: {
+    backgroundColor: "#dc2626",
+  },
+  attachmentPressTarget: {
+    ...StyleSheet.absoluteFillObject,
+  },
+  attachmentPreviewCard: {
+    borderRadius: 0,
+    elevation: 10,
+    position: "absolute",
+    shadowColor: "#020617",
+    shadowOffset: { height: 12, width: 0 },
+    shadowOpacity: 0.18,
+    shadowRadius: 24,
+  },
+  attachmentSlot: {
+    maxWidth: "82%",
+    width: ATTACHMENT_CARD_WIDTH,
+  },
+  attachmentSubtitle: {
+    color: "#64748b",
+    fontSize: 12,
+    lineHeight: 16,
+    marginTop: 2,
+  },
+  attachmentTitle: {
+    color: "#0f172a",
+    fontSize: 15,
+    fontWeight: "700",
+    lineHeight: 19,
+  },
   avatar: {
     alignItems: "center",
     backgroundColor: "#111827",
@@ -580,6 +1043,9 @@ const styles = StyleSheet.create({
   flightBubble: {
     position: "absolute",
   },
+  hidden: {
+    opacity: 0,
+  },
   inputSlot: {
     backgroundColor: "#ffffff",
     borderColor: "#cbd5e1",
@@ -610,12 +1076,229 @@ const styles = StyleSheet.create({
     paddingHorizontal: 14,
     paddingTop: 18,
   },
+  mapArtwork: {
+    backgroundColor: "#dff5e7",
+    flex: 1,
+    overflow: "hidden",
+  },
+  mapBlock: {
+    backgroundColor: "rgba(255,255,255,0.58)",
+    borderColor: "#cbd5e1",
+    borderRadius: 18,
+    borderWidth: StyleSheet.hairlineWidth,
+    position: "absolute",
+  },
+  mapBlockOne: {
+    height: 138,
+    left: 124,
+    top: 142,
+    transform: [{ rotate: "-8deg" }],
+    width: 180,
+  },
+  mapBlockThree: {
+    height: 150,
+    left: 560,
+    top: 336,
+    transform: [{ rotate: "12deg" }],
+    width: 238,
+  },
+  mapBlockTwo: {
+    height: 184,
+    left: 384,
+    top: 112,
+    transform: [{ rotate: "7deg" }],
+    width: 246,
+  },
+  mapCanvas: {
+    backgroundColor: "#dff5e7",
+    height: 1100,
+    left: -420,
+    position: "absolute",
+    top: -320,
+    width: 1200,
+  },
+  mapPark: {
+    backgroundColor: "#b7e6c8",
+    borderRadius: 999,
+    height: 212,
+    left: 392,
+    position: "absolute",
+    top: 244,
+    width: 276,
+  },
+  mapPin: {
+    alignItems: "center",
+    backgroundColor: "#ef4444",
+    borderColor: "#ffffff",
+    borderRadius: 16,
+    borderWidth: 3,
+    height: 32,
+    justifyContent: "center",
+    left: 548,
+    position: "absolute",
+    top: 366,
+    width: 32,
+  },
+  mapRoad: {
+    backgroundColor: "#ffffff",
+    borderColor: "#cbd5e1",
+    borderRadius: 999,
+    borderWidth: StyleSheet.hairlineWidth,
+    height: 18,
+    position: "absolute",
+    width: 780,
+  },
+  mapRoadFour: {
+    left: 196,
+    top: 528,
+    transform: [{ rotate: "-31deg" }],
+  },
+  mapRoadOne: {
+    left: 250,
+    top: 340,
+    transform: [{ rotate: "-18deg" }],
+  },
+  mapRoadThree: {
+    left: 238,
+    top: 452,
+    transform: [{ rotate: "22deg" }],
+  },
+  mapRoadTwo: {
+    left: 364,
+    top: 398,
+    transform: [{ rotate: "7deg" }],
+  },
+  mapWater: {
+    backgroundColor: "#93c5fd",
+    borderRadius: 999,
+    height: 250,
+    left: 734,
+    position: "absolute",
+    top: 466,
+    transform: [{ rotate: "-20deg" }],
+    width: 360,
+  },
+  pdfArtwork: {
+    alignItems: "center",
+    backgroundColor: "#f1f5f9",
+    flex: 1,
+    justifyContent: "center",
+  },
+  pdfBadge: {
+    backgroundColor: "#dc2626",
+    borderRadius: 8,
+    bottom: 16,
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    position: "absolute",
+    right: 16,
+  },
+  pdfBadgeText: {
+    color: "#ffffff",
+    fontSize: 11,
+    fontWeight: "800",
+    letterSpacing: 0,
+  },
+  pdfHeaderLine: {
+    backgroundColor: "#dc2626",
+    borderRadius: 999,
+    height: 10,
+    marginBottom: 14,
+    width: "58%",
+  },
+  pdfLine: {
+    backgroundColor: "#cbd5e1",
+    borderRadius: 999,
+    height: 7,
+    marginBottom: 9,
+    width: "100%",
+  },
+  pdfLineShort: {
+    width: "72%",
+  },
+  pdfLineTiny: {
+    width: "46%",
+  },
+  pdfPage: {
+    backgroundColor: "#ffffff",
+    borderColor: "#e2e8f0",
+    borderRadius: 8,
+    borderWidth: StyleSheet.hairlineWidth,
+    height: "76%",
+    overflow: "hidden",
+    padding: 14,
+    width: "48%",
+  },
+  pdfSection: {
+    backgroundColor: "#e0f2fe",
+    borderRadius: 6,
+    height: 28,
+    marginBottom: 11,
+    width: "100%",
+  },
   placeholder: {
     color: "#94a3b8",
     fontSize: MESSAGE_FONT_SIZE,
     lineHeight: MESSAGE_LINE_HEIGHT,
     paddingHorizontal: 16,
     paddingTop: 10,
+  },
+  previewArtwork: {
+    flex: 1,
+    padding: 18,
+  },
+  previewBackdrop: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: "#020617",
+  },
+  previewCloseButton: {
+    alignItems: "center",
+    backgroundColor: "#e2e8f0",
+    borderRadius: 20,
+    height: 40,
+    justifyContent: "center",
+    width: 40,
+  },
+  previewFullContent: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: "#f8fafc",
+  },
+  previewHeader: {
+    alignItems: "center",
+    borderBottomColor: "#e2e8f0",
+    borderBottomWidth: StyleSheet.hairlineWidth,
+    flexDirection: "row",
+    gap: 14,
+    paddingHorizontal: 18,
+    paddingVertical: 14,
+  },
+  previewHeaderCopy: {
+    flex: 1,
+  },
+  previewSafeArea: {
+    flex: 1,
+  },
+  previewSubtitle: {
+    color: "#64748b",
+    fontSize: 14,
+    lineHeight: 18,
+    marginTop: 3,
+  },
+  previewSurface: {
+    backgroundColor: "#ffffff",
+    elevation: 10,
+    overflow: "hidden",
+    position: "absolute",
+    shadowColor: "#020617",
+    shadowOffset: { height: 12, width: 0 },
+    shadowOpacity: 0.18,
+    shadowRadius: 24,
+  },
+  previewTitle: {
+    color: "#0f172a",
+    fontSize: 20,
+    fontWeight: "800",
+    lineHeight: 25,
   },
   receivedBubble: {
     backgroundColor: "#ffffff",
