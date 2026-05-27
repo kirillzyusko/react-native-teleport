@@ -45,57 +45,68 @@ const STICKERS: Sticker[] = [
   {
     id: "lol",
     label: "Laugh",
-    source: "https://media2.giphy.com/media/v1.Y2lkPTc5MGI3NjExbWkwNjBnbmE0dHdkaWRuajBqNmJrcGI2OHRoODByM2t5cXF1Zm9nYSZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/14fe94oGGsupaw/giphy.gif",
+    source:
+      "https://media2.giphy.com/media/v1.Y2lkPTc5MGI3NjExbWkwNjBnbmE0dHdkaWRuajBqNmJrcGI2OHRoODByM2t5cXF1Zm9nYSZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/14fe94oGGsupaw/giphy.gif",
   },
   {
     id: "yes",
     label: "Yes",
-    source: "https://media1.giphy.com/media/v1.Y2lkPTc5MGI3NjExenpia3U5ajV6cGV4M3ZqcHY0ZDQ4ZXV2cnRrY2F4dDZjNXE0eHp6YyZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/g9582DNuQppxC/giphy.gif",
+    source:
+      "https://media1.giphy.com/media/v1.Y2lkPTc5MGI3NjExenpia3U5ajV6cGV4M3ZqcHY0ZDQ4ZXV2cnRrY2F4dDZjNXE0eHp6YyZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/g9582DNuQppxC/giphy.gif",
   },
   {
     id: "wow",
     label: "Wow",
-    source: "https://media0.giphy.com/media/v1.Y2lkPTc5MGI3NjExMDFtbWFyYXNocGl2dm4xaDZvdDg0YmNhbGNkOWF1d2ozeDNpMGd1MSZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/LPFNd1AJBoYcVUExmE/giphy.gif",
+    source:
+      "https://media0.giphy.com/media/v1.Y2lkPTc5MGI3NjExMDFtbWFyYXNocGl2dm4xaDZvdDg0YmNhbGNkOWF1d2ozeDNpMGd1MSZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/LPFNd1AJBoYcVUExmE/giphy.gif",
   },
   {
     id: "fire",
     label: "Fire",
-    source: "https://media4.giphy.com/media/v1.Y2lkPTc5MGI3NjExOHd5MncwYW1qNXVlaWRudGFnb290OTU3NGJsd2NrcDI2czBncWNhbCZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/V7jkATiqn3mRie2LI2/giphy.gif",
+    source:
+      "https://media4.giphy.com/media/v1.Y2lkPTc5MGI3NjExOHd5MncwYW1qNXVlaWRudGFnb290OTU3NGJsd2NrcDI2czBncWNhbCZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/V7jkATiqn3mRie2LI2/giphy.gif",
   },
   {
     id: "party",
     label: "Party",
-    source: "https://media3.giphy.com/media/v1.Y2lkPTc5MGI3NjExdDRmY3FtanFpeGl3eGlydzA4M3VnamtyOGFiY2oyZWRwbHNoMWJ4MiZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/kaBU6pgv0OsPHz2yxy/giphy.gif",
+    source:
+      "https://media3.giphy.com/media/v1.Y2lkPTc5MGI3NjExdDRmY3FtanFpeGl3eGlydzA4M3VnamtyOGFiY2oyZWRwbHNoMWJ4MiZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/kaBU6pgv0OsPHz2yxy/giphy.gif",
   },
   {
     id: "coffee",
     label: "Coffee",
-    source: "https://media2.giphy.com/media/v1.Y2lkPTc5MGI3NjExZGRiazh4bmYyYzhlZjEwcjdocDQ3YmoyaHVwem9xaGZhdWg1ZWNnNCZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/wyi5tYZJvkMLIgRmXv/giphy.gif",
+    source:
+      "https://media2.giphy.com/media/v1.Y2lkPTc5MGI3NjExZGRiazh4bmYyYzhlZjEwcjdocDQ3YmoyaHVwem9xaGZhdWg1ZWNnNCZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/wyi5tYZJvkMLIgRmXv/giphy.gif",
   },
   {
     id: "pizza",
     label: "Pizza",
-    source: "https://media1.giphy.com/media/v1.Y2lkPTc5MGI3NjExYTMwaDd5ZnR6NnJwOTVrb2Z3aWNtMHVqNXJvN2RjNWhvbXVvdjRlcyZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/ZqlvCTNHpqrio/giphy.gif",
+    source:
+      "https://media1.giphy.com/media/v1.Y2lkPTc5MGI3NjExYTMwaDd5ZnR6NnJwOTVrb2Z3aWNtMHVqNXJvN2RjNWhvbXVvdjRlcyZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/ZqlvCTNHpqrio/giphy.gif",
   },
   {
     id: "ok",
     label: "Ok",
-    source: "https://media1.giphy.com/media/v1.Y2lkPTc5MGI3NjExZnZ3ZXltem12OHF4aXdyMjRoMWhsN3N1aHFldmZlMzd2Z3RmYmJzaCZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/meJN6qdG74lUKAJTQl/giphy.gif",
+    source:
+      "https://media1.giphy.com/media/v1.Y2lkPTc5MGI3NjExZnZ3ZXltem12OHF4aXdyMjRoMWhsN3N1aHFldmZlMzd2Z3RmYmJzaCZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/meJN6qdG74lUKAJTQl/giphy.gif",
   },
   {
     id: "cool",
     label: "Cool",
-    source: "https://media4.giphy.com/media/v1.Y2lkPTc5MGI3NjExbGtkbzM1d2QxNzliMHRuam1tdnRyc2tjdjFlbGhkanF6YWJkbDFrYSZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/wYyTHMm50f4Dm/giphy.gif",
+    source:
+      "https://media4.giphy.com/media/v1.Y2lkPTc5MGI3NjExbGtkbzM1d2QxNzliMHRuam1tdnRyc2tjdjFlbGhkanF6YWJkbDFrYSZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/wYyTHMm50f4Dm/giphy.gif",
   },
   {
     id: "star",
     label: "Star",
-    source: "https://media2.giphy.com/media/v1.Y2lkPTc5MGI3NjExbHVjbm1nZ2YwanBwdWcwNTFzcm4zbnhjeGtyaDZra3Rtd2FqY21tOCZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/AAsj7jdrHjtp6/giphy.gif",
+    source:
+      "https://media2.giphy.com/media/v1.Y2lkPTc5MGI3NjExbHVjbm1nZ2YwanBwdWcwNTFzcm4zbnhjeGtyaDZra3Rtd2FqY21tOCZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/AAsj7jdrHjtp6/giphy.gif",
   },
   {
     id: "clap",
     label: "Clap",
-    source: "https://media4.giphy.com/media/v1.Y2lkPTc5MGI3NjExYzdidjRxZXUxZXdtb2dnaW56aXQ5bHU2ZjI2NWlsbmdpaWVqbHoxbCZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/d3mlE7uhX8KFgEmY/giphy.gif",
+    source:
+      "https://media4.giphy.com/media/v1.Y2lkPTc5MGI3NjExYzdidjRxZXUxZXdtb2dnaW56aXQ5bHU2ZjI2NWlsbmdpaWVqbHoxbCZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/d3mlE7uhX8KFgEmY/giphy.gif",
   },
   {
     id: "rocket",
@@ -198,7 +209,7 @@ type ActiveAttachment = {
 type Sticker = {
   id: string;
   label: string;
-  source: ImageSourcePropType;
+  source: ImageSourcePropType | string;
 };
 
 type ActiveSticker = {
@@ -282,6 +293,8 @@ const messageHostName = (id: string) => `message-animation-row-${id}`;
 const attachmentPortalName = (id: string) =>
   `message-animation-attachment-${id}`;
 const stickerPortalName = (id: string) => `message-animation-sticker-${id}`;
+const stickerImageSource = (source: Sticker["source"]): ImageSourcePropType =>
+  typeof source === "string" ? { uri: source } : source;
 
 function DraftSurface({ frames, phase, progress, text }: DraftSurfaceProps) {
   if (phase === "flying" && frames) {
@@ -663,7 +676,7 @@ function StickerArtwork({
     >
       <Image
         accessibilityLabel={sticker.label}
-        source={{ uri: sticker.source }}
+        source={stickerImageSource(sticker.source)}
         style={styles.stickerImage}
       />
       {onPress && !isPreview && (
@@ -671,10 +684,7 @@ function StickerArtwork({
           accessibilityLabel={sticker.label}
           accessibilityRole="button"
           onPress={() => onPress(sticker)}
-          style={({ pressed }) => [
-            styles.stickerPressTarget,
-            pressed && styles.stickerTilePressed,
-          ]}
+          style={styles.stickerPressTarget}
         />
       )}
     </Animated.View>
@@ -722,6 +732,7 @@ export default function MessageAnimation() {
   const rootRef = useRef<ViewRef>(null);
   const inputSlotRef = useRef<ViewRef>(null);
   const destinationSlotRef = useRef<ViewRef>(null);
+  const isHidingStickerKeyboardRef = useRef(false);
   const scrollRef = useRef<ScrollViewRef>(null);
   const stickerRefs = useRef<Record<string, ViewRef | null>>({});
   const textInputRef = useRef<ComponentRef<typeof TextInput>>(null);
@@ -851,6 +862,7 @@ export default function MessageAnimation() {
   );
 
   const showStickerKeyboard = useCallback(() => {
+    isHidingStickerKeyboardRef.current = false;
     setStickerKeyboardVisible(true);
     stickerKeyboardProgress.stopAnimation();
     Animated.timing(stickerKeyboardProgress, {
@@ -861,20 +873,50 @@ export default function MessageAnimation() {
     }).start();
   }, [stickerKeyboardProgress]);
 
-  const hideStickerKeyboard = useCallback(() => {
-    textInputRef.current?.blur();
-    stickerKeyboardProgress.stopAnimation();
-    Animated.timing(stickerKeyboardProgress, {
-      duration: 260,
-      easing: Easing.out(Easing.cubic),
-      toValue: 0,
-      useNativeDriver: true,
-    }).start(({ finished }) => {
-      if (finished) {
-        setStickerKeyboardVisible(false);
+  const hideStickerKeyboard = useCallback(
+    ({ blurInput = true }: { blurInput?: boolean } = {}) => {
+      if (isHidingStickerKeyboardRef.current && !blurInput) {
+        return;
       }
-    });
-  }, [stickerKeyboardProgress]);
+
+      if (!isStickerKeyboardVisible) {
+        if (blurInput) {
+          textInputRef.current?.blur();
+        }
+
+        return;
+      }
+
+      isHidingStickerKeyboardRef.current = true;
+
+      if (blurInput) {
+        textInputRef.current?.blur();
+      }
+
+      stickerKeyboardProgress.stopAnimation();
+      Animated.timing(stickerKeyboardProgress, {
+        duration: 260,
+        easing: Easing.out(Easing.cubic),
+        toValue: 0,
+        useNativeDriver: true,
+      }).start(({ finished }) => {
+        isHidingStickerKeyboardRef.current = false;
+
+        if (finished) {
+          setStickerKeyboardVisible(false);
+        }
+      });
+    },
+    [isStickerKeyboardVisible, stickerKeyboardProgress],
+  );
+
+  const handleInputEndEditing = useCallback(() => {
+    hideStickerKeyboard({ blurInput: false });
+  }, [hideStickerKeyboard]);
+
+  const handleStickerKeyboardClose = useCallback(() => {
+    hideStickerKeyboard();
+  }, [hideStickerKeyboard]);
 
   const handleStickerPress = useCallback(
     async (sticker: Sticker) => {
@@ -1203,25 +1245,25 @@ export default function MessageAnimation() {
         }}
         style={styles.root}
       >
+        <View style={styles.conversationHeader}>
+          <View style={styles.avatar}>
+            <Image
+              source={require("./avatar.jpeg")}
+              style={styles.avatarText}
+            />
+          </View>
+          <View>
+            <Text style={styles.contactName}>Ksenia</Text>
+            <Text style={styles.contactStatus}>online</Text>
+          </View>
+        </View>
+
         <Animated.View
           style={[
             styles.chatContent,
             { transform: [{ translateY: contentTranslateY }] },
           ]}
         >
-          <View style={styles.conversationHeader}>
-            <View style={styles.avatar}>
-              <Image
-                source={require("./avatar.jpeg")}
-                style={styles.avatarText}
-              />
-            </View>
-            <View>
-              <Text style={styles.contactName}>Ksenia</Text>
-              <Text style={styles.contactStatus}>online</Text>
-            </View>
-          </View>
-
           <ScrollView
             ref={scrollRef}
             contentContainerStyle={styles.messagesContent}
@@ -1275,6 +1317,7 @@ export default function MessageAnimation() {
                 autoCapitalize="sentences"
                 editable={!activeDraft}
                 onChangeText={setInputText}
+                onEndEditing={handleInputEndEditing}
                 onFocus={showStickerKeyboard}
                 onSubmitEditing={handleSend}
                 placeholder=""
@@ -1310,7 +1353,7 @@ export default function MessageAnimation() {
           activeSticker={activeSticker}
           bottomInset={insets.bottom}
           keyboardProgress={stickerKeyboardProgress}
-          onClose={hideStickerKeyboard}
+          onClose={handleStickerKeyboardClose}
           onStickerPress={handleStickerPress}
           previewProgress={stickerPreviewProgress}
           registerRef={registerStickerRef}
@@ -1465,11 +1508,13 @@ const styles = StyleSheet.create({
     backgroundColor: "#f8fafc",
     borderBottomColor: "#dbe4ef",
     borderBottomWidth: StyleSheet.hairlineWidth,
+    elevation: 2,
     flexDirection: "row",
     gap: 12,
     paddingHorizontal: 16,
     paddingVertical: 12,
     paddingTop: 56,
+    zIndex: 2,
   },
   composerGhost: {
     left: 0,
@@ -1632,7 +1677,6 @@ const styles = StyleSheet.create({
   },
   stickerPressTarget: {
     ...StyleSheet.absoluteFillObject,
-    borderRadius: 18,
   },
   stickerPreviewScrim: {
     ...StyleSheet.absoluteFillObject,
@@ -1649,17 +1693,9 @@ const styles = StyleSheet.create({
   stickerTile: {
     alignItems: "center",
     aspectRatio: 1,
-    backgroundColor: "#ffffff",
-    borderColor: "#e2e8f0",
-    borderRadius: 18,
-    borderWidth: StyleSheet.hairlineWidth,
     justifyContent: "center",
-    overflow: "hidden",
-    padding: 4,
+    overflow: "visible",
     width: "100%",
-  },
-  stickerTilePressed: {
-    backgroundColor: "#eff6ff",
   },
   stickerTileSlot: {
     flexBasis: "22%",
