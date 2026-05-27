@@ -10,6 +10,8 @@ import {
 import {
   Animated,
   Easing,
+  Image,
+  type ImageSourcePropType,
   KeyboardAvoidingView,
   Platform,
   Pressable,
@@ -18,18 +20,104 @@ import {
   Text,
   TextInput,
   View,
-  Image,
 } from "react-native";
 import { Portal, PortalHost } from "react-native-teleport";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import BlurView from "../../components/BlurView";
 import { AttachmentArtwork, type AttachmentKind } from "./AttachmentArtwork";
 
 const FLIGHT_HOST = "message-animation-flight";
 const ATTACHMENT_PREVIEW_HOST = "message-animation-attachment-preview";
+const STICKER_PREVIEW_HOST = "message-animation-sticker-preview";
 const DRAFT_PORTAL = "message-animation-draft";
 const MESSAGE_FONT_SIZE = 17;
 const MESSAGE_LINE_HEIGHT = 22;
 const ATTACHMENT_CARD_WIDTH = 292;
+const STICKER_KEYBOARD_HEIGHT = 300;
+const STICKER_PREVIEW_SIZE = 224;
+const STICKERS: Sticker[] = [
+  {
+    id: "love",
+    label: "Love",
+    source:
+      "https://media3.giphy.com/media/v1.Y2lkPTc5MGI3NjExbXllcGk2eG1qcGxkdG1vNnlqM2RmN2Q0Z2xsNHR5N2Z1cDk3YjFiNyZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/fWfowxJtHySJ0SGCgN/giphy.gif",
+  },
+  {
+    id: "lol",
+    label: "Laugh",
+    source: "https://media2.giphy.com/media/v1.Y2lkPTc5MGI3NjExbWkwNjBnbmE0dHdkaWRuajBqNmJrcGI2OHRoODByM2t5cXF1Zm9nYSZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/14fe94oGGsupaw/giphy.gif",
+  },
+  {
+    id: "yes",
+    label: "Yes",
+    source: "https://media1.giphy.com/media/v1.Y2lkPTc5MGI3NjExenpia3U5ajV6cGV4M3ZqcHY0ZDQ4ZXV2cnRrY2F4dDZjNXE0eHp6YyZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/g9582DNuQppxC/giphy.gif",
+  },
+  {
+    id: "wow",
+    label: "Wow",
+    source: "https://media0.giphy.com/media/v1.Y2lkPTc5MGI3NjExMDFtbWFyYXNocGl2dm4xaDZvdDg0YmNhbGNkOWF1d2ozeDNpMGd1MSZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/LPFNd1AJBoYcVUExmE/giphy.gif",
+  },
+  {
+    id: "fire",
+    label: "Fire",
+    source: "https://media4.giphy.com/media/v1.Y2lkPTc5MGI3NjExOHd5MncwYW1qNXVlaWRudGFnb290OTU3NGJsd2NrcDI2czBncWNhbCZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/V7jkATiqn3mRie2LI2/giphy.gif",
+  },
+  {
+    id: "party",
+    label: "Party",
+    source: "https://media3.giphy.com/media/v1.Y2lkPTc5MGI3NjExdDRmY3FtanFpeGl3eGlydzA4M3VnamtyOGFiY2oyZWRwbHNoMWJ4MiZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/kaBU6pgv0OsPHz2yxy/giphy.gif",
+  },
+  {
+    id: "coffee",
+    label: "Coffee",
+    source: "https://media2.giphy.com/media/v1.Y2lkPTc5MGI3NjExZGRiazh4bmYyYzhlZjEwcjdocDQ3YmoyaHVwem9xaGZhdWg1ZWNnNCZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/wyi5tYZJvkMLIgRmXv/giphy.gif",
+  },
+  {
+    id: "pizza",
+    label: "Pizza",
+    source: "https://media1.giphy.com/media/v1.Y2lkPTc5MGI3NjExYTMwaDd5ZnR6NnJwOTVrb2Z3aWNtMHVqNXJvN2RjNWhvbXVvdjRlcyZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/ZqlvCTNHpqrio/giphy.gif",
+  },
+  {
+    id: "ok",
+    label: "Ok",
+    source: "https://media1.giphy.com/media/v1.Y2lkPTc5MGI3NjExZnZ3ZXltem12OHF4aXdyMjRoMWhsN3N1aHFldmZlMzd2Z3RmYmJzaCZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/meJN6qdG74lUKAJTQl/giphy.gif",
+  },
+  {
+    id: "cool",
+    label: "Cool",
+    source: "https://media4.giphy.com/media/v1.Y2lkPTc5MGI3NjExbGtkbzM1d2QxNzliMHRuam1tdnRyc2tjdjFlbGhkanF6YWJkbDFrYSZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/wYyTHMm50f4Dm/giphy.gif",
+  },
+  {
+    id: "star",
+    label: "Star",
+    source: "https://media2.giphy.com/media/v1.Y2lkPTc5MGI3NjExbHVjbm1nZ2YwanBwdWcwNTFzcm4zbnhjeGtyaDZra3Rtd2FqY21tOCZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/AAsj7jdrHjtp6/giphy.gif",
+  },
+  {
+    id: "clap",
+    label: "Clap",
+    source: "https://media4.giphy.com/media/v1.Y2lkPTc5MGI3NjExYzdidjRxZXUxZXdtb2dnaW56aXQ5bHU2ZjI2NWlsbmdpaWVqbHoxbCZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/d3mlE7uhX8KFgEmY/giphy.gif",
+  },
+  {
+    id: "rocket",
+    label: "Rocket",
+    source: require("./stickers/rocket.gif"),
+  },
+  {
+    id: "sparkle",
+    label: "Sparkle",
+    source: require("./stickers/sparkle.gif"),
+  },
+  {
+    id: "thanks",
+    label: "Thanks",
+    source: require("./stickers/thanks.gif"),
+  },
+  {
+    id: "idea",
+    label: "Idea",
+    source: require("./stickers/idea.gif"),
+  },
+];
 
 const INITIAL_MESSAGES: ChatMessage[] = [
   {
@@ -107,6 +195,19 @@ type ActiveAttachment = {
   to: Frame;
 };
 
+type Sticker = {
+  id: string;
+  label: string;
+  source: ImageSourcePropType;
+};
+
+type ActiveSticker = {
+  from: Frame;
+  phase: "closing" | "open" | "opening";
+  sticker: Sticker;
+  to: Frame;
+};
+
 type ChatMessage = {
   attachment?: Attachment;
   id: string;
@@ -145,9 +246,42 @@ type AttachmentMessageProps = {
   sender: ChatMessage["sender"];
 };
 
+type StickerKeyboardProps = {
+  activeSticker: ActiveSticker | null;
+  bottomInset: number;
+  keyboardProgress: Animated.Value;
+  onClose: () => void;
+  onStickerPress: (sticker: Sticker) => void;
+  previewProgress: Animated.Value;
+  registerRef: (id: string) => (node: ViewRef | null) => void;
+  visible: boolean;
+};
+
+type StickerTileProps = {
+  activeSticker: ActiveSticker | null;
+  onPress: (sticker: Sticker) => void;
+  previewProgress: Animated.Value;
+  registerRef: (node: ViewRef | null) => void;
+  sticker: Sticker;
+};
+
+type StickerArtworkProps = {
+  activeSticker: ActiveSticker | null;
+  onPress?: (sticker: Sticker) => void;
+  previewProgress: Animated.Value;
+  sticker: Sticker;
+};
+
+type StickerPreviewLayerProps = {
+  activeSticker: ActiveSticker | null;
+  onClose: () => void;
+  previewProgress: Animated.Value;
+};
+
 const messageHostName = (id: string) => `message-animation-row-${id}`;
 const attachmentPortalName = (id: string) =>
   `message-animation-attachment-${id}`;
+const stickerPortalName = (id: string) => `message-animation-sticker-${id}`;
 
 function DraftSurface({ frames, phase, progress, text }: DraftSurfaceProps) {
   if (phase === "flying" && frames) {
@@ -391,6 +525,196 @@ function MessageBubble({ sender, text }: ChatMessage & { text: string }) {
   );
 }
 
+function StickerKeyboard({
+  activeSticker,
+  bottomInset,
+  keyboardProgress,
+  onClose,
+  onStickerPress,
+  previewProgress,
+  registerRef,
+  visible,
+}: StickerKeyboardProps) {
+  const translateY = keyboardProgress.interpolate({
+    inputRange: [0, 1],
+    outputRange: [STICKER_KEYBOARD_HEIGHT + bottomInset, 0],
+  });
+
+  return (
+    <Animated.View
+      pointerEvents={visible ? "auto" : "none"}
+      style={[
+        styles.stickerKeyboard,
+        {
+          height: STICKER_KEYBOARD_HEIGHT + bottomInset,
+          paddingBottom: bottomInset + 14,
+          transform: [{ translateY }],
+        },
+      ]}
+    >
+      <View style={styles.stickerKeyboardHeader}>
+        <Text style={styles.stickerKeyboardTitle}>Stickers</Text>
+        <Pressable onPress={onClose} style={styles.stickerKeyboardClose}>
+          <FontAwesome6
+            color="#334155"
+            iconStyle="solid"
+            name="chevron-down"
+            size={15}
+          />
+        </Pressable>
+      </View>
+      <View style={styles.stickerGrid}>
+        {STICKERS.map((sticker) => (
+          <StickerTile
+            key={sticker.id}
+            activeSticker={activeSticker}
+            onPress={onStickerPress}
+            previewProgress={previewProgress}
+            registerRef={registerRef(sticker.id)}
+            sticker={sticker}
+          />
+        ))}
+      </View>
+    </Animated.View>
+  );
+}
+
+function StickerTile({
+  activeSticker,
+  onPress,
+  previewProgress,
+  registerRef,
+  sticker,
+}: StickerTileProps) {
+  const isActive = activeSticker?.sticker.id === sticker.id;
+
+  return (
+    <View ref={registerRef} collapsable={false} style={styles.stickerTileSlot}>
+      {isActive && <View style={[styles.stickerTile, styles.hidden]} />}
+      <Portal
+        hostName={isActive ? STICKER_PREVIEW_HOST : undefined}
+        name={stickerPortalName(sticker.id)}
+        style={isActive ? StyleSheet.absoluteFillObject : undefined}
+      >
+        <StickerArtwork
+          activeSticker={activeSticker}
+          onPress={onPress}
+          previewProgress={previewProgress}
+          sticker={sticker}
+        />
+      </Portal>
+    </View>
+  );
+}
+
+function StickerArtwork({
+  activeSticker,
+  onPress,
+  previewProgress,
+  sticker,
+}: StickerArtworkProps) {
+  const isPreview = activeSticker?.sticker.id === sticker.id;
+  const progress = previewProgress;
+  const from = activeSticker?.from;
+  const to = activeSticker?.to;
+  const previewStyle =
+    isPreview && from && to
+      ? {
+          height: from.height,
+          left: from.x,
+          top: from.y,
+          transform: [
+            {
+              translateX: progress.interpolate({
+                inputRange: [0, 1],
+                outputRange: [
+                  0,
+                  to.x + to.width / 2 - (from.x + from.width / 2),
+                ],
+              }),
+            },
+            {
+              translateY: progress.interpolate({
+                inputRange: [0, 1],
+                outputRange: [
+                  0,
+                  to.y + to.height / 2 - (from.y + from.height / 2),
+                ],
+              }),
+            },
+            {
+              scale: progress.interpolate({
+                inputRange: [0, 1],
+                outputRange: [1, to.width / from.width],
+              }),
+            },
+          ],
+          width: from.width,
+        }
+      : undefined;
+
+  return (
+    <Animated.View
+      style={[
+        styles.stickerTile,
+        isPreview && styles.stickerPreviewTile,
+        previewStyle,
+      ]}
+    >
+      <Image
+        accessibilityLabel={sticker.label}
+        source={{ uri: sticker.source }}
+        style={styles.stickerImage}
+      />
+      {onPress && !isPreview && (
+        <Pressable
+          accessibilityLabel={sticker.label}
+          accessibilityRole="button"
+          onPress={() => onPress(sticker)}
+          style={({ pressed }) => [
+            styles.stickerPressTarget,
+            pressed && styles.stickerTilePressed,
+          ]}
+        />
+      )}
+    </Animated.View>
+  );
+}
+
+function StickerPreviewLayer({
+  activeSticker,
+  onClose,
+  previewProgress,
+}: StickerPreviewLayerProps) {
+  const scrimOpacity = previewProgress.interpolate({
+    inputRange: [0, 1],
+    outputRange: [0, 0.16],
+  });
+
+  return (
+    <View
+      pointerEvents={activeSticker ? "box-none" : "none"}
+      style={StyleSheet.absoluteFillObject}
+    >
+      {activeSticker && (
+        <Pressable onPress={onClose} style={StyleSheet.absoluteFillObject}>
+          <BlurView visible={activeSticker.phase !== "closing"} />
+          <Animated.View
+            pointerEvents="none"
+            style={[styles.stickerPreviewScrim, { opacity: scrimOpacity }]}
+          />
+        </Pressable>
+      )}
+      <View pointerEvents="none" style={StyleSheet.absoluteFillObject}>
+        <PortalHost
+          name={STICKER_PREVIEW_HOST}
+          style={StyleSheet.absoluteFillObject}
+        />
+      </View>
+    </View>
+  );
+}
+
 export default function MessageAnimation() {
   const insets = useSafeAreaInsets();
   const attachmentRefs = useRef<Record<string, ViewRef | null>>({});
@@ -399,22 +723,34 @@ export default function MessageAnimation() {
   const inputSlotRef = useRef<ViewRef>(null);
   const destinationSlotRef = useRef<ViewRef>(null);
   const scrollRef = useRef<ScrollViewRef>(null);
+  const stickerRefs = useRef<Record<string, ViewRef | null>>({});
+  const textInputRef = useRef<ComponentRef<typeof TextInput>>(null);
   const attachmentProgress = useRef(new Animated.Value(0)).current;
   const settleTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const placeholderOpacity = useRef(new Animated.Value(1)).current;
   const progress = useRef(new Animated.Value(0)).current;
+  const stickerKeyboardProgress = useRef(new Animated.Value(0)).current;
+  const stickerPreviewProgress = useRef(new Animated.Value(0)).current;
 
   const [messages, setMessages] = useState(INITIAL_MESSAGES);
   const [inputText, setInputText] = useState("");
   const [activeDraft, setActiveDraft] = useState<ActiveDraft | null>(null);
   const [activeAttachment, setActiveAttachment] =
     useState<ActiveAttachment | null>(null);
+  const [activeSticker, setActiveSticker] = useState<ActiveSticker | null>(
+    null,
+  );
   const [frames, setFrames] = useState<FlightFrames | null>(null);
+  const [isStickerKeyboardVisible, setStickerKeyboardVisible] = useState(false);
   const [rootFrame, setRootFrame] = useState<Frame>({
     height: 0,
     width: 0,
     x: 0,
     y: 0,
+  });
+  const contentTranslateY = stickerKeyboardProgress.interpolate({
+    inputRange: [0, 1],
+    outputRange: [0, -STICKER_KEYBOARD_HEIGHT],
   });
 
   const canSend = inputText.trim().length > 0 && !activeDraft;
@@ -506,6 +842,123 @@ export default function MessageAnimation() {
     },
     [],
   );
+
+  const registerStickerRef = useCallback(
+    (id: string) => (node: ViewRef | null) => {
+      stickerRefs.current[id] = node;
+    },
+    [],
+  );
+
+  const showStickerKeyboard = useCallback(() => {
+    setStickerKeyboardVisible(true);
+    stickerKeyboardProgress.stopAnimation();
+    Animated.timing(stickerKeyboardProgress, {
+      duration: 320,
+      easing: Easing.out(Easing.cubic),
+      toValue: 1,
+      useNativeDriver: true,
+    }).start();
+  }, [stickerKeyboardProgress]);
+
+  const hideStickerKeyboard = useCallback(() => {
+    textInputRef.current?.blur();
+    stickerKeyboardProgress.stopAnimation();
+    Animated.timing(stickerKeyboardProgress, {
+      duration: 260,
+      easing: Easing.out(Easing.cubic),
+      toValue: 0,
+      useNativeDriver: true,
+    }).start(({ finished }) => {
+      if (finished) {
+        setStickerKeyboardVisible(false);
+      }
+    });
+  }, [stickerKeyboardProgress]);
+
+  const handleStickerPress = useCallback(
+    async (sticker: Sticker) => {
+      if (activeSticker || rootFrame.width === 0 || rootFrame.height === 0) {
+        return;
+      }
+
+      const from = await measureInRoot(stickerRefs.current[sticker.id] ?? null);
+
+      if (!from) {
+        return;
+      }
+
+      const previewSize = Math.min(
+        STICKER_PREVIEW_SIZE,
+        rootFrame.width - 72,
+        rootFrame.height - STICKER_KEYBOARD_HEIGHT - 64,
+      );
+      const size = Math.max(168, previewSize);
+      const to = {
+        height: size,
+        width: size,
+        x: (rootFrame.width - size) / 2,
+        y: (rootFrame.height - STICKER_KEYBOARD_HEIGHT - size) / 2,
+      };
+
+      stickerPreviewProgress.stopAnimation();
+      stickerPreviewProgress.setValue(0);
+      setActiveSticker({
+        from,
+        phase: "opening",
+        sticker,
+        to,
+      });
+
+      requestAnimationFrame(() => {
+        Animated.timing(stickerPreviewProgress, {
+          duration: 420,
+          easing: Easing.out(Easing.cubic),
+          toValue: 1,
+          useNativeDriver: true,
+        }).start(({ finished }) => {
+          if (!finished) {
+            return;
+          }
+
+          setActiveSticker((current) =>
+            current?.sticker.id === sticker.id
+              ? { ...current, phase: "open" }
+              : current,
+          );
+        });
+      });
+    },
+    [activeSticker, measureInRoot, rootFrame, stickerPreviewProgress],
+  );
+
+  const handleStickerClose = useCallback(() => {
+    if (!activeSticker || activeSticker.phase === "closing") {
+      return;
+    }
+
+    const id = activeSticker.sticker.id;
+
+    setActiveSticker((current) =>
+      current?.sticker.id === id ? { ...current, phase: "closing" } : current,
+    );
+    stickerPreviewProgress.stopAnimation();
+
+    Animated.timing(stickerPreviewProgress, {
+      duration: 320,
+      easing: Easing.out(Easing.cubic),
+      toValue: 0,
+      useNativeDriver: true,
+    }).start(({ finished }) => {
+      if (!finished) {
+        return;
+      }
+
+      setActiveSticker((current) =>
+        current?.sticker.id === id ? null : current,
+      );
+    });
+  }, [activeSticker, stickerPreviewProgress]);
 
   const handleAttachmentOpen = useCallback(
     async (attachment: Attachment) => {
@@ -750,92 +1203,119 @@ export default function MessageAnimation() {
         }}
         style={styles.root}
       >
-        <View style={styles.conversationHeader}>
-          <View style={styles.avatar}>
-            <Image
-              source={require("./avatar.jpeg")}
-              style={styles.avatarText}
-            />
-          </View>
-          <View>
-            <Text style={styles.contactName}>Ksenia</Text>
-            <Text style={styles.contactStatus}>online</Text>
-          </View>
-        </View>
-
-        <ScrollView
-          ref={scrollRef}
-          contentContainerStyle={styles.messagesContent}
-          keyboardShouldPersistTaps="handled"
-          onContentSizeChange={scrollToBottom}
-          showsVerticalScrollIndicator={false}
+        <Animated.View
+          style={[
+            styles.chatContent,
+            { transform: [{ translateY: contentTranslateY }] },
+          ]}
         >
-          {renderedMessages.map(renderMessage)}
-        </ScrollView>
-
-        <View style={[styles.composer, { paddingBottom: insets.bottom + 12 }]}>
-          <View ref={inputSlotRef} collapsable={false} style={styles.inputSlot}>
-            <Animated.Text
-              style={[styles.placeholder, { opacity: placeholderOpacity }]}
-            >
-              Message
-            </Animated.Text>
-            {activeDraft && (
-              <>
-                <View
-                  ref={composerBubbleRef}
-                  collapsable={false}
-                  style={[styles.sentBubble, styles.composerGhost]}
-                >
-                  <Text numberOfLines={1} style={styles.sentText}>
-                    {activeDraft.text}
-                  </Text>
-                </View>
-                <Portal
-                  hostName={portalHostName}
-                  name={DRAFT_PORTAL}
-                  style={StyleSheet.absoluteFillObject}
-                >
-                  <DraftSurface
-                    frames={frames}
-                    phase={draftPhase}
-                    progress={progress}
-                    text={activeDraft.text}
-                  />
-                </Portal>
-              </>
-            )}
-            <TextInput
-              autoCapitalize="sentences"
-              editable={!activeDraft}
-              onChangeText={setInputText}
-              onSubmitEditing={handleSend}
-              placeholder=""
-              returnKeyType="send"
-              selectionColor="#2563eb"
-              style={styles.textInput}
-              value={inputText}
-            />
+          <View style={styles.conversationHeader}>
+            <View style={styles.avatar}>
+              <Image
+                source={require("./avatar.jpeg")}
+                style={styles.avatarText}
+              />
+            </View>
+            <View>
+              <Text style={styles.contactName}>Ksenia</Text>
+              <Text style={styles.contactStatus}>online</Text>
+            </View>
           </View>
-          <Pressable
-            accessibilityRole="button"
-            accessibilityState={{ disabled: !canSend }}
-            disabled={!canSend}
-            onPress={handleSend}
-            style={({ pressed }) => [
-              styles.sendButton,
-              !canSend && styles.sendButtonDisabled,
-              pressed && canSend && styles.sendButtonPressed,
-            ]}
+
+          <ScrollView
+            ref={scrollRef}
+            contentContainerStyle={styles.messagesContent}
+            keyboardShouldPersistTaps="handled"
+            onContentSizeChange={scrollToBottom}
+            showsVerticalScrollIndicator={false}
           >
-            <FontAwesome6
-              color="#ffffff"
-              iconStyle="solid"
-              name="paper-plane"
-              size={16}
-            />
-          </Pressable>
-        </View>
+            {renderedMessages.map(renderMessage)}
+          </ScrollView>
+
+          <View
+            style={[styles.composer, { paddingBottom: insets.bottom + 12 }]}
+          >
+            <View
+              ref={inputSlotRef}
+              collapsable={false}
+              style={styles.inputSlot}
+            >
+              <Animated.Text
+                style={[styles.placeholder, { opacity: placeholderOpacity }]}
+              >
+                Message
+              </Animated.Text>
+              {activeDraft && (
+                <>
+                  <View
+                    ref={composerBubbleRef}
+                    collapsable={false}
+                    style={[styles.sentBubble, styles.composerGhost]}
+                  >
+                    <Text numberOfLines={1} style={styles.sentText}>
+                      {activeDraft.text}
+                    </Text>
+                  </View>
+                  <Portal
+                    hostName={portalHostName}
+                    name={DRAFT_PORTAL}
+                    style={StyleSheet.absoluteFillObject}
+                  >
+                    <DraftSurface
+                      frames={frames}
+                      phase={draftPhase}
+                      progress={progress}
+                      text={activeDraft.text}
+                    />
+                  </Portal>
+                </>
+              )}
+              <TextInput
+                ref={textInputRef}
+                autoCapitalize="sentences"
+                editable={!activeDraft}
+                onChangeText={setInputText}
+                onFocus={showStickerKeyboard}
+                onSubmitEditing={handleSend}
+                placeholder=""
+                returnKeyType="send"
+                selectionColor="#2563eb"
+                showSoftInputOnFocus={false}
+                style={styles.textInput}
+                value={inputText}
+              />
+            </View>
+            <Pressable
+              accessibilityRole="button"
+              accessibilityState={{ disabled: !canSend }}
+              disabled={!canSend}
+              onPress={handleSend}
+              style={({ pressed }) => [
+                styles.sendButton,
+                !canSend && styles.sendButtonDisabled,
+                pressed && canSend && styles.sendButtonPressed,
+              ]}
+            >
+              <FontAwesome6
+                color="#ffffff"
+                iconStyle="solid"
+                name="paper-plane"
+                size={16}
+              />
+            </Pressable>
+          </View>
+        </Animated.View>
+
+        <StickerKeyboard
+          activeSticker={activeSticker}
+          bottomInset={insets.bottom}
+          keyboardProgress={stickerKeyboardProgress}
+          onClose={hideStickerKeyboard}
+          onStickerPress={handleStickerPress}
+          previewProgress={stickerPreviewProgress}
+          registerRef={registerStickerRef}
+          visible={isStickerKeyboardVisible}
+        />
 
         <View pointerEvents="none" style={StyleSheet.absoluteFillObject}>
           <PortalHost
@@ -852,6 +1332,11 @@ export default function MessageAnimation() {
             style={StyleSheet.absoluteFillObject}
           />
         </View>
+        <StickerPreviewLayer
+          activeSticker={activeSticker}
+          onClose={handleStickerClose}
+          previewProgress={stickerPreviewProgress}
+        />
       </View>
     </KeyboardAvoidingView>
   );
@@ -946,6 +1431,9 @@ const styles = StyleSheet.create({
     color: "#ffffff",
     fontSize: 17,
     fontWeight: "800",
+  },
+  chatContent: {
+    flex: 1,
   },
   composer: {
     alignItems: "center",
@@ -1067,6 +1555,7 @@ const styles = StyleSheet.create({
   },
   root: {
     flex: 1,
+    overflow: "hidden",
   },
   sendButton: {
     alignItems: "center",
@@ -1100,6 +1589,82 @@ const styles = StyleSheet.create({
   settledBubble: {
     minHeight: 44,
     width: "100%",
+  },
+  stickerGrid: {
+    flex: 1,
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: 10,
+    paddingHorizontal: 14,
+  },
+  stickerImage: {
+    height: "100%",
+    width: "100%",
+  },
+  stickerKeyboard: {
+    backgroundColor: "#f8fafc",
+    borderTopColor: "#dbe4ef",
+    borderTopWidth: StyleSheet.hairlineWidth,
+    bottom: 0,
+    left: 0,
+    paddingTop: 10,
+    position: "absolute",
+    right: 0,
+  },
+  stickerKeyboardClose: {
+    alignItems: "center",
+    borderRadius: 16,
+    height: 32,
+    justifyContent: "center",
+    width: 32,
+  },
+  stickerKeyboardHeader: {
+    alignItems: "center",
+    flexDirection: "row",
+    justifyContent: "space-between",
+    paddingBottom: 10,
+    paddingHorizontal: 16,
+  },
+  stickerKeyboardTitle: {
+    color: "#0f172a",
+    fontSize: 15,
+    fontWeight: "800",
+  },
+  stickerPressTarget: {
+    ...StyleSheet.absoluteFillObject,
+    borderRadius: 18,
+  },
+  stickerPreviewScrim: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: "#020617",
+  },
+  stickerPreviewTile: {
+    elevation: 18,
+    position: "absolute",
+    shadowColor: "#020617",
+    shadowOffset: { height: 20, width: 0 },
+    shadowOpacity: 0.24,
+    shadowRadius: 30,
+  },
+  stickerTile: {
+    alignItems: "center",
+    aspectRatio: 1,
+    backgroundColor: "#ffffff",
+    borderColor: "#e2e8f0",
+    borderRadius: 18,
+    borderWidth: StyleSheet.hairlineWidth,
+    justifyContent: "center",
+    overflow: "hidden",
+    padding: 4,
+    width: "100%",
+  },
+  stickerTilePressed: {
+    backgroundColor: "#eff6ff",
+  },
+  stickerTileSlot: {
+    flexBasis: "22%",
+    flexGrow: 1,
+    maxWidth: "23.5%",
   },
   textInput: {
     ...StyleSheet.absoluteFillObject,
