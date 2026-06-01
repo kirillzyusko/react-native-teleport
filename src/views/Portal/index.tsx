@@ -7,6 +7,24 @@ import type { PortalProps } from "../../types";
 
 const supportsMoveBefore =
   typeof Element !== "undefined" && "moveBefore" in Element.prototype;
+
+function moveElementTo(
+  parent: Element,
+  child: Element,
+  before: Element | null = null,
+) {
+  if (supportsMoveBefore && child.parentNode) {
+    parent.moveBefore(child, before);
+    return;
+  }
+
+  if (child.parentNode) {
+    child.parentNode.removeChild(child);
+  }
+
+  parent.insertBefore(child, before);
+}
+
 export default function Portal({ hostName, children, style }: PortalProps) {
   const { getHost, registerPendingPortal, unregisterPendingPortal } =
     usePortalRegistryContext();
@@ -30,27 +48,11 @@ export default function Portal({ hostName, children, style }: PortalProps) {
     const hostNode = hostName ? getHost(hostName) : null;
     if (hostNode) {
       // teleport view to the host
-      if (supportsMoveBefore && el.parentNode) {
-        hostNode.moveBefore(el, null);
-      } else {
-        if (el.parentNode) {
-          el.parentNode.removeChild(el);
-        }
-
-        hostNode.appendChild(el);
-      }
-    } else if (sentinelRef.current && sentinelRef.current.parentNode) {
+      moveElementTo(hostNode, el);
+    } else if (sentinelRef.current && sentinelRef.current.parentElement) {
       // keep view locally
-      const parent = sentinelRef.current.parentNode;
-
-      if (supportsMoveBefore && el.parentNode) {
-        parent.moveBefore(el, sentinelRef.current);
-      } else {
-        if (el.parentNode) {
-          el.parentNode.removeChild(el);
-        }
-        parent.insertBefore(el, sentinelRef.current);
-      }
+      const parent = sentinelRef.current.parentElement;
+      moveElementTo(parent, el, sentinelRef.current);
     }
   }, [hostName, getHost]);
 
