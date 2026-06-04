@@ -19,7 +19,7 @@ abstract class TeleportViewManager : ReactViewManager() {
   override fun prepareToRecycleView(
     reactContext: ThemedReactContext,
     view: ReactViewGroup,
-  ): ReactViewGroup? {
+  ): ReactViewGroup {
     super.prepareToRecycleView(reactContext, view)
     forceBoxNone(view)
     return view
