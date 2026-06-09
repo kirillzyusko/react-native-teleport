@@ -108,14 +108,35 @@ class PortalView(
     }
     ownChildren.clear()
     for (child in list) {
-      val parent = child.parent as? ViewGroup
+      val parent = child.parent as? ViewGroup ?: continue
       if (parent === this) {
         super.removeView(child)
       } else {
-        parent?.removeView(child)
+        val idx = parent.indexOfChild(child)
+        if (idx >= 0) parent.removeViewAt(idx) else parent.removeView(child)
+      }
+      // A torn-down host can be left holding a dangling parent link: the child
+      // is gone from the host's child list (childCount 0 / indexOfChild -1) but
+      // child.getParent() still points at it, so removeView is a no-op. Clear
+      // the stale back-reference so the caller can re-attach without throwing.
+      if (child.parent != null) {
+        forceClearParent(child)
       }
     }
     return list
+  }
+
+  // Clears a dangling parent pointer that removeView can't (the parent no longer
+  // lists the child, and View.mParent reflection is blocked on API 28+):
+  // re-adopt via attachViewToParent (no parent check), then remove cleanly.
+  private fun forceClearParent(child: View) {
+    try {
+      val params = child.layoutParams ?: generateDefaultLayoutParams()
+      attachViewToParent(child, super.getChildCount(), params)
+      super.removeView(child)
+    } catch (_: Throwable) {
+      // Best effort; nothing safer exists for a child of a dead parent.
+    }
   }
 
   private fun extractChildren(): List<View> {
