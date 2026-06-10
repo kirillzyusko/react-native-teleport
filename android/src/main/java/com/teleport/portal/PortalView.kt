@@ -88,9 +88,21 @@ class PortalView(
       super.getChildAt(i)?.let { children.add(it) }
     }
     for (child in children) {
-      super.removeView(child)
+      detachFromParent(child)
     }
     return children
+  }
+
+  private fun detachFromParent(child: View) {
+    val parent = child.parent as? ViewGroup ?: return
+    if (parent === this) {
+      super.removeView(child)
+    } else {
+      parent.removeView(child)
+    }
+    if (child.parent === parent) {
+      parent.endViewTransition(child)
+    }
   }
 
   /**
@@ -108,12 +120,7 @@ class PortalView(
     }
     ownChildren.clear()
     for (child in list) {
-      val parent = child.parent as? ViewGroup
-      if (parent === this) {
-        super.removeView(child)
-      } else {
-        parent?.removeView(child)
-      }
+      detachFromParent(child)
     }
     return list
   }

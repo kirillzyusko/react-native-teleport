@@ -12,6 +12,7 @@ class PortalHostView(
   private var name: String? = null
   private var isInBatch = false
   private var batchBaseIndex = 0
+  private var pendingCleanupViewId: Int? = null
 
   /**
    * Returns the index at which a portal child should be inserted.
@@ -40,9 +41,25 @@ class PortalHostView(
   }
 
   fun cleanup(viewId: Int) {
+    if (isAttachedToWindow) {
+      pendingCleanupViewId = viewId
+      return
+    }
+
+    cleanupNow(viewId)
+  }
+
+  override fun onDetachedFromWindow() {
+    super.onDetachedFromWindow()
+
+    pendingCleanupViewId?.let { cleanupNow(it) }
+  }
+
+  private fun cleanupNow(viewId: Int) {
     name?.let { PortalRegistry.unregisterHost(it, viewId) }
     name = null
     isInBatch = false
     batchBaseIndex = 0
+    pendingCleanupViewId = null
   }
 }
