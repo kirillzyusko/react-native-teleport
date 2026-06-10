@@ -1,0 +1,27 @@
+appId: teleport.example
+---
+- launchApp
+
+# Scroll to the Rich Text Editor example.
+- repeat:
+    while:
+      notVisible:
+        id: "rich_text_editor"
+    commands:
+      - swipe:
+          start: 50%, 80%
+          end: 50%, 20%
+- tapOn:
+    id: "rich_text_editor"
+
+# Teleport the preloaded editor into the screen-local host.
+- tapOn:
+    id: "rich_text_editor_preloaded"
+- assertVisible:
+    text: "Pre-loaded Editor"
+
+# Dismiss the parent native-stack screen while the editor is teleported.
+- tapOn:
+    id: "rich_text_editor_back"
+- assertVisible:
+    id: "rich_text_editor"
