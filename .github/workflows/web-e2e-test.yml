@@ -65,6 +65,7 @@ jobs:
           curl -fsSL "https://get.maestro.mobile.dev" | bash
           echo "$HOME/.maestro/bin" >> $GITHUB_PATH
           export MAESTRO_DRIVER_STARTUP_TIMEOUT=600000
+          maestro --version
       - name: Specify web env
         run: |
           find e2e/flows -name "*.yml" -exec sh -c '
