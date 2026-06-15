@@ -61,6 +61,7 @@ jobs:
           echo $! > .server-pid
       - name: Install Maestro
         run: |
+          export MAESTRO_VERSION=2.6.0
           curl -fsSL "https://get.maestro.mobile.dev" | bash
           echo "$HOME/.maestro/bin" >> $GITHUB_PATH
           export MAESTRO_DRIVER_STARTUP_TIMEOUT=600000
