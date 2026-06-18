@@ -21,6 +21,7 @@ export enum ScreenNames {
   PHOTO_GALLERY = "PHOTO_GALLERY",
   PHOTO_DETAIL = "PHOTO_DETAIL",
   MIRROR = "MIRROR",
+  MIRROR_PERFORMANCE = "MIRROR_PERFORMANCE",
 }
 
 export enum StackNames {

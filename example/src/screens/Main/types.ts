@@ -18,7 +18,8 @@ export type ExampleScreen =
   | ScreenNames.RICH_TEXT_EDITOR
   | ScreenNames.PERSISTED_PORTAL
   | ScreenNames.PHOTO_GALLERY
-  | ScreenNames.MIRROR;
+  | ScreenNames.MIRROR
+  | ScreenNames.MIRROR_PERFORMANCE;
 
 export type Example = {
   testID: string;
