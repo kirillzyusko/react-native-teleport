@@ -29,6 +29,7 @@ import PersistedPortal from "../../screens/PersistedPortal";
 import PhotoGallery from "../../screens/PhotoGallery/PhotoGallery";
 import PhotoDetail from "../../screens/PhotoGallery/PhotoDetail";
 import Mirror from "../../screens/Mirror";
+import MirrorPerformance from "../../screens/MirrorPerformance";
 import type { Photo } from "../../screens/PhotoGallery/photos";
 import Orientation from "../../screens/Orientation";
 import ScaledHost from "../../screens/ScaledHost";
@@ -66,6 +67,7 @@ export type ExamplesStackParamList = {
   [ScreenNames.ORIENTATION]: undefined;
   [ScreenNames.SCALED_HOST]: undefined;
   [ScreenNames.MIRROR]: undefined;
+  [ScreenNames.MIRROR_PERFORMANCE]: undefined;
 };
 
 const Stack = createNativeStackNavigator<ExamplesStackParamList>();
@@ -142,6 +144,9 @@ const options = {
   [ScreenNames.SCALED_HOST]: { title: "Context menu (scaled host)" },
   [ScreenNames.MIRROR]: {
     headerShown: false,
+  },
+  [ScreenNames.MIRROR_PERFORMANCE]: {
+    title: "Mirror Performance",
   },
 };
 
@@ -276,6 +281,11 @@ const ExamplesStack = () => (
       component={Mirror}
       name={ScreenNames.MIRROR}
       options={options[ScreenNames.MIRROR]}
+    />
+    <Stack.Screen
+      component={MirrorPerformance}
+      name={ScreenNames.MIRROR_PERFORMANCE}
+      options={options[ScreenNames.MIRROR_PERFORMANCE]}
     />
   </Stack.Navigator>
 );

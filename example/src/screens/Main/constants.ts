@@ -123,4 +123,10 @@ export const examples: Example[] = [
     info: ScreenNames.MIRROR,
     icons: "🪞",
   },
+  {
+    title: "Mirror Performance",
+    testID: "mirror_performance",
+    info: ScreenNames.MIRROR_PERFORMANCE,
+    icons: "🪞⚡",
+  },
 ];

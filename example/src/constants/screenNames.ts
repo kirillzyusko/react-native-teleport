@@ -23,6 +23,7 @@ export enum ScreenNames {
   ORIENTATION = "ORIENTATION",
   SCALED_HOST = "SCALED_HOST",
   MIRROR = "MIRROR",
+  MIRROR_PERFORMANCE = "MIRROR_PERFORMANCE",
 }
 
 export enum StackNames {
