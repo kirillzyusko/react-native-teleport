@@ -68,8 +68,10 @@ class PortalView(
 
   override fun cleanup() {
     hostName?.let { PortalRegistry.unregisterPendingPortal(it, this) }
+    sourceName?.let { PortalRegistry.unregisterPortalSource(it, this) }
     detachOwnChildren()
     hostName = null
+    sourceName = null
     layoutStateController.resetIfNeeded()
     layoutStateController.setStateWrapper(null)
   }
@@ -112,13 +114,6 @@ class PortalView(
     if (isAttachedToWindow) {
       sourceName?.let { PortalRegistry.registerPortalSource(it, this) }
     }
-  }
-
-  fun cleanup() {
-    hostName?.let { PortalRegistry.unregisterPendingPortal(it, this) }
-    sourceName?.let { PortalRegistry.unregisterPortalSource(it, this) }
-    hostName = null
-    sourceName = null
   }
 
   internal fun onHostLayoutChanged() {
