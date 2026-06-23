@@ -1,1 +1,0 @@
-"use strict";(self.webpackChunkreact_native_teleport_docs=self.webpackChunkreact_native_teleport_docs||[]).push([[9647],{7121:(e,r,t)=>{t.r(r),t.d(r,{default:()=>o});t(6540);var s=t(4164),a=t(7559),c=t(5500),n=t(2831),u=t(3850),l=t(4848);function o(e){return(0,l.jsx)(c.e3,{className:(0,s.A)(a.G.wrapper.docsPages),children:(0,l.jsx)(u.A,{children:(0,n.v)(e.route.routes)})})}}}]);

@@ -2,11 +2,30 @@
 <feed xmlns="http://www.w3.org/2005/Atom">
     <id>https://kirillzyusko.github.io/react-native-teleport/blog</id>
     <title>Teleport Blog</title>
-    <updated>2026-01-30T00:00:00.000Z</updated>
+    <updated>2026-06-23T00:00:00.000Z</updated>
     <generator>https://github.com/jpmonette/feed</generator>
     <link rel="alternate" href="https://kirillzyusko.github.io/react-native-teleport/blog"/>
     <subtitle>Teleport Blog</subtitle>
     <icon>https://kirillzyusko.github.io/react-native-teleport/img/favicon.ico</icon>
+    <entry>
+        <title type="html"><![CDATA[Illusion of portals in React Native 🛸]]></title>
+        <id>https://kirillzyusko.github.io/react-native-teleport/blog/illusion-of-portals</id>
+        <link href="https://kirillzyusko.github.io/react-native-teleport/blog/illusion-of-portals"/>
+        <updated>2026-06-23T00:00:00.000Z</updated>
+        <summary type="html"><![CDATA[Ever wondered what really happens when you render something through a portal in React Native?]]></summary>
+        <content type="html"><![CDATA[<p><strong>Ever wondered what really happens when you render something through a portal in React Native?</strong></p>
+<p>In my talk <strong>The Illusion of Portals in React Native</strong> at <a href="https://appjs.co/" target="_blank" rel="noopener noreferrer">App.js Conf</a>, we look beyond the familiar <strong>Portal</strong> API to understand how different implementations actually work, how they affect the React tree, and what a true portal should look like internally — from the illusion created at the React layer to native portals, view re-parenting, and the new possibilities they unlock.</p>
+<p>Step through the portal and join me for the ride!</p>
+<iframe width="560" height="315" src="https://www.youtube.com/embed/w90acmyrTXk" title="Illusion of Portals" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen=""></iframe>]]></content>
+        <author>
+            <name>Kirill Zyusko</name>
+            <uri>https://github.com/kirillzyusko</uri>
+        </author>
+        <category label="react-native" term="react-native"/>
+        <category label="portal" term="portal"/>
+        <category label="teleport" term="teleport"/>
+        <category label="reparenting" term="reparenting"/>
+    </entry>
     <entry>
         <title type="html"><![CDATA[Meet teleport!]]></title>
         <id>https://kirillzyusko.github.io/react-native-teleport/blog/welcome</id>

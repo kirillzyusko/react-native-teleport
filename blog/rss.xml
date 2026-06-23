@@ -4,10 +4,25 @@
         <title>Teleport Blog</title>
         <link>https://kirillzyusko.github.io/react-native-teleport/blog</link>
         <description>Teleport Blog</description>
-        <lastBuildDate>Fri, 30 Jan 2026 00:00:00 GMT</lastBuildDate>
+        <lastBuildDate>Tue, 23 Jun 2026 00:00:00 GMT</lastBuildDate>
         <docs>https://validator.w3.org/feed/docs/rss2.html</docs>
         <generator>https://github.com/jpmonette/feed</generator>
         <language>en</language>
+        <item>
+            <title><![CDATA[Illusion of portals in React Native 🛸]]></title>
+            <link>https://kirillzyusko.github.io/react-native-teleport/blog/illusion-of-portals</link>
+            <guid>https://kirillzyusko.github.io/react-native-teleport/blog/illusion-of-portals</guid>
+            <pubDate>Tue, 23 Jun 2026 00:00:00 GMT</pubDate>
+            <description><![CDATA[Ever wondered what really happens when you render something through a portal in React Native?]]></description>
+            <content:encoded><![CDATA[<p><strong>Ever wondered what really happens when you render something through a portal in React Native?</strong></p>
+<p>In my talk <strong>The Illusion of Portals in React Native</strong> at <a href="https://appjs.co/" target="_blank" rel="noopener noreferrer">App.js Conf</a>, we look beyond the familiar <strong>Portal</strong> API to understand how different implementations actually work, how they affect the React tree, and what a true portal should look like internally — from the illusion created at the React layer to native portals, view re-parenting, and the new possibilities they unlock.</p>
+<p>Step through the portal and join me for the ride!</p>
+<iframe width="560" height="315" src="https://www.youtube.com/embed/w90acmyrTXk" title="Illusion of Portals" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen=""></iframe>]]></content:encoded>
+            <category>react-native</category>
+            <category>portal</category>
+            <category>teleport</category>
+            <category>reparenting</category>
+        </item>
         <item>
             <title><![CDATA[Meet teleport!]]></title>
             <link>https://kirillzyusko.github.io/react-native-teleport/blog/welcome</link>
