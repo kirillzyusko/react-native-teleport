@@ -54,7 +54,7 @@ function MirrorGrid() {
 }
 
 export default function MirrorPerformance() {
-  const [mode, setMode] = useState<Mode>("lottie");
+  const [mode, setMode] = useState<Mode>("mirror");
 
   const toggle = useCallback(
     () => setMode((m) => (m === "lottie" ? "mirror" : "lottie")),
