@@ -126,13 +126,6 @@ jobs:
       - uses: maxim-lobanov/setup-xcode@v1
         with:
           xcode-version: ${{ env.XCODE_VERSION }}
-      - name: Install Maestro CLI
-        run: |
-          brew tap mobile-dev-inc/tap
-          brew install mobile-dev-inc/tap/maestro
-      - name: Prepare snapshot engine
-        run: cd e2e && npm install
-
       - name: Install app on simulator
         run: |
           UDID=$(xcrun simctl list devices | grep "iPhone 16 Pro (" | grep -oE "[0-9A-F-]{36}" | head -n 1)
@@ -140,6 +133,12 @@ jobs:
           xcrun simctl bootstatus "$UDID"
           osascript -e 'tell application "Simulator" to activate'
           xcrun simctl install "$UDID" example/ios/build/Build/Products/Release-iphonesimulator/TeleportExample.app
+      - name: Install Maestro CLI
+        run: |
+          brew tap mobile-dev-inc/tap
+          brew install mobile-dev-inc/tap/maestro
+      - name: Prepare snapshot engine
+        run: cd e2e && npm install
       - name: Record simulator video
         run: |
           mkdir -p e2e/reports/videos
