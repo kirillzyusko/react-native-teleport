@@ -157,6 +157,18 @@ jobs:
         run: |
           kill -INT $(cat /tmp/sim-video.pid) || true
           sleep 2
+      - name: Collect focused logs
+        if: always()
+        run: |
+          mkdir -p e2e/reports/system
+
+          xcrun simctl spawn booted log show \
+            --style compact \
+            --last 10m \
+            --predicate 'process == "teleport" OR process == "teleport.example" OR eventMessage CONTAINS "teleport.example" OR eventMessage CONTAINS "Terminating app" OR eventMessage CONTAINS "crash" OR eventMessage CONTAINS "JetsamEvent"' \
+            > e2e/reports/system/teleport.log || true
+
+          cp -R ~/Library/Logs/DiagnosticReports e2e/reports/system/DiagnosticReports || true
       - name: Upload test report
         if: failure()
         uses: actions/upload-artifact@v4
