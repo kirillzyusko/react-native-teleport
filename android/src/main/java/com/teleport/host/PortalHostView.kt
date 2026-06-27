@@ -40,6 +40,22 @@ class PortalHostView(
     newName?.let { PortalRegistry.registerHost(it, this) }
   }
 
+  override fun onLayout(
+    changed: Boolean,
+    left: Int,
+    top: Int,
+    right: Int,
+    bottom: Int,
+  ) {
+    super.onLayout(changed, left, top, right, bottom)
+    name?.let { PortalRegistry.notifyHostLayoutChanged(it) }
+  }
+
+  override fun onAttachedToWindow() {
+    super.onAttachedToWindow()
+    name?.let { PortalRegistry.notifyHostLayoutChanged(it) }
+  }
+
   fun cleanup(viewId: Int) {
     if (isAttachedToWindow) {
       pendingCleanupViewId = viewId

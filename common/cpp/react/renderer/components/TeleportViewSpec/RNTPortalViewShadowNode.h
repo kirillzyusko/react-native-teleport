@@ -6,6 +6,7 @@
 #include <react/renderer/components/TeleportViewSpec/EventEmitters.h>
 #include <react/renderer/components/TeleportViewSpec/Props.h>
 #include <react/renderer/components/view/ConcreteViewShadowNode.h>
+#include <react/renderer/graphics/Transform.h>
 #include <jsi/jsi.h>
 
 namespace facebook::react {
@@ -30,6 +31,25 @@ namespace facebook::react {
       if (hostSize.width != 0 && hostSize.height != 0) {
         setSize(Size(hostSize.width, hostSize.height));
       }
+    }
+
+    void setDimensionsFromState(PortalViewState state) const {
+      if (state.hasHostLayout && state.width != 0 && state.height != 0) {
+        setSize(Size(state.width, state.height));
+      }
+    }
+
+    Transform getTransform() const override {
+      auto transform = ConcreteViewShadowNode::getTransform();
+      const auto &stateData =
+          static_cast<const PortalViewShadowNode::ConcreteState &>(*getState())
+              .getData();
+
+      if (!stateData.hasHostLayout) {
+        return transform;
+      }
+
+      return transform * Transform::Translate(stateData.offsetX, stateData.offsetY, 0);
     }
   };
 

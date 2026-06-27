@@ -81,6 +81,15 @@
   return [self.hosts objectForKey:name];
 }
 
+- (void)notifyHostLayoutChangedWithName:(NSString *)name
+{
+  if (!name) {
+    return;
+  }
+
+  [self notifySubscribersForName:name];
+}
+
 - (void)registerPendingPortal:(PortalView *)portal withHostName:(NSString *)hostName
 {
   if (!hostName || !portal) {

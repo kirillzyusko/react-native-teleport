@@ -3,16 +3,27 @@ package com.teleport.portal
 import android.content.Context
 import android.view.View
 import android.view.ViewGroup
+import com.facebook.react.bridge.Arguments
+import com.facebook.react.uimanager.PixelUtil
+import com.facebook.react.uimanager.StateWrapper
 import com.facebook.react.views.view.ReactViewGroup
 import com.teleport.global.PortalRegistry
 import com.teleport.host.PortalHostView
 import java.util.ArrayList
+import kotlin.math.abs
 
 class PortalView(
   context: Context,
 ) : ReactViewGroup(context) {
   private var hostName: String? = null
+  private var lastHostLayout: HostLayoutState? = null
+  private var stateWrapper: StateWrapper? = null
   private val ownChildren: MutableList<View> = ArrayList()
+
+  fun setStateWrapper(wrapper: StateWrapper?) {
+    stateWrapper = wrapper
+    updatePortalLayoutStateIfNeeded()
+  }
 
   fun setHostName(name: String?) {
     if (name == hostName) return
@@ -38,6 +49,7 @@ class PortalView(
     }
 
     name?.let { PortalRegistry.registerPendingPortal(it, this) }
+    updatePortalLayoutStateIfNeeded()
   }
 
   internal fun onHostChanged() {
@@ -54,26 +66,78 @@ class PortalView(
         host.addView(children[i], idx)
       }
       ownChildren.addAll(children)
+      updatePortalLayoutStateIfNeeded()
     } else {
       // Host went away. Pull children back to ourselves so they remain
       // attached to a live view tree and React-driven mutations keep working.
-      if (ownChildren.isEmpty()) return
+      if (ownChildren.isEmpty()) {
+        resetPortalLayoutStateIfNeeded()
+        return
+      }
       val list = detachOwnChildren()
       // isTeleported() is now false, so super.addView and addView are equivalent;
       // use super to be explicit that this is a physical re-attach.
       for (i in list.indices) {
         super.addView(list[i], i)
       }
+      resetPortalLayoutStateIfNeeded()
     }
+  }
+
+  internal fun onHostLayoutChanged() {
+    updatePortalLayoutStateIfNeeded()
   }
 
   fun cleanup() {
     hostName?.let { PortalRegistry.unregisterPendingPortal(it, this) }
     detachOwnChildren()
     hostName = null
+    resetPortalLayoutStateIfNeeded()
+    stateWrapper = null
   }
 
   private fun isTeleported(): Boolean = hostName != null && PortalRegistry.getHost(hostName) != null
+
+  private fun updatePortalLayoutStateIfNeeded() {
+    val wrapper = stateWrapper ?: return
+    val host = PortalRegistry.getHost(hostName)
+
+    if (hostName == null || host == null || !isAttachedToWindow || !host.isAttachedToWindow) {
+      resetPortalLayoutStateIfNeeded()
+      return
+    }
+
+    if (host.width == 0 || host.height == 0) return
+
+    val sourceLocation = IntArray(2)
+    val hostLocation = IntArray(2)
+    getLocationOnScreen(sourceLocation)
+    host.getLocationOnScreen(hostLocation)
+
+    val nextState =
+      HostLayoutState(
+        width = PixelUtil.toDIPFromPixel(host.width.toFloat()),
+        height = PixelUtil.toDIPFromPixel(host.height.toFloat()),
+        offsetX = PixelUtil.toDIPFromPixel((hostLocation[0] - sourceLocation[0]).toFloat()),
+        offsetY = PixelUtil.toDIPFromPixel((hostLocation[1] - sourceLocation[1]).toFloat()),
+        hasHostLayout = true,
+      )
+
+    if (lastHostLayout?.nearlyEquals(nextState) == true) return
+
+    lastHostLayout = nextState
+    wrapper.updateState(nextState.toMap())
+  }
+
+  private fun resetPortalLayoutStateIfNeeded() {
+    val wrapper = stateWrapper ?: return
+    val currentState = lastHostLayout
+    if (currentState != null && !currentState.hasHostLayout) return
+
+    val nextState = HostLayoutState.EMPTY
+    lastHostLayout = nextState
+    wrapper.updateState(nextState.toMap())
+  }
 
   private fun extractPhysicalChildren(): List<View> {
     // Collect children first, then remove via super.removeView(child).
@@ -227,6 +291,27 @@ class PortalView(
   }
   // endregion
 
+  override fun onLayout(
+    changed: Boolean,
+    left: Int,
+    top: Int,
+    right: Int,
+    bottom: Int,
+  ) {
+    super.onLayout(changed, left, top, right, bottom)
+    updatePortalLayoutStateIfNeeded()
+  }
+
+  override fun onAttachedToWindow() {
+    super.onAttachedToWindow()
+    updatePortalLayoutStateIfNeeded()
+  }
+
+  override fun onDetachedFromWindow() {
+    resetPortalLayoutStateIfNeeded()
+    super.onDetachedFromWindow()
+  }
+
   // region Accessibility
   // Override to prevent accessibility from trying to include non-descendant children
   override fun addChildrenForAccessibility(outChildren: ArrayList<View>) {
@@ -236,4 +321,43 @@ class PortalView(
     // When teleported, do nothing—children are handled by the host's accessibility tree
   }
   // endregion
+
+  private data class HostLayoutState(
+    val width: Float,
+    val height: Float,
+    val offsetX: Float,
+    val offsetY: Float,
+    val hasHostLayout: Boolean,
+  ) {
+    fun nearlyEquals(other: HostLayoutState): Boolean =
+      hasHostLayout == other.hasHostLayout &&
+        abs(width - other.width) < STATE_EPSILON &&
+        abs(height - other.height) < STATE_EPSILON &&
+        abs(offsetX - other.offsetX) < STATE_EPSILON &&
+        abs(offsetY - other.offsetY) < STATE_EPSILON
+
+    fun toMap() =
+      Arguments.createMap().apply {
+        putDouble("width", width.toDouble())
+        putDouble("height", height.toDouble())
+        putDouble("offsetX", offsetX.toDouble())
+        putDouble("offsetY", offsetY.toDouble())
+        putBoolean("hasHostLayout", hasHostLayout)
+      }
+
+    companion object {
+      val EMPTY =
+        HostLayoutState(
+          width = 0f,
+          height = 0f,
+          offsetX = 0f,
+          offsetY = 0f,
+          hasHostLayout = false,
+        )
+    }
+  }
+
+  companion object {
+    private const val STATE_EPSILON = 0.01f
+  }
 }

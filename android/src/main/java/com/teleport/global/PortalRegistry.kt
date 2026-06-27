@@ -37,6 +37,16 @@ object PortalRegistry {
     }
   }
 
+  fun notifyHostLayoutChanged(name: String) {
+    pendingPortals[name]?.let { portals ->
+      val iterator = portals.iterator()
+      while (iterator.hasNext()) {
+        val portalRef = iterator.next()
+        portalRef.get()?.onHostLayoutChanged() ?: iterator.remove()
+      }
+    }
+  }
+
   fun getHost(name: String?): PortalHostView? = hosts[name]?.get()
 
   fun registerPendingPortal(
