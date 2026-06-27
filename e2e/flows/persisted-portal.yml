@@ -1,6 +1,7 @@
 appId: teleport.example
 ---
 - launchApp
+- waitForAnimationToEnd
 
 # Scroll to the Persisted Portal example (last item in the list)
 - repeat:

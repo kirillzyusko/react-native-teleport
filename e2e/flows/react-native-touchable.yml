@@ -1,6 +1,7 @@
 appId: teleport.example
 ---
 - launchApp
+- waitForAnimationToEnd
 - tapOn:
     id: "react_native_touchable"
 - assertVisible:
