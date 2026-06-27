@@ -4,6 +4,7 @@ import android.view.View
 import com.facebook.react.bridge.Arguments
 import com.facebook.react.uimanager.PixelUtil
 import com.facebook.react.uimanager.StateWrapper
+import com.teleport.extensions.isDetached
 import com.teleport.extensions.screenLocation
 import com.teleport.host.PortalHostView
 
@@ -49,7 +50,7 @@ internal class PortalLayoutStateController(
       host
     }
 
-  private fun viewsAreDetached(host: PortalHostView): Boolean = !sourceView.isAttachedToWindow || !host.isAttachedToWindow
+  private fun viewsAreDetached(host: PortalHostView): Boolean = sourceView.isDetached() || host.isDetached()
 
   private fun publishIfChanged(
     wrapper: StateWrapper,
