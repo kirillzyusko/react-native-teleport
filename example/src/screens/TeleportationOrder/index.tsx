@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { StyleSheet, Text, View, Pressable } from "react-native";
-import { Portal, PortalProvider } from "react-native-teleport";
+import { Portal, PortalHost } from "react-native-teleport";
 
 interface DialogProps {
   open: boolean;
@@ -14,7 +14,7 @@ function Dialog(props: DialogProps) {
   const { open, onClose, title, message, children } = props;
   if (!open) return null;
   return (
-    <Portal hostName="root">
+    <Portal hostName="dialog">
       <View style={styles.overlay}>
         <View style={styles.dialog}>
           <Text style={styles.title}>{title}</Text>
@@ -41,63 +41,63 @@ export default function TeleportationOrder() {
   const [thirdDialogOpen, setThirdDialogOpen] = useState(false);
 
   return (
-    <PortalProvider>
-      <View style={styles.container}>
-        <Text style={styles.header}>Nested Dialogs Example</Text>
-        <Text style={styles.subtitle}>Open dialogs within dialogs</Text>
+    <View style={styles.container}>
+      <Text style={styles.header}>Nested Dialogs Example</Text>
+      <Text style={styles.subtitle}>Open dialogs within dialogs</Text>
 
+      <Pressable
+        style={({ pressed }) => [
+          styles.buttonPrimary,
+          pressed && styles.buttonPrimaryPressed,
+        ]}
+        onPress={() => setFirstDialogOpen(true)}
+      >
+        <Text style={styles.buttonPrimaryText}>Open First Dialog</Text>
+      </Pressable>
+
+      <Dialog
+        open={firstDialogOpen}
+        onClose={() => setFirstDialogOpen(false)}
+        title="First Dialog"
+        message="This is the first dialog. You can open another dialog from here."
+      >
+        <Pressable
+          style={({ pressed }) => [
+            styles.buttonOutline,
+            pressed && styles.buttonOutlinePressed,
+          ]}
+          onPress={() => setSecondDialogOpen(true)}
+        >
+          <Text style={styles.buttonOutlineText}>Open Second Dialog</Text>
+        </Pressable>
+      </Dialog>
+
+      <Dialog
+        open={secondDialogOpen}
+        onClose={() => setSecondDialogOpen(false)}
+        title="Second Dialog"
+        message="This is the second dialog, opened from the first one. Go even deeper?"
+      >
         <Pressable
           style={({ pressed }) => [
             styles.buttonPrimary,
             pressed && styles.buttonPrimaryPressed,
           ]}
-          onPress={() => setFirstDialogOpen(true)}
+          onPress={() => setThirdDialogOpen(true)}
         >
-          <Text style={styles.buttonPrimaryText}>Open First Dialog</Text>
+          <Text style={styles.buttonPrimaryText}>Open Third Dialog</Text>
         </Pressable>
+      </Dialog>
 
-        <Dialog
-          open={firstDialogOpen}
-          onClose={() => setFirstDialogOpen(false)}
-          title="First Dialog"
-          message="This is the first dialog. You can open another dialog from here."
-        >
-          <Pressable
-            style={({ pressed }) => [
-              styles.buttonOutline,
-              pressed && styles.buttonOutlinePressed,
-            ]}
-            onPress={() => setSecondDialogOpen(true)}
-          >
-            <Text style={styles.buttonOutlineText}>Open Second Dialog</Text>
-          </Pressable>
-        </Dialog>
+      <Dialog
+        open={thirdDialogOpen}
+        onClose={() => setThirdDialogOpen(false)}
+        title="Third Dialog"
+        message="You've reached the third level of nested dialogs! 🎉"
+      />
 
-        <Dialog
-          open={secondDialogOpen}
-          onClose={() => setSecondDialogOpen(false)}
-          title="Second Dialog"
-          message="This is the second dialog, opened from the first one. Go even deeper?"
-        >
-          <Pressable
-            style={({ pressed }) => [
-              styles.buttonPrimary,
-              pressed && styles.buttonPrimaryPressed,
-            ]}
-            onPress={() => setThirdDialogOpen(true)}
-          >
-            <Text style={styles.buttonPrimaryText}>Open Third Dialog</Text>
-          </Pressable>
-        </Dialog>
-
-        <Dialog
-          open={thirdDialogOpen}
-          onClose={() => setThirdDialogOpen(false)}
-          title="Third Dialog"
-          message="You've reached the third level of nested dialogs! 🎉"
-        />
-      </View>
-    </PortalProvider>
+      <PortalHost name="dialog" style={StyleSheet.absoluteFill} />
+    </View>
   );
 }
 
