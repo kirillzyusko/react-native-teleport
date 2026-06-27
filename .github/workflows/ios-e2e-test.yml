@@ -139,11 +139,6 @@ jobs:
           brew install mobile-dev-inc/tap/maestro
       - name: Prepare snapshot engine
         run: cd e2e && npm install
-      - name: Record simulator video
-        run: |
-          mkdir -p e2e/reports/videos
-          xcrun simctl io booted recordVideo e2e/reports/videos/dynamic-children.mp4 &
-          echo $! > /tmp/sim-video.pid
       - name: Run E2E tests
         run: |
           node e2e/snapshot-engine.js &
@@ -151,23 +146,6 @@ jobs:
           export MAESTRO_DRIVER_STARTUP_TIMEOUT=600000
           maestro --platform ios test -e DEVICE="iPhone 16 Pro" e2e/flows/* --format html ./e2e/reports/debug --debug-output ./e2e/reports/debug --flatten-debug-output
           kill $SERVER_PID
-      - name: Stop video recording
-        if: always()
-        run: |
-          kill -INT $(cat /tmp/sim-video.pid) || true
-          sleep 2
-      - name: Collect focused logs
-        if: always()
-        run: |
-          mkdir -p e2e/reports/system
-
-          xcrun simctl spawn booted log show \
-            --style compact \
-            --last 10m \
-            --predicate 'process == "teleport" OR process == "teleport.example" OR eventMessage CONTAINS "teleport.example" OR eventMessage CONTAINS "Terminating app" OR eventMessage CONTAINS "crash" OR eventMessage CONTAINS "JetsamEvent"' \
-            > e2e/reports/system/teleport.log || true
-
-          cp -R ~/Library/Logs/DiagnosticReports e2e/reports/system/DiagnosticReports || true
       - name: Upload test report
         if: failure()
         uses: actions/upload-artifact@v4
