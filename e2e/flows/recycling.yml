@@ -1,6 +1,7 @@
 appId: teleport.example
 ---
 - launchApp
+- waitForAnimationToEnd
 
 # Scroll to the Recycling example (last item in the list)
 - repeat:
