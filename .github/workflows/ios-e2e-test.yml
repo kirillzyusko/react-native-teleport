@@ -140,6 +140,11 @@ jobs:
           xcrun simctl bootstatus "$UDID"
           osascript -e 'tell application "Simulator" to activate'
           xcrun simctl install "$UDID" example/ios/build/Build/Products/Release-iphonesimulator/TeleportExample.app
+      - name: Record simulator video
+        run: |
+          mkdir -p e2e/reports/videos
+          xcrun simctl io booted recordVideo e2e/reports/videos/dynamic-children.mp4 &
+          echo $! > /tmp/sim-video.pid
       - name: Run E2E tests
         run: |
           node e2e/snapshot-engine.js &
@@ -147,6 +152,11 @@ jobs:
           export MAESTRO_DRIVER_STARTUP_TIMEOUT=600000
           maestro --platform ios test -e DEVICE="iPhone 16 Pro" e2e/flows/* --format html ./e2e/reports/debug --debug-output ./e2e/reports/debug --flatten-debug-output
           kill $SERVER_PID
+      - name: Stop video recording
+        if: always()
+        run: |
+          kill -INT $(cat /tmp/sim-video.pid) || true
+          sleep 2
       - name: Upload test report
         if: failure()
         uses: actions/upload-artifact@v4
