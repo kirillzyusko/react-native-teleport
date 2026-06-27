@@ -19,14 +19,7 @@
 
 #import <React/RCTSurfaceTouchHandler.h>
 
-#include <cmath>
-
 using namespace facebook::react;
-
-static bool RNTNearlyEqual(Float lhs, Float rhs)
-{
-  return std::abs(lhs - rhs) < 0.01;
-}
 
 @interface PortalView () <RCTPortalViewViewProtocol>
 
@@ -79,7 +72,7 @@ static bool RNTNearlyEqual(Float lhs, Float rhs)
   _state->updateState(
       [=](const PortalViewShadowNode::ConcreteState::Data &oldData)
           -> PortalViewShadowNode::ConcreteState::SharedData {
-        if (!oldData.hasHostLayout) {
+        if (oldData.offsetX == newData.offsetX && oldData.offsetY == newData.offsetY) {
           return nullptr;
         }
 
@@ -101,8 +94,7 @@ static bool RNTNearlyEqual(Float lhs, Float rhs)
   CGRect sourceRect = [self screenRectForView:self];
   CGRect hostRect = [self screenRectForView:self.targetView];
 
-  if (CGRectIsNull(sourceRect) || CGRectIsNull(hostRect) || hostRect.size.width == 0 ||
-      hostRect.size.height == 0) {
+  if (CGRectIsNull(sourceRect) || CGRectIsNull(hostRect)) {
     return;
   }
 
@@ -110,18 +102,13 @@ static bool RNTNearlyEqual(Float lhs, Float rhs)
   // PortalView shadow node. Store the host-source delta so Fabric measurement
   // follows the native destination.
   PortalViewState newData = {
-      static_cast<Float>(hostRect.size.width),
-      static_cast<Float>(hostRect.size.height),
       static_cast<Float>(hostRect.origin.x - sourceRect.origin.x),
       static_cast<Float>(hostRect.origin.y - sourceRect.origin.y)};
 
   _state->updateState(
       [=](const PortalViewShadowNode::ConcreteState::Data &oldData)
           -> PortalViewShadowNode::ConcreteState::SharedData {
-        if (oldData.hasHostLayout && RNTNearlyEqual(oldData.width, newData.width) &&
-            RNTNearlyEqual(oldData.height, newData.height) &&
-            RNTNearlyEqual(oldData.offsetX, newData.offsetX) &&
-            RNTNearlyEqual(oldData.offsetY, newData.offsetY)) {
+        if (oldData.offsetX == newData.offsetX && oldData.offsetY == newData.offsetY) {
           return nullptr;
         }
 
