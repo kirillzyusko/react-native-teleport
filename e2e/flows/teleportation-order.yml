@@ -48,10 +48,10 @@ appId: teleport.example
     label: "Android press-move-release"
     when:
       platform: Android
-    file: subflows/teleportation-order-press-move-release.yml
+    file: ../subflows/teleportation-order-press-move-release.yml
 
 - runFlow:
     label: "iOS press-move-release"
     when:
       platform: iOS
-    file: subflows/teleportation-order-press-move-release.yml
+    file: ../subflows/teleportation-order-press-move-release.yml
