@@ -40,3 +40,14 @@ appId: teleport.example
     text: "Second Dialog"
 - assertNotVisible:
     text: "Third Dialog"
+- tapOn:
+    text: "Open First Dialog"
+- assertVisible:
+    text: "First Dialog"
+- swipe:
+    label: "Press, move right, hold, and release Close First Dialog"
+    start: 45%, 59%
+    end: 55%, 59%
+    duration: 5000
+- assertNotVisible:
+    text: "First Dialog"

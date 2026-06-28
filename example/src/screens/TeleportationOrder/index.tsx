@@ -14,7 +14,7 @@ function Dialog(props: DialogProps) {
   const { open, onClose, title, message, children } = props;
   if (!open) return null;
   return (
-    <Portal hostName="dialog">
+    <Portal hostName="overlay">
       <View style={styles.overlay}>
         <View style={styles.dialog}>
           <Text style={styles.title}>{title}</Text>
