@@ -66,11 +66,6 @@ class PortalHostView(
     name?.let { PortalRegistry.notifyHostLayoutChanged(it) }
   }
 
-  override fun onAttachedToWindow() {
-    super.onAttachedToWindow()
-    name?.let { PortalRegistry.notifyHostLayoutChanged(it) }
-  }
-
   override fun onDetachedFromWindow() {
     super.onDetachedFromWindow()
 

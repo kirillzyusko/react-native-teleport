@@ -238,18 +238,6 @@ using namespace facebook::react;
   [self updatePortalLayoutStateIfNeeded];
 }
 
-- (void)didMoveToWindow
-{
-  [super didMoveToWindow];
-  [self updatePortalLayoutStateIfNeeded];
-}
-
-- (void)finalizeUpdates:(RNComponentViewUpdateMask)updateMask
-{
-  [super finalizeUpdates:updateMask];
-  [self updatePortalLayoutStateIfNeeded];
-}
-
 - (void)updateState:(const facebook::react::State::Shared &)state
            oldState:(const facebook::react::State::Shared &)oldState
 {
