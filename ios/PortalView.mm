@@ -206,8 +206,6 @@ using namespace facebook::react;
       [self.targetView addSubview:childComponentView];
     }
   }
-
-  [self updatePortalLayoutStateIfNeeded];
 }
 
 - (void)unmountChildComponentView:(UIView<RCTComponentViewProtocol> *)childComponentView
