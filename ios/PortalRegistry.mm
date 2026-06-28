@@ -87,7 +87,19 @@
     return;
   }
 
-  [self notifySubscribersForName:name];
+  NSPointerArray *portals = self.pendingPortals[name];
+  if (!portals) {
+    return;
+  }
+
+  [portals compact];
+
+  for (NSUInteger i = 0; i < portals.count; i++) {
+    PortalView *portal = (__bridge PortalView *)[portals pointerAtIndex:i];
+    if (portal) {
+      [portal onHostLayoutChanged];
+    }
+  }
 }
 
 - (void)registerPendingPortal:(PortalView *)portal withHostName:(NSString *)hostName

@@ -134,8 +134,6 @@ using namespace facebook::react;
       [target addSubview:child];
     }
   }
-
-  [self updatePortalLayoutStateIfNeeded];
 }
 
 - (void)updateProps:(Props::Shared const &)props oldProps:(Props::Shared const &)oldProps
@@ -229,6 +227,13 @@ using namespace facebook::react;
     [self moveOwnChildrenToTarget:newTarget];
   }
 
+  if (!hostView) {
+    [self resetPortalLayoutStateIfNeeded];
+  }
+}
+
+- (void)onHostLayoutChanged
+{
   [self updatePortalLayoutStateIfNeeded];
 }
 

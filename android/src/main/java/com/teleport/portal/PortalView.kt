@@ -76,7 +76,6 @@ class PortalView(
         host.addView(children[i], idx)
       }
       ownChildren.addAll(children)
-      layoutStateController.updateIfNeeded(hostName, host)
     } else {
       // Host went away. Pull children back to ourselves so they remain
       // attached to a live view tree and React-driven mutations keep working.
