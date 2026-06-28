@@ -11,6 +11,10 @@ appId: teleport.example
       - swipe:
           start: 50%, 80%
           end: 50%, 20%
+# do additional swipe for headless web, this is Maestro bug
+- swipe:
+    start: 50%, 75%
+    end: 50%, 55%
 - tapOn:
     id: "rich_text_editor"
 
