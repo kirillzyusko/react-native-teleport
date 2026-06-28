@@ -1,0 +1,24 @@
+appId: teleport.example
+---
+# Maestro web exposes this stack back button by its accessibility label instead
+# of the React Native Web data-testid.
+- runFlow:
+    when:
+      platform: Web
+    commands:
+      - tapOn:
+          id: "Examples, back"
+
+- runFlow:
+    when:
+      platform: iOS
+    commands:
+      - tapOn:
+          id: "go_back"
+
+- runFlow:
+    when:
+      platform: Android
+    commands:
+      - tapOn:
+          id: "go_back"

@@ -230,7 +230,7 @@ const ExamplesStack = () => (
           <HeaderBackButton
             label={label}
             onPress={() => navigation.goBack()}
-            testID="rich_text_editor_back"
+            testID="go_back"
             tintColor={tintColor}
           />
         ),

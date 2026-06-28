@@ -21,7 +21,7 @@ appId: teleport.example
     text: "Pre-loaded Editor"
 
 # Dismiss the parent native-stack screen while the editor is teleported.
-- tapOn:
-    id: "rich_text_editor_back"
+- runFlow:
+    file: ../subflows/go-back.yml
 - assertVisible:
     id: "rich_text_editor"
