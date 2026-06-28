@@ -46,6 +46,9 @@ appId: teleport.example
 - assertVisible:
     text: "First Dialog"
 
+# on web swipe moves a whole window, and it't not a mouse move
+# can be rewritten when https://github.com/mobile-dev-inc/Maestro/pull/2978
+# is getting merged
 - runFlow:
     label: "Mobile-only press-move-release"
     when:
