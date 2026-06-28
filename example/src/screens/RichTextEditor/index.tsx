@@ -60,6 +60,7 @@ export default function RichTextEditorExample() {
           <TouchableOpacity
             style={[styles.card, styles.cardHighlight]}
             onPress={openPreloaded}
+            testID="rich_text_editor_preloaded"
           >
             <Text style={[styles.cardTitle, styles.cardTitleHighlight]}>
               Pre-loaded (Teleport)

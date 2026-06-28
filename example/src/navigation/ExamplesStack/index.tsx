@@ -2,6 +2,7 @@ import {
   createNativeStackNavigator,
   type NativeStackNavigationProp,
 } from "@react-navigation/native-stack";
+import { HeaderBackButton } from "@react-navigation/elements";
 
 import { ScreenNames } from "../../constants/screenNames";
 import GestureHandlerTouchableExample from "../../screens/Touchable";
@@ -223,7 +224,17 @@ const ExamplesStack = () => (
     <Stack.Screen
       component={RichTextEditor}
       name={ScreenNames.RICH_TEXT_EDITOR}
-      options={options[ScreenNames.RICH_TEXT_EDITOR]}
+      options={({ navigation }) => ({
+        ...options[ScreenNames.RICH_TEXT_EDITOR],
+        headerLeft: ({ label, tintColor }) => (
+          <HeaderBackButton
+            label={label}
+            onPress={() => navigation.goBack()}
+            testID="go_back"
+            tintColor={tintColor}
+          />
+        ),
+      })}
     />
     <Stack.Screen
       component={PersistedPortal}
