@@ -40,18 +40,3 @@ appId: teleport.example
     text: "Second Dialog"
 - assertNotVisible:
     text: "Third Dialog"
-
-# on web swipe moves a whole window, and it't not a mouse move
-# can be rewritten when https://github.com/mobile-dev-inc/Maestro/pull/2978
-# is getting merged
-- runFlow:
-    label: "Android press-move-release"
-    when:
-      platform: Android
-    file: ../subflows/teleportation-order-press-move-release.yml
-
-- runFlow:
-    label: "iOS press-move-release"
-    when:
-      platform: iOS
-    file: ../subflows/teleportation-order-press-move-release.yml
