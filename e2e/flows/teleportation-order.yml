@@ -1,4 +1,5 @@
 appId: teleport.example
+# url: http://localhost:8080
 ---
 - launchApp
 - waitForAnimationToEnd
@@ -44,10 +45,16 @@ appId: teleport.example
     text: "Open First Dialog"
 - assertVisible:
     text: "First Dialog"
-- swipe:
-    label: "Press, move right, hold, and release Close First Dialog"
-    start: 45%, 59%
-    end: 55%, 59%
-    duration: 5000
-- assertNotVisible:
-    text: "First Dialog"
+
+- runFlow:
+    label: "Mobile-only press-move-release"
+    when:
+      true: ${MAESTRO_PLATFORM !== 'Web'}
+    commands:
+      - swipe:
+          label: "Press, move right, hold, and release Close First Dialog"
+          start: 45%, 59%
+          end: 55%, 59%
+          duration: 3000
+      - assertNotVisible:
+          text: "First Dialog"
