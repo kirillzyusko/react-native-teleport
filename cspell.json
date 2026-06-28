@@ -73,7 +73,8 @@
     "reparenting",
     "portaling",
     "segoe",
-    "picsum"
+    "picsum",
+    "subflows"
   ],
   "ignorePaths": [
     "node_modules",
