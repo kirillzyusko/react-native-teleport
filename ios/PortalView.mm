@@ -13,6 +13,7 @@
 #import <react/renderer/components/TeleportViewSpec/Props.h>
 #import <react/renderer/components/TeleportViewSpec/RCTComponentViewHelpers.h>
 #import <react/renderer/components/TeleportViewSpec/RNTPortalViewComponentDescriptor.h>
+#import <react/renderer/components/TeleportViewSpec/RNTPortalViewShadowNode.h>
 
 #import "RCTFabricComponentsPlugins.h"
 
@@ -29,6 +30,7 @@ using namespace facebook::react;
 
 @implementation PortalView {
   NSMutableArray<UIView *> *_ownChildren;
+  PortalViewShadowNode::ConcreteState::Shared _state;
 }
 
 + (ComponentDescriptorProvider)componentDescriptorProvider
@@ -49,6 +51,69 @@ using namespace facebook::react;
   }
 
   return self;
+}
+
+- (CGRect)screenRectForView:(UIView *)view
+{
+  if (!view.window) {
+    return CGRectNull;
+  }
+
+  return [view convertRect:view.bounds toCoordinateSpace:view.window.screen.coordinateSpace];
+}
+
+- (void)resetPortalLayoutStateIfNeeded
+{
+  if (!_state) {
+    return;
+  }
+
+  PortalViewState newData = {};
+  _state->updateState(
+      [=](const PortalViewShadowNode::ConcreteState::Data &oldData)
+          -> PortalViewShadowNode::ConcreteState::SharedData {
+        if (oldData.offsetX == newData.offsetX && oldData.offsetY == newData.offsetY) {
+          return nullptr;
+        }
+
+        return std::make_shared<const PortalViewShadowNode::ConcreteState::Data>(newData);
+      });
+}
+
+- (void)updatePortalLayoutStateIfNeeded
+{
+  if (!_state) {
+    return;
+  }
+
+  if (!self.hostName || ![self.targetView isKindOfClass:[PortalHostView class]]) {
+    [self resetPortalLayoutStateIfNeeded];
+    return;
+  }
+
+  CGRect sourceRect = [self screenRectForView:self];
+  CGRect hostRect = [self screenRectForView:self.targetView];
+
+  if (CGRectIsNull(sourceRect) || CGRectIsNull(hostRect)) {
+    return;
+  }
+
+  // Children are physically mounted under the host, but measured through this
+  // PortalView shadow node. Store the host-source delta so Fabric measurement
+  // follows the native destination.
+  PortalViewState newData = {
+      static_cast<Float>(hostRect.origin.x - sourceRect.origin.x),
+      static_cast<Float>(hostRect.origin.y - sourceRect.origin.y)};
+
+  _state->updateState(
+      [=](const PortalViewShadowNode::ConcreteState::Data &oldData)
+          -> PortalViewShadowNode::ConcreteState::SharedData {
+        if (oldData.offsetX == newData.offsetX && oldData.offsetY == newData.offsetY) {
+          return nullptr;
+        }
+
+        return std::make_shared<const PortalViewShadowNode::ConcreteState::Data>(newData);
+      });
 }
 
 - (void)moveOwnChildrenToTarget:(UIView *)target
@@ -107,6 +172,7 @@ using namespace facebook::react;
   }
 
   [super updateProps:props oldProps:oldProps];
+  [self updatePortalLayoutStateIfNeeded];
 }
 
 /// Finds the host index of the first next sibling (in _ownChildren) that is
@@ -158,6 +224,28 @@ using namespace facebook::react;
     self.targetView = newTarget;
     [self moveOwnChildrenToTarget:newTarget];
   }
+
+  if (!hostView) {
+    [self resetPortalLayoutStateIfNeeded];
+  }
+}
+
+- (void)onHostLayoutChanged
+{
+  [self updatePortalLayoutStateIfNeeded];
+}
+
+- (void)layoutSubviews
+{
+  [super layoutSubviews];
+  [self updatePortalLayoutStateIfNeeded];
+}
+
+- (void)updateState:(const facebook::react::State::Shared &)state
+           oldState:(const facebook::react::State::Shared &)oldState
+{
+  _state = std::static_pointer_cast<const PortalViewShadowNode::ConcreteState>(state);
+  [self updatePortalLayoutStateIfNeeded];
 }
 
 - (void)prepareForRecycle
@@ -175,6 +263,7 @@ using namespace facebook::react;
   self.hostName = nil;
   self.targetView = self.contentView;
   [_ownChildren removeAllObjects];
+  _state.reset();
 }
 
 // MARK: touch handling

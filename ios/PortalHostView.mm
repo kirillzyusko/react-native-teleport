@@ -62,6 +62,15 @@ using namespace facebook::react;
   [super updateProps:props oldProps:oldProps];
 }
 
+- (void)layoutSubviews
+{
+  [super layoutSubviews];
+
+  if (self.registeredName) {
+    [[PortalRegistry sharedInstance] notifyHostLayoutChangedWithName:self.registeredName];
+  }
+}
+
 - (NSInteger)nextInsertionIndexForChildAt:(NSInteger)childIndex
 {
   if (!self.isInBatch) {

@@ -1,6 +1,8 @@
 package com.teleport.portal
 
 import com.facebook.react.module.annotations.ReactModule
+import com.facebook.react.uimanager.ReactStylesDiffMap
+import com.facebook.react.uimanager.StateWrapper
 import com.facebook.react.uimanager.ThemedReactContext
 import com.facebook.react.uimanager.ViewManagerDelegate
 import com.facebook.react.uimanager.annotations.ReactProp
@@ -24,6 +26,15 @@ class PortalViewManager :
   override fun onDropViewInstance(view: ReactViewGroup) {
     (view as? PortalView)?.cleanup()
     super.onDropViewInstance(view)
+  }
+
+  override fun updateState(
+    view: ReactViewGroup,
+    props: ReactStylesDiffMap?,
+    stateWrapper: StateWrapper?,
+  ): Any? {
+    (view as? PortalView)?.setStateWrapper(stateWrapper)
+    return super.updateState(view, props, stateWrapper)
   }
 
   @ReactProp(name = "name")

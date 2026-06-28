@@ -3,6 +3,7 @@ package com.teleport.portal
 import android.content.Context
 import android.view.View
 import android.view.ViewGroup
+import com.facebook.react.uimanager.StateWrapper
 import com.facebook.react.views.view.ReactViewGroup
 import com.teleport.global.PortalRegistry
 import com.teleport.host.PortalHostView
@@ -12,7 +13,17 @@ class PortalView(
   context: Context,
 ) : ReactViewGroup(context) {
   private var hostName: String? = null
+  private val layoutStateController = PortalLayoutStateController(this)
   private val ownChildren: MutableList<View> = ArrayList()
+
+  private val isTeleported: Boolean
+    get() = hostName != null && PortalRegistry.getHost(hostName) != null
+
+  // region ViewManager methods
+  fun setStateWrapper(wrapper: StateWrapper?) {
+    layoutStateController.setStateWrapper(wrapper)
+    layoutStateController.updateIfNeeded(hostName, PortalRegistry.getHost(hostName))
+  }
 
   fun setHostName(name: String?) {
     if (name == hostName) return
@@ -38,8 +49,19 @@ class PortalView(
     }
 
     name?.let { PortalRegistry.registerPendingPortal(it, this) }
+    layoutStateController.updateIfNeeded(hostName, PortalRegistry.getHost(hostName))
   }
 
+  fun cleanup() {
+    hostName?.let { PortalRegistry.unregisterPendingPortal(it, this) }
+    detachOwnChildren()
+    hostName = null
+    layoutStateController.resetIfNeeded()
+    layoutStateController.setStateWrapper(null)
+  }
+  // endregion
+
+  // region Host lifecycle callbacks
   internal fun onHostChanged() {
     val host = PortalRegistry.getHost(hostName)
     if (host != null) {
@@ -57,24 +79,26 @@ class PortalView(
     } else {
       // Host went away. Pull children back to ourselves so they remain
       // attached to a live view tree and React-driven mutations keep working.
-      if (ownChildren.isEmpty()) return
+      if (ownChildren.isEmpty()) {
+        layoutStateController.resetIfNeeded()
+        return
+      }
       val list = detachOwnChildren()
-      // isTeleported() is now false, so super.addView and addView are equivalent;
+      // isTeleported is now false, so super.addView and addView are equivalent;
       // use super to be explicit that this is a physical re-attach.
       for (i in list.indices) {
         super.addView(list[i], i)
       }
+      layoutStateController.resetIfNeeded()
     }
   }
 
-  fun cleanup() {
-    hostName?.let { PortalRegistry.unregisterPendingPortal(it, this) }
-    detachOwnChildren()
-    hostName = null
+  internal fun onHostLayoutChanged() {
+    layoutStateController.updateIfNeeded(hostName, PortalRegistry.getHost(hostName))
   }
+  // endregion
 
-  private fun isTeleported(): Boolean = hostName != null && PortalRegistry.getHost(hostName) != null
-
+  // region Child relocation helpers
   private fun extractPhysicalChildren(): List<View> {
     // Collect children first, then remove via super.removeView(child).
     // Using super.removeViewAt(i) may call our overridden getChildAt(),
@@ -127,7 +151,7 @@ class PortalView(
 
   private fun extractChildren(): List<View> {
     // Gather current children (logical if teleported, physical otherwise)
-    return if (isTeleported()) detachOwnChildren() else extractPhysicalChildren()
+    return if (isTeleported) detachOwnChildren() else extractPhysicalChildren()
   }
 
   /**
@@ -145,17 +169,18 @@ class PortalView(
     }
     return -1
   }
+  // endregion
 
   // region Children management
   override fun getChildCount(): Int =
-    if (isTeleported()) {
+    if (isTeleported) {
       ownChildren.size
     } else {
       super.getChildCount()
     }
 
   override fun getChildAt(index: Int): View? =
-    if (isTeleported()) {
+    if (isTeleported) {
       ownChildren.getOrNull(index)
     } else {
       super.getChildAt(index)
@@ -165,7 +190,7 @@ class PortalView(
     child: View,
     index: Int,
   ) {
-    if (isTeleported()) {
+    if (isTeleported) {
       val host = PortalRegistry.getHost(hostName)
       ownChildren.add(index, child)
       if (host != null) {
@@ -186,7 +211,7 @@ class PortalView(
     index: Int,
     params: LayoutParams,
   ) {
-    if (isTeleported()) {
+    if (isTeleported) {
       val host = PortalRegistry.getHost(hostName)
       ownChildren.add(index, child)
       if (host != null) {
@@ -204,7 +229,7 @@ class PortalView(
 
   override fun removeView(view: View?) {
     if (view == null) return
-    if (isTeleported()) {
+    if (isTeleported) {
       val host = PortalRegistry.getHost(hostName)
       host?.removeView(view)
       ownChildren.remove(view)
@@ -214,7 +239,7 @@ class PortalView(
   }
 
   override fun removeViewAt(index: Int) {
-    if (isTeleported()) {
+    if (isTeleported) {
       val host = PortalRegistry.getHost(hostName)
       val view = ownChildren.getOrNull(index)
       if (view != null) {
@@ -227,10 +252,24 @@ class PortalView(
   }
   // endregion
 
+  // region Lifecycle
+  override fun onLayout(
+    changed: Boolean,
+    left: Int,
+    top: Int,
+    right: Int,
+    bottom: Int,
+  ) {
+    super.onLayout(changed, left, top, right, bottom)
+    layoutStateController.updateIfNeeded(hostName, PortalRegistry.getHost(hostName))
+  }
+
+  // endregion
+
   // region Accessibility
   // Override to prevent accessibility from trying to include non-descendant children
   override fun addChildrenForAccessibility(outChildren: ArrayList<View>) {
-    if (!isTeleported()) {
+    if (!isTeleported) {
       super.addChildrenForAccessibility(outChildren)
     }
     // When teleported, do nothing—children are handled by the host's accessibility tree
