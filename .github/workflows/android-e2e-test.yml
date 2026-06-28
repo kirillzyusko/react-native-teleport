@@ -121,6 +121,7 @@ jobs:
         with:
           api-level: ${{ matrix.devices.api }}
           target: ${{ matrix.devices.target }}
+          cores: 4
           profile: pixel_2
           ram-size: "4096M"
           disk-size: "10G"
