@@ -2,8 +2,8 @@ package com.teleport.portal
 
 import android.view.View
 import com.facebook.react.bridge.Arguments
-import com.facebook.react.uimanager.PixelUtil
 import com.facebook.react.uimanager.StateWrapper
+import com.teleport.extensions.dp
 import com.teleport.extensions.isDetached
 import com.teleport.extensions.screenLocation
 import com.teleport.host.PortalHostView
@@ -67,27 +67,27 @@ internal class PortalLayoutStateController(
     val hostLocation = host.screenLocation()
 
     return PortalOffsetState(
-      offsetX = PixelUtil.toDIPFromPixel((hostLocation[0] - sourceLocation[0]).toFloat()),
-      offsetY = PixelUtil.toDIPFromPixel((hostLocation[1] - sourceLocation[1]).toFloat()),
+      offsetX = (hostLocation[0] - sourceLocation[0]).toFloat().dp,
+      offsetY = (hostLocation[1] - sourceLocation[1]).toFloat().dp,
     )
   }
 }
 
 private data class PortalOffsetState(
-  val offsetX: Float,
-  val offsetY: Float,
+  val offsetX: Double,
+  val offsetY: Double,
 ) {
   fun toMap() =
     Arguments.createMap().apply {
-      putDouble("offsetX", offsetX.toDouble())
-      putDouble("offsetY", offsetY.toDouble())
+      putDouble("offsetX", offsetX)
+      putDouble("offsetY", offsetY)
     }
 
   companion object {
     val EMPTY =
       PortalOffsetState(
-        offsetX = 0f,
-        offsetY = 0f,
+        offsetX = 0.0,
+        offsetY = 0.0,
       )
   }
 }

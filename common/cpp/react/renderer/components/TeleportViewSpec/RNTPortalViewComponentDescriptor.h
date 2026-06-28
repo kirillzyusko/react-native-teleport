@@ -31,6 +31,7 @@ namespace facebook::react {
         yogaPortal.setPositionType(YGPositionTypeAbsolute);
 
         HostSize hostSize = PortalShadowRegistry::getInstance().getHostSize(props.hostName);
+
         portalViewShadowNode.setDimensionsFromHost(hostSize);
       }
 

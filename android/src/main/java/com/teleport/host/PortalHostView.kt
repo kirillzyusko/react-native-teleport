@@ -14,6 +14,27 @@ class PortalHostView(
   private var batchBaseIndex = 0
   private var pendingCleanupViewId: Int? = null
 
+  // region ViewManager methods
+  fun setName(newName: String?) {
+    if (name == newName) return
+
+    name?.let { PortalRegistry.unregisterHost(it, id) }
+    name = newName
+    newName?.let { PortalRegistry.registerHost(it, this) }
+  }
+
+  fun cleanup(viewId: Int) {
+    if (isAttachedToWindow) {
+      pendingCleanupViewId = viewId
+      return
+    }
+
+    cleanupNow(viewId)
+  }
+  // endregion
+
+  // region Portal insertion
+
   /**
    * Returns the index at which a portal child should be inserted.
    *
@@ -31,15 +52,9 @@ class PortalHostView(
     }
     return minOf(batchBaseIndex + childIndex, childCount)
   }
+  // endregion
 
-  fun setName(newName: String?) {
-    if (name == newName) return
-
-    name?.let { PortalRegistry.unregisterHost(it, id) }
-    name = newName
-    newName?.let { PortalRegistry.registerHost(it, this) }
-  }
-
+  // region Lifecycle
   override fun onLayout(
     changed: Boolean,
     left: Int,
@@ -56,21 +71,14 @@ class PortalHostView(
     name?.let { PortalRegistry.notifyHostLayoutChanged(it) }
   }
 
-  fun cleanup(viewId: Int) {
-    if (isAttachedToWindow) {
-      pendingCleanupViewId = viewId
-      return
-    }
-
-    cleanupNow(viewId)
-  }
-
   override fun onDetachedFromWindow() {
     super.onDetachedFromWindow()
 
     pendingCleanupViewId?.let { cleanupNow(it) }
   }
+  // endregion
 
+  // region Helpers
   private fun cleanupNow(viewId: Int) {
     name?.let { PortalRegistry.unregisterHost(it, viewId) }
     name = null
@@ -78,4 +86,5 @@ class PortalHostView(
     batchBaseIndex = 0
     pendingCleanupViewId = null
   }
+  // endregion
 }
