@@ -9,9 +9,11 @@ import { useHeroStore } from "./store";
 import type { FlatStyle } from "./types";
 
 export const HERO_OVERLAY_HOST = "hero-overlay";
+export const HERO_FOREGROUND_OVERLAY_HOST = "hero-overlay-foreground";
 
 type HeroComponentProps = {
   id: string;
+  role?: "source" | "target";
   style?: any;
   /** Controls stacking order in the overlay during transitions */
   zIndex?: number;
@@ -64,10 +66,7 @@ function toNumeric(value: any): number | null {
  * Given source and target flat styles, returns the keys of properties
  * that can be resolved to numbers in both and have different values.
  */
-function getAnimatableKeys(
-  source: FlatStyle,
-  target: FlatStyle,
-): string[] {
+function getAnimatableKeys(source: FlatStyle, target: FlatStyle): string[] {
   const keys: string[] = [];
   for (const key of Object.keys(source)) {
     if (LAYOUT_KEYS.has(key)) continue;
@@ -87,6 +86,7 @@ export function createHeroComponent(Component: React.ComponentType<any>) {
 
   function HeroComponent({
     id,
+    role,
     style,
     zIndex = 0,
     children,
@@ -96,7 +96,10 @@ export function createHeroComponent(Component: React.ComponentType<any>) {
 
     // Determine role once at mount time
     const roleRef = useRef<"source" | "target">(
-      useHeroStore.getState().source[id] !== undefined ? "target" : "source",
+      role ??
+        (useHeroStore.getState().source[id] !== undefined
+          ? "target"
+          : "source"),
     );
     const isSource = roleRef.current === "source";
 
@@ -117,9 +120,14 @@ export function createHeroComponent(Component: React.ComponentType<any>) {
         ref.current?.measureInWindow(
           (x: number, y: number, w: number, h: number) => {
             if (w === 0 && h === 0) return;
-            const role = isSource ? "source" : "target";
-            console.log(`[Hero] ${role} "${id}" measured:`, { x, y, width: w, height: h });
-            console.log(`[Hero] ${role} "${id}" flatStyle:`, flatStyle);
+            const measuredRole = isSource ? "source" : "target";
+            console.log(`[Hero] ${measuredRole} "${id}" measured:`, {
+              x,
+              y,
+              width: w,
+              height: h,
+            });
+            console.log(`[Hero] ${measuredRole} "${id}" flatStyle:`, flatStyle);
             const reg = { rect: { x, y, width: w, height: h }, flatStyle };
             if (isSource) {
               useHeroStore.getState().registerSource(id, reg);
@@ -143,8 +151,10 @@ export function createHeroComponent(Component: React.ComponentType<any>) {
     // Source teleports to overlay during transitions
     const shouldTeleport = isSource && isTransitioning && !!transition;
 
-    // Target is hidden during transitions (overlay handles the animation)
-    const isTargetHidden = !isSource && isTransitioning;
+    // Targets mount before their layout effect can register the transition.
+    // Keep them hidden for that initial frame as well as while the source is
+    // animating in the overlay.
+    const isTargetHidden = !isSource && (!transition || isTransitioning);
 
     if (transition) {
       console.log(`[Hero] "${id}" transition:`, {
@@ -179,6 +189,21 @@ export function createHeroComponent(Component: React.ComponentType<any>) {
       };
     }, [transition]);
 
+    // Reanimated applies a newly-created animated style on the UI thread. The
+    // static source bounds keep the first portal frame in place until then.
+    const initialOverlayStyle = useMemo(() => {
+      if (!transition) return undefined;
+
+      const src = transition.sourceRect;
+      return {
+        position: "absolute" as const,
+        left: src.x,
+        top: src.y,
+        width: src.width,
+        height: src.height,
+      };
+    }, [transition]);
+
     // Animated component style: interpolate differing numeric properties (fontSize, fontWeight, etc.)
     const animatedComponentStyle = useAnimatedStyle(() => {
       if (!transition?.sourceStyle || !transition?.targetStyle) return {};
@@ -194,8 +219,12 @@ export function createHeroComponent(Component: React.ComponentType<any>) {
 
     if (shouldTeleport) {
       return (
-        <Portal hostName={HERO_OVERLAY_HOST} order={zIndex}>
-          <Animated.View style={overlayStyle}>
+        <Portal
+          hostName={
+            zIndex > 0 ? HERO_FOREGROUND_OVERLAY_HOST : HERO_OVERLAY_HOST
+          }
+        >
+          <Animated.View style={[initialOverlayStyle, overlayStyle]}>
             <AnimatedComponent
               ref={ref}
               style={[style, styles.fill, animatedComponentStyle]}

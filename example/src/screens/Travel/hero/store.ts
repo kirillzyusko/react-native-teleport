@@ -38,13 +38,23 @@ export const useHeroStore = create<HeroStore>((set, get) => ({
   },
 
   registerTarget: (id, reg) => {
-    set((s) => ({ target: { ...s.target, [id]: reg } }));
-
     const source = get().source[id];
-    if (!source) return;
+    if (!source) {
+      set((s) => ({ target: { ...s.target, [id]: reg } }));
+      return;
+    }
 
-    // Store transition rects for this element
+    const shouldStartForward = get().phase === "idle";
+    const { progress } = get();
+
+    if (shouldStartForward) {
+      progress.set(0);
+    }
+
+    // Publish the transition and its active phase together. Otherwise the
+    // target becomes visible for one render between these two store updates.
     set((s) => ({
+      target: { ...s.target, [id]: reg },
       transitions: {
         ...s.transitions,
         [id]: {
@@ -54,13 +64,12 @@ export const useHeroStore = create<HeroStore>((set, get) => ({
           targetStyle: reg.flatStyle,
         },
       },
+      ...(shouldStartForward && { phase: "forward" as const }),
     }));
 
     // Start forward animation on the single shared driver
     // (only if not already running — first target to register kicks it off)
-    if (get().phase === "idle") {
-      const { progress } = get();
-      set({ phase: "forward" });
+    if (shouldStartForward) {
       const completeForward = () => {
         set({ phase: "idle" });
       };
@@ -78,8 +87,9 @@ export const useHeroStore = create<HeroStore>((set, get) => ({
 
     // Clean up target registration
     set((s) => {
-      const { [id]: _, ...rest } = s.target;
-      return { target: rest };
+      const target = { ...s.target };
+      delete target[id];
+      return { target };
     });
 
     if (!transition || !source) return;
@@ -91,8 +101,9 @@ export const useHeroStore = create<HeroStore>((set, get) => ({
       set({ phase: "backward" });
       const clearTransition = () => {
         set((s) => {
-          const { [id]: _, ...rest } = s.transitions;
-          return { transitions: rest, phase: "idle" };
+          const transitions = { ...s.transitions };
+          delete transitions[id];
+          return { transitions, phase: "idle" };
         });
       };
       progress.set(
@@ -104,9 +115,15 @@ export const useHeroStore = create<HeroStore>((set, get) => ({
   },
 
   unregisterSource: (id) => {
-    set((s) => {
-      const { [id]: _, ...rest } = s.source;
-      return { source: rest };
-    });
+    const source = { ...get().source };
+    delete source[id];
+
+    if (Object.keys(source).length === 0) {
+      get().progress.set(0);
+      set({ source, target: {}, transitions: {}, phase: "idle" });
+      return;
+    }
+
+    set({ source });
   },
 }));

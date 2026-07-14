@@ -114,8 +114,9 @@ const options = {
   },
   [ScreenNames.TRAVEL_DETAILS]: {
     headerShown: false,
-    animation: "none",
+    animation: "none" as const,
     animationDuration: 516,
+    presentation: "containedTransparentModal" as const,
   },
   [ScreenNames.TELEPORTATION_ORDER]: {
     title: "Teleportation order",

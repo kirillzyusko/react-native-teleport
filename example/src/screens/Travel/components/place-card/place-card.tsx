@@ -7,13 +7,13 @@ import {
   TouchableOpacity,
 } from "react-native";
 import { FontAwesome6 } from "@react-native-vector-icons/fontawesome6";
-import LinearGradient from "react-native-linear-gradient";
 import { useState } from "react";
 import { useNavigation } from "@react-navigation/native";
 import { ScreenNames } from "../../../../constants/screenNames";
 import type { ExamplesStackNavigation } from "../../../../navigation/ExamplesStack";
 
 import Hero from "../../hero";
+import HeroGradient from "../../hero/HeroGradient";
 
 type Props = {
   text: string;
@@ -45,18 +45,18 @@ export default function PlaceCard({ text, image, header, rate }: Props) {
       style={styles.card}
       onPress={handleCardPress}
     >
-      <Hero.Image
+      <Hero.View
         id={`${header}-cover`}
-        style={styles.card}
-        source={image}
+        role="source"
+        style={[styles.card, styles.cover]}
         zIndex={0}
-      />
-      <LinearGradient
-        colors={["rgba(0, 0, 0, 0)", "rgba(0, 0, 0, 0.89)"]}
-        style={[styles.card, styles.absolute]}
       >
+        <Image source={image} style={styles.coverImage} />
+        <HeroGradient />
+      </Hero.View>
+      <View style={[styles.card, styles.absolute]}>
         <View style={styles.content}>
-          <Hero.Text id={header} style={styles.header} zIndex={1}>
+          <Hero.Text id={header} role="source" style={styles.header} zIndex={1}>
             {header}
           </Hero.Text>
           <View style={styles.container}>
@@ -66,7 +66,14 @@ export default function PlaceCard({ text, image, header, rate }: Props) {
               size={12}
               style={styles.white}
             />
-            <Hero.Text id={`${header}-location`} style={styles.text} zIndex={1}>{text}</Hero.Text>
+            <Hero.Text
+              id={`${header}-location`}
+              role="source"
+              style={styles.text}
+              zIndex={1}
+            >
+              {text}
+            </Hero.Text>
           </View>
           <View style={styles.container}>
             <View style={styles.container}>
@@ -116,7 +123,7 @@ export default function PlaceCard({ text, image, header, rate }: Props) {
             color={liked ? "#FD5B1F" : "#161616"}
           />
         </TouchableOpacity>
-      </LinearGradient>
+      </View>
     </TouchableOpacity>
   );
 }
@@ -126,6 +133,14 @@ const styles = StyleSheet.create({
     width: 186,
     height: 246,
     borderRadius: 20,
+  },
+  cover: {
+    overflow: "hidden",
+  },
+  coverImage: {
+    position: "absolute",
+    width: "100%",
+    height: "100%",
   },
   container: {
     flexDirection: "row",
@@ -160,11 +175,6 @@ const styles = StyleSheet.create({
     fontSize: 20,
     lineHeight: 30,
     color: "#FFFFFF",
-  },
-
-  gradient: {
-    flex: 1,
-    justifyContent: "flex-end",
   },
 
   likeContainer: {

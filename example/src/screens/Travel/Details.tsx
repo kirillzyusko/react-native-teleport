@@ -1,6 +1,5 @@
 import { Image, StyleSheet, Text, View, type ImageProps } from "react-native";
 import Button from "../Travel/components/button/button";
-import LinearGradient from "react-native-linear-gradient";
 import { FontAwesome6 } from "@react-native-vector-icons/fontawesome6";
 import type { NativeStackScreenProps } from "@react-navigation/native-stack";
 import type { ExamplesStackParamList } from "../../navigation/ExamplesStack";
@@ -9,6 +8,7 @@ import verify from "./images/verify.png";
 import group1 from "./images/group1.png";
 
 import Hero from "./hero";
+import HeroGradient from "./hero/HeroGradient";
 
 type Props = {
   image: ImageProps["source"];
@@ -35,69 +35,77 @@ const DetailScreen = ({
 }: Props) => {
   return (
     <View style={styles.screen}>
-      <Hero.Image id={`${header}-cover`} style={styles.image} source={image} />
+      <Hero.View id={`${header}-cover`} role="target" style={styles.cover}>
+        <Image source={image} style={styles.coverImage} />
+        <HeroGradient />
+      </Hero.View>
       <View style={styles.mainContainer}>
-        <LinearGradient
-          colors={["rgba(0, 0, 0, 0)", "rgba(0, 0, 0, 0.89)"]}
-          style={styles.gradient}
-        >
-          <View style={styles.view}>
+        <View style={styles.view}>
+          <Hero.Reveal>
             <View style={styles.verification}>
               <Text style={styles.heading}>{text}</Text>
               <Image source={verify} style={styles.verificationImage} />
             </View>
-            <Hero.Text id={header} style={styles.mainText}>
-              {header}
-            </Hero.Text>
-            <View style={styles.verification}>
+          </Hero.Reveal>
+          <Hero.Text id={header} role="target" style={styles.mainText}>
+            {header}
+          </Hero.Text>
+          <View style={styles.verification}>
+            <Hero.Reveal>
               <FontAwesome6
                 name="location-dot"
                 iconStyle="solid"
                 size={18}
                 style={styles.white}
               />
-              <Hero.Text id={`${header}-location`} style={styles.location}>{location}</Hero.Text>
-            </View>
-            <Hero.Reveal>
-              <View style={[styles.verification, styles.textContainer]}>
-                <Text>
-                  <Text style={styles.heading}>{substring}</Text>
-                  <Text style={styles.smallText}>people have explored</Text>
-                </Text>
-                <Image source={group1} style={styles.avatars} />
-              </View>
-              <Text style={[styles.smallText]}>{description}</Text>
-              <View style={[styles.textContainer, styles.mt30]}>
-                <View style={styles.verification}>
-                  <FontAwesome6
-                    name="star"
-                    iconStyle="solid"
-                    size={18}
-                    style={styles.yellow}
-                  />
-                  <Text style={styles.numbers}>{rating}</Text>
-                </View>
-                <View>
-                  <FontAwesome6
-                    name="arrow-down"
-                    iconStyle="solid"
-                    size={18}
-                    style={styles.white}
-                  />
-                </View>
-              </View>
-              <View
-                style={[styles.verification, styles.textContainer, styles.mt50]}
-              >
-                <Text>
-                  <Text style={styles.numbers}>{price}</Text>
-                  <Text style={styles.smallText}>/ Person </Text>
-                </Text>
-                <Button text={buttonText} />
-              </View>
             </Hero.Reveal>
+            <Hero.Text
+              id={`${header}-location`}
+              role="target"
+              style={styles.location}
+            >
+              {location}
+            </Hero.Text>
           </View>
-        </LinearGradient>
+          <Hero.Reveal>
+            <View style={[styles.verification, styles.textContainer]}>
+              <Text>
+                <Text style={styles.heading}>{substring}</Text>
+                <Text style={styles.smallText}>people have explored</Text>
+              </Text>
+              <Image source={group1} style={styles.avatars} />
+            </View>
+            <Text style={[styles.smallText]}>{description}</Text>
+            <View style={[styles.textContainer, styles.mt30]}>
+              <View style={styles.verification}>
+                <FontAwesome6
+                  name="star"
+                  iconStyle="solid"
+                  size={18}
+                  style={styles.yellow}
+                />
+                <Text style={styles.numbers}>{rating}</Text>
+              </View>
+              <View>
+                <FontAwesome6
+                  name="arrow-down"
+                  iconStyle="solid"
+                  size={18}
+                  style={styles.white}
+                />
+              </View>
+            </View>
+            <View
+              style={[styles.verification, styles.textContainer, styles.mt50]}
+            >
+              <Text>
+                <Text style={styles.numbers}>{price}</Text>
+                <Text style={styles.smallText}>/ Person </Text>
+              </Text>
+              <Button text={buttonText} />
+            </View>
+          </Hero.Reveal>
+        </View>
       </View>
     </View>
   );
@@ -130,11 +138,18 @@ const styles = StyleSheet.create({
   screen: {
     flex: 1,
   },
-  image: {
+  cover: {
     position: "absolute",
     width: "100%",
     height: "100%",
-    zIndex: -1,
+    borderRadius: 0,
+    overflow: "hidden",
+    zIndex: 0,
+  },
+  coverImage: {
+    position: "absolute",
+    width: "100%",
+    height: "100%",
   },
   view: {
     marginHorizontal: 30,
@@ -144,10 +159,7 @@ const styles = StyleSheet.create({
   mainContainer: {
     flex: 1,
     justifyContent: "flex-end",
-  },
-  gradient: {
-    flex: 0.8,
-    justifyContent: "flex-end",
+    zIndex: 1,
   },
   mainText: {
     fontFamily: "Urbanist",
