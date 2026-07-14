@@ -29,6 +29,7 @@
     "!android/gradlew",
     "!android/gradlew.bat",
     "!android/local.properties",
+    "!android/detekt.yml",
     "!**/__tests__",
     "!**/__fixtures__",
     "!**/__mocks__",
