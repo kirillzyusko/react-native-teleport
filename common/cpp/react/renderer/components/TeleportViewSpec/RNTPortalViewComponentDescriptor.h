@@ -30,9 +30,23 @@ namespace facebook::react {
         // - we need to stretch the view beyond the parent layout constraints
         yogaPortal.setPositionType(YGPositionTypeAbsolute);
 
-        HostSize hostSize = PortalShadowRegistry::getInstance().getHostSize(props.hostName);
+        const auto &stateData =
+            static_cast<const PortalViewShadowNode::ConcreteState &>(
+                *portalViewShadowNode.getState())
+                .getData();
 
-        portalViewShadowNode.setDimensionsFromHost(hostSize);
+        // Native state tracks the destination host after it re-layouts (for
+        // example, on rotation). The registry is the initial-layout fallback.
+        HostSize hostSize{
+            static_cast<float>(stateData.hostWidth),
+            static_cast<float>(stateData.hostHeight)};
+        if (hostSize.width == 0 || hostSize.height == 0) {
+          hostSize = PortalShadowRegistry::getInstance().getHostSize(props.hostName);
+        }
+
+        if (hostSize.width != 0 && hostSize.height != 0) {
+          yogaPortal.setSize(Size(hostSize.width, hostSize.height));
+        }
       }
 
       ConcreteComponentDescriptor::adopt(shadowNode);

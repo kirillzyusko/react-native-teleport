@@ -72,7 +72,8 @@ using namespace facebook::react;
   _state->updateState(
       [=](const PortalViewShadowNode::ConcreteState::Data &oldData)
           -> PortalViewShadowNode::ConcreteState::SharedData {
-        if (oldData.offsetX == newData.offsetX && oldData.offsetY == newData.offsetY) {
+        if (oldData.hostWidth == newData.hostWidth && oldData.hostHeight == newData.hostHeight &&
+            oldData.offsetX == newData.offsetX && oldData.offsetY == newData.offsetY) {
           return nullptr;
         }
 
@@ -99,16 +100,19 @@ using namespace facebook::react;
   }
 
   // Children are physically mounted under the host, but measured through this
-  // PortalView shadow node. Store the host-source delta so Fabric measurement
-  // follows the native destination.
+  // PortalView shadow node. Store the host's native layout so Fabric
+  // measurement follows the destination after it re-layouts.
   PortalViewState newData = {
+      static_cast<Float>(hostRect.size.width),
+      static_cast<Float>(hostRect.size.height),
       static_cast<Float>(hostRect.origin.x - sourceRect.origin.x),
       static_cast<Float>(hostRect.origin.y - sourceRect.origin.y)};
 
   _state->updateState(
       [=](const PortalViewShadowNode::ConcreteState::Data &oldData)
           -> PortalViewShadowNode::ConcreteState::SharedData {
-        if (oldData.offsetX == newData.offsetX && oldData.offsetY == newData.offsetY) {
+        if (oldData.hostWidth == newData.hostWidth && oldData.hostHeight == newData.hostHeight &&
+            oldData.offsetX == newData.offsetX && oldData.offsetY == newData.offsetY) {
           return nullptr;
         }
 
