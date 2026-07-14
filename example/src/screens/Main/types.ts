@@ -17,7 +17,8 @@ export type ExampleScreen =
   | ScreenNames.TELEPORTATION_ORDER
   | ScreenNames.RICH_TEXT_EDITOR
   | ScreenNames.PERSISTED_PORTAL
-  | ScreenNames.PHOTO_GALLERY;
+  | ScreenNames.PHOTO_GALLERY
+  | ScreenNames.ORIENTATION;
 
 export type Example = {
   testID: string;

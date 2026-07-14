@@ -1,0 +1,34 @@
+appId: teleport.example
+---
+# setOrientation is not supported on Web, so keep this regression mobile-only.
+- runFlow:
+    when:
+      true: ${maestro.platform == 'ios' || maestro.platform == 'android'}
+    commands:
+      - launchApp
+      - setOrientation: PORTRAIT
+      - waitForAnimationToEnd
+      - scrollUntilVisible:
+          element:
+            id: "orientation"
+          direction: DOWN
+      - tapOn:
+          id: "orientation"
+      - assertVisible:
+          text: "RIGHT EDGE"
+      - setOrientation: LANDSCAPE_LEFT
+      - waitForAnimationToEnd
+      - tapOn:
+          id: "orientation_toggle"
+      - assertVisible:
+          text: "Fullscreen"
+      - assertVisible:
+          text: "RIGHT EDGE"
+      - tapOn:
+          id: "orientation_toggle"
+      - assertVisible:
+          text: "Tap to enter fullscreen"
+      - setOrientation: PORTRAIT
+      - waitForAnimationToEnd
+      - assertVisible:
+          text: "RIGHT EDGE"
