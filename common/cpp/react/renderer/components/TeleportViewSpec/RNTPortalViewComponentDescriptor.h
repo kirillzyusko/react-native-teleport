@@ -44,6 +44,8 @@ namespace facebook::react {
           hostSize = PortalShadowRegistry::getInstance().getHostSize(props.hostName);
         }
 
+        // printf("HostSize:: width - %f height - %f\n", hostSize.width, hostSize.height);
+
         if (hostSize.width != 0 && hostSize.height != 0) {
           yogaPortal.setSize(Size(hostSize.width, hostSize.height));
         }
