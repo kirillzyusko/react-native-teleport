@@ -105,4 +105,10 @@ export const examples: Example[] = [
     info: ScreenNames.PHOTO_GALLERY,
     icons: "📸",
   },
+  {
+    title: "Orientation",
+    testID: "orientation",
+    info: ScreenNames.ORIENTATION,
+    icons: "🧭",
+  },
 ];

@@ -1,0 +1,154 @@
+appId: teleport.example
+---
+# setOrientation is not supported on Web, so keep this regression mobile-only.
+- runFlow:
+    when:
+      true: ${maestro.platform == 'ios' || maestro.platform == 'android'}
+    commands:
+      - launchApp
+      - setOrientation: PORTRAIT
+      - waitForAnimationToEnd
+      - scrollUntilVisible:
+          element:
+            id: "orientation"
+          direction: DOWN
+      - tapOn:
+          id: "orientation"
+      - assertVisible:
+          id: "orientation_toggle"
+      - assertVisible:
+          id: "orientation_right_edge"
+      - takeScreenshot:
+          path: e2e/OrientationPortrait
+      - runScript:
+          file: ../scripts/compare-screenshots.js
+          env:
+            base: screenshots/${DEVICE}/OrientationPortrait
+            target: OrientationPortrait
+            diff: 0.3
+      - assertTrue: ${output.matches}
+
+      # Rotate before entering fullscreen, then make sure exiting fullscreen
+      # restores the same landscape source layout.
+      - setOrientation: LANDSCAPE_LEFT
+      - waitForAnimationToEnd
+      - takeScreenshot:
+          path: e2e/OrientationLandscape
+      - runScript:
+          file: ../scripts/compare-screenshots.js
+          env:
+            base: screenshots/${DEVICE}/OrientationLandscape
+            target: OrientationLandscape
+            diff: 0.3
+      - assertTrue: ${output.matches}
+      - tapOn:
+          id: "orientation_toggle"
+      - assertVisible:
+          id: "orientation_toggle"
+      - assertVisible:
+          id: "orientation_right_edge"
+      - takeScreenshot:
+          path: e2e/OrientationLandscapeFullscreen
+      - runScript:
+          file: ../scripts/compare-screenshots.js
+          env:
+            base: screenshots/${DEVICE}/OrientationLandscapeFullscreen
+            target: OrientationLandscapeFullscreen
+            diff: 0.3
+      - assertTrue: ${output.matches}
+      - tapOn:
+          id: "orientation_toggle"
+      - assertVisible:
+          id: "orientation_toggle"
+      - takeScreenshot:
+          path: e2e/OrientationLandscape
+      - runScript:
+          file: ../scripts/compare-screenshots.js
+          env:
+            base: screenshots/${DEVICE}/OrientationLandscape
+            target: OrientationLandscape
+            diff: 0.3
+      - assertTrue: ${output.matches}
+      - setOrientation: PORTRAIT
+      - waitForAnimationToEnd
+      - assertVisible:
+          id: "orientation_right_edge"
+      - takeScreenshot:
+          path: e2e/OrientationPortrait
+      - runScript:
+          file: ../scripts/compare-screenshots.js
+          env:
+            base: screenshots/${DEVICE}/OrientationPortrait
+            target: OrientationPortrait
+            diff: 0.3
+      - assertTrue: ${output.matches}
+
+      # Repeat the issue scenario by rotating multiple times while the player
+      # is teleported, then verify the final source layout again.
+      - tapOn:
+          id: "orientation_toggle"
+      - assertVisible:
+          id: "orientation_toggle"
+      - takeScreenshot:
+          path: e2e/OrientationPortraitFullscreen
+      - runScript:
+          file: ../scripts/compare-screenshots.js
+          env:
+            base: screenshots/${DEVICE}/OrientationPortraitFullscreen
+            target: OrientationPortraitFullscreen
+            diff: 0.3
+      - assertTrue: ${output.matches}
+      - setOrientation: LANDSCAPE_LEFT
+      - waitForAnimationToEnd
+      - assertVisible:
+          id: "orientation_toggle"
+      - assertVisible:
+          id: "orientation_right_edge"
+      - takeScreenshot:
+          path: e2e/OrientationLandscapeFullscreen
+      - runScript:
+          file: ../scripts/compare-screenshots.js
+          env:
+            base: screenshots/${DEVICE}/OrientationLandscapeFullscreen
+            target: OrientationLandscapeFullscreen
+            diff: 0.3
+      - assertTrue: ${output.matches}
+      - setOrientation: PORTRAIT
+      - waitForAnimationToEnd
+      - takeScreenshot:
+          path: e2e/OrientationPortraitFullscreen
+      - runScript:
+          file: ../scripts/compare-screenshots.js
+          env:
+            base: screenshots/${DEVICE}/OrientationPortraitFullscreen
+            target: OrientationPortraitFullscreen
+            diff: 0.3
+      - assertTrue: ${output.matches}
+      - setOrientation: LANDSCAPE_LEFT
+      - waitForAnimationToEnd
+      - takeScreenshot:
+          path: e2e/OrientationLandscapeFullscreen
+      - runScript:
+          file: ../scripts/compare-screenshots.js
+          env:
+            base: screenshots/${DEVICE}/OrientationLandscapeFullscreen
+            target: OrientationLandscapeFullscreen
+            diff: 0.3
+      - assertTrue: ${output.matches}
+      - tapOn:
+          id: "orientation_toggle"
+      - assertVisible:
+          id: "orientation_toggle"
+      - setOrientation: PORTRAIT
+      - waitForAnimationToEnd
+      - assertVisible:
+          id: "orientation_right_edge"
+      - takeScreenshot:
+          path: e2e/OrientationPortrait
+      - runScript:
+          file: ../scripts/compare-screenshots.js
+          env:
+            base: screenshots/${DEVICE}/OrientationPortrait
+            target: OrientationPortrait
+            diff: 0.3
+      - assertTrue: ${output.matches}

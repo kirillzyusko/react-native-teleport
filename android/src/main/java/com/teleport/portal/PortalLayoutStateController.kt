@@ -11,7 +11,7 @@ import com.teleport.host.PortalHostView
 internal class PortalLayoutStateController(
   private val sourceView: View,
 ) {
-  private var lastOffset = PortalOffsetState.EMPTY
+  private var lastLayout = PortalLayoutState.EMPTY
   private var stateWrapper: StateWrapper? = null
 
   fun setStateWrapper(wrapper: StateWrapper?) {
@@ -28,7 +28,7 @@ internal class PortalLayoutStateController(
     when {
       wrapper == null -> Unit
       activeHost == null -> resetIfNeeded()
-      else -> publishIfChanged(wrapper, createOffsetState(activeHost))
+      else -> publishIfChanged(wrapper, createLayoutState(activeHost))
     }
   }
 
@@ -36,7 +36,7 @@ internal class PortalLayoutStateController(
     val wrapper = stateWrapper
 
     if (wrapper != null) {
-      publishIfChanged(wrapper, PortalOffsetState.EMPTY)
+      publishIfChanged(wrapper, PortalLayoutState.EMPTY)
     }
   }
 
@@ -54,38 +54,46 @@ internal class PortalLayoutStateController(
 
   private fun publishIfChanged(
     wrapper: StateWrapper,
-    nextOffset: PortalOffsetState,
+    nextLayout: PortalLayoutState,
   ) {
-    if (lastOffset != nextOffset) {
-      lastOffset = nextOffset
-      wrapper.updateState(nextOffset.toMap())
+    if (lastLayout != nextLayout) {
+      lastLayout = nextLayout
+      wrapper.updateState(nextLayout.toMap())
     }
   }
 
-  private fun createOffsetState(host: PortalHostView): PortalOffsetState {
+  private fun createLayoutState(host: PortalHostView): PortalLayoutState {
     val sourceLocation = sourceView.screenLocation()
     val hostLocation = host.screenLocation()
 
-    return PortalOffsetState(
+    return PortalLayoutState(
+      hostWidth = host.width.toFloat().dp,
+      hostHeight = host.height.toFloat().dp,
       offsetX = (hostLocation[0] - sourceLocation[0]).toFloat().dp,
       offsetY = (hostLocation[1] - sourceLocation[1]).toFloat().dp,
     )
   }
 }
 
-private data class PortalOffsetState(
+private data class PortalLayoutState(
+  val hostWidth: Double,
+  val hostHeight: Double,
   val offsetX: Double,
   val offsetY: Double,
 ) {
   fun toMap() =
     Arguments.createMap().apply {
+      putDouble("hostWidth", hostWidth)
+      putDouble("hostHeight", hostHeight)
       putDouble("offsetX", offsetX)
       putDouble("offsetY", offsetY)
     }
 
   companion object {
     val EMPTY =
-      PortalOffsetState(
+      PortalLayoutState(
+        hostWidth = 0.0,
+        hostHeight = 0.0,
         offsetX = 0.0,
         offsetY = 0.0,
       )
