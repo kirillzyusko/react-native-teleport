@@ -30,6 +30,7 @@ import PhotoGallery from "../../screens/PhotoGallery/PhotoGallery";
 import PhotoDetail from "../../screens/PhotoGallery/PhotoDetail";
 import type { Photo } from "../../screens/PhotoGallery/photos";
 import Orientation from "../../screens/Orientation";
+import ScaledHost from "../../screens/ScaledHost";
 
 export type ExamplesStackParamList = {
   [ScreenNames.GESTURE_HANDLER_TOUCHABLE]: undefined;
@@ -62,6 +63,7 @@ export type ExamplesStackParamList = {
   [ScreenNames.PHOTO_GALLERY]: undefined;
   [ScreenNames.PHOTO_DETAIL]: { photo: Photo };
   [ScreenNames.ORIENTATION]: undefined;
+  [ScreenNames.SCALED_HOST]: undefined;
 };
 
 const Stack = createNativeStackNavigator<ExamplesStackParamList>();
@@ -135,6 +137,7 @@ const options = {
     presentation: "containedTransparentModal" as const,
   },
   [ScreenNames.ORIENTATION]: { title: "Orientation" },
+  [ScreenNames.SCALED_HOST]: { title: "Context menu (scaled host)" },
 };
 
 const ExamplesStack = () => (
@@ -258,6 +261,11 @@ const ExamplesStack = () => (
       component={Orientation}
       name={ScreenNames.ORIENTATION}
       options={options[ScreenNames.ORIENTATION]}
+    />
+    <Stack.Screen
+      component={ScaledHost}
+      name={ScreenNames.SCALED_HOST}
+      options={options[ScreenNames.SCALED_HOST]}
     />
   </Stack.Navigator>
 );

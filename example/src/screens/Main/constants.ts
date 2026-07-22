@@ -111,4 +111,10 @@ export const examples: Example[] = [
     info: ScreenNames.ORIENTATION,
     icons: "🧭",
   },
+  {
+    title: "Context menu (scaled host)",
+    testID: "scaled_host",
+    info: ScreenNames.SCALED_HOST,
+    icons: "📐",
+  },
 ];

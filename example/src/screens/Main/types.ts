@@ -18,7 +18,8 @@ export type ExampleScreen =
   | ScreenNames.RICH_TEXT_EDITOR
   | ScreenNames.PERSISTED_PORTAL
   | ScreenNames.PHOTO_GALLERY
-  | ScreenNames.ORIENTATION;
+  | ScreenNames.ORIENTATION
+  | ScreenNames.SCALED_HOST;
 
 export type Example = {
   testID: string;

@@ -102,9 +102,11 @@ using namespace facebook::react;
   // Children are physically mounted under the host, but measured through this
   // PortalView shadow node. Store the host's native layout so Fabric
   // measurement follows the destination after it re-layouts.
+  CGSize hostSize = self.targetView.bounds.size;
+
   PortalViewState newData = {
-      static_cast<Float>(hostRect.size.width),
-      static_cast<Float>(hostRect.size.height),
+      static_cast<Float>(hostSize.width),
+      static_cast<Float>(hostSize.height),
       static_cast<Float>(hostRect.origin.x - sourceRect.origin.x),
       static_cast<Float>(hostRect.origin.y - sourceRect.origin.y)};
 
