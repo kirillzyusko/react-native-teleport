@@ -92,9 +92,12 @@ jobs:
           path: example/android/app/build/outputs/apk/
       - name: Install Maestro
         run: |
+          export MAESTRO_VERSION=2.6.1
           curl -fsSL "https://get.maestro.mobile.dev" | bash
           echo "$HOME/.maestro/bin" >> $GITHUB_PATH
           export MAESTRO_DRIVER_STARTUP_TIMEOUT=600000
+      - name: Log Maestro version
+        run: maestro --version
       - name: Enable KVM group perms
         run: |
           echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules

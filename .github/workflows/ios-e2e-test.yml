@@ -135,8 +135,11 @@ jobs:
           xcrun simctl install "$UDID" example/ios/build/Build/Products/Release-iphonesimulator/TeleportExample.app
       - name: Install Maestro CLI
         run: |
-          brew tap mobile-dev-inc/tap
-          brew install mobile-dev-inc/tap/maestro
+          export MAESTRO_VERSION=2.6.1
+          curl -fsSL "https://get.maestro.mobile.dev" | bash
+          echo "$HOME/.maestro/bin" >> $GITHUB_PATH
+      - name: Log Maestro version
+        run: maestro --version
       - name: Prepare snapshot engine
         run: cd e2e && npm install
       - name: Run E2E tests

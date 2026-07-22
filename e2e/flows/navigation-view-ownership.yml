@@ -2,21 +2,11 @@ appId: teleport.example
 ---
 - launchApp
 
-# Scroll to the Rich Text Editor example.
-- repeat:
-    while:
-      notVisible:
-        id: "rich_text_editor"
-    commands:
-      - swipe:
-          start: 50%, 80%
-          end: 50%, 20%
-# do additional swipe for headless web, this is Maestro bug
-- swipe:
-    start: 50%, 75%
-    end: 50%, 55%
-- tapOn:
-    id: "rich_text_editor"
+# Open the Rich Text Editor example.
+- runFlow:
+    file: ../subflows/open-example.yml
+    env:
+      EXAMPLE_ID: "rich_text_editor"
 
 # Teleport the preloaded editor into the screen-local host.
 - tapOn:

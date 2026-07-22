@@ -2,16 +2,10 @@ appId: teleport.example
 ---
 - launchApp
 - waitForAnimationToEnd
-- repeat:
-    while:
-      notVisible:
-        id: "bottom_sheet"
-    commands:
-      - swipe:
-          start: 50%, 80%
-          end: 50%, 20%
-- tapOn:
-    id: "bottom_sheet"
+- runFlow:
+    file: ../subflows/open-example.yml
+    env:
+      EXAMPLE_ID: "bottom_sheet"
 - assertNotVisible:
     text: "Sheet"
 - assertNotVisible:

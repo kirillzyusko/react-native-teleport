@@ -3,17 +3,11 @@ appId: teleport.example
 - launchApp
 - waitForAnimationToEnd
 
-# Scroll to the Recycling example (last item in the list)
-- repeat:
-    while:
-      notVisible:
-        id: "recycling"
-    commands:
-      - swipe:
-          start: 50%, 80%
-          end: 50%, 20%
-- tapOn:
-    id: "recycling"
+# Open the Recycling example.
+- runFlow:
+    file: ../subflows/open-example.yml
+    env:
+      EXAMPLE_ID: "recycling"
 
 # Step 1: Teleport into the host for the first time
 - tapOn:

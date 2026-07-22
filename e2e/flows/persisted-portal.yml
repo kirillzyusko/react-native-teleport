@@ -3,17 +3,11 @@ appId: teleport.example
 - launchApp
 - waitForAnimationToEnd
 
-# Scroll to the Persisted Portal example (last item in the list)
-- repeat:
-    while:
-      notVisible:
-        id: "persisted_portal"
-    commands:
-      - swipe:
-          start: 50%, 80%
-          end: 50%, 20%
-- tapOn:
-    id: "persisted_portal"
+# Open the Persisted Portal example.
+- runFlow:
+    file: ../subflows/open-example.yml
+    env:
+      EXAMPLE_ID: "persisted_portal"
 
 - takeScreenshot:
     path: e2e/PersistedPortalWithoutHost

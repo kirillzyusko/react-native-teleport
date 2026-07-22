@@ -8,12 +8,10 @@ appId: teleport.example
       - launchApp
       - setOrientation: PORTRAIT
       - waitForAnimationToEnd
-      - scrollUntilVisible:
-          element:
-            id: "orientation"
-          direction: DOWN
-      - tapOn:
-          id: "orientation"
+      - runFlow:
+          file: ../subflows/open-example.yml
+          env:
+            EXAMPLE_ID: "orientation"
       - assertVisible:
           id: "orientation_toggle"
       - assertVisible:

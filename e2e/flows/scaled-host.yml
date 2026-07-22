@@ -1,0 +1,14 @@
+appId: teleport.example
+---
+- launchApp
+- waitForAnimationToEnd
+- runFlow:
+    file: ../subflows/open-example.yml
+    env:
+      EXAMPLE_ID: "scaled_host"
+- assertVisible:
+    id: "context_menu_toggle"
+- tapOn:
+    id: "context_menu_toggle"
+- waitForAnimationToEnd
+- assertVisible: "status: OK"
