@@ -64,8 +64,9 @@ jobs:
           export MAESTRO_VERSION=2.6.1
           curl -fsSL "https://get.maestro.mobile.dev" | bash
           echo "$HOME/.maestro/bin" >> $GITHUB_PATH
-          maestro --version
           export MAESTRO_DRIVER_STARTUP_TIMEOUT=600000
+      - name: Log Maestro version
+        run: maestro --version
       - name: Specify web env
         run: |
           find e2e/flows -name "*.yml" -exec sh -c '

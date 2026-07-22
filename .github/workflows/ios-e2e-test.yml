@@ -138,7 +138,8 @@ jobs:
           export MAESTRO_VERSION=2.6.1
           curl -fsSL "https://get.maestro.mobile.dev" | bash
           echo "$HOME/.maestro/bin" >> $GITHUB_PATH
-          maestro --version
+      - name: Log Maestro version
+        run: maestro --version
       - name: Prepare snapshot engine
         run: cd e2e && npm install
       - name: Run E2E tests
