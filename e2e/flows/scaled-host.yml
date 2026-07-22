@@ -1,0 +1,16 @@
+appId: teleport.example
+---
+- launchApp
+- waitForAnimationToEnd
+- scrollUntilVisible:
+    element:
+      id: "scaled_host"
+    direction: DOWN
+- tapOn:
+    id: "scaled_host"
+- assertVisible:
+    id: "context_menu_toggle"
+- tapOn:
+    id: "context_menu_toggle"
+- waitForAnimationToEnd
+- assertVisible: "status: OK"
