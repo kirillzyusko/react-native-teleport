@@ -230,7 +230,6 @@ const styles = StyleSheet.create({
   },
   readout: {
     color: "#0f172a",
-    fontVariant: ["tabular-nums"],
   },
   screen: {
     flex: 1,
