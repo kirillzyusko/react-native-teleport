@@ -2,12 +2,10 @@ appId: teleport.example
 ---
 - launchApp
 - waitForAnimationToEnd
-- scrollUntilVisible:
-    element:
-      id: "scaled_host"
-    direction: DOWN
-- tapOn:
-    id: "scaled_host"
+- runFlow:
+    file: ../subflows/open-example.yml
+    env:
+      EXAMPLE_ID: "scaled_host"
 - assertVisible:
     id: "context_menu_toggle"
 - tapOn:

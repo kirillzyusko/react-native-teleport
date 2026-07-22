@@ -1,0 +1,33 @@
+appId: teleport.example
+---
+# Required env: EXAMPLE_ID — testID of an example on the home screen.
+#
+# Web's scrollUntilVisible does not reliably drive React Native Web's list, so
+# find the item with explicit swipes there. Native platforms use Maestro's
+# normal scrolling command.
+- runFlow:
+    when:
+      platform: Web
+    commands:
+      - repeat:
+          while:
+            notVisible:
+              id: ${EXAMPLE_ID}
+          commands:
+            - swipe:
+                start: 50%, 80%
+                end: 50%, 20%
+      # Maestro Web needs one final gesture before a just-found item is pressable.
+      - swipe:
+          start: 50%, 75%
+          end: 50%, 55%
+- runFlow:
+    when:
+      true: ${maestro.platform == 'ios' || maestro.platform == 'android'}
+    commands:
+      - scrollUntilVisible:
+          element:
+            id: ${EXAMPLE_ID}
+          direction: DOWN
+- tapOn:
+    id: ${EXAMPLE_ID}
