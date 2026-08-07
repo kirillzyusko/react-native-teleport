@@ -3,6 +3,7 @@ package com.teleport.portal
 import android.content.Context
 import android.view.View
 import android.view.ViewGroup
+import android.view.accessibility.AccessibilityEvent
 import com.facebook.react.uimanager.StateWrapper
 import com.facebook.react.views.view.ReactViewGroup
 import com.teleport.global.PortalRegistry
@@ -274,5 +275,10 @@ class PortalView(
     }
     // When teleported, do nothing—children are handled by the host's accessibility tree
   }
+
+  // A teleported child is no longer a physical descendant of this view.
+  // The host traverses it at its actual location instead.
+  override fun dispatchPopulateAccessibilityEvent(event: AccessibilityEvent): Boolean =
+    if (isTeleported) false else super.dispatchPopulateAccessibilityEvent(event)
   // endregion
 }
