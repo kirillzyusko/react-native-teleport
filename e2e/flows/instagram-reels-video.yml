@@ -21,8 +21,7 @@ appId: teleport.example
     timeout: 10000
 - waitForAnimationToEnd:
     timeout: 2000
-- tapOn:
-    point: 6%, 5%
+- runFlow: ../subflows/go-back.yml
 - extendedWaitUntil:
     visible: Magic forest
     timeout: 10000

@@ -63,7 +63,11 @@ function ReelsHeader() {
       >
         <View style={styles.header}>
           <Text style={styles.title}>Reels</Text>
-          <TouchableOpacity onPress={onGoBack}>
+          <TouchableOpacity
+            accessibilityLabel="Examples, back"
+            onPress={onGoBack}
+            testID="go_back"
+          >
             <FontAwesome6
               name="chevron-left"
               iconStyle="solid"
