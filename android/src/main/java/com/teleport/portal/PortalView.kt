@@ -29,12 +29,13 @@ class PortalView(
   fun setHostName(name: String?) {
     if (name == hostName) return
 
-    val target: ViewGroup = name?.let { PortalRegistry.getHost(it) } ?: this
-    val children = extractChildren(target)
+    val children = extractChildren(name)
 
     hostName?.let { PortalRegistry.unregisterPendingPortal(it, this) }
 
     hostName = name
+
+    val target: ViewGroup = name?.let { PortalRegistry.getHost(it) } ?: this
 
     if (target is PortalHostView) {
       for (i in children.indices) {
@@ -84,6 +85,8 @@ class PortalView(
         return
       }
       val list = detachOwnChildren(this)
+      // A child moved via detachViewFromParent remains attached to the window.
+      // Use our override so it is reattached via attachViewToParent.
       for (i in list.indices) {
         addView(list[i], i)
       }
@@ -98,8 +101,12 @@ class PortalView(
 
   // region Child relocation helpers
   private fun extractPhysicalChildren(target: ViewGroup): List<View> {
-    // Collect children first, then detach them. Using super.removeViewAt(i)
-    // may call our overridden getChildAt() while the logical parent changes.
+    // Collect children first, then detach them.
+    // Using super.removeViewAt(i) may call our overridden getChildAt(),
+    // which can return null during onHostAvailable (isTeleported flips
+    // before ownChildren is populated), leading to an NPE in
+    // removeViewInternal. The removeView fallback avoids this by using
+    // indexOfChild without re-fetching the view.
     val count = super.getChildCount()
     val children = ArrayList<View>(count)
     for (i in 0 until count) {
@@ -192,8 +199,11 @@ class PortalView(
     invalidate()
   }
 
-  private fun extractChildren(target: ViewGroup): List<View> =
-    if (isTeleported) detachOwnChildren(target) else extractPhysicalChildren(target)
+  private fun extractChildren(targetName: String?): List<View> {
+    // Gather current children (logical if teleported, physical otherwise)
+    val target: ViewGroup = targetName?.let { PortalRegistry.getHost(it) } ?: this
+    return if (isTeleported) detachOwnChildren(target) else extractPhysicalChildren(target)
+  }
 
   /**
    * Finds the host index of the first next sibling (in [ownChildren]) that is
