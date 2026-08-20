@@ -8,7 +8,6 @@ import com.facebook.react.uimanager.StateWrapper
 import com.facebook.react.views.view.ReactViewGroup
 import com.teleport.global.PortalRegistry
 import com.teleport.host.PortalHostView
-import com.teleport.reparent.AttachedSurfaceReparenter
 import java.util.ArrayList
 
 class PortalView(
@@ -30,23 +29,22 @@ class PortalView(
   fun setHostName(name: String?) {
     if (name == hostName) return
 
-    val children = collectChildren()
+    val target: ViewGroup = name?.let { PortalRegistry.getHost(it) } ?: this
+    val children = extractChildren(target)
 
     hostName?.let { PortalRegistry.unregisterPendingPortal(it, this) }
 
     hostName = name
 
-    val target: ViewGroup = name?.let { PortalRegistry.getHost(it) } ?: this
-
     if (target is PortalHostView) {
       for (i in children.indices) {
         val idx = target.nextInsertionIndexForChildAt(i)
-        moveChildTo(children[i], target, idx)
+        target.addView(children[i], idx)
       }
       ownChildren.addAll(children)
     } else {
       for (i in children.indices) {
-        moveChildTo(children[i], target, i)
+        target.addView(children[i], i)
       }
     }
 
@@ -71,11 +69,11 @@ class PortalView(
       // from their current parent first — that may be `this` (initial mount
       // or after host loss) or a stale, detached host view.
       val children: List<View> =
-        if (ownChildren.isEmpty()) collectPhysicalChildren() else collectOwnChildren()
+        if (ownChildren.isEmpty()) extractPhysicalChildren(host) else detachOwnChildren(host)
 
       for (i in children.indices) {
         val idx = host.nextInsertionIndexForChildAt(i)
-        moveChildTo(children[i], host, idx)
+        host.addView(children[i], idx)
       }
       ownChildren.addAll(children)
     } else {
@@ -85,11 +83,9 @@ class PortalView(
         layoutStateController.resetIfNeeded()
         return
       }
-      val list = collectOwnChildren()
-      // isTeleported is now false, so super.addView and addView are equivalent;
-      // use super to be explicit that this is a physical re-attach.
+      val list = detachOwnChildren(this)
       for (i in list.indices) {
-        moveChildTo(list[i], this, i)
+        addView(list[i], i)
       }
       layoutStateController.resetIfNeeded()
     }
@@ -101,50 +97,55 @@ class PortalView(
   // endregion
 
   // region Child relocation helpers
-  private fun collectPhysicalChildren(): List<View> {
+  private fun extractPhysicalChildren(target: ViewGroup): List<View> {
+    // Collect children first, then detach them. Using super.removeViewAt(i)
+    // may call our overridden getChildAt() while the logical parent changes.
     val count = super.getChildCount()
     val children = ArrayList<View>(count)
     for (i in 0 until count) {
       super.getChildAt(i)?.let { children.add(it) }
     }
-    return children
-  }
-
-  private fun collectOwnChildren(): List<View> {
-    val children = ArrayList(ownChildren)
-    ownChildren.clear()
-    return children
-  }
-
-  private fun collectChildren(): List<View> =
-    if (ownChildren.isNotEmpty()) collectOwnChildren() else collectPhysicalChildren()
-
-  private fun moveChildTo(
-    child: View,
-    target: ViewGroup,
-    index: Int,
-  ) {
-    if (AttachedSurfaceReparenter.tryReparent(child, target, index)) return
-
-    detachFromParent(child)
-    if (target === this) {
-      super.addView(child, index)
-    } else {
-      target.addView(child, index)
+    for (child in children) {
+      detachFromParent(child, target)
     }
+    return children
   }
 
-  private fun detachFromParent(child: View) {
+  private fun detachFromParent(
+    child: View,
+    target: ViewGroup? = null,
+  ) {
     val parent = child.parent as? ViewGroup ?: return
-    if (parent === this) {
+
+    if (target != null && canReparentAttached(child, parent, target)) {
+      when (parent) {
+        is PortalView -> parent.detachForReparent(child)
+        is PortalHostView -> parent.detachForReparent(child)
+      }
+    } else if (parent === this) {
       super.removeView(child)
     } else {
       parent.removeView(child)
     }
+
     if (child.parent === parent) {
       parent.endViewTransition(child)
     }
   }
+
+  private fun canReparentAttached(
+    child: View,
+    source: ViewGroup,
+    target: ViewGroup,
+  ): Boolean =
+    source !== target &&
+      (source is PortalView || source is PortalHostView) &&
+      child.isAttachedToWindow &&
+      target.isAttachedToWindow &&
+      source.rootView === target.rootView &&
+      !child.hasFocus() &&
+      source.layoutTransition == null &&
+      target.layoutTransition == null
 
   /**
    * Detaches every view in [ownChildren] from its current parent (which may be
@@ -152,7 +153,7 @@ class PortalView(
    * Returns the detached views in their original order so the caller can
    * re-attach them somewhere else.
    */
-  private fun detachOwnChildren(): List<View> {
+  private fun detachOwnChildren(target: ViewGroup? = null): List<View> {
     val list = ArrayList<View>(ownChildren.size)
     for (child in ownChildren) {
       if (!list.contains(child)) {
@@ -161,17 +162,12 @@ class PortalView(
     }
     ownChildren.clear()
     for (child in list) {
-      detachFromParent(child)
+      detachFromParent(child, target)
     }
     return list
   }
 
-  internal fun physicalIndexOfChild(child: View): Int = super.indexOfChild(child)
-
-  internal fun physicalChildCount(): Int = super.getChildCount()
-
-  internal fun detachChildForAttachedReparent(child: View) {
-    check(super.indexOfChild(child) >= 0) { "The view is not a physical child of this portal" }
+  internal fun detachForReparent(child: View) {
     if (child.hasTransientState()) {
       childHasTransientStateChanged(child, false)
     }
@@ -183,12 +179,11 @@ class PortalView(
     invalidate()
   }
 
-  internal fun attachChildForAttachedReparent(
+  private fun attachDetachedView(
     child: View,
     index: Int,
-    params: LayoutParams,
   ) {
-    super.attachViewToParent(child, index, params)
+    super.attachViewToParent(child, index, child.layoutParams)
     onViewAdded(child)
     if (child.hasTransientState()) {
       childHasTransientStateChanged(child, true)
@@ -196,6 +191,9 @@ class PortalView(
     requestLayout()
     invalidate()
   }
+
+  private fun extractChildren(target: ViewGroup): List<View> =
+    if (isTeleported) detachOwnChildren(target) else extractPhysicalChildren(target)
 
   /**
    * Finds the host index of the first next sibling (in [ownChildren]) that is
@@ -233,7 +231,9 @@ class PortalView(
     child: View,
     index: Int,
   ) {
-    if (isTeleported) {
+    if (child.parent == null && child.isAttachedToWindow) {
+      attachDetachedView(child, index)
+    } else if (isTeleported) {
       val host = PortalRegistry.getHost(hostName)
       ownChildren.add(index, child)
       if (host != null) {
