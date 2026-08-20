@@ -3,6 +3,8 @@ package com.teleport.host
 import android.content.Context
 import android.os.Handler
 import android.os.Looper
+import android.view.View
+import android.view.ViewGroup
 import com.facebook.react.views.view.ReactViewGroup
 import com.teleport.global.PortalRegistry
 
@@ -51,6 +53,38 @@ class PortalHostView(
       Handler(Looper.getMainLooper()).post { isInBatch = false }
     }
     return minOf(batchBaseIndex + childIndex, childCount)
+  }
+
+  /** Internal hooks used by the same-window attached-reparent PoC. */
+  internal fun physicalIndexOfChild(child: View): Int = super.indexOfChild(child)
+
+  internal fun physicalChildCount(): Int = super.getChildCount()
+
+  internal fun detachChildForAttachedReparent(child: View) {
+    check(super.indexOfChild(child) >= 0) { "The view is not a physical child of this host" }
+    if (child.hasTransientState()) {
+      childHasTransientStateChanged(child, false)
+    }
+    super.detachViewFromParent(child)
+    // attach/detachViewFromParent deliberately skip ViewGroup callbacks. Keep
+    // ReactViewGroup's drawing-order bookkeeping in sync explicitly.
+    onViewRemoved(child)
+    requestLayout()
+    invalidate()
+  }
+
+  internal fun attachChildForAttachedReparent(
+    child: View,
+    index: Int,
+    params: ViewGroup.LayoutParams,
+  ) {
+    super.attachViewToParent(child, index, params)
+    onViewAdded(child)
+    if (child.hasTransientState()) {
+      childHasTransientStateChanged(child, true)
+    }
+    requestLayout()
+    invalidate()
   }
   // endregion
 
