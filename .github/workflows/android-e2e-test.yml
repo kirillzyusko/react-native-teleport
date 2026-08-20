@@ -132,7 +132,7 @@ jobs:
           disk-size: "10G"
           disable-animations: true
           force-avd-creation: false
-          emulator-options: -no-window -gpu swiftshader_indirect -feature -HardwareDecoder -noaudio -no-boot-anim -camera-back none
+          emulator-options: -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -camera-back none
           avd-name: e2e_emulator_${{ matrix.devices.api }}
           arch: x86_64
           script: |

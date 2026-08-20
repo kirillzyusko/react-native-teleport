@@ -25,6 +25,8 @@ appId: teleport.example
 - extendedWaitUntil:
     visible: Magic forest
     timeout: 10000
+- waitForAnimationToEnd:
+    timeout: 2000
 - runFlow:
     when:
       true: ${maestro.platform == 'ios' || maestro.platform == 'android'}
