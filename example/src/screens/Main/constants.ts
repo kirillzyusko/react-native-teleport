@@ -117,4 +117,10 @@ export const examples: Example[] = [
     info: ScreenNames.SCALED_HOST,
     icons: "📐",
   },
+  {
+    title: "MapBox",
+    testID: "map_box_surface_view",
+    info: ScreenNames.MAP_BOX,
+    icons: "🗺️",
+  },
 ];

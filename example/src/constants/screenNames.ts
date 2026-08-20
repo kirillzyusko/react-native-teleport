@@ -22,6 +22,7 @@ export enum ScreenNames {
   PHOTO_DETAIL = "PHOTO_DETAIL",
   ORIENTATION = "ORIENTATION",
   SCALED_HOST = "SCALED_HOST",
+  MAP_BOX = "MAP_BOX",
 }
 
 export enum StackNames {

@@ -31,6 +31,7 @@ import PhotoDetail from "../../screens/PhotoGallery/PhotoDetail";
 import type { Photo } from "../../screens/PhotoGallery/photos";
 import Orientation from "../../screens/Orientation";
 import ScaledHost from "../../screens/ScaledHost";
+import MapboxSurfaceView from "../../screens/MapboxSurfaceView";
 
 export type ExamplesStackParamList = {
   [ScreenNames.GESTURE_HANDLER_TOUCHABLE]: undefined;
@@ -64,6 +65,7 @@ export type ExamplesStackParamList = {
   [ScreenNames.PHOTO_DETAIL]: { photo: Photo };
   [ScreenNames.ORIENTATION]: undefined;
   [ScreenNames.SCALED_HOST]: undefined;
+  [ScreenNames.MAP_BOX]: undefined;
 };
 
 const Stack = createNativeStackNavigator<ExamplesStackParamList>();
@@ -138,6 +140,7 @@ const options = {
   },
   [ScreenNames.ORIENTATION]: { title: "Orientation" },
   [ScreenNames.SCALED_HOST]: { title: "Context menu (scaled host)" },
+  [ScreenNames.MAP_BOX]: { headerShown: false },
 };
 
 const ExamplesStack = () => (
@@ -266,6 +269,11 @@ const ExamplesStack = () => (
       component={ScaledHost}
       name={ScreenNames.SCALED_HOST}
       options={options[ScreenNames.SCALED_HOST]}
+    />
+    <Stack.Screen
+      component={MapboxSurfaceView}
+      name={ScreenNames.MAP_BOX}
+      options={options[ScreenNames.MAP_BOX]}
     />
   </Stack.Navigator>
 );
