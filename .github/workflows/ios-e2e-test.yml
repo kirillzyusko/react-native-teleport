@@ -140,6 +140,8 @@ jobs:
           echo "$HOME/.maestro/bin" >> $GITHUB_PATH
       - name: Log Maestro version
         run: maestro --version
+      - name: Ensure FFmpeg is available
+        run: command -v ffmpeg >/dev/null || brew install ffmpeg
       - name: Prepare snapshot engine
         run: cd e2e && npm install
       - name: Run E2E tests
@@ -149,9 +151,12 @@ jobs:
           export MAESTRO_DRIVER_STARTUP_TIMEOUT=600000
           maestro --platform ios test -e DEVICE="iPhone 16 Pro" e2e/flows/* --format html ./e2e/reports/debug --debug-output ./e2e/reports/debug --flatten-debug-output
           kill $SERVER_PID
+          node e2e/scripts/analyze-video-frames.mjs e2e/videos
       - name: Upload test report
         if: failure()
         uses: actions/upload-artifact@v4
         with:
-          path: ./e2e/reports
+          path: |
+            ./e2e/reports
+            ./e2e/videos
           name: e2e-report-ios

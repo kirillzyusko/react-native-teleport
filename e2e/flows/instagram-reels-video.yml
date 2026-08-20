@@ -1,0 +1,33 @@
+appId: teleport.example
+---
+- launchApp
+- waitForAnimationToEnd
+- runFlow:
+    file: ../subflows/open-example.yml
+    env:
+      EXAMPLE_ID: reels
+- extendedWaitUntil:
+    visible: Magic forest
+    timeout: 10000
+- runFlow:
+    when:
+      true: ${maestro.platform == 'ios' || maestro.platform == 'android'}
+    commands:
+      - startRecording: e2e/videos/${DEVICE}/instagram-reels
+- tapOn:
+    point: 50%, 35%
+- extendedWaitUntil:
+    visible: Reels
+    timeout: 10000
+- waitForAnimationToEnd:
+    timeout: 2000
+- tapOn:
+    point: 6%, 5%
+- extendedWaitUntil:
+    visible: Magic forest
+    timeout: 10000
+- runFlow:
+    when:
+      true: ${maestro.platform == 'ios' || maestro.platform == 'android'}
+    commands:
+      - stopRecording
