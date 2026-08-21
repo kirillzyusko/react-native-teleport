@@ -134,12 +134,7 @@ jobs:
           avd-name: e2e_emulator_${{ matrix.devices.api }}
           arch: x86_64
           script: |
-            mem_total_kb="$(adb shell grep '^MemTotal:' /proc/meminfo | tr -cd '0-9')"
-            echo "Emulator MemTotal: ${mem_total_kb} kB"
-            if [ -z "${mem_total_kb}" ] || [ "${mem_total_kb}" -lt 3500000 ]; then
-              echo "::error::Expected the emulator to have at least 3.5 GB of RAM, but MemTotal is ${mem_total_kb:-unknown} kB"
-              exit 1
-            fi
+            mem_total_kb="$(adb shell grep '^MemTotal:' /proc/meminfo | tr -cd '0-9')"; echo "Emulator MemTotal: ${mem_total_kb:-unknown} kB"; if [ -z "${mem_total_kb}" ] || [ "${mem_total_kb}" -lt 3500000 ]; then echo "::error::Expected the emulator to have at least 3.5 GB of RAM, but MemTotal is ${mem_total_kb:-unknown} kB"; exit 1; fi
             adb install -r -d -t example/android/app/build/outputs/apk/release/app-release.apk
             maestro --platform android test -e DEVICE="e2e_emulator_31" e2e/flows/* --format html ./e2e/reports/debug --debug-output ./e2e/reports/debug --flatten-debug-output
       - name: Show snapshot engine logs
