@@ -102,10 +102,7 @@ function PhotoPreview({ photo, onOpen }: Props) {
             }
           >
             <Animated.Image
-              style={[
-                { width: THUMB_SIZE, opacity: source },
-                isAnimating ? animatedHeight : styles.thumb,
-              ]}
+              style={[{ width: THUMB_SIZE, opacity: source }, animatedHeight]}
               source={{ uri: photo.thumbnail }}
               resizeMode="cover"
             />
@@ -117,9 +114,6 @@ function PhotoPreview({ photo, onOpen }: Props) {
 }
 
 const styles = StyleSheet.create({
-  thumb: {
-    height: THUMB_SIZE,
-  },
   animating: {
     transformOrigin: "0% 0%",
   },
