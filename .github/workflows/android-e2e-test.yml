@@ -138,12 +138,13 @@ jobs:
           script: |
             adb install -r -d -t example/android/app/build/outputs/apk/release/app-release.apk
             maestro --platform android test -e DEVICE="e2e_emulator_31" e2e/flows/* --format html ./e2e/reports/debug --debug-output ./e2e/reports/debug --flatten-debug-output
-            node e2e/scripts/analyze-video-frames.mjs e2e/videos
       - name: Show snapshot engine logs
         if: always()
         run: |
           echo "===== FULL server.log ====="
           cat server.log || true
+      - name: Check glitches/flickering
+        run: node e2e/scripts/check-glitches.mjs e2e/videos
       - name: Kill snapshot engine
         if: always()
         shell: bash
@@ -153,7 +154,7 @@ jobs:
             rm -f server.pid
           fi
       - name: Upload test report
-        if: always()
+        if: failure()
         uses: actions/upload-artifact@v4
         with:
           path: |
