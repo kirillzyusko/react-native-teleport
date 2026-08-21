@@ -1,4 +1,4 @@
-import { readdirSync, statSync } from "node:fs";
+import { existsSync, readdirSync, statSync } from "node:fs";
 import { spawnSync } from "node:child_process";
 import path from "node:path";
 
@@ -11,6 +11,8 @@ const BYTES_PER_PIXEL = 3;
 const FRAME_SIZE = SAMPLE_SIZE * SAMPLE_SIZE * BYTES_PER_PIXEL;
 
 function findRecordings(input) {
+  if (!existsSync(input)) return [];
+
   if (statSync(input).isFile()) {
     return input.toLowerCase().endsWith(".mp4") ? [input] : [];
   }
@@ -159,11 +161,23 @@ function analyzeRecording(recording) {
   return { frameCount: frames.length, mostUniformFrame };
 }
 
-try {
-  const input = path.resolve(process.argv[2] ?? "e2e/videos");
+function main() {
+  const args = process.argv.slice(2);
+  const allowEmpty = args.includes("--allow-empty");
+  const inputs = args.filter((argument) => argument !== "--allow-empty");
+  if (inputs.length > 1) {
+    throw new Error("Usage: check-glitches.mjs [path] [--allow-empty]");
+  }
+
+  const input = path.resolve(inputs[0] ?? "e2e/videos");
   const recordings = findRecordings(input).sort();
-  if (recordings.length === 0)
+  if (recordings.length === 0 && allowEmpty) {
+    console.log(`SKIP: No MP4 recordings found in ${input}`);
+    return;
+  }
+  if (recordings.length === 0) {
     throw new Error(`No MP4 recordings found in ${input}`);
+  }
 
   let failed = false;
   for (const recording of recordings) {
@@ -182,6 +196,10 @@ try {
   }
 
   if (failed) process.exitCode = 1;
+}
+
+try {
+  main();
 } catch (error) {
   console.error(`FAIL: ${error.message}`);
   process.exitCode = 1;
