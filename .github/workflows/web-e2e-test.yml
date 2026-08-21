@@ -77,6 +77,8 @@ jobs:
         shell: bash
       - name: Prepare snapshot engine
         run: cd e2e && npm install
+      - name: Ensure FFmpeg is available
+        run: command -v ffmpeg >/dev/null || brew install ffmpeg
       - name: Run tests
         run: |
           node e2e/snapshot-engine.js &
