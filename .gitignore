@@ -89,6 +89,3 @@ android/generated
 nitrogen/
 
 coverage/
-
-# Local E2E screen recordings
-e2e/videos/
