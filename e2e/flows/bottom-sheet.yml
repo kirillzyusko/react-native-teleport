@@ -22,18 +22,25 @@ appId: teleport.example
     text: "Sheet"
 - assertNotVisible:
     text: "Close"
-- tapOn:
-    id: "open_bottom_sheet"
-- assertVisible:
-    text: "Sheet"
-- assertVisible:
-    text: "Close"
-- swipe:
-    label: "Press, move right, hold, and release Close Bottom Sheet"
-    start: 45%, 55%
-    end: 55%, 55%
-    duration: 3000
-- assertNotVisible:
-    text: "Sheet"
-- assertNotVisible:
-    text: "Close"
+# Maestro does not expose a press/move/release pointer action on web yet;
+# `swipe` scrolls the page instead. The regular tap scenario above still runs.
+# Re-enable when https://github.com/mobile-dev-inc/Maestro/pull/2978 lands.
+- runFlow:
+    when:
+      true: ${maestro.platform == 'ios' || maestro.platform == 'android'}
+    commands:
+      - tapOn:
+          id: "open_bottom_sheet"
+      - assertVisible:
+          text: "Sheet"
+      - assertVisible:
+          text: "Close"
+      - swipe:
+          label: "Press, move right, hold, and release Close Bottom Sheet"
+          start: 45%, 55%
+          end: 55%, 55%
+          duration: 3000
+      - assertNotVisible:
+          text: "Sheet"
+      - assertNotVisible:
+          text: "Close"
