@@ -6,13 +6,16 @@ import android.view.ViewGroup
 import android.view.accessibility.AccessibilityEvent
 import com.facebook.react.uimanager.StateWrapper
 import com.facebook.react.views.view.ReactViewGroup
+import com.teleport.extensions.canReparentAttached
+import com.teleport.extensions.findNextSiblingHostIndex
 import com.teleport.global.PortalRegistry
 import com.teleport.host.PortalHostView
 import java.util.ArrayList
 
 class PortalView(
   context: Context,
-) : ReactViewGroup(context) {
+) : ReactViewGroup(context),
+  PortalViewLifecycle {
   private var hostName: String? = null
   private val layoutStateController = PortalLayoutStateController(this)
   private val ownChildren: MutableList<View> = ArrayList()
@@ -21,12 +24,12 @@ class PortalView(
     get() = hostName != null && PortalRegistry.getHost(hostName) != null
 
   // region ViewManager methods
-  fun setStateWrapper(wrapper: StateWrapper?) {
+  override fun setStateWrapper(wrapper: StateWrapper?) {
     layoutStateController.setStateWrapper(wrapper)
     layoutStateController.updateIfNeeded(hostName, PortalRegistry.getHost(hostName))
   }
 
-  fun setHostName(name: String?) {
+  override fun setHostName(name: String?) {
     if (name == hostName) return
 
     val children = extractChildren(name)
@@ -53,7 +56,7 @@ class PortalView(
     layoutStateController.updateIfNeeded(hostName, PortalRegistry.getHost(hostName))
   }
 
-  fun cleanup() {
+  override fun cleanup() {
     hostName?.let { PortalRegistry.unregisterPendingPortal(it, this) }
     detachOwnChildren()
     hostName = null
@@ -124,7 +127,7 @@ class PortalView(
   ) {
     val parent = child.parent as? ViewGroup ?: return
 
-    if (target != null && canReparentAttached(child, parent, target)) {
+    if (target != null && child.canReparentAttached(parent, target)) {
       when (parent) {
         is PortalView -> parent.detachForReparent(child)
         is PortalHostView -> parent.detachForReparent(child)
@@ -139,20 +142,6 @@ class PortalView(
       parent.endViewTransition(child)
     }
   }
-
-  private fun canReparentAttached(
-    child: View,
-    source: ViewGroup,
-    target: ViewGroup,
-  ): Boolean =
-    source !== target &&
-      (source is PortalView || source is PortalHostView) &&
-      child.isAttachedToWindow &&
-      target.isAttachedToWindow &&
-      source.rootView === target.rootView &&
-      !child.hasFocus() &&
-      source.layoutTransition == null &&
-      target.layoutTransition == null
 
   /**
    * Detaches every view in [ownChildren] from its current parent (which may be
@@ -205,21 +194,6 @@ class PortalView(
     return if (isTeleported) detachOwnChildren(target) else extractPhysicalChildren(target)
   }
 
-  /**
-   * Finds the host index of the first next sibling (in [ownChildren]) that is
-   * already present in the host.  Returns -1 when none is found (caller should append).
-   */
-  private fun findNextSiblingHostIndex(
-    host: ViewGroup,
-    ownIndex: Int,
-  ): Int {
-    for (i in (ownIndex + 1) until ownChildren.size) {
-      val sibling = ownChildren[i]
-      val siblingIndex = host.indexOfChild(sibling)
-      if (siblingIndex >= 0) return siblingIndex
-    }
-    return -1
-  }
   // endregion
 
   // region Children management
@@ -247,7 +221,7 @@ class PortalView(
       val host = PortalRegistry.getHost(hostName)
       ownChildren.add(index, child)
       if (host != null) {
-        val hostIndex = findNextSiblingHostIndex(host, index)
+        val hostIndex = ownChildren.findNextSiblingHostIndex(host, index)
         if (hostIndex >= 0) {
           host.addView(child, hostIndex)
         } else {
@@ -268,7 +242,7 @@ class PortalView(
       val host = PortalRegistry.getHost(hostName)
       ownChildren.add(index, child)
       if (host != null) {
-        val hostIndex = findNextSiblingHostIndex(host, index)
+        val hostIndex = ownChildren.findNextSiblingHostIndex(host, index)
         if (hostIndex >= 0) {
           host.addView(child, hostIndex)
         } else {
