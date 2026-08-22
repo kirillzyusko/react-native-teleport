@@ -2,8 +2,6 @@ package com.teleport.extensions
 
 import android.view.View
 import android.view.ViewGroup
-import com.teleport.host.PortalHostView
-import com.teleport.portal.PortalView
 
 internal fun View.screenLocation(): IntArray =
   IntArray(2).also {
@@ -17,7 +15,6 @@ internal fun View.canReparentAttached(
   target: ViewGroup,
 ): Boolean =
   source !== target &&
-    (source is PortalView || source is PortalHostView) &&
     isAttachedToWindow &&
     target.isAttachedToWindow &&
     source.rootView === target.rootView &&

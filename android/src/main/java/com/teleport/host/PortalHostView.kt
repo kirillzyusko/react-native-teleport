@@ -4,12 +4,12 @@ import android.content.Context
 import android.os.Handler
 import android.os.Looper
 import android.view.View
-import com.facebook.react.views.view.ReactViewGroup
+import com.teleport.common.ReparentableReactViewGroup
 import com.teleport.global.PortalRegistry
 
 class PortalHostView(
   context: Context?,
-) : ReactViewGroup(context) {
+) : ReparentableReactViewGroup(context) {
   private var name: String? = null
   private var isInBatch = false
   private var batchBaseIndex = 0
@@ -54,18 +54,6 @@ class PortalHostView(
     return minOf(batchBaseIndex + childIndex, childCount)
   }
 
-  internal fun detachForReparent(child: View) {
-    if (child.hasTransientState()) {
-      childHasTransientStateChanged(child, false)
-    }
-    super.detachViewFromParent(child)
-    // attach/detachViewFromParent deliberately skip ViewGroup callbacks. Keep
-    // ReactViewGroup's drawing-order bookkeeping in sync explicitly.
-    onViewRemoved(child)
-    requestLayout()
-    invalidate()
-  }
-
   override fun addView(
     child: View,
     index: Int,
@@ -75,13 +63,7 @@ class PortalHostView(
       return
     }
 
-    super.attachViewToParent(child, index, child.layoutParams)
-    onViewAdded(child)
-    if (child.hasTransientState()) {
-      childHasTransientStateChanged(child, true)
-    }
-    requestLayout()
-    invalidate()
+    attachDetachedView(child, index)
   }
   // endregion
 

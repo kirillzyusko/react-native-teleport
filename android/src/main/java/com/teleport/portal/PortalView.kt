@@ -5,7 +5,7 @@ import android.view.View
 import android.view.ViewGroup
 import android.view.accessibility.AccessibilityEvent
 import com.facebook.react.uimanager.StateWrapper
-import com.facebook.react.views.view.ReactViewGroup
+import com.teleport.common.ReparentableReactViewGroup
 import com.teleport.extensions.canReparentAttached
 import com.teleport.extensions.findNextSiblingHostIndex
 import com.teleport.global.PortalRegistry
@@ -14,7 +14,7 @@ import java.util.ArrayList
 
 class PortalView(
   context: Context,
-) : ReactViewGroup(context),
+) : ReparentableReactViewGroup(context),
   PortalViewLifecycle {
   private var hostName: String? = null
   private val layoutStateController = PortalLayoutStateController(this)
@@ -127,11 +127,12 @@ class PortalView(
   ) {
     val parent = child.parent as? ViewGroup ?: return
 
-    if (target != null && child.canReparentAttached(parent, target)) {
-      when (parent) {
-        is PortalView -> parent.detachForReparent(child)
-        is PortalHostView -> parent.detachForReparent(child)
-      }
+    if (
+      target != null &&
+      parent is ReparentableReactViewGroup &&
+      child.canReparentAttached(parent, target)
+    ) {
+      parent.detachForReparent(child)
     } else if (parent === this) {
       super.removeView(child)
     } else {
@@ -163,37 +164,11 @@ class PortalView(
     return list
   }
 
-  internal fun detachForReparent(child: View) {
-    if (child.hasTransientState()) {
-      childHasTransientStateChanged(child, false)
-    }
-    super.detachViewFromParent(child)
-    // attach/detachViewFromParent deliberately skip ViewGroup callbacks. Keep
-    // ReactViewGroup's drawing-order bookkeeping in sync explicitly.
-    onViewRemoved(child)
-    requestLayout()
-    invalidate()
-  }
-
-  private fun attachDetachedView(
-    child: View,
-    index: Int,
-  ) {
-    super.attachViewToParent(child, index, child.layoutParams)
-    onViewAdded(child)
-    if (child.hasTransientState()) {
-      childHasTransientStateChanged(child, true)
-    }
-    requestLayout()
-    invalidate()
-  }
-
   private fun extractChildren(targetName: String?): List<View> {
     // Gather current children (logical if teleported, physical otherwise)
     val target: ViewGroup = targetName?.let { PortalRegistry.getHost(it) } ?: this
     return if (isTeleported) detachOwnChildren(target) else extractPhysicalChildren(target)
   }
-
   // endregion
 
   // region Children management
