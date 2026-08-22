@@ -3,12 +3,13 @@ package com.teleport.host
 import android.content.Context
 import android.os.Handler
 import android.os.Looper
-import com.facebook.react.views.view.ReactViewGroup
+import android.view.View
+import com.teleport.common.ReparentableReactViewGroup
 import com.teleport.global.PortalRegistry
 
 class PortalHostView(
   context: Context?,
-) : ReactViewGroup(context) {
+) : ReparentableReactViewGroup(context) {
   private var name: String? = null
   private var isInBatch = false
   private var batchBaseIndex = 0
@@ -51,6 +52,18 @@ class PortalHostView(
       Handler(Looper.getMainLooper()).post { isInBatch = false }
     }
     return minOf(batchBaseIndex + childIndex, childCount)
+  }
+
+  override fun addView(
+    child: View,
+    index: Int,
+  ) {
+    if (child.parent != null || !child.isAttachedToWindow) {
+      super.addView(child, index)
+      return
+    }
+
+    attachDetachedView(child, index)
   }
   // endregion
 
