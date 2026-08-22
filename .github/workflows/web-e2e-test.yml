@@ -77,6 +77,8 @@ jobs:
         shell: bash
       - name: Prepare snapshot engine
         run: cd e2e && npm install
+      - name: Ensure FFmpeg is available
+        run: command -v ffmpeg >/dev/null || brew install ffmpeg
       - name: Run tests
         run: |
           node e2e/snapshot-engine.js &
@@ -85,6 +87,8 @@ jobs:
           export MAESTRO_CHROME_FLAGS="--no-sandbox --user-data-dir=/tmp/chrome-profile-$GITHUB_RUN_ID"
           maestro --platform web test -e DEVICE="Chrome" --headless e2e/flows/* --format html ./e2e/reports/debug --debug-output ./e2e/reports/debug --flatten-debug-output
           kill $SERVER_PID
+      - name: Check glitches/flickering
+        run: node e2e/scripts/check-glitches.mjs e2e/videos --allow-empty
       - name: Stop server
         if: always()
         run: |
@@ -93,5 +97,7 @@ jobs:
         if: failure()
         uses: actions/upload-artifact@v4
         with:
-          path: ./e2e/reports
+          path: |
+            ./e2e/reports
+            ./e2e/videos
           name: e2e-report-web

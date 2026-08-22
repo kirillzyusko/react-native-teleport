@@ -19029,6 +19029,16 @@ __metadata:
   languageName: node
   linkType: hard
 
+"react-native-video@patch:react-native-video@npm%3A6.17.0#./.yarn/patches/react-native-video-npm-6.17.0-5bb920fb41.patch::locator=react-native-teleport%40workspace%3A.":
+  version: 6.17.0
+  resolution: "react-native-video@patch:react-native-video@npm%3A6.17.0#./.yarn/patches/react-native-video-npm-6.17.0-5bb920fb41.patch::version=6.17.0&hash=e28f9f&locator=react-native-teleport%40workspace%3A."
+  peerDependencies:
+    react: "*"
+    react-native: "*"
+  checksum: d73737def4d7b488aa24684a84a555600a68a35e1efcfc5accf5c833d66510d3108b205ab9c82072a333ab66718bfa091a4aa3f0c97d2752a9c74fef2cfe910e
+  languageName: node
+  linkType: hard
+
 "react-native-web-linear-gradient@npm:^1.1.2":
   version: 1.1.2
   resolution: "react-native-web-linear-gradient@npm:1.1.2"

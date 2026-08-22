@@ -76,7 +76,12 @@
     "segoe",
     "picsum",
     "subflows",
-    "detekt"
+    "detekt",
+    "blackframe",
+    "nostats",
+    "vsync",
+    "rawvideo",
+    "pblack"
   ],
   "ignorePaths": [
     "node_modules",

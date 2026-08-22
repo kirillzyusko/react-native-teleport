@@ -1,0 +1,119 @@
+diff --git a/android/src/main/java/com/brentvatne/exoplayer/ExoPlayerView.kt b/android/src/main/java/com/brentvatne/exoplayer/ExoPlayerView.kt
+index bb945fe79399d4ff41579890e9a061059e0384b5..a1f5b4aab4481fafb440c0b4ceba6009abc06d19 100644
+--- a/android/src/main/java/com/brentvatne/exoplayer/ExoPlayerView.kt
++++ b/android/src/main/java/com/brentvatne/exoplayer/ExoPlayerView.kt
+@@ -3,9 +3,13 @@ package com.brentvatne.exoplayer
+ import android.content.Context
+ import android.graphics.Color
+ import android.graphics.drawable.GradientDrawable
++import android.os.Build
+ import android.util.AttributeSet
++import android.view.SurfaceView
++import android.view.TextureView
+ import android.view.View
+ import android.view.View.MeasureSpec
++import android.view.ViewGroup
+ import android.widget.FrameLayout
+ import android.widget.TextView
+ import androidx.media3.common.Player
+@@ -17,6 +21,8 @@ import androidx.media3.ui.DefaultTimeBar
+ import androidx.media3.ui.PlayerView
+ import com.brentvatne.common.api.ResizeMode
+ import com.brentvatne.common.api.SubtitleStyle
++import com.brentvatne.common.api.ViewType
++import com.brentvatne.common.toolbox.DebugLog
+ 
+ @UnstableApi
+ class ExoPlayerView @JvmOverloads constructor(context: Context, attrs: AttributeSet? = null, defStyleAttr: Int = 0) :
+@@ -139,8 +145,76 @@ class ExoPlayerView @JvmOverloads constructor(context: Context, attrs: Attribute
+         playerView.setShutterBackgroundColor(color)
+     }
+ 
+-    fun updateSurfaceView(viewType: Int) {
+-        // TODO: Implement proper surface type switching if needed
++    fun updateSurfaceView(@ViewType.ViewType viewType: Int) {
++        val currentSurfaceView = playerView.videoSurfaceView ?: return
++
++        val newSurfaceView = when (viewType) {
++            ViewType.VIEW_TYPE_SURFACE, ViewType.VIEW_TYPE_SURFACE_SECURE -> {
++                if (currentSurfaceView is SurfaceView) {
++                    currentSurfaceView.setSecure(viewType == ViewType.VIEW_TYPE_SURFACE_SECURE)
++                    return
++                }
++
++                SurfaceView(context).apply {
++                    setSecure(viewType == ViewType.VIEW_TYPE_SURFACE_SECURE)
++                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
++                        setSurfaceLifecycle(SurfaceView.SURFACE_LIFECYCLE_FOLLOWS_ATTACHMENT)
++                    }
++                }
++            }
++
++            ViewType.VIEW_TYPE_TEXTURE -> {
++                if (currentSurfaceView is TextureView) {
++                    currentSurfaceView.isOpaque = false
++                    return
++                }
++
++                TextureView(context).apply {
++                    // TextureView is used when the video needs to participate in normal
++                    // Android view compositing (for example overflow clipping/animations).
++                    isOpaque = false
++                }
++            }
++
++            else -> {
++                DebugLog.wtf(TAG, "Unexpected view type: $viewType")
++                return
++            }
++        }
++
++        replaceSurfaceView(currentSurfaceView, newSurfaceView)
++    }
++
++    private fun replaceSurfaceView(currentSurfaceView: View, newSurfaceView: View) {
++        val contentFrame = playerView.findViewById<ViewGroup>(androidx.media3.ui.R.id.exo_content_frame)
++            ?: return
++        val surfaceIndex = contentFrame.indexOfChild(currentSurfaceView)
++        if (surfaceIndex == -1) return
++
++        val surfaceLayoutParams = currentSurfaceView.layoutParams
++        val player = playerView.player
++
++        // PlayerView clears the old video output when its player is detached. Its surfaceView
++        // field is private and final, so keep it in sync with the child we install before the
++        // player is reattached and chooses its new TextureView/SurfaceView output.
++        playerView.player = null
++        contentFrame.removeViewAt(surfaceIndex)
++        contentFrame.addView(newSurfaceView, surfaceIndex, surfaceLayoutParams)
++
++        try {
++            playerSurfaceViewField.set(playerView, newSurfaceView)
++        } catch (error: ReflectiveOperationException) {
++            // Keep PlayerView usable if a future Media3 version changes its internals.
++            contentFrame.removeView(newSurfaceView)
++            contentFrame.addView(currentSurfaceView, surfaceIndex, surfaceLayoutParams)
++            playerView.player = player
++            DebugLog.e(TAG, "Unable to replace PlayerView surface: $error")
++            return
++        }
++
++        playerView.player = player
++        playerView.requestLayout()
++        playerView.invalidate()
+     }
+ 
+     val isPlaying: Boolean
+@@ -254,6 +328,12 @@ class ExoPlayerView @JvmOverloads constructor(context: Context, attrs: Attribute
+ 
+     companion object {
+         private const val TAG = "ExoPlayerView"
++
++        private val playerSurfaceViewField by lazy {
++            PlayerView::class.java.getDeclaredField("surfaceView").apply {
++                isAccessible = true
++            }
++        }
+     }
+ 
+     /**

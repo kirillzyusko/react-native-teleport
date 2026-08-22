@@ -98,6 +98,8 @@ jobs:
           export MAESTRO_DRIVER_STARTUP_TIMEOUT=600000
       - name: Log Maestro version
         run: maestro --version
+      - name: Ensure FFmpeg is available
+        run: command -v ffmpeg >/dev/null || (sudo apt-get update && sudo apt-get install -y ffmpeg)
       - name: Enable KVM group perms
         run: |
           echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
@@ -141,6 +143,8 @@ jobs:
         run: |
           echo "===== FULL server.log ====="
           cat server.log || true
+      - name: Check glitches/flickering
+        run: node e2e/scripts/check-glitches.mjs e2e/videos
       - name: Kill snapshot engine
         if: always()
         shell: bash
@@ -153,5 +157,7 @@ jobs:
         if: failure()
         uses: actions/upload-artifact@v4
         with:
-          path: ./e2e/reports
+          path: |
+            ./e2e/reports
+            ./e2e/videos
           name: e2e-report-android
