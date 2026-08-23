@@ -14,8 +14,8 @@
 
 
 <link rel="search" type="application/opensearchdescription+xml" title="Teleport" href="/react-native-teleport/pr-preview/pr-175/opensearch.xml"><link rel="stylesheet" href="/react-native-teleport/pr-preview/pr-175/assets/css/styles.5f21375c.css">
-<script src="/react-native-teleport/pr-preview/pr-175/assets/js/runtime~main.518112f7.js" defer="defer"></script>
-<script src="/react-native-teleport/pr-preview/pr-175/assets/js/main.92ec6a60.js" defer="defer"></script>
+<script src="/react-native-teleport/pr-preview/pr-175/assets/js/runtime~main.813279df.js" defer="defer"></script>
+<script src="/react-native-teleport/pr-preview/pr-175/assets/js/main.686c807c.js" defer="defer"></script>
 </head>
 <body class="navigation-with-keyboard">
 <svg xmlns="http://www.w3.org/2000/svg" style="display: none;"><defs>
@@ -32,10 +32,7 @@
 <p>The view is removed from one parent&#x27;s child list and inserted into the other <strong>synchronously, without leaving the Android window</strong>. This keeps its rendering resources alive and lets the compositor continue displaying the previously submitted frame throughout the move.</p>
 <p>In practice, teleporting videos, maps, and other surface-backed views should now feel much more seamless.</p>
 <!-- -->
-<div class="center video"><video autoplay="" loop="" muted="" playsinline="" height="100%" src="/react-native-teleport/pr-preview/pr-175/video/fast-reparenting.mp4" width="100%" aria-label="Comparison of regular and fast Android reparenting"></video></div>
-<blockquote>
-<p><strong>Before (left):</strong> regular reparenting · <strong>After (right):</strong> the new fast path</p>
-</blockquote>
+<table><tbody><tr style="border:none"><td style="border:none"><div class="center video"><video autoplay="" loop="" muted="" playsinline="" height="100%" src="/react-native-teleport/pr-preview/pr-175/video/fast-reparenting-before.mp4" width="100%" aria-label="Android teleportation with regular reparenting"></video></div></td><td style="border:none"><div class="center video"><video autoplay="" loop="" muted="" playsinline="" height="100%" src="/react-native-teleport/pr-preview/pr-175/video/fast-reparenting-after.mp4" width="100%" aria-label="Android teleportation with the fast reparenting path"></video></div></td></tr><tr style="border:none;background-color:#00000000"><td style="border:none;max-width:400px;text-align:center"><strong>Before: regular reparenting</strong></td><td style="border:none;max-width:400px;text-align:center"><strong>After: the new fast path</strong></td></tr></tbody></table>
 <h2 class="anchor anchorWithStickyNavbar_LWe7" id="safe-by-default">Safe by default<a href="#safe-by-default" class="hash-link" aria-label="Direct link to Safe by default" title="Direct link to Safe by default">​</a></h2>
 <p>The fast path is used only when Teleport can safely preserve the view&#x27;s window attachment - for example, when both parents belong to the same Android window and no active focus or layout transition requires the full detach lifecycle.</p>
 <p>When those conditions are not met, Teleport automatically falls back to the existing <code>removeView()</code> and <code>addView()</code> behavior. There is no new API or configuration to adopt: the optimization happens internally.</p>
