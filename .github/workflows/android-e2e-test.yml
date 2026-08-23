@@ -105,14 +105,6 @@ jobs:
           echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
           sudo udevadm control --reload-rules
           sudo udevadm trigger --name-match=kvm
-      - name: AVD cache
-        uses: actions/cache@v4
-        id: avd-cache
-        with:
-          path: |
-            ~/.android/avd/*
-            ~/.android/adb*
-          key: avd-${{ matrix.devices.api }}-${{ matrix.devices.target }}
       - name: Prepare snapshot engine
         run: cd e2e && npm install
 
@@ -131,12 +123,29 @@ jobs:
           ram-size: "4096M"
           disk-size: "10G"
           disable-animations: true
-          force-avd-creation: false
+          force-avd-creation: true
           emulator-options: -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -camera-back none
           avd-name: e2e_emulator_${{ matrix.devices.api }}
           arch: x86_64
           script: |
             adb install -r -d -t example/android/app/build/outputs/apk/release/app-release.apk
+            mkdir -p e2e/reports/debug
+            {
+              echo "run_id=${GITHUB_RUN_ID}"
+              echo "run_attempt=${GITHUB_RUN_ATTEMPT}"
+              echo "sha=${GITHUB_SHA}"
+              echo "device=e2e_emulator_${{ matrix.devices.api }}"
+            } > e2e/reports/debug/reparent-context.txt
+            adb shell setprop log.tag.RNTPReparent DEBUG
+            adb logcat -c
+            adb logcat -v threadtime > e2e/reports/debug/android-logcat.txt &
+            logcat_pid=$!
+            finish_logcat() {
+              kill "$logcat_pid" || true
+              wait "$logcat_pid" || true
+              grep RNTPReparent e2e/reports/debug/android-logcat.txt > e2e/reports/debug/reparent-logcat.txt || true
+            }
+            trap finish_logcat EXIT
             maestro --platform android test -e DEVICE="e2e_emulator_31" e2e/flows/* --format html ./e2e/reports/debug --debug-output ./e2e/reports/debug --flatten-debug-output
       - name: Show snapshot engine logs
         if: always()

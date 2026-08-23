@@ -5,6 +5,8 @@ import android.os.Handler
 import android.os.Looper
 import android.view.View
 import com.teleport.common.ReparentableReactViewGroup
+import com.teleport.common.logAttachDecision
+import com.teleport.common.logHostEvent
 import com.teleport.global.PortalRegistry
 
 class PortalHostView(
@@ -19,12 +21,14 @@ class PortalHostView(
   fun setName(newName: String?) {
     if (name == newName) return
 
+    logHostEvent("set-host-name", this, name, "nextHost=${newName ?: "null"}")
     name?.let { PortalRegistry.unregisterHost(it, id) }
     name = newName
     newName?.let { PortalRegistry.registerHost(it, this) }
   }
 
   fun cleanup(viewId: Int) {
+    logHostEvent("host-cleanup", this, name, "viewId=$viewId")
     if (isAttachedToWindow) {
       pendingCleanupViewId = viewId
       return
@@ -59,10 +63,12 @@ class PortalHostView(
     index: Int,
   ) {
     if (child.parent != null || !child.isAttachedToWindow) {
+      logAttachDecision(this, name, child, false)
       super.addView(child, index)
       return
     }
 
+    logAttachDecision(this, name, child, true)
     attachDetachedView(child, index)
   }
   // endregion
@@ -80,6 +86,7 @@ class PortalHostView(
   }
 
   override fun onDetachedFromWindow() {
+    logHostEvent("host-detaching", this, name)
     super.onDetachedFromWindow()
 
     pendingCleanupViewId?.let { cleanupNow(it) }

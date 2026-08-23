@@ -1,5 +1,7 @@
 package com.teleport.global
 
+import com.teleport.common.logHostEvent
+import com.teleport.common.logPortalEvent
 import com.teleport.host.PortalHostView
 import com.teleport.portal.PortalView
 import java.lang.ref.WeakReference
@@ -12,6 +14,7 @@ object PortalRegistry {
     name: String,
     view: PortalHostView,
   ) {
+    logHostEvent("register-host", view, name)
     hosts[name] = WeakReference(view)
     notifySubscribers(name)
   }
@@ -22,6 +25,7 @@ object PortalRegistry {
   ) {
     val hostViewId = hosts[name]?.get()?.id
     if (hostViewId == viewId) {
+      hosts[name]?.get()?.let { logHostEvent("unregister-host", it, name, "viewId=$viewId") }
       hosts.remove(name)
       notifySubscribers(name)
     }
@@ -53,6 +57,7 @@ object PortalRegistry {
     hostName: String,
     portal: PortalView,
   ) {
+    logPortalEvent("register-pending-portal", portal, hostName)
     val portals = pendingPortals.getOrPut(hostName) { mutableListOf() }
     portals.removeAll { it.get() == null || it.get() == portal }
     portals.add(WeakReference(portal))
@@ -62,6 +67,7 @@ object PortalRegistry {
     hostName: String,
     portal: PortalView,
   ) {
+    logPortalEvent("unregister-pending-portal", portal, hostName)
     pendingPortals[hostName]?.let { portals ->
       portals.removeAll { it.get() == null || it.get() == portal }
       if (portals.isEmpty()) {

@@ -5,7 +5,12 @@ import android.view.View
 import android.view.ViewGroup
 import android.view.accessibility.AccessibilityEvent
 import com.facebook.react.uimanager.StateWrapper
+import com.teleport.common.ReparentDecision
 import com.teleport.common.ReparentableReactViewGroup
+import com.teleport.common.logAttachDecision
+import com.teleport.common.logMoveDecision
+import com.teleport.common.logMoveResult
+import com.teleport.common.logPortalEvent
 import com.teleport.extensions.canReparentAttached
 import com.teleport.extensions.findNextSiblingHostIndex
 import com.teleport.global.PortalRegistry
@@ -32,6 +37,7 @@ class PortalView(
   override fun setHostName(name: String?) {
     if (name == hostName) return
 
+    logPortalEvent("set-host-start", this, hostName, "nextHost=${name ?: "null"}")
     val children = extractChildren(name)
 
     hostName?.let { PortalRegistry.unregisterPendingPortal(it, this) }
@@ -39,6 +45,13 @@ class PortalView(
     hostName = name
 
     val target: ViewGroup = name?.let { PortalRegistry.getHost(it) } ?: this
+    logPortalEvent(
+      "set-host-target",
+      this,
+      hostName,
+      "target=${target.javaClass.simpleName}(id=${target.id},attached=${target.isAttachedToWindow}) " +
+        "children=${children.size}",
+    )
 
     if (target is PortalHostView) {
       for (i in children.indices) {
@@ -54,9 +67,11 @@ class PortalView(
 
     name?.let { PortalRegistry.registerPendingPortal(it, this) }
     layoutStateController.updateIfNeeded(hostName, PortalRegistry.getHost(hostName))
+    logPortalEvent("set-host-complete", this, hostName, "children=${children.size}")
   }
 
   override fun cleanup() {
+    logPortalEvent("cleanup", this, hostName, "children=${ownChildren.size}")
     hostName?.let { PortalRegistry.unregisterPendingPortal(it, this) }
     detachOwnChildren()
     hostName = null
@@ -68,6 +83,13 @@ class PortalView(
   // region Host lifecycle callbacks
   internal fun onHostChanged() {
     val host = PortalRegistry.getHost(hostName)
+    logPortalEvent(
+      "host-changed",
+      this,
+      hostName,
+      "host=${host?.javaClass?.simpleName ?: "null"}(id=${host?.id ?: -1}," +
+        "attached=${host?.isAttachedToWindow ?: false}) children=${ownChildren.size}",
+    )
     if (host != null) {
       // Host appeared (or was replaced). Move children into it, detaching
       // from their current parent first — that may be `this` (initial mount
@@ -126,18 +148,30 @@ class PortalView(
     target: ViewGroup? = null,
   ) {
     val parent = child.parent as? ViewGroup ?: return
-
-    if (
+    val reparentableParent = parent as? ReparentableReactViewGroup
+    val fastPath =
       target != null &&
-      parent is ReparentableReactViewGroup &&
-      child.canReparentAttached(parent, target)
-    ) {
-      parent.detachForReparent(child)
+        reparentableParent != null &&
+        child.canReparentAttached(parent, target)
+
+    logMoveDecision(
+      ReparentDecision(
+        portal = this,
+        currentHostName = hostName,
+        child = child,
+        source = parent,
+        target = target,
+        fastPath = fastPath,
+      ),
+    )
+    if (fastPath) {
+      reparentableParent?.detachForReparent(child)
     } else if (parent === this) {
       super.removeView(child)
     } else {
       parent.removeView(child)
     }
+    logMoveResult(child, if (fastPath) "fast-detach" else "fallback-remove")
 
     if (child.parent === parent) {
       parent.endViewTransition(child)
@@ -191,6 +225,7 @@ class PortalView(
     index: Int,
   ) {
     if (child.parent == null && child.isAttachedToWindow) {
+      logAttachDecision(this, hostName, child, true)
       attachDetachedView(child, index)
     } else if (isTeleported) {
       val host = PortalRegistry.getHost(hostName)
@@ -204,6 +239,7 @@ class PortalView(
         }
       }
     } else {
+      logAttachDecision(this, hostName, child, false)
       super.addView(child, index)
     }
   }
