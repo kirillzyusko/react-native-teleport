@@ -255,6 +255,16 @@ class PortalView(
   // endregion
 
   // region Lifecycle
+  override fun onAttachedToWindow() {
+    super.onAttachedToWindow()
+    layoutStateController.updateIfNeeded(hostName, PortalRegistry.getHost(hostName))
+  }
+
+  override fun onDetachedFromWindow() {
+    layoutStateController.resetIfNeeded()
+    super.onDetachedFromWindow()
+  }
+
   override fun onLayout(
     changed: Boolean,
     left: Int,
@@ -265,7 +275,6 @@ class PortalView(
     super.onLayout(changed, left, top, right, bottom)
     layoutStateController.updateIfNeeded(hostName, PortalRegistry.getHost(hostName))
   }
-
   // endregion
 
   // region Accessibility
