@@ -260,6 +260,11 @@ class PortalView(
     layoutStateController.updateIfNeeded(hostName, PortalRegistry.getHost(hostName))
   }
 
+  override fun onDetachedFromWindow() {
+    layoutStateController.resetIfNeeded()
+    super.onDetachedFromWindow()
+  }
+
   override fun onLayout(
     changed: Boolean,
     left: Int,
