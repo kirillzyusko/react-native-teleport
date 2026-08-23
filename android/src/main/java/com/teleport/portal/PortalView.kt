@@ -275,7 +275,6 @@ class PortalView(
     super.onLayout(changed, left, top, right, bottom)
     layoutStateController.updateIfNeeded(hostName, PortalRegistry.getHost(hostName))
   }
-
   // endregion
 
   // region Accessibility
