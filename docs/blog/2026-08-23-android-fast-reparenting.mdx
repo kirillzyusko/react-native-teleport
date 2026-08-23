@@ -15,7 +15,7 @@ keywords:
   ]
 ---
 
-`react-native-teleport` **1.2.0** is just around the corner. This release focuses on one major improvement: a reworked reparenting mechanism on Android.
+`react-native-teleport` **1.2.0** is just around the corner. This release focuses on one major improvement: a **reworked reparenting** mechanism on **Android**.
 
 With the new fast path, you should see fewer - and in most cases no - empty frames while teleporting views. The difference is especially noticeable for surface-backed content such as videos and maps.
 
@@ -36,6 +36,15 @@ In 1.2.0, Teleport can move an already attached view using Android's lightweight
 The view is removed from one parent's child list and inserted into the other **synchronously, without leaving the Android window**. This keeps its rendering resources alive and lets the compositor continue displaying the previously submitted frame throughout the move.
 
 In practice, teleporting videos, maps, and other surface-backed views should now feel much more seamless.
+
+import Video from "@site/src/components/Video";
+
+<Video
+  aria-label="Comparison of regular and fast Android reparenting"
+  src="/video/fast-reparenting.mp4"
+/>
+
+> **Before (left):** regular reparenting · **After (right):** the new fast path
 
 ## Safe by default
 
