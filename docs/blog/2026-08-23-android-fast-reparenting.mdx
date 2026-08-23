@@ -43,18 +43,20 @@ import Video from "@site/src/components/Video";
 <ComparisonTable
   left={
     <Video
+      width={50}
       aria-label="Android teleportation with regular reparenting"
       src="/video/fast-reparenting-before.mp4"
     />
   }
   right={
     <Video
+      width={51}
       aria-label="Android teleportation with the fast reparenting path"
       src="/video/fast-reparenting-after.mp4"
     />
   }
-  leftText={<strong>Before: regular reparenting</strong>}
-  rightText={<strong>After: the new fast path</strong>}
+  leftText={<i>Video is flickering while teleporting</i>}
+  rightText={<i>Video gets teleported without flickering</i>}
 />
 
 ## Safe by default
