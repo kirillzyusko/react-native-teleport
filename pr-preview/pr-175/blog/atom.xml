@@ -13,7 +13,7 @@
         <link href="https://kirillzyusko.github.io/react-native-teleport/pr-preview/pr-175/blog/1-2-0-android-fast-reparenting"/>
         <updated>2026-08-23T00:00:00.000Z</updated>
         <summary type="html"><![CDATA[react-native-teleport 1.2.0 is just around the corner. This release focuses on one major improvement: a reworked reparenting mechanism on Android.]]></summary>
-        <content type="html"><![CDATA[<p><code>react-native-teleport</code> <strong>1.2.0</strong> is just around the corner. This release focuses on one major improvement: a reworked reparenting mechanism on Android.</p>
+        <content type="html"><![CDATA[<p><code>react-native-teleport</code> <strong>1.2.0</strong> is just around the corner. This release focuses on one major improvement: a <strong>reworked reparenting</strong> mechanism on <strong>Android</strong>.</p>
 <p>With the new fast path, you should see fewer - and in most cases no - empty frames while teleporting views. The difference is especially noticeable for surface-backed content such as videos and maps.</p>
 <h2 class="anchor anchorWithStickyNavbar_LWe7" id="why-did-empty-frames-appear">Why did empty frames appear?<a href="https://kirillzyusko.github.io/react-native-teleport/pr-preview/pr-175/blog/1-2-0-android-fast-reparenting#why-did-empty-frames-appear" class="hash-link" aria-label="Direct link to Why did empty frames appear?" title="Direct link to Why did empty frames appear?">​</a></h2>
 <p>Teleport moves an existing native view between parents without remounting the React component. On Android, that move previously used the regular <code>removeView()</code> and <code>addView()</code> APIs.</p>
@@ -23,6 +23,11 @@
 <p>In 1.2.0, Teleport can move an already attached view using Android's lightweight <code>detachViewFromParent()</code> and <code>attachViewToParent()</code> APIs.</p>
 <p>The view is removed from one parent's child list and inserted into the other <strong>synchronously, without leaving the Android window</strong>. This keeps its rendering resources alive and lets the compositor continue displaying the previously submitted frame throughout the move.</p>
 <p>In practice, teleporting videos, maps, and other surface-backed views should now feel much more seamless.</p>
+<!-- -->
+<div class="center video"><video autoplay="" loop="" muted="" playsinline="" height="100%" src="/react-native-teleport/pr-preview/pr-175/video/fast-reparenting.mp4" width="100%" aria-label="Comparison of regular and fast Android reparenting"></video></div>
+<blockquote>
+<p><strong>Before (left):</strong> regular reparenting · <strong>After (right):</strong> the new fast path</p>
+</blockquote>
 <h2 class="anchor anchorWithStickyNavbar_LWe7" id="safe-by-default">Safe by default<a href="https://kirillzyusko.github.io/react-native-teleport/pr-preview/pr-175/blog/1-2-0-android-fast-reparenting#safe-by-default" class="hash-link" aria-label="Direct link to Safe by default" title="Direct link to Safe by default">​</a></h2>
 <p>The fast path is used only when Teleport can safely preserve the view's window attachment - for example, when both parents belong to the same Android window and no active focus or layout transition requires the full detach lifecycle.</p>
 <p>When those conditions are not met, Teleport automatically falls back to the existing <code>removeView()</code> and <code>addView()</code> behavior. There is no new API or configuration to adopt: the optimization happens internally.</p>
