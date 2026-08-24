@@ -81,7 +81,8 @@
     "nostats",
     "vsync",
     "rawvideo",
-    "pblack"
+    "pblack",
+    "teleporting"
   ],
   "ignorePaths": [
     "node_modules",
