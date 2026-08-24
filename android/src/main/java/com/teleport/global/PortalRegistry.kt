@@ -27,6 +27,15 @@ object PortalRegistry {
     }
   }
 
+  fun notifyHostAvailabilityChanged(
+    name: String,
+    view: PortalHostView,
+  ) {
+    if (hosts[name]?.get() === view) {
+      notifySubscribers(name)
+    }
+  }
+
   private fun notifySubscribers(name: String) {
     pendingPortals[name]?.let { portals ->
       val iterator = portals.iterator()
@@ -47,7 +56,7 @@ object PortalRegistry {
     }
   }
 
-  fun getHost(name: String?): PortalHostView? = hosts[name]?.get()
+  fun getAttachedHost(name: String?): PortalHostView? = hosts[name]?.get()?.takeIf { it.isAttachedToWindow }
 
   fun registerPendingPortal(
     hostName: String,

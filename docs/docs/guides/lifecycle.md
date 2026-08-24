@@ -32,6 +32,8 @@ Given a fixed configuration that doesn't change over time, this is where childre
 
 The "render locally as fallback" rule means a `Portal` is never a black hole - children are always attached to a live view tree, even if the host is missing.
 
+On native platforms, a mounted host is used as a physical destination only after its view is attached to a window. The native view may be registered shortly before that happens; during that interval, children stay local and migrate when attachment completes.
+
 :::tip Conditionally rendering when no host exists
 
 If you'd rather render _nothing_ (or a different UI) while the host is missing instead of falling back locally, use the [`usePortal`](../api/hooks/use-portal) hook and read its `isHostAvailable` flag:
