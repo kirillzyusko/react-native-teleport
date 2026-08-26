@@ -34,7 +34,7 @@ This library brings **true native portals** to React Native:
 
 ✅ The component stays in the **original React tree** → contexts & state are preserved.  
 ✅ The view is physically moved in the **native view hierarchy** → correct layout, z-order & performance.  
-✅ Works across **iOS, Android, and Web**.  
+✅ Core portal and re-parenting APIs work across **iOS, Android, and Web**.\
 ✅ Supports not only portals but also **re-parenting (teleport)**: move an existing view without unmounting it.
 
 You can think of it as:
@@ -43,20 +43,19 @@ You can think of it as:
 
 ## Comparison
 
-|                                                         | `react-native-teleport`        | `@gorhom/portal` |
-| ------------------------------------------------------- | ------------------------------ | ---------------- |
-| Render local component in a different place in the tree | ✅                             | ✅               |
-| Support multiple hosts/portals                          | ✅                             | ✅               |
-| Native implementation                                   | ✅                             | ❌               |
-| Keeps React tree continuity                             | ✅                             | ❌               |
-| Preserves React context                                 | ✅                             | ❌               |
-| Move views without losing state (teleport)              | ✅                             | ❌               |
-| Mirroring <sup><small>1</small></sup>                   | 🟠 <sup><small>2</small></sup> | ❌               |
+|                                                         | `react-native-teleport` | `@gorhom/portal` |
+| ------------------------------------------------------- | ----------------------- | ---------------- |
+| Render local component in a different place in the tree | ✅                      | ✅               |
+| Support multiple hosts/portals                          | ✅                      | ✅               |
+| Native implementation                                   | ✅                      | ❌               |
+| Keeps React tree continuity                             | ✅                      | ❌               |
+| Preserves React context                                 | ✅                      | ❌               |
+| Move views without losing state (teleport)              | ✅                      | ❌               |
+| [Mirroring](./api/components/mirror) [^1]               | ✅ [^2]                 | ❌               |
 
-> <sup>1</sup> create a live copy of a view elsewhere in the tree (similar to a
-> real-time snapshot).
+[^1]: Create a live copy of a view elsewhere in the tree, similar to a real-time snapshot.
 
-> <sup>2</sup> Is planned to be added in the future
+[^2]: `Mirror` is currently available on iOS and Android. Its Web implementation renders `null`.
 
 ---
 

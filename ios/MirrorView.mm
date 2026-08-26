@@ -8,6 +8,7 @@
 #import "MirrorView.h"
 #import "PortalRegistry.h"
 
+#import <QuartzCore/QuartzCore.h>
 #import <objc/message.h>
 #import <react/renderer/components/TeleportViewSpec/EventEmitters.h>
 #import <react/renderer/components/TeleportViewSpec/Props.h>
@@ -20,14 +21,9 @@ using namespace facebook::react;
 
 @interface MirrorView () <RCTMirrorViewViewProtocol>
 
-@property (nonatomic, strong) NSString *registeredName;
+@property (nonatomic, copy, nullable) NSString *registeredName;
+@property (nonatomic, weak, nullable) UIView *sourceView;
 @property (nonatomic, strong, nullable) UIView *portalView;
-@property (nonatomic, assign) NSInteger refreshGeneration;
-@property (nonatomic, assign) CGRect lastBounds;
-@property (nonatomic, assign) BOOL hidesSourceView;
-@property (nonatomic, assign) BOOL matchesAlpha;
-@property (nonatomic, assign) BOOL matchesTransform;
-@property (nonatomic, assign) BOOL matchesPosition;
 
 @end
 
@@ -49,11 +45,6 @@ using namespace facebook::react;
     content.autoresizingMask = UIViewAutoresizingFlexibleWidth | UIViewAutoresizingFlexibleHeight;
     content.userInteractionEnabled = NO;
 
-    self.portalView = [self createPortalViewWithFrame:content.bounds];
-    if (self.portalView) {
-      [content addSubview:self.portalView];
-    }
-
     self.contentView = content;
     self.userInteractionEnabled = NO;
   }
@@ -68,29 +59,12 @@ using namespace facebook::react;
     return nil;
   }
 
-  UIView *portalView = [[portalViewClass alloc] initWithFrame:frame];
-  portalView.autoresizingMask = UIViewAutoresizingFlexibleWidth | UIViewAutoresizingFlexibleHeight;
-  portalView.userInteractionEnabled = NO;
-
-  return portalView;
-}
-
-- (nullable UIView *)createPortalViewWithSourceView:(UIView *)sourceView frame:(CGRect)frame
-{
-  Class portalViewClass = NSClassFromString(@"_UIPortalView");
-  if (!portalViewClass || ![portalViewClass isSubclassOfClass:[UIView class]]) {
+  SEL sourceSelector = NSSelectorFromString(@"setSourceView:");
+  if (![portalViewClass instancesRespondToSelector:sourceSelector]) {
     return nil;
   }
 
-  UIView *portalView = nil;
-  SEL initSelector = NSSelectorFromString(@"initWithSourceView:");
-  if ([portalViewClass instancesRespondToSelector:initSelector]) {
-    portalView = ((UIView * (*)(id, SEL, UIView *)) objc_msgSend)(
-        [portalViewClass alloc], initSelector, sourceView);
-  } else {
-    portalView = [[portalViewClass alloc] initWithFrame:frame];
-  }
-
+  UIView *portalView = [[portalViewClass alloc] initWithFrame:frame];
   portalView.frame = frame;
   portalView.autoresizingMask = UIViewAutoresizingFlexibleWidth | UIViewAutoresizingFlexibleHeight;
   portalView.userInteractionEnabled = NO;
@@ -98,79 +72,134 @@ using namespace facebook::react;
   return portalView;
 }
 
-- (void)installFreshPortalViewWithSourceView:(UIView *)sourceView
+- (void)setPortalBool:(BOOL)value
+         selectorName:(NSString *)selectorName
+           portalView:(UIView *)portalView
 {
-  [self.portalView removeFromSuperview];
-  self.portalView = [self createPortalViewWithSourceView:sourceView frame:self.bounds];
-
-  if (!self.portalView) {
-    return;
+  SEL selector = NSSelectorFromString(selectorName);
+  if ([portalView respondsToSelector:selector]) {
+    ((void (*)(id, SEL, BOOL))objc_msgSend)(portalView, selector, value);
   }
-
-  [self.contentView addSubview:self.portalView];
-  [self setPortalBool:self.hidesSourceView selectorName:@"setHidesSourceView:"];
-  [self setPortalBool:self.matchesAlpha selectorName:@"setMatchesAlpha:"];
-  [self setPortalBool:self.matchesTransform selectorName:@"setMatchesTransform:"];
-  [self setPortalBool:self.matchesPosition selectorName:@"setMatchesPosition:"];
 }
 
-- (void)setSourceView:(nullable UIView *)sourceView
+- (void)setSourceView:(nullable UIView *)sourceView onPortalView:(UIView *)portalView
 {
-  if (!self.portalView) {
-    return;
-  }
-
   SEL selector = NSSelectorFromString(@"setSourceView:");
-  if ([self.portalView respondsToSelector:selector]) {
-    ((void (*)(id, SEL, UIView *))objc_msgSend)(self.portalView, selector, sourceView);
+  if ([portalView respondsToSelector:selector]) {
+    ((void (*)(id, SEL, UIView *))objc_msgSend)(portalView, selector, sourceView);
   }
 
   SEL updateSelector = NSSelectorFromString(@"_updateSourceLayer");
-  if ([self.portalView respondsToSelector:updateSelector]) {
-    ((void (*)(id, SEL))objc_msgSend)(self.portalView, updateSelector);
+  if ([portalView respondsToSelector:updateSelector]) {
+    ((void (*)(id, SEL))objc_msgSend)(portalView, updateSelector);
   }
 }
 
-- (void)setPortalBool:(BOOL)value selectorName:(NSString *)selectorName
+- (void)configurePortalView:(UIView *)portalView
 {
-  if (!self.portalView) {
+  // Mirror has one cross-platform contract. The private UIKit implementation
+  // is deliberately kept internal and cannot leak its behavior switches into
+  // the public React Native API.
+  [self setPortalBool:NO selectorName:@"setHidesSourceView:" portalView:portalView];
+  [self setPortalBool:NO selectorName:@"setMatchesAlpha:" portalView:portalView];
+  [self setPortalBool:NO selectorName:@"setMatchesTransform:" portalView:portalView];
+  [self setPortalBool:NO selectorName:@"setMatchesPosition:" portalView:portalView];
+}
+
+- (BOOL)isDrawableSourceView:(UIView *)sourceView
+{
+  return sourceView && CGRectGetWidth(sourceView.bounds) > 0 &&
+      CGRectGetHeight(sourceView.bounds) > 0;
+}
+
+- (void)installPortalViewWithSourceView:(UIView *)sourceView
+{
+  UIView *replacement = [self createPortalViewWithFrame:self.contentView.bounds];
+  if (!replacement) {
     return;
   }
 
-  SEL selector = NSSelectorFromString(selectorName);
-  if ([self.portalView respondsToSelector:selector]) {
-    ((void (*)(id, SEL, BOOL))objc_msgSend)(self.portalView, selector, value);
+  // Configure source visibility semantics before associating the source. The
+  // private initWithSourceView: path can transiently apply its default of
+  // hiding the source before setHidesSourceView:NO takes effect.
+  [self configurePortalView:replacement];
+  [self setSourceView:sourceView onPortalView:replacement];
+
+  UIView *previous = self.portalView;
+
+  // Put the replacement above the previous portal first. If UIKit needs a
+  // display transaction to prepare the new source layer, the old pixels stay
+  // visible underneath instead of exposing an empty frame.
+  [CATransaction begin];
+  [CATransaction setDisableActions:YES];
+  [self.contentView addSubview:replacement];
+  [replacement setNeedsLayout];
+  [replacement layoutIfNeeded];
+
+  __weak MirrorView *weakSelf = self;
+  [CATransaction setCompletionBlock:^{
+    MirrorView *strongSelf = weakSelf;
+    if (strongSelf && previous != strongSelf.portalView) {
+      // A transaction completion confirms the layer-tree commit, not that a
+      // private portal has necessarily presented its first pixels. Keep the
+      // previous portal underneath for two display frames as a transparent
+      // fallback while the replacement becomes drawable.
+      dispatch_after(
+          dispatch_time(DISPATCH_TIME_NOW, (int64_t)(32 * NSEC_PER_MSEC)),
+          dispatch_get_main_queue(),
+          ^{
+            MirrorView *currentSelf = weakSelf;
+            if (!currentSelf || previous != currentSelf.portalView) {
+              [previous removeFromSuperview];
+            }
+          });
+    }
+  }];
+
+  self.portalView = replacement;
+  self.sourceView = sourceView;
+  [CATransaction commit];
+}
+
+- (void)clearCurrentSource
+{
+  if (self.portalView) {
+    [self setSourceView:nil onPortalView:self.portalView];
   }
+  self.sourceView = nil;
+}
+
+- (void)removeAllPortalViews
+{
+  Class portalViewClass = NSClassFromString(@"_UIPortalView");
+  for (UIView *subview in [self.contentView.subviews copy]) {
+    if (portalViewClass && [subview isKindOfClass:portalViewClass]) {
+      [self setSourceView:nil onPortalView:subview];
+      [subview removeFromSuperview];
+    }
+  }
+  self.portalView = nil;
 }
 
 - (void)refreshSource
 {
-  NSString *registeredName = [self.registeredName copy];
-  self.refreshGeneration += 1;
-  NSInteger generation = self.refreshGeneration;
-
-  NSArray<NSNumber *> *delays = @[ @0, @16, @80, @200, @500 ];
-  for (NSNumber *delay in delays) {
-    dispatch_after(
-        dispatch_time(DISPATCH_TIME_NOW, (int64_t)(delay.doubleValue * NSEC_PER_MSEC)),
-        dispatch_get_main_queue(),
-        ^{
-          if (self.refreshGeneration != generation ||
-              ![self.registeredName isEqualToString:registeredName]) {
-            return;
-          }
-
-          UIView *sourceView =
-              [[PortalRegistry sharedInstance] getPortalSourceWithName:registeredName];
-          if (!sourceView) {
-            [self setSourceView:nil];
-            return;
-          }
-
-          [self installFreshPortalViewWithSourceView:sourceView];
-          [self setSourceView:sourceView];
-        });
+  if (!self.registeredName) {
+    [self clearCurrentSource];
+    return;
   }
+
+  UIView *sourceView =
+      [[PortalRegistry sharedInstance] getPortalSourceWithName:self.registeredName];
+  if (![self isDrawableSourceView:sourceView]) {
+    [self clearCurrentSource];
+    return;
+  }
+
+  if (sourceView == self.sourceView && self.portalView) {
+    return;
+  }
+
+  [self installPortalViewWithSourceView:sourceView];
 }
 
 - (void)onSourceChanged
@@ -191,12 +220,7 @@ using namespace facebook::react;
 {
   [super layoutSubviews];
   self.contentView.frame = self.bounds;
-  self.portalView.frame = self.bounds;
-
-  if (self.window && !CGRectEqualToRect(self.bounds, self.lastBounds)) {
-    self.lastBounds = self.bounds;
-    [self refreshSource];
-  }
+  self.portalView.frame = self.contentView.bounds;
 }
 
 - (void)updateLayoutMetrics:(const LayoutMetrics &)layoutMetrics
@@ -204,12 +228,7 @@ using namespace facebook::react;
 {
   [super updateLayoutMetrics:layoutMetrics oldLayoutMetrics:oldLayoutMetrics];
   self.contentView.frame = self.bounds;
-  self.portalView.frame = self.bounds;
-
-  if (self.window && !CGRectEqualToRect(self.bounds, self.lastBounds)) {
-    self.lastBounds = self.bounds;
-    [self refreshSource];
-  }
+  self.portalView.frame = self.contentView.bounds;
 }
 
 - (void)updateProps:(Props::Shared const &)props oldProps:(Props::Shared const &)oldProps
@@ -218,11 +237,6 @@ using namespace facebook::react;
 
   std::string newNameStr = newViewProps.name;
   NSString *newName = newNameStr.empty() ? nil : [NSString stringWithUTF8String:newNameStr.c_str()];
-
-  self.hidesSourceView = newViewProps.hidesSourceView;
-  self.matchesAlpha = newViewProps.matchesAlpha;
-  self.matchesTransform = newViewProps.matchesTransform;
-  self.matchesPosition = newViewProps.matchesPosition;
 
   if (![self.registeredName isEqualToString:newName]) {
     if (self.registeredName) {
@@ -238,11 +252,6 @@ using namespace facebook::react;
     [self refreshSource];
   }
 
-  [self setPortalBool:self.hidesSourceView selectorName:@"setHidesSourceView:"];
-  [self setPortalBool:self.matchesAlpha selectorName:@"setMatchesAlpha:"];
-  [self setPortalBool:self.matchesTransform selectorName:@"setMatchesTransform:"];
-  [self setPortalBool:self.matchesPosition selectorName:@"setMatchesPosition:"];
-
   [super updateProps:props oldProps:oldProps];
 }
 
@@ -250,20 +259,17 @@ using namespace facebook::react;
 {
   [super prepareForRecycle];
 
-  self.refreshGeneration += 1;
-
   if (self.registeredName) {
     [[PortalRegistry sharedInstance] unregisterPendingMirror:self withName:self.registeredName];
   }
 
-  [self setSourceView:nil];
+  [self clearCurrentSource];
+  [self removeAllPortalViews];
   self.registeredName = nil;
 }
 
 - (void)dealloc
 {
-  self.refreshGeneration += 1;
-
   if (self.registeredName) {
     [[PortalRegistry sharedInstance] unregisterPendingMirror:self withName:self.registeredName];
   }

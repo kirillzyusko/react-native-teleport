@@ -18,8 +18,4 @@ export type PortalProps = {
 export type MirrorProps = {
   name: string;
   style?: StyleProp<ViewStyle>;
-  hidesSourceView?: boolean;
-  matchesAlpha?: boolean;
-  matchesTransform?: boolean;
-  matchesPosition?: boolean;
 };

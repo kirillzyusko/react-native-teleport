@@ -147,7 +147,7 @@ using namespace facebook::react;
 
 - (void)notifyMirrorsIfRegistered
 {
-  if (self.registeredName) {
+  if (self.registeredName && self.window) {
     [[PortalRegistry sharedInstance] registerPortalSource:self.contentView
                                                  withName:self.registeredName];
   }
@@ -156,7 +156,12 @@ using namespace facebook::react;
 - (void)didMoveToWindow
 {
   [super didMoveToWindow];
-  [self notifyMirrorsIfRegistered];
+  if (self.window) {
+    [self notifyMirrorsIfRegistered];
+  } else if (self.registeredName) {
+    [[PortalRegistry sharedInstance] unregisterPortalSourceWithName:self.registeredName
+                                                             source:self.contentView];
+  }
 }
 
 - (void)layoutSubviews
@@ -194,7 +199,7 @@ using namespace facebook::react;
 
     self.registeredName = newName;
 
-    if (newName) {
+    if (newName && self.window) {
       [[PortalRegistry sharedInstance] registerPortalSource:self.contentView withName:newName];
     }
   }

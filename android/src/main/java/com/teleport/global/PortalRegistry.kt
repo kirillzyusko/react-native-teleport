@@ -109,6 +109,7 @@ object PortalRegistry {
     mirror: MirrorView,
   ) {
     val mirrors = pendingMirrors.getOrPut(name) { mutableListOf() }
+    mirrors.removeAll { it.get() == null || it.get() == mirror }
     mirrors.add(WeakReference(mirror))
   }
 

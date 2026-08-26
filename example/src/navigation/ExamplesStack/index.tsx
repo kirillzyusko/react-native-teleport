@@ -30,6 +30,9 @@ import PhotoGallery from "../../screens/PhotoGallery/PhotoGallery";
 import PhotoDetail from "../../screens/PhotoGallery/PhotoDetail";
 import Mirror from "../../screens/Mirror";
 import MirrorPerformance from "../../screens/MirrorPerformance";
+import MirrorImageGallery from "../../screens/MirrorImageGallery";
+import MirrorPhotoDetail from "../../screens/MirrorImageGallery/MirrorPhotoDetail";
+import MirrorSemantics from "../../screens/MirrorSemantics";
 import type { Photo } from "../../screens/PhotoGallery/photos";
 import Orientation from "../../screens/Orientation";
 import ScaledHost from "../../screens/ScaledHost";
@@ -68,6 +71,9 @@ export type ExamplesStackParamList = {
   [ScreenNames.SCALED_HOST]: undefined;
   [ScreenNames.MIRROR]: undefined;
   [ScreenNames.MIRROR_PERFORMANCE]: undefined;
+  [ScreenNames.MIRROR_IMAGE_GALLERY]: undefined;
+  [ScreenNames.MIRROR_IMAGE_DETAIL]: { photoId: string };
+  [ScreenNames.MIRROR_SEMANTICS]: undefined;
 };
 
 const Stack = createNativeStackNavigator<ExamplesStackParamList>();
@@ -147,6 +153,18 @@ const options = {
   },
   [ScreenNames.MIRROR_PERFORMANCE]: {
     title: "Mirror Performance",
+  },
+  [ScreenNames.MIRROR_IMAGE_GALLERY]: {
+    headerShown: false,
+  },
+  [ScreenNames.MIRROR_IMAGE_DETAIL]: {
+    animation: "none" as const,
+    gestureEnabled: false,
+    headerShown: false,
+    presentation: "containedTransparentModal" as const,
+  },
+  [ScreenNames.MIRROR_SEMANTICS]: {
+    title: "Mirror Semantics",
   },
 };
 
@@ -286,6 +304,21 @@ const ExamplesStack = () => (
       component={MirrorPerformance}
       name={ScreenNames.MIRROR_PERFORMANCE}
       options={options[ScreenNames.MIRROR_PERFORMANCE]}
+    />
+    <Stack.Screen
+      component={MirrorImageGallery}
+      name={ScreenNames.MIRROR_IMAGE_GALLERY}
+      options={options[ScreenNames.MIRROR_IMAGE_GALLERY]}
+    />
+    <Stack.Screen
+      component={MirrorPhotoDetail}
+      name={ScreenNames.MIRROR_IMAGE_DETAIL}
+      options={options[ScreenNames.MIRROR_IMAGE_DETAIL]}
+    />
+    <Stack.Screen
+      component={MirrorSemantics}
+      name={ScreenNames.MIRROR_SEMANTICS}
+      options={options[ScreenNames.MIRROR_SEMANTICS]}
     />
   </Stack.Navigator>
 );

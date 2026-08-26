@@ -1,11 +1,5 @@
-import { useCallback, useState } from "react";
-import {
-  Pressable,
-  ScrollView,
-  StyleSheet,
-  Text,
-  View,
-} from "react-native";
+import { useState } from "react";
+import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import LottieView from "lottie-react-native";
 import { Mirror, Portal } from "react-native-teleport";
 
@@ -38,12 +32,7 @@ function MirrorGrid() {
   return (
     <View style={styles.grid}>
       <Portal name="perf-lottie" style={styles.cell}>
-        <LottieView
-          source={lottieSource}
-          style={styles.cell}
-          autoPlay
-          loop
-        />
+        <LottieView source={lottieSource} style={styles.cell} autoPlay loop />
       </Portal>
 
       {Array.from({ length: TOTAL - 1 }, (_, i) => (
@@ -56,16 +45,8 @@ function MirrorGrid() {
 export default function MirrorPerformance() {
   const [mode, setMode] = useState<Mode>("mirror");
 
-  const toggle = useCallback(
-    () => setMode((m) => (m === "lottie" ? "mirror" : "lottie")),
-    [],
-  );
-
   return (
-    <ScrollView
-      style={styles.scroll}
-      contentContainerStyle={styles.container}
-    >
+    <ScrollView style={styles.scroll} contentContainerStyle={styles.container}>
       <Text style={styles.title}>Mirror Performance</Text>
       <Text style={styles.subtitle}>
         {mode === "lottie"
@@ -79,10 +60,7 @@ export default function MirrorPerformance() {
           onPress={() => setMode("lottie")}
         >
           <Text
-            style={[
-              styles.tabText,
-              mode === "lottie" && styles.tabTextActive,
-            ]}
+            style={[styles.tabText, mode === "lottie" && styles.tabTextActive]}
           >
             {TOTAL} Lottie
           </Text>
@@ -92,10 +70,7 @@ export default function MirrorPerformance() {
           onPress={() => setMode("mirror")}
         >
           <Text
-            style={[
-              styles.tabText,
-              mode === "mirror" && styles.tabTextActive,
-            ]}
+            style={[styles.tabText, mode === "mirror" && styles.tabTextActive]}
           >
             1 + {TOTAL - 1} Mirror
           </Text>

@@ -129,4 +129,16 @@ export const examples: Example[] = [
     info: ScreenNames.MIRROR_PERFORMANCE,
     icons: "🪞⚡",
   },
+  {
+    title: "Mirror Image Gallery",
+    testID: "mirror_image_gallery",
+    info: ScreenNames.MIRROR_IMAGE_GALLERY,
+    icons: "🪞📸",
+  },
+  {
+    title: "Mirror Semantics",
+    testID: "mirror_semantics",
+    info: ScreenNames.MIRROR_SEMANTICS,
+    icons: "🪞🧩",
+  },
 ];

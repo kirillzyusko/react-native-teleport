@@ -34,38 +34,6 @@ class MirrorViewManager :
     (view as? MirrorView)?.setName(name)
   }
 
-  @ReactProp(name = "hidesSourceView", defaultBoolean = false)
-  override fun setHidesSourceView(
-    view: ReactViewGroup?,
-    value: Boolean,
-  ) {
-    (view as? MirrorView)?.setHidesSourceView(value)
-  }
-
-  @ReactProp(name = "matchesAlpha", defaultBoolean = true)
-  override fun setMatchesAlpha(
-    view: ReactViewGroup?,
-    value: Boolean,
-  ) {
-    (view as? MirrorView)?.setMatchesAlpha(value)
-  }
-
-  @ReactProp(name = "matchesTransform", defaultBoolean = false)
-  override fun setMatchesTransform(
-    view: ReactViewGroup?,
-    value: Boolean,
-  ) {
-    (view as? MirrorView)?.setMatchesTransform(value)
-  }
-
-  @ReactProp(name = "matchesPosition", defaultBoolean = false)
-  override fun setMatchesPosition(
-    view: ReactViewGroup?,
-    value: Boolean,
-  ) {
-    (view as? MirrorView)?.setMatchesPosition(value)
-  }
-
   companion object {
     const val NAME = "MirrorView"
   }

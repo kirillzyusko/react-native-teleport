@@ -106,6 +106,15 @@
 - (void)registerPortalSource:(UIView *)source withName:(NSString *)name
 {
   if (name && source) {
+    UIView *registered = [self.portalSources objectForKey:name];
+    if (registered == source) {
+      // A source can register before Fabric assigns non-zero bounds. Notify
+      // again after later layout passes so Mirror can resolve synchronously
+      // without native retry timers.
+      [self notifyMirrorsForPortalSourceName:name];
+      return;
+    }
+
     [self.portalSources setObject:source forKey:name];
     [self notifyMirrorsForPortalSourceName:name];
   }
@@ -227,6 +236,14 @@
     self.pendingMirrors[name] = mirrors;
   }
 
+  [mirrors compact];
+  for (NSInteger i = (NSInteger)mirrors.count - 1; i >= 0; i--) {
+    MirrorView *existingMirror = (__bridge MirrorView *)[mirrors pointerAtIndex:(NSUInteger)i];
+    if (existingMirror == mirror) {
+      [mirrors removePointerAtIndex:(NSUInteger)i];
+    }
+  }
+  [mirrors compact];
   [mirrors addPointer:(__bridge void *)mirror];
 }
 

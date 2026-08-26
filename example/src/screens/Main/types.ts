@@ -21,7 +21,9 @@ export type ExampleScreen =
   | ScreenNames.ORIENTATION
   | ScreenNames.SCALED_HOST
   | ScreenNames.MIRROR
-  | ScreenNames.MIRROR_PERFORMANCE;
+  | ScreenNames.MIRROR_PERFORMANCE
+  | ScreenNames.MIRROR_IMAGE_GALLERY
+  | ScreenNames.MIRROR_SEMANTICS;
 
 export type Example = {
   testID: string;
