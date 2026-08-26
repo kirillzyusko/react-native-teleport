@@ -6,6 +6,8 @@ import com.facebook.react.uimanager.StateWrapper
 interface PortalViewLifecycle {
   fun setStateWrapper(wrapper: StateWrapper?)
 
+  fun setName(name: String?)
+
   fun setHostName(name: String?)
 
   fun cleanup()
