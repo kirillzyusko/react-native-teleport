@@ -164,6 +164,7 @@ using namespace facebook::react;
   [super layoutSubviews];
   self.contentView.frame = self.bounds;
   [self notifyMirrorsIfRegistered];
+  [self updatePortalLayoutStateIfNeeded];
 }
 
 - (void)updateLayoutMetrics:(const LayoutMetrics &)layoutMetrics
@@ -288,12 +289,6 @@ using namespace facebook::react;
 
 - (void)onHostLayoutChanged
 {
-  [self updatePortalLayoutStateIfNeeded];
-}
-
-- (void)layoutSubviews
-{
-  [super layoutSubviews];
   [self updatePortalLayoutStateIfNeeded];
 }
 
