@@ -124,6 +124,12 @@ export const examples: Example[] = [
     icons: "🪞",
   },
   {
+    title: "Mirror Video Surfaces",
+    testID: "mirror_video",
+    info: ScreenNames.MIRROR_VIDEO,
+    icons: "🪞🎬",
+  },
+  {
     title: "Mirror Performance",
     testID: "mirror_performance",
     info: ScreenNames.MIRROR_PERFORMANCE,

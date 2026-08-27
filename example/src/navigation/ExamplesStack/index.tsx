@@ -29,6 +29,7 @@ import PersistedPortal from "../../screens/PersistedPortal";
 import PhotoGallery from "../../screens/PhotoGallery/PhotoGallery";
 import PhotoDetail from "../../screens/PhotoGallery/PhotoDetail";
 import Mirror from "../../screens/Mirror";
+import MirrorVideo from "../../screens/MirrorVideo";
 import MirrorPerformance from "../../screens/MirrorPerformance";
 import MirrorImageGallery from "../../screens/MirrorImageGallery";
 import MirrorPhotoDetail from "../../screens/MirrorImageGallery/MirrorPhotoDetail";
@@ -70,6 +71,7 @@ export type ExamplesStackParamList = {
   [ScreenNames.ORIENTATION]: undefined;
   [ScreenNames.SCALED_HOST]: undefined;
   [ScreenNames.MIRROR]: undefined;
+  [ScreenNames.MIRROR_VIDEO]: undefined;
   [ScreenNames.MIRROR_PERFORMANCE]: undefined;
   [ScreenNames.MIRROR_IMAGE_GALLERY]: undefined;
   [ScreenNames.MIRROR_IMAGE_DETAIL]: { photoId: string };
@@ -150,6 +152,9 @@ const options = {
   [ScreenNames.SCALED_HOST]: { title: "Context menu (scaled host)" },
   [ScreenNames.MIRROR]: {
     headerShown: false,
+  },
+  [ScreenNames.MIRROR_VIDEO]: {
+    title: "Mirror Video Surfaces",
   },
   [ScreenNames.MIRROR_PERFORMANCE]: {
     title: "Mirror Performance",
@@ -299,6 +304,11 @@ const ExamplesStack = () => (
       component={Mirror}
       name={ScreenNames.MIRROR}
       options={options[ScreenNames.MIRROR]}
+    />
+    <Stack.Screen
+      component={MirrorVideo}
+      name={ScreenNames.MIRROR_VIDEO}
+      options={options[ScreenNames.MIRROR_VIDEO]}
     />
     <Stack.Screen
       component={MirrorPerformance}
