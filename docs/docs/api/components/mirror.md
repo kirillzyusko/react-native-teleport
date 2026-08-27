@@ -37,6 +37,19 @@ is intentionally not exposed through platform-specific React props.
 
 :::
 
+:::caution Android video surfaces
+
+If the source Portal subtree contains a `SurfaceView`, the Android Mirror stays
+empty and leaves the real source unchanged. A `SurfaceView` owns a separate
+compositor surface, so drawing the View subtree cannot safely duplicate its
+pixels.
+
+Use a `TextureView` when live video must participate in normal View compositing.
+Unlike `SurfaceView`, it is part of the View hierarchy drawn into the Mirror's
+Canvas.
+
+:::
+
 ## Props
 
 ### `name`

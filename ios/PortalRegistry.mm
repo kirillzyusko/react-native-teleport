@@ -236,14 +236,6 @@
     self.pendingMirrors[name] = mirrors;
   }
 
-  [mirrors compact];
-  for (NSInteger i = (NSInteger)mirrors.count - 1; i >= 0; i--) {
-    MirrorView *existingMirror = (__bridge MirrorView *)[mirrors pointerAtIndex:(NSUInteger)i];
-    if (existingMirror == mirror) {
-      [mirrors removePointerAtIndex:(NSUInteger)i];
-    }
-  }
-  [mirrors compact];
   [mirrors addPointer:(__bridge void *)mirror];
 }
 
