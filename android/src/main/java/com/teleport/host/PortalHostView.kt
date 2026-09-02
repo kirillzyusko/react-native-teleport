@@ -77,7 +77,7 @@ class PortalHostView(
     // already-attached portal child into this host.
     post {
       if (isAttachedToWindow && name == attachedName) {
-        PortalRegistry.notifyHostAvailabilityChanged(attachedName, this)
+        PortalRegistry.notifySubscribers(attachedName)
       }
     }
   }
@@ -106,7 +106,7 @@ class PortalHostView(
       // to a sibling that is about to be detached in the same pass.
       Handler(Looper.getMainLooper()).post {
         if (name == detachedName) {
-          PortalRegistry.notifyHostAvailabilityChanged(detachedName, this)
+          PortalRegistry.notifySubscribers(detachedName)
         }
       }
     }

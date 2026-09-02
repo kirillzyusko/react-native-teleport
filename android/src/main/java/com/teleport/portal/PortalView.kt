@@ -38,7 +38,7 @@ class PortalView(
     hostName = name
     name?.let { PortalRegistry.registerPendingPortal(it, this) }
 
-    moveChildrenTo(PortalRegistry.getAttachedHost(name))
+    moveChildrenTo(PortalRegistry.getHost(name))
     layoutStateController.updateIfNeeded(hostName, currentHost)
   }
 
@@ -54,7 +54,7 @@ class PortalView(
 
   // region Host lifecycle callbacks
   internal fun onHostChanged() {
-    moveChildrenTo(PortalRegistry.getAttachedHost(hostName))
+    moveChildrenTo(PortalRegistry.getHost(hostName))
     layoutStateController.updateIfNeeded(hostName, currentHost)
   }
 
