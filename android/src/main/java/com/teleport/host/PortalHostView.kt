@@ -68,6 +68,20 @@ class PortalHostView(
   // endregion
 
   // region Lifecycle
+  override fun onAttachedToWindow() {
+    super.onAttachedToWindow()
+
+    val attachedName = name ?: return
+    // ViewGroup invokes onAttachedToWindow before dispatching attachment to
+    // its children. Wait until that traversal finishes before moving an
+    // already-attached portal child into this host.
+    post {
+      if (isAttachedToWindow && name == attachedName) {
+        PortalRegistry.notifySubscribers(attachedName)
+      }
+    }
+  }
+
   override fun onLayout(
     changed: Boolean,
     left: Int,
@@ -82,7 +96,20 @@ class PortalHostView(
   override fun onDetachedFromWindow() {
     super.onDetachedFromWindow()
 
-    pendingCleanupViewId?.let { cleanupNow(it) }
+    val cleanupViewId = pendingCleanupViewId
+    if (cleanupViewId != null) {
+      cleanupNow(cleanupViewId)
+    } else {
+      val detachedName = name ?: return
+      // The parent may still be dispatching detachment to sibling views.
+      // Resolve the fallback after that traversal so we do not attach a child
+      // to a sibling that is about to be detached in the same pass.
+      post {
+        if (name == detachedName) {
+          PortalRegistry.notifySubscribers(detachedName)
+        }
+      }
+    }
   }
   // endregion
 
