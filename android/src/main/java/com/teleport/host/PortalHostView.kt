@@ -104,7 +104,7 @@ class PortalHostView(
       // The parent may still be dispatching detachment to sibling views.
       // Resolve the fallback after that traversal so we do not attach a child
       // to a sibling that is about to be detached in the same pass.
-      Handler(Looper.getMainLooper()).post {
+      post {
         if (name == detachedName) {
           PortalRegistry.notifySubscribers(detachedName)
         }
