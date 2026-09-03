@@ -19,3 +19,25 @@ appId: teleport.example
     file: ../subflows/go-back.yml
 - assertVisible:
     id: "rich_text_editor"
+
+# Reparent a persistent Portal while its screen-local host is participating in
+# a native-stack removal transition. On Android, react-native-screens keeps the
+# departing subtree in a view transition, which exposes stale parent ownership
+# when the Portal moves to the still-attached app-level overlay host.
+- runFlow:
+    file: ../subflows/open-example.yml
+    env:
+      EXAMPLE_ID: "transition_reparent"
+- tapOn:
+    id: "open-transition-reparent"
+- assertVisible:
+    id: "transition-reparent-screen"
+- assertVisible:
+    text: "Portal card"
+- tapOn:
+    id: "trigger-transition-reparent"
+- waitForAnimationToEnd
+- assertVisible:
+    id: "open-transition-reparent"
+- assertVisible:
+    text: "Portal card"

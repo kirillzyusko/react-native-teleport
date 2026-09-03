@@ -19,7 +19,8 @@ export type ExampleScreen =
   | ScreenNames.PERSISTED_PORTAL
   | ScreenNames.PHOTO_GALLERY
   | ScreenNames.ORIENTATION
-  | ScreenNames.SCALED_HOST;
+  | ScreenNames.SCALED_HOST
+  | ScreenNames.TRANSITION_REPARENT;
 
 export type Example = {
   testID: string;
