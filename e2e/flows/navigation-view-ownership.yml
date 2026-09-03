@@ -25,23 +25,19 @@ appId: teleport.example
 # departing subtree in a view transition, which exposes stale parent ownership
 # when the Portal moves to the still-attached app-level overlay host.
 - runFlow:
-    when:
-      platform: Android
-    commands:
-      - runFlow:
-          file: ../subflows/open-example.yml
-          env:
-            EXAMPLE_ID: "transition_reparent"
-      - tapOn:
-          id: "open-transition-reparent"
-      - assertVisible:
-          id: "transition-reparent-screen"
-      - assertVisible:
-          text: "Portal card"
-      - tapOn:
-          id: "trigger-transition-reparent"
-      - waitForAnimationToEnd
-      - assertVisible:
-          id: "open-transition-reparent"
-      - assertVisible:
-          text: "Portal card"
+    file: ../subflows/open-example.yml
+    env:
+      EXAMPLE_ID: "transition_reparent"
+- tapOn:
+    id: "open-transition-reparent"
+- assertVisible:
+    id: "transition-reparent-screen"
+- assertVisible:
+    text: "Portal card"
+- tapOn:
+    id: "trigger-transition-reparent"
+- waitForAnimationToEnd
+- assertVisible:
+    id: "open-transition-reparent"
+- assertVisible:
+    text: "Portal card"
