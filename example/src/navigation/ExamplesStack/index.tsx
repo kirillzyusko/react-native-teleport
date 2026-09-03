@@ -31,6 +31,7 @@ import PhotoDetail from "../../screens/PhotoGallery/PhotoDetail";
 import type { Photo } from "../../screens/PhotoGallery/photos";
 import Orientation from "../../screens/Orientation";
 import ScaledHost from "../../screens/ScaledHost";
+import TransitionReparent from "../../screens/TransitionReparent";
 
 export type ExamplesStackParamList = {
   [ScreenNames.GESTURE_HANDLER_TOUCHABLE]: undefined;
@@ -64,6 +65,7 @@ export type ExamplesStackParamList = {
   [ScreenNames.PHOTO_DETAIL]: { photo: Photo };
   [ScreenNames.ORIENTATION]: undefined;
   [ScreenNames.SCALED_HOST]: undefined;
+  [ScreenNames.TRANSITION_REPARENT]: undefined;
 };
 
 const Stack = createNativeStackNavigator<ExamplesStackParamList>();
@@ -138,6 +140,7 @@ const options = {
   },
   [ScreenNames.ORIENTATION]: { title: "Orientation" },
   [ScreenNames.SCALED_HOST]: { title: "Context menu (scaled host)" },
+  [ScreenNames.TRANSITION_REPARENT]: { headerShown: false },
 };
 
 const ExamplesStack = () => (
@@ -266,6 +269,11 @@ const ExamplesStack = () => (
       component={ScaledHost}
       name={ScreenNames.SCALED_HOST}
       options={options[ScreenNames.SCALED_HOST]}
+    />
+    <Stack.Screen
+      component={TransitionReparent}
+      name={ScreenNames.TRANSITION_REPARENT}
+      options={options[ScreenNames.TRANSITION_REPARENT]}
     />
   </Stack.Navigator>
 );
