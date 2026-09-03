@@ -8,6 +8,8 @@ abstract class ReparentableReactViewGroup(
   context: Context?,
 ) : ReactViewGroup(context) {
   internal fun detachForReparent(child: View) {
+    endViewTransition(child)
+
     if (child.hasTransientState()) {
       childHasTransientStateChanged(child, false)
     }

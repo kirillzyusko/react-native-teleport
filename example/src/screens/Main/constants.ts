@@ -117,4 +117,10 @@ export const examples: Example[] = [
     info: ScreenNames.SCALED_HOST,
     icons: "📐",
   },
+  {
+    title: "Reparent during native-stack pop",
+    testID: "transition_reparent",
+    info: ScreenNames.TRANSITION_REPARENT,
+    icons: "↗️💥",
+  },
 ];
