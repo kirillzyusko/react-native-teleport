@@ -1,0 +1,14 @@
+appId: teleport.example
+env:
+  DIFF: ${DIFF || 0.3}
+---
+# Required env: SCREENSHOT — screenshot and baseline name without an extension.
+- takeScreenshot:
+    path: e2e/${SCREENSHOT}
+- runScript:
+    file: ../scripts/compare-screenshots.js
+    env:
+      base: screenshots/${DEVICE}/${SCREENSHOT}
+      target: ${SCREENSHOT}
+      diff: ${DIFF}
+- assertTrue: ${output.matches}

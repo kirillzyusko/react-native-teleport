@@ -1,0 +1,36 @@
+appId: teleport.example
+env:
+  # Maestro validates both swipe shapes before evaluating their conditions, so
+  # typed values need valid defaults even when their branch will not execute.
+  START: ${START || '0%, 0%'}
+  END: ${END || '0%, 0%'}
+  DIRECTION: ${DIRECTION || 'RIGHT'}
+  DURATION: ${DURATION || 3000}
+---
+# Required env: MODE (coordinates or element) and TARGET_TEXT.
+# Web validates activation with a press until Maestro's drag command lands:
+# https://github.com/mobile-dev-inc/Maestro/pull/2978
+- runFlow:
+    when:
+      platform: Web
+    commands:
+      - tapOn: ${TARGET_TEXT}
+- runFlow:
+    when:
+      true: ${(maestro.platform == 'ios' || maestro.platform == 'android') && MODE == 'coordinates'}
+    commands:
+      - swipe:
+          label: "Press, move, hold, and release ${TARGET_TEXT}"
+          start: ${START}
+          end: ${END}
+          duration: ${DURATION}
+- runFlow:
+    when:
+      true: ${(maestro.platform == 'ios' || maestro.platform == 'android') && MODE == 'element'}
+    commands:
+      - swipe:
+          label: "Press, move, hold, and release ${TARGET_TEXT}"
+          from:
+            text: ${TARGET_TEXT}
+          direction: ${DIRECTION}
+          duration: ${DURATION}

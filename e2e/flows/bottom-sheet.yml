@@ -22,26 +22,20 @@ appId: teleport.example
     text: "Sheet"
 - assertNotVisible:
     text: "Close"
-# Web is skipped for this scenario because Maestro does not expose a
-# press/move/release pointer API there yet; `swipe` scrolls the page instead.
-# Re-enable when https://github.com/mobile-dev-inc/Maestro/pull/2978 lands.
+- tapOn:
+    id: "open_bottom_sheet"
+- assertVisible:
+    text: "Sheet"
+- assertVisible:
+    text: "Close"
 - runFlow:
-    when:
-      true: ${maestro.platform == 'ios' || maestro.platform == 'android'}
-    commands:
-      - tapOn:
-          id: "open_bottom_sheet"
-      - assertVisible:
-          text: "Sheet"
-      - assertVisible:
-          text: "Close"
-      - swipe:
-          label: "Press, move right, hold, and release Close Bottom Sheet"
-          from:
-            text: "Close"
-          direction: RIGHT
-          duration: 3000
-      - assertNotVisible:
-          text: "Sheet"
-      - assertNotVisible:
-          text: "Close"
+    file: ../subflows/press-move-release.yml
+    env:
+      MODE: element
+      TARGET_TEXT: "Close"
+      DIRECTION: RIGHT
+      DURATION: 3000
+- assertNotVisible:
+    text: "Sheet"
+- assertNotVisible:
+    text: "Close"

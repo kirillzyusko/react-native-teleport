@@ -1,0 +1,8 @@
+appId: teleport.example
+---
+# Keep this condition in sync with start-recording.yml.
+- runFlow:
+    when:
+      true: ${maestro.platform == 'ios' || maestro.platform == 'android'}
+    commands:
+      - stopRecording

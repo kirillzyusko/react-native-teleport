@@ -1,0 +1,10 @@
+appId: teleport.example
+---
+# Required env: RECORDING_PATH — output path without the .mp4 extension.
+# Web falls back to a no-op until
+# https://github.com/mobile-dev-inc/Maestro/issues/3468 is resolved.
+- runFlow:
+    when:
+      true: ${maestro.platform == 'ios' || maestro.platform == 'android'}
+    commands:
+      - startRecording: ${RECORDING_PATH}
