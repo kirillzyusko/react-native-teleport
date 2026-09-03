@@ -21,8 +21,7 @@ class PortalViewManager :
 
   override fun getDelegate(): ViewManagerDelegate<ReactViewGroup> = delegate
 
-  override fun createTeleportView(context: ThemedReactContext): ReactViewGroup =
-    PortalView(context, ::applyPortalPointerEvents)
+  override fun createTeleportView(context: ThemedReactContext): ReactViewGroup = PortalView(context, ::applyPortalPointerEvents)
 
   override fun onAfterUpdateTransaction(view: ReactViewGroup) {
     super.onAfterUpdateTransaction(view)
