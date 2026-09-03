@@ -28,13 +28,24 @@ appId: teleport.example
     text: "Sheet"
 - assertVisible:
     text: "Close"
+# Web validates activation with a press until Maestro's drag command lands:
+# https://github.com/mobile-dev-inc/Maestro/pull/2978
 - runFlow:
-    file: ../subflows/press-move-release.yml
-    env:
-      MODE: element
-      TARGET_TEXT: "Close"
-      DIRECTION: RIGHT
-      DURATION: 3000
+    when:
+      platform: Web
+    commands:
+      - tapOn:
+          text: "Close"
+- runFlow:
+    when:
+      true: ${maestro.platform == 'ios' || maestro.platform == 'android'}
+    commands:
+      - swipe:
+          label: "Press, move, hold, and release Close"
+          from:
+            text: "Close"
+          direction: RIGHT
+          duration: 3000
 - assertNotVisible:
     text: "Sheet"
 - assertNotVisible:
