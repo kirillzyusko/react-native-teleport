@@ -1,13 +1,8 @@
 appId: teleport.example
-env:
-  # Maestro validates both swipe shapes before evaluating their conditions, so
-  # typed values need valid defaults even when their branch will not execute.
-  START: ${START || '0%, 0%'}
-  END: ${END || '0%, 0%'}
-  DIRECTION: ${DIRECTION || 'RIGHT'}
-  DURATION: ${DURATION || 3000}
 ---
-# Required env: MODE (coordinates or element) and TARGET_TEXT.
+# Required env: MODE, TARGET_TEXT, DURATION, plus START and END for coordinates
+# or DIRECTION for an element. Keep these parameters on the runFlow call rather
+# than declaring computed defaults in this helper's header.
 # Web validates activation with a press until Maestro's drag command lands:
 # https://github.com/mobile-dev-inc/Maestro/pull/2978
 - runFlow:
