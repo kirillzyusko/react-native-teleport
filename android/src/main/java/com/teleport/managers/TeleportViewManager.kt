@@ -11,6 +11,10 @@ abstract class TeleportViewManager : ReactViewManager() {
     super.setPointerEvents(view, "box-none")
   }
 
+  fun forceNone(view: ReactViewGroup) {
+    super.setPointerEvents(view, "none")
+  }
+
   override fun createViewInstance(context: ThemedReactContext): ReactViewGroup =
     createTeleportView(context).also {
       forceBoxNone(it)
