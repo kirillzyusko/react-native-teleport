@@ -10,22 +10,22 @@ appId: teleport.example
     text: "Selected: none"
 
 - tapOn:
-    id: "select-trigger"
+    text: "^Choose a country$"
 - tapOn:
-    id: "select-option-portugal"
+    text: "^Portugal$"
 - assertVisible:
     text: "Selected: portugal"
 
 - tapOn:
-    id: "select-trigger"
+    text: "^portugal$"
 - tapOn:
-    id: "select-option-france"
+    text: "^France$"
 - assertVisible:
     text: "Selected: france"
 
 - tapOn:
-    id: "select-trigger"
+    text: "^france$"
 - tapOn:
-    id: "select-option-italy"
+    text: "^Italy$"
 - assertVisible:
     text: "Selected: italy"
