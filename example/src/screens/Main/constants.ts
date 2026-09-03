@@ -16,6 +16,12 @@ export const examples: Example[] = [
     icons: "👆🔮",
   },
   {
+    title: "Menu",
+    testID: "menu",
+    info: ScreenNames.MENU,
+    icons: "📋",
+  },
+  {
     title: "Dynamic children",
     testID: "dynamic_children",
     info: ScreenNames.DYNAMIC_CHILDREN,

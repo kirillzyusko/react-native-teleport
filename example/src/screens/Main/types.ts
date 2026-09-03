@@ -3,6 +3,7 @@ import type { ScreenNames } from "../../constants/screenNames";
 export type ExampleScreen =
   | ScreenNames.GESTURE_HANDLER_TOUCHABLE
   | ScreenNames.REACT_NATIVE_TOUCHABLE
+  | ScreenNames.MENU
   | ScreenNames.DYNAMIC_CHILDREN
   | ScreenNames.INSTANT_ROOT
   | ScreenNames.HOOKS
