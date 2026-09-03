@@ -14,6 +14,7 @@ import java.util.ArrayList
 
 class PortalView(
   context: Context,
+  private val onTeleportationChanged: (PortalView) -> Unit,
 ) : ReparentableReactViewGroup(context),
   PortalViewLifecycle {
   private var hostName: String? = null
@@ -21,7 +22,7 @@ class PortalView(
   private val layoutStateController = PortalLayoutStateController(this)
   private val ownChildren: MutableList<View> = ArrayList()
 
-  private val isTeleported: Boolean
+  internal val isTeleported: Boolean
     get() = currentHost != null
 
   // region ViewManager methods
@@ -49,6 +50,7 @@ class PortalView(
     currentHost = null
     layoutStateController.resetIfNeeded()
     layoutStateController.setStateWrapper(null)
+    onTeleportationChanged(this)
   }
   // endregion
 
@@ -145,6 +147,8 @@ class PortalView(
         addView(children[i], i)
       }
     }
+
+    onTeleportationChanged(this)
   }
 
   private fun extractChildren(target: ViewGroup): List<View> {

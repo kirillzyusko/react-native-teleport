@@ -21,7 +21,16 @@ class PortalViewManager :
 
   override fun getDelegate(): ViewManagerDelegate<ReactViewGroup> = delegate
 
-  override fun createTeleportView(context: ThemedReactContext): ReactViewGroup = PortalView(context)
+  override fun createTeleportView(context: ThemedReactContext): ReactViewGroup =
+    PortalView(
+      context,
+      ::applyPortalPointerEvents,
+    )
+
+  override fun onAfterUpdateTransaction(view: ReactViewGroup) {
+    super.onAfterUpdateTransaction(view)
+    (view as? PortalView)?.let(::applyPortalPointerEvents)
+  }
 
   override fun onDropViewInstance(view: ReactViewGroup) {
     (view as? PortalView)?.cleanup()
@@ -51,6 +60,14 @@ class PortalViewManager :
     name: String?,
   ) {
     (view as? PortalView)?.setHostName(name)
+  }
+
+  private fun applyPortalPointerEvents(view: PortalView) {
+    if (view.isTeleported) {
+      forceNone(view)
+    } else {
+      forceBoxNone(view)
+    }
   }
 
   companion object {
