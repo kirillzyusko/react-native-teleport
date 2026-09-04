@@ -59,11 +59,19 @@ export default function Portal({ hostName, children, style }: PortalProps) {
   useLayoutEffect(() => {
     teleportToHost();
 
-    if (!hostName) return;
+    if (hostName) {
+      registerPendingPortal(hostName, teleportToHost);
+    }
 
-    registerPendingPortal(hostName, teleportToHost);
     return () => {
-      unregisterPendingPortal(hostName, teleportToHost);
+      if (hostName) {
+        unregisterPendingPortal(hostName, teleportToHost);
+      }
+
+      const el = elRef.current;
+      if (el?.parentNode) {
+        el.parentNode.removeChild(el);
+      }
     };
   }, [
     hostName,
