@@ -4,11 +4,7 @@ appId: teleport.example
 - waitForAnimationToEnd
 - tapOn:
     id: "portal_before_host"
-- takeScreenshot:
-    path: e2e/PortalBeforeHost
-- runScript:
-    file: ../scripts/compare-screenshots.js
+- runFlow:
+    file: ../subflows/assert-screenshot.yml
     env:
-      base: screenshots/${DEVICE}/PortalBeforeHost
-      target: PortalBeforeHost
-      diff: 0.3
+      SCREENSHOT: PortalBeforeHost

@@ -16,70 +16,45 @@ appId: teleport.example
           id: "orientation_toggle"
       - assertVisible:
           id: "orientation_right_edge"
-      - takeScreenshot:
-          path: e2e/OrientationPortrait
-      - runScript:
-          file: ../scripts/compare-screenshots.js
+      - runFlow:
+          file: ../subflows/assert-screenshot.yml
           env:
-            base: screenshots/${DEVICE}/OrientationPortrait
-            target: OrientationPortrait
-            diff: 0.3
-      - assertTrue: ${output.matches}
+            SCREENSHOT: OrientationPortrait
 
       # Rotate before entering fullscreen, then make sure exiting fullscreen
       # restores the same landscape source layout.
       - setOrientation: LANDSCAPE_LEFT
       - waitForAnimationToEnd
-      - takeScreenshot:
-          path: e2e/OrientationLandscape
-      - runScript:
-          file: ../scripts/compare-screenshots.js
+      - runFlow:
+          file: ../subflows/assert-screenshot.yml
           env:
-            base: screenshots/${DEVICE}/OrientationLandscape
-            target: OrientationLandscape
-            diff: 0.3
-      - assertTrue: ${output.matches}
+            SCREENSHOT: OrientationLandscape
       - tapOn:
           id: "orientation_toggle"
       - assertVisible:
           id: "orientation_toggle"
       - assertVisible:
           id: "orientation_right_edge"
-      - takeScreenshot:
-          path: e2e/OrientationLandscapeFullscreen
-      - runScript:
-          file: ../scripts/compare-screenshots.js
+      - runFlow:
+          file: ../subflows/assert-screenshot.yml
           env:
-            base: screenshots/${DEVICE}/OrientationLandscapeFullscreen
-            target: OrientationLandscapeFullscreen
-            diff: 0.3
-      - assertTrue: ${output.matches}
+            SCREENSHOT: OrientationLandscapeFullscreen
       - tapOn:
           id: "orientation_toggle"
       - assertVisible:
           id: "orientation_toggle"
-      - takeScreenshot:
-          path: e2e/OrientationLandscape
-      - runScript:
-          file: ../scripts/compare-screenshots.js
+      - runFlow:
+          file: ../subflows/assert-screenshot.yml
           env:
-            base: screenshots/${DEVICE}/OrientationLandscape
-            target: OrientationLandscape
-            diff: 0.3
-      - assertTrue: ${output.matches}
+            SCREENSHOT: OrientationLandscape
       - setOrientation: PORTRAIT
       - waitForAnimationToEnd
       - assertVisible:
           id: "orientation_right_edge"
-      - takeScreenshot:
-          path: e2e/OrientationPortrait
-      - runScript:
-          file: ../scripts/compare-screenshots.js
+      - runFlow:
+          file: ../subflows/assert-screenshot.yml
           env:
-            base: screenshots/${DEVICE}/OrientationPortrait
-            target: OrientationPortrait
-            diff: 0.3
-      - assertTrue: ${output.matches}
+            SCREENSHOT: OrientationPortrait
 
       # Repeat the issue scenario by rotating multiple times while the player
       # is teleported, then verify the final source layout again.
@@ -87,52 +62,32 @@ appId: teleport.example
           id: "orientation_toggle"
       - assertVisible:
           id: "orientation_toggle"
-      - takeScreenshot:
-          path: e2e/OrientationPortraitFullscreen
-      - runScript:
-          file: ../scripts/compare-screenshots.js
+      - runFlow:
+          file: ../subflows/assert-screenshot.yml
           env:
-            base: screenshots/${DEVICE}/OrientationPortraitFullscreen
-            target: OrientationPortraitFullscreen
-            diff: 0.3
-      - assertTrue: ${output.matches}
+            SCREENSHOT: OrientationPortraitFullscreen
       - setOrientation: LANDSCAPE_LEFT
       - waitForAnimationToEnd
       - assertVisible:
           id: "orientation_toggle"
       - assertVisible:
           id: "orientation_right_edge"
-      - takeScreenshot:
-          path: e2e/OrientationLandscapeFullscreen
-      - runScript:
-          file: ../scripts/compare-screenshots.js
+      - runFlow:
+          file: ../subflows/assert-screenshot.yml
           env:
-            base: screenshots/${DEVICE}/OrientationLandscapeFullscreen
-            target: OrientationLandscapeFullscreen
-            diff: 0.3
-      - assertTrue: ${output.matches}
+            SCREENSHOT: OrientationLandscapeFullscreen
       - setOrientation: PORTRAIT
       - waitForAnimationToEnd
-      - takeScreenshot:
-          path: e2e/OrientationPortraitFullscreen
-      - runScript:
-          file: ../scripts/compare-screenshots.js
+      - runFlow:
+          file: ../subflows/assert-screenshot.yml
           env:
-            base: screenshots/${DEVICE}/OrientationPortraitFullscreen
-            target: OrientationPortraitFullscreen
-            diff: 0.3
-      - assertTrue: ${output.matches}
+            SCREENSHOT: OrientationPortraitFullscreen
       - setOrientation: LANDSCAPE_LEFT
       - waitForAnimationToEnd
-      - takeScreenshot:
-          path: e2e/OrientationLandscapeFullscreen
-      - runScript:
-          file: ../scripts/compare-screenshots.js
+      - runFlow:
+          file: ../subflows/assert-screenshot.yml
           env:
-            base: screenshots/${DEVICE}/OrientationLandscapeFullscreen
-            target: OrientationLandscapeFullscreen
-            diff: 0.3
-      - assertTrue: ${output.matches}
+            SCREENSHOT: OrientationLandscapeFullscreen
       - tapOn:
           id: "orientation_toggle"
       - assertVisible:
@@ -141,12 +96,7 @@ appId: teleport.example
       - waitForAnimationToEnd
       - assertVisible:
           id: "orientation_right_edge"
-      - takeScreenshot:
-          path: e2e/OrientationPortrait
-      - runScript:
-          file: ../scripts/compare-screenshots.js
+      - runFlow:
+          file: ../subflows/assert-screenshot.yml
           env:
-            base: screenshots/${DEVICE}/OrientationPortrait
-            target: OrientationPortrait
-            diff: 0.3
-      - assertTrue: ${output.matches}
+            SCREENSHOT: OrientationPortrait

@@ -6,14 +6,10 @@ appId: teleport.example
     file: ../subflows/open-example.yml
     env:
       EXAMPLE_ID: reels
-# Web is skipped for now because Maestro does not support startRecording/
-# stopRecording there yet. Re-enable when
-# https://github.com/mobile-dev-inc/Maestro/issues/3468 is resolved.
 - runFlow:
-    when:
-      true: ${maestro.platform == 'ios' || maestro.platform == 'android'}
-    commands:
-      - startRecording: e2e/videos/${DEVICE}/instagram-reels
+    file: ../subflows/start-recording.yml
+    env:
+      RECORDING_PATH: e2e/videos/${DEVICE}/instagram-reels
 - tapOn:
     point: 50%, 35%
 - extendedWaitUntil:
@@ -24,8 +20,4 @@ appId: teleport.example
 - runFlow: ../subflows/go-back.yml
 - waitForAnimationToEnd:
     timeout: 2000
-- runFlow:
-    when:
-      true: ${maestro.platform == 'ios' || maestro.platform == 'android'}
-    commands:
-      - stopRecording
+- runFlow: ../subflows/stop-recording.yml

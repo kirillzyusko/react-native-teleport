@@ -8,25 +8,16 @@ appId: teleport.example
     point: "10%,15%"
 - assertVisible: "OK"
 - tapOn: "OK"
-- takeScreenshot:
-    path: e2e/InstantRootInitial
-- runScript:
-    file: ../scripts/compare-screenshots.js
+- runFlow:
+    file: ../subflows/assert-screenshot.yml
     env:
-      base: screenshots/${DEVICE}/InstantRootInitial
-      target: InstantRootInitial
-      diff: 0.3
-- assertTrue: ${output.matches}
+      SCREENSHOT: InstantRootInitial
 - tapOn: "Move back"
 - tapOn:
     id: "touchable"
 - assertVisible: "OK"
 - tapOn: "OK"
-- takeScreenshot:
-    path: e2e/InstantRootTeleportedBack
-- runScript:
-    file: ../scripts/compare-screenshots.js
+- runFlow:
+    file: ../subflows/assert-screenshot.yml
     env:
-      base: screenshots/${DEVICE}/InstantRootTeleportedBack
-      target: InstantRootTeleportedBack
-      diff: 0.3
+      SCREENSHOT: InstantRootTeleportedBack

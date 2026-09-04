@@ -12,28 +12,18 @@ appId: teleport.example
 # Step 1: Teleport into the host for the first time
 - tapOn:
     id: "teleport_first_time"
-- takeScreenshot:
-    path: e2e/RecyclingFirstTeleport
-- runScript:
-    file: ../scripts/compare-screenshots.js
+- runFlow:
+    file: ../subflows/assert-screenshot.yml
     env:
-      base: screenshots/${DEVICE}/RecyclingFirstTeleport
-      target: RecyclingFirstTeleport
-      diff: 0.3
-- assertTrue: ${output.matches}
+      SCREENSHOT: RecyclingFirstTeleport
 
 # Step 2: Unmount the host
 - tapOn:
     id: "unmount_host"
-- takeScreenshot:
-    path: e2e/RecyclingHostUnmounted
-- runScript:
-    file: ../scripts/compare-screenshots.js
+- runFlow:
+    file: ../subflows/assert-screenshot.yml
     env:
-      base: screenshots/${DEVICE}/RecyclingHostUnmounted
-      target: RecyclingHostUnmounted
-      diff: 0.3
-- assertTrue: ${output.matches}
+      SCREENSHOT: RecyclingHostUnmounted
 
 # Step 3: Remount the host
 - tapOn:
@@ -42,12 +32,7 @@ appId: teleport.example
 # Step 4: Teleport into the remounted host a second time.
 - tapOn:
     id: "teleport_second_time"
-- takeScreenshot:
-    path: e2e/RecyclingSecondTeleport
-- runScript:
-    file: ../scripts/compare-screenshots.js
+- runFlow:
+    file: ../subflows/assert-screenshot.yml
     env:
-      base: screenshots/${DEVICE}/RecyclingSecondTeleport
-      target: RecyclingSecondTeleport
-      diff: 0.3
-- assertTrue: ${output.matches}
+      SCREENSHOT: RecyclingSecondTeleport

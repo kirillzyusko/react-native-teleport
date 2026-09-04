@@ -9,54 +9,36 @@ appId: teleport.example
     env:
       EXAMPLE_ID: "persisted_portal"
 
-- takeScreenshot:
-    path: e2e/PersistedPortalWithoutHost
-- runScript:
-    file: ../scripts/compare-screenshots.js
+- runFlow:
+    file: ../subflows/assert-screenshot.yml
     env:
-      base: screenshots/${DEVICE}/PersistedPortalWithoutHost
-      target: PersistedPortalWithoutHost
-      diff: 0.3
-- assertTrue: ${output.matches}
+      SCREENSHOT: PersistedPortalWithoutHost
 
 # Step 1: Mount the <PortalHost> for the first time
 # pending Portal should be teleported to proper host
 - tapOn:
     id: "persisted_portal_toggle_host"
-- takeScreenshot:
-    path: e2e/PersistedPortalWithHost
-- runScript:
-    file: ../scripts/compare-screenshots.js
+- runFlow:
+    file: ../subflows/assert-screenshot.yml
     env:
-      base: screenshots/${DEVICE}/PersistedPortalWithHost
-      target: PersistedPortalWithHost
-      diff: 0.3
-- assertTrue: ${output.matches}
+      SCREENSHOT: PersistedPortalWithHost
 
 # Step 2: Unmount the <PortalHost>
 # teleported children should return to the local Portal location
 - tapOn:
     id: "persisted_portal_toggle_host"
-- takeScreenshot:
-    path: e2e/PersistedPortalWithoutHost
-- runScript:
-    file: ../scripts/compare-screenshots.js
+- runFlow:
+    file: ../subflows/assert-screenshot.yml
     env:
-      base: screenshots/${DEVICE}/PersistedPortalWithoutHost
-      target: PersistedPortalWithoutHost
-      diff: 0.4
-- assertTrue: ${output.matches}
+      SCREENSHOT: PersistedPortalWithoutHost
+      DIFF: 0.4
 
 # Step 3: Mount the <PortalHost> again
 # Portal should re-teleport its children to the new host instance
 - tapOn:
     id: "persisted_portal_toggle_host"
-- takeScreenshot:
-    path: e2e/PersistedPortalWithHost
-- runScript:
-    file: ../scripts/compare-screenshots.js
+- runFlow:
+    file: ../subflows/assert-screenshot.yml
     env:
-      base: screenshots/${DEVICE}/PersistedPortalWithHost
-      target: PersistedPortalWithHost
-      diff: 0.4
-- assertTrue: ${output.matches}
+      SCREENSHOT: PersistedPortalWithHost
+      DIFF: 0.4
