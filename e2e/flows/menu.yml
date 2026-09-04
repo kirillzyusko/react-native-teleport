@@ -10,21 +10,21 @@ appId: teleport.example
     text: "Selected: none"
 
 - tapOn:
-    text: "^Choose a country$"
+    text: "^Choose a country.*$"
 - tapOn:
     text: "^Portugal$"
 - assertVisible:
     text: "Selected: portugal"
 
 - tapOn:
-    text: "^portugal$"
+    text: "^portugal.*$"
 - tapOn:
     text: "^France$"
 - assertVisible:
     text: "Selected: france"
 
 - tapOn:
-    text: "^france$"
+    text: "^france.*$"
 - tapOn:
     text: "^Italy$"
 - assertVisible:
