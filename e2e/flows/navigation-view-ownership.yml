@@ -6,6 +6,7 @@ appId: teleport.example
 - runFlow:
     file: ../subflows/open-example.yml
     env:
+      EXAMPLE_CATEGORY: "demo"
       EXAMPLE_ID: "rich_text_editor"
 
 # Teleport the preloaded editor into the screen-local host.
@@ -27,6 +28,7 @@ appId: teleport.example
 - runFlow:
     file: ../subflows/open-example.yml
     env:
+      EXAMPLE_CATEGORY: "fixture"
       EXAMPLE_ID: "transition_reparent"
 - tapOn:
     id: "open-transition-reparent"
