@@ -144,7 +144,7 @@ jobs:
           echo "===== FULL server.log ====="
           cat server.log || true
       - name: Check glitches/flickering
-        run: node e2e/scripts/check-glitches.mjs e2e/videos
+        run: node e2e/scripts/check-glitches.mjs e2e/reports/debug
       - name: Kill snapshot engine
         if: always()
         shell: bash
