@@ -32,10 +32,12 @@ import type { Photo } from "../../screens/PhotoGallery/photos";
 import Orientation from "../../screens/Orientation";
 import ScaledHost from "../../screens/ScaledHost";
 import TransitionReparent from "../../screens/TransitionReparent";
+import Menu from "../../screens/Menu";
 
 export type ExamplesStackParamList = {
   [ScreenNames.GESTURE_HANDLER_TOUCHABLE]: undefined;
   [ScreenNames.REACT_NATIVE_TOUCHABLE]: undefined;
+  [ScreenNames.MENU]: undefined;
   [ScreenNames.DYNAMIC_CHILDREN]: undefined;
   [ScreenNames.INSTANT_ROOT]: undefined;
   [ScreenNames.HOOKS]: undefined;
@@ -76,6 +78,10 @@ const options = {
   },
   [ScreenNames.REACT_NATIVE_TOUCHABLE]: {
     title: "RN Touchable",
+  },
+  [ScreenNames.MENU]: {
+    title: "Menu",
+    headerShown: false,
   },
   [ScreenNames.DYNAMIC_CHILDREN]: {
     title: "Dynamic children",
@@ -154,6 +160,11 @@ const ExamplesStack = () => (
       component={RNTouchableExample}
       name={ScreenNames.REACT_NATIVE_TOUCHABLE}
       options={options[ScreenNames.REACT_NATIVE_TOUCHABLE]}
+    />
+    <Stack.Screen
+      component={Menu}
+      name={ScreenNames.MENU}
+      options={options[ScreenNames.MENU]}
     />
     <Stack.Screen
       component={DynamicChildrenExample}
