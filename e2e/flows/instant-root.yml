@@ -2,8 +2,11 @@ appId: teleport.example
 ---
 - launchApp
 - waitForAnimationToEnd
-- tapOn:
-    id: "instant_root"
+- runFlow:
+    file: ../subflows/open-example.yml
+    env:
+      EXAMPLE_CATEGORY: "fixture"
+      EXAMPLE_ID: "instant_root"
 - tapOn:
     point: "10%,15%"
 - assertVisible: "OK"

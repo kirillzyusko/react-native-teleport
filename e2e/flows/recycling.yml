@@ -7,6 +7,7 @@ appId: teleport.example
 - runFlow:
     file: ../subflows/open-example.yml
     env:
+      EXAMPLE_CATEGORY: "fixture"
       EXAMPLE_ID: "recycling"
 
 # Step 1: Teleport into the host for the first time

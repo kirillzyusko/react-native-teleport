@@ -5,6 +5,7 @@ appId: teleport.example
 - runFlow:
     file: ../subflows/open-example.yml
     env:
+      EXAMPLE_CATEGORY: "demo"
       EXAMPLE_ID: "teleportation_order"
 - assertVisible:
     text: "Open First Dialog"
