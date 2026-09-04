@@ -59,19 +59,11 @@ export default function Portal({ hostName, children, style }: PortalProps) {
   useLayoutEffect(() => {
     teleportToHost();
 
-    if (hostName) {
-      registerPendingPortal(hostName, teleportToHost);
-    }
+    if (!hostName) return;
 
+    registerPendingPortal(hostName, teleportToHost);
     return () => {
-      if (hostName) {
-        unregisterPendingPortal(hostName, teleportToHost);
-      }
-
-      const el = elRef.current;
-      if (el?.parentNode) {
-        el.parentNode.removeChild(el);
-      }
+      unregisterPendingPortal(hostName, teleportToHost);
     };
   }, [
     hostName,
@@ -79,6 +71,15 @@ export default function Portal({ hostName, children, style }: PortalProps) {
     unregisterPendingPortal,
     teleportToHost,
   ]);
+
+  useLayoutEffect(() => {
+    return () => {
+      const el = elRef.current;
+      if (el?.parentNode) {
+        el.parentNode.removeChild(el);
+      }
+    };
+  }, []);
 
   return (
     <>
