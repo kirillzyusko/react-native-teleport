@@ -72,6 +72,15 @@ export default function Portal({ hostName, children, style }: PortalProps) {
     teleportToHost,
   ]);
 
+  useLayoutEffect(() => {
+    return () => {
+      const el = elRef.current;
+      if (el?.parentNode) {
+        el.parentNode.removeChild(el);
+      }
+    };
+  }, []);
+
   return (
     <>
       {createPortal(children, elRef.current)}
