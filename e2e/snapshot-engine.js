@@ -12,18 +12,26 @@ const server = http.createServer(async (req, res) => {
     body += chunk.toString();
   });
   req.on("end", async () => {
-    const { base, target, diff: threshold = 0.3 } = JSON.parse(body);
+    const { base, target, flow, diff: threshold = 0.3 } = JSON.parse(body);
     console.log("Request to compare images: ", base, target);
-    if (!base || !target) {
+    if (!base || !target || !flow) {
       res.statusCode = 400;
       return res.end(
-        JSON.stringify({ error: "Missing base or target parameter" }),
+        JSON.stringify({ error: "Missing base, target or flow parameter" }),
       );
     }
 
     try {
       const basePath = path.resolve(__dirname, base);
-      const targetPath = resolveTargetPath(target);
+      const targetPath = path.resolve(
+        __dirname,
+        "reports",
+        "debug",
+        flow,
+        "takeScreenshot",
+        "e2e",
+        `${target}.png`,
+      );
       console.log("Comparing images: ", basePath, targetPath);
       const img1 = await readPngFile(`${basePath}.png`);
       const img2 = await readPngFile(targetPath);
@@ -90,48 +98,6 @@ const server = http.createServer(async (req, res) => {
     }
   });
 });
-
-function resolveTargetPath(target) {
-  const screenshotName = `${target}.png`;
-  const legacyPath = path.resolve(__dirname, screenshotName);
-  const debugOutputPath = path.resolve(__dirname, "reports", "debug");
-  const candidates = [
-    legacyPath,
-    path.join(debugOutputPath, "takeScreenshot", "e2e", screenshotName),
-  ];
-
-  if (fs.existsSync(debugOutputPath)) {
-    for (const entry of fs.readdirSync(debugOutputPath, {
-      withFileTypes: true,
-    })) {
-      if (entry.isDirectory()) {
-        candidates.push(
-          path.join(
-            debugOutputPath,
-            entry.name,
-            "takeScreenshot",
-            "e2e",
-            screenshotName,
-          ),
-        );
-      }
-    }
-  }
-
-  const targetPath = candidates
-    .filter((candidate) => fs.existsSync(candidate))
-    .sort(
-      (left, right) => fs.statSync(right).mtimeMs - fs.statSync(left).mtimeMs,
-    )[0];
-
-  if (!targetPath) {
-    throw new Error(
-      `Screenshot not found: ${screenshotName}. Searched ${legacyPath} and Maestro artifacts in ${debugOutputPath}`,
-    );
-  }
-
-  return targetPath;
-}
 
 function readPngFile(filePath) {
   return new Promise((resolve, reject) => {
