@@ -135,7 +135,7 @@ jobs:
           xcrun simctl install "$UDID" example/ios/build/Build/Products/Release-iphonesimulator/TeleportExample.app
       - name: Install Maestro CLI
         run: |
-          export MAESTRO_VERSION=2.6.1
+          export MAESTRO_VERSION=2.10.0
           curl -fsSL "https://get.maestro.mobile.dev" | bash
           echo "$HOME/.maestro/bin" >> $GITHUB_PATH
       - name: Log Maestro version
@@ -152,7 +152,7 @@ jobs:
           maestro --platform ios test -e DEVICE="iPhone 16 Pro" e2e/flows/* --format html ./e2e/reports/debug --debug-output ./e2e/reports/debug --flatten-debug-output
           kill $SERVER_PID
       - name: Check glitches/flickering
-        run: node e2e/scripts/check-glitches.mjs e2e/videos
+        run: node e2e/scripts/check-glitches.mjs e2e/reports/debug
       - name: Upload test report
         if: failure()
         uses: actions/upload-artifact@v4

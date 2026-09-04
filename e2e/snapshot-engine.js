@@ -12,29 +12,29 @@ const server = http.createServer(async (req, res) => {
     body += chunk.toString();
   });
   req.on("end", async () => {
-    const { base, target, diff: threshold = 0.3 } = JSON.parse(body);
+    const { base, target, flow, diff: threshold = 0.3 } = JSON.parse(body);
     console.log("Request to compare images: ", base, target);
-    if (!base || !target) {
+    if (!base || !target || !flow) {
       res.statusCode = 400;
       return res.end(
-        JSON.stringify({ error: "Missing base or target parameter" }),
+        JSON.stringify({ error: "Missing base, target or flow parameter" }),
       );
     }
 
     try {
       const basePath = path.resolve(__dirname, base);
-      const targetPath = path.resolve(__dirname, target);
+      const targetPath = path.resolve(
+        __dirname,
+        "reports",
+        "debug",
+        flow,
+        "takeScreenshot",
+        "e2e",
+        `${target}.png`,
+      );
       console.log("Comparing images: ", basePath, targetPath);
       const img1 = await readPngFile(`${basePath}.png`);
-      let img2 = null;
-      try {
-        img2 = await readPngFile(`${targetPath}.png`);
-      } catch (error) {
-        console.log("Can not read a file: ", error);
-        // target not found -> we just took a screenshot
-        res.end(JSON.stringify({ matches: true, diff: 0 }));
-        return;
-      }
+      const img2 = await readPngFile(targetPath);
 
       if (img1.width !== img2.width || img1.height !== img2.height) {
         res.statusCode = 400;
@@ -50,7 +50,7 @@ const server = http.createServer(async (req, res) => {
           path.join(__dirname, "reports", `${target}-base.png`),
         );
         fs.copyFileSync(
-          `${targetPath}.png`,
+          targetPath,
           path.join(__dirname, "reports", `${target}-new.png`),
         );
         return res.end(
@@ -85,7 +85,7 @@ const server = http.createServer(async (req, res) => {
           path.join(__dirname, "reports", `${target}-base.png`),
         );
         fs.copyFileSync(
-          `${targetPath}.png`,
+          targetPath,
           path.join(__dirname, "reports", `${target}-new.png`),
         );
       }

@@ -92,7 +92,7 @@ jobs:
           path: example/android/app/build/outputs/apk/
       - name: Install Maestro
         run: |
-          export MAESTRO_VERSION=2.6.1
+          export MAESTRO_VERSION=2.10.0
           curl -fsSL "https://get.maestro.mobile.dev" | bash
           echo "$HOME/.maestro/bin" >> $GITHUB_PATH
           export MAESTRO_DRIVER_STARTUP_TIMEOUT=600000
@@ -144,7 +144,7 @@ jobs:
           echo "===== FULL server.log ====="
           cat server.log || true
       - name: Check glitches/flickering
-        run: node e2e/scripts/check-glitches.mjs e2e/videos
+        run: node e2e/scripts/check-glitches.mjs e2e/reports/debug
       - name: Kill snapshot engine
         if: always()
         shell: bash
