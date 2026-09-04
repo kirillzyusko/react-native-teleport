@@ -23,18 +23,10 @@ const server = http.createServer(async (req, res) => {
 
     try {
       const basePath = path.resolve(__dirname, base);
-      const targetPath = path.resolve(__dirname, target);
+      const targetPath = resolveTargetPath(target);
       console.log("Comparing images: ", basePath, targetPath);
       const img1 = await readPngFile(`${basePath}.png`);
-      let img2 = null;
-      try {
-        img2 = await readPngFile(`${targetPath}.png`);
-      } catch (error) {
-        console.log("Can not read a file: ", error);
-        // target not found -> we just took a screenshot
-        res.end(JSON.stringify({ matches: true, diff: 0 }));
-        return;
-      }
+      const img2 = await readPngFile(targetPath);
 
       if (img1.width !== img2.width || img1.height !== img2.height) {
         res.statusCode = 400;
@@ -50,7 +42,7 @@ const server = http.createServer(async (req, res) => {
           path.join(__dirname, "reports", `${target}-base.png`),
         );
         fs.copyFileSync(
-          `${targetPath}.png`,
+          targetPath,
           path.join(__dirname, "reports", `${target}-new.png`),
         );
         return res.end(
@@ -85,7 +77,7 @@ const server = http.createServer(async (req, res) => {
           path.join(__dirname, "reports", `${target}-base.png`),
         );
         fs.copyFileSync(
-          `${targetPath}.png`,
+          targetPath,
           path.join(__dirname, "reports", `${target}-new.png`),
         );
       }
@@ -98,6 +90,48 @@ const server = http.createServer(async (req, res) => {
     }
   });
 });
+
+function resolveTargetPath(target) {
+  const screenshotName = `${target}.png`;
+  const legacyPath = path.resolve(__dirname, screenshotName);
+  const debugOutputPath = path.resolve(__dirname, "reports", "debug");
+  const candidates = [
+    legacyPath,
+    path.join(debugOutputPath, "takeScreenshot", "e2e", screenshotName),
+  ];
+
+  if (fs.existsSync(debugOutputPath)) {
+    for (const entry of fs.readdirSync(debugOutputPath, {
+      withFileTypes: true,
+    })) {
+      if (entry.isDirectory()) {
+        candidates.push(
+          path.join(
+            debugOutputPath,
+            entry.name,
+            "takeScreenshot",
+            "e2e",
+            screenshotName,
+          ),
+        );
+      }
+    }
+  }
+
+  const targetPath = candidates
+    .filter((candidate) => fs.existsSync(candidate))
+    .sort(
+      (left, right) => fs.statSync(right).mtimeMs - fs.statSync(left).mtimeMs,
+    )[0];
+
+  if (!targetPath) {
+    throw new Error(
+      `Screenshot not found: ${screenshotName}. Searched ${legacyPath} and Maestro artifacts in ${debugOutputPath}`,
+    );
+  }
+
+  return targetPath;
+}
 
 function readPngFile(filePath) {
   return new Promise((resolve, reject) => {
