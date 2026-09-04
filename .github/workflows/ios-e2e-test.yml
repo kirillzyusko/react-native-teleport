@@ -38,6 +38,8 @@ jobs:
         working-directory: example/ios
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
 
       - uses: maxim-lobanov/setup-xcode@v1
         with:
@@ -118,6 +120,8 @@ jobs:
     needs: build-ios
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
       - name: Download a single artifact
         uses: actions/download-artifact@v4
         with:
