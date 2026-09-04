@@ -5,6 +5,7 @@ appId: teleport.example
 - runFlow:
     file: ../subflows/open-example.yml
     env:
+      EXAMPLE_CATEGORY: "fixture"
       EXAMPLE_ID: "scaled_host"
 - assertVisible:
     id: "context_menu_toggle"

@@ -11,6 +11,7 @@ appId: teleport.example
       - runFlow:
           file: ../subflows/open-example.yml
           env:
+            EXAMPLE_CATEGORY: "fixture"
             EXAMPLE_ID: "orientation"
       - assertVisible:
           id: "orientation_toggle"
