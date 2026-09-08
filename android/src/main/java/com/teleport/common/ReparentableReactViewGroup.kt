@@ -8,6 +8,10 @@ abstract class ReparentableReactViewGroup(
   context: Context?,
 ) : ReactViewGroup(context) {
   internal fun detachForReparent(child: View) {
+    // detachViewFromParent() skips removeView()'s disappearing-view cleanup.
+    // End the transition first so the fast path does not retain the old parent.
+    endViewTransition(child)
+
     if (child.hasTransientState()) {
       childHasTransientStateChanged(child, false)
     }

@@ -91,7 +91,8 @@ class PortalView(
   ) {
     val parent = child.parent as? ViewGroup ?: return
 
-    parent.endViewTransition(child)
+    // Finish transitions owned inside the moved subtree. The transition between
+    // the child and its current parent must be handled by the detach path below.
     (child as? ViewGroup)?.endViewTransitionsRecursively()
 
     if (
@@ -104,6 +105,12 @@ class PortalView(
       super.removeView(child)
     } else {
       parent.removeView(child)
+    }
+
+    // removeView() may keep a disappearing child attached to its old parent.
+    // Only after removal can endViewTransition() release that stale ownership.
+    if (child.parent === parent) {
+      parent.endViewTransition(child)
     }
   }
 
