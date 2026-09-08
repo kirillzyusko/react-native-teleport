@@ -129,4 +129,10 @@ export const examples: Example[] = [
     info: ScreenNames.TRANSITION_REPARENT,
     icons: "↗️💥",
   },
+  {
+    title: "Stable host remount",
+    testID: "stable_host_remount",
+    info: ScreenNames.STABLE_HOST_REMOUNT,
+    icons: "🧨",
+  },
 ];

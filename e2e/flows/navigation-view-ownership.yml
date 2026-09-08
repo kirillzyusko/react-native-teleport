@@ -41,3 +41,18 @@ appId: teleport.example
     id: "open-transition-reparent"
 - assertVisible:
     text: "Portal card"
+
+# Restart on the examples list, then run the sequence to completion.
+# The completion marker is never mounted if Fabric rejects a child that still
+# belongs to a departing native-stack host.
+- launchApp
+- runFlow:
+    file: ../subflows/open-example.yml
+    env:
+      EXAMPLE_ID: "stable_host_remount"
+- tapOn:
+    id: "repro_run"
+- extendedWaitUntil:
+    visible:
+      id: "repro_complete"
+    timeout: 30000
