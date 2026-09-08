@@ -7,6 +7,7 @@ import android.view.accessibility.AccessibilityEvent
 import com.facebook.react.uimanager.StateWrapper
 import com.teleport.common.ReparentableReactViewGroup
 import com.teleport.extensions.canReparentAttached
+import com.teleport.extensions.endViewTransitionsRecursively
 import com.teleport.extensions.findNextSiblingHostIndex
 import com.teleport.global.PortalRegistry
 import com.teleport.host.PortalHostView
@@ -90,6 +91,9 @@ class PortalView(
   ) {
     val parent = child.parent as? ViewGroup ?: return
 
+    parent.endViewTransition(child)
+    (child as? ViewGroup)?.endViewTransitionsRecursively()
+
     if (
       target != null &&
       parent is ReparentableReactViewGroup &&
@@ -100,10 +104,6 @@ class PortalView(
       super.removeView(child)
     } else {
       parent.removeView(child)
-    }
-
-    if (child.parent === parent) {
-      parent.endViewTransition(child)
     }
   }
 
