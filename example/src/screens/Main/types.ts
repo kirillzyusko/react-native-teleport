@@ -21,7 +21,8 @@ export type ExampleScreen =
   | ScreenNames.PHOTO_GALLERY
   | ScreenNames.ORIENTATION
   | ScreenNames.SCALED_HOST
-  | ScreenNames.TRANSITION_REPARENT;
+  | ScreenNames.TRANSITION_REPARENT
+  | ScreenNames.STABLE_HOST_REMOUNT;
 
 export type Example = {
   testID: string;
