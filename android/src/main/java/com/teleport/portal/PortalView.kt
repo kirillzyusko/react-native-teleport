@@ -7,6 +7,7 @@ import android.view.accessibility.AccessibilityEvent
 import com.facebook.react.uimanager.StateWrapper
 import com.teleport.common.ReparentableReactViewGroup
 import com.teleport.extensions.canReparentAttached
+import com.teleport.extensions.endViewTransitionsRecursively
 import com.teleport.extensions.findNextSiblingHostIndex
 import com.teleport.global.PortalRegistry
 import com.teleport.host.PortalHostView
@@ -90,6 +91,10 @@ class PortalView(
   ) {
     val parent = child.parent as? ViewGroup ?: return
 
+    // Finish transitions owned inside the moved subtree. The transition between
+    // the child and its current parent must be handled by the detach path below.
+    (child as? ViewGroup)?.endViewTransitionsRecursively()
+
     if (
       target != null &&
       parent is ReparentableReactViewGroup &&
@@ -102,6 +107,8 @@ class PortalView(
       parent.removeView(child)
     }
 
+    // removeView() may keep a disappearing child attached to its old parent.
+    // Only after removal can endViewTransition() release that stale ownership.
     if (child.parent === parent) {
       parent.endViewTransition(child)
     }
