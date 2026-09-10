@@ -2,7 +2,58 @@ import { ScreenNames } from "../../constants/screenNames";
 
 import type { Example } from "./types";
 
-export const examples: Example[] = [
+export const demos: Example[] = [
+  {
+    title: "Bottom sheet",
+    testID: "bottom_sheet",
+    info: ScreenNames.BOTTOM_SHEET,
+    icons: "📱",
+  },
+  {
+    title: "Instagram Reels",
+    testID: "reels",
+    info: ScreenNames.INSTAGRAM_FEED,
+    icons: "🎞",
+  },
+  {
+    title: "Menu",
+    testID: "menu",
+    info: ScreenNames.MENU,
+    icons: "📋",
+  },
+  {
+    title: "Messenger",
+    testID: "messenger",
+    info: ScreenNames.MESSENGER,
+    icons: "💬",
+  },
+  {
+    title: "Photo Gallery",
+    testID: "photo_gallery",
+    info: ScreenNames.PHOTO_GALLERY,
+    icons: "📸",
+  },
+  {
+    title: "Rich Text Editor",
+    testID: "rich_text_editor",
+    info: ScreenNames.RICH_TEXT_EDITOR,
+    icons: "📝",
+  },
+  {
+    title: "Teleportation order",
+    testID: "teleportation_order",
+    info: ScreenNames.TELEPORTATION_ORDER,
+    icons: "🛸",
+  },
+  {
+    title: "Travel",
+    testID: "travel",
+    info: ScreenNames.TRAVEL_EXPLORE,
+    icons: "🚧 🏝️",
+  },
+];
+
+export const fixtures: Example[] = [
   {
     title: "GestureHandler Touchable",
     testID: "gesture_handler_touchable",
@@ -14,12 +65,6 @@ export const examples: Example[] = [
     testID: "react_native_touchable",
     info: ScreenNames.REACT_NATIVE_TOUCHABLE,
     icons: "👆🔮",
-  },
-  {
-    title: "Menu",
-    testID: "menu",
-    info: ScreenNames.MENU,
-    icons: "📋",
   },
   {
     title: "Dynamic children",
@@ -58,58 +103,16 @@ export const examples: Example[] = [
     icons: "♻️",
   },
   {
-    title: "Teleportation order",
-    testID: "teleportation_order",
-    info: ScreenNames.TELEPORTATION_ORDER,
-    icons: "🛸",
-  },
-  {
-    title: "Instagram Reels",
-    testID: "reels",
-    info: ScreenNames.INSTAGRAM_FEED,
-    icons: "🎞",
-  },
-  {
-    title: "Bottom sheet",
-    testID: "bottom_sheet",
-    info: ScreenNames.BOTTOM_SHEET,
-    icons: "📱",
-  },
-  {
-    title: "Messenger",
-    testID: "messenger",
-    info: ScreenNames.MESSENGER,
-    icons: "💬",
-  },
-  {
-    title: "Travel",
-    testID: "travel",
-    info: ScreenNames.TRAVEL_EXPLORE,
-    icons: "🚧 🏝️",
-  },
-  {
     title: "Recycling",
     testID: "recycling",
     info: ScreenNames.RECYCLING,
     icons: "🗑️",
   },
   {
-    title: "Rich Text Editor",
-    testID: "rich_text_editor",
-    info: ScreenNames.RICH_TEXT_EDITOR,
-    icons: "📝",
-  },
-  {
     title: "Persisted Portal",
     testID: "persisted_portal",
     info: ScreenNames.PERSISTED_PORTAL,
     icons: "🪂",
-  },
-  {
-    title: "Photo Gallery",
-    testID: "photo_gallery",
-    info: ScreenNames.PHOTO_GALLERY,
-    icons: "📸",
   },
   {
     title: "Orientation",

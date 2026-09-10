@@ -29,3 +29,5 @@ export type Example = {
   info: ExampleScreen;
   icons: string;
 };
+
+export type ExampleCategory = "demo" | "fixture";
