@@ -3,11 +3,15 @@
   "version": "1.2.2",
   "description": "Missing native portal implementation for react-native",
   "main": "./lib/module/index.js",
-  "types": "./lib/typescript/src/index.d.ts",
+  "types": "./lib/typescript/src/index.web.d.ts",
   "exports": {
     ".": {
       "source": "./src/index.ts",
-      "types": "./lib/typescript/src/index.d.ts",
+      "react-native": {
+        "types": "./lib/typescript/src/index.d.ts",
+        "default": "./lib/module/index.js"
+      },
+      "types": "./lib/typescript/src/index.web.d.ts",
       "default": "./lib/module/index.js"
     },
     "./jest": "./jest/index.js",
@@ -106,6 +110,14 @@
     "react": "*",
     "react-dom": "*",
     "react-native": "*"
+  },
+  "peerDependenciesMeta": {
+    "react-dom": {
+      "optional": true
+    },
+    "react-native": {
+      "optional": true
+    }
   },
   "workspaces": [
     "example",

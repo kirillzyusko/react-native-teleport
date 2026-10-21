@@ -1,16 +1,9 @@
 import type { StyleProp, ViewStyle } from "react-native";
+import type {
+  PortalHostProps as SharedPortalHostProps,
+  PortalProps as SharedPortalProps,
+} from "./shared";
 
-export type PortalProviderProps = {
-  children: React.ReactNode;
-};
-export type PortalHostProps = {
-  name: string;
-  style?: StyleProp<ViewStyle>;
-  children?: React.ReactNode;
-};
-export type PortalProps = {
-  name?: string;
-  hostName?: string;
-  style?: StyleProp<ViewStyle>;
-  children?: React.ReactNode;
-};
+export type { PortalProviderProps } from "./shared";
+export type PortalHostProps = SharedPortalHostProps<StyleProp<ViewStyle>>;
+export type PortalProps = SharedPortalProps<StyleProp<ViewStyle>>;
