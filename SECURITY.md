@@ -32,6 +32,6 @@ In scope:
 
 Out of scope:
 
-- The example applications (`example/`, `FabricExample/`) — these exist only for local development and integration testing
+- The example application (`example/`) — it exists only for local development and integration testing
 - Issues in third-party dependencies (please report those upstream)
 - Vulnerabilities requiring a physically compromised device or a modified host application
