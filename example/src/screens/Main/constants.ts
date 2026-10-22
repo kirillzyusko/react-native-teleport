@@ -135,4 +135,10 @@ export const examples: Example[] = [
     info: ScreenNames.STABLE_HOST_REMOUNT,
     icons: "🧨",
   },
+  {
+    title: "Nested stack pop (#198)",
+    testID: "nested_stack_pop",
+    info: ScreenNames.NESTED_STACK_POP,
+    icons: "🪆",
+  },
 ];

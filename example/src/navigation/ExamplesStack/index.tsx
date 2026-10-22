@@ -33,6 +33,7 @@ import Orientation from "../../screens/Orientation";
 import ScaledHost from "../../screens/ScaledHost";
 import TransitionReparent from "../../screens/TransitionReparent";
 import StableHostRemount from "../../screens/StableHostRemount";
+import NestedStackPop from "../../screens/NestedStackPop";
 import Menu from "../../screens/Menu";
 
 export type ExamplesStackParamList = {
@@ -70,6 +71,7 @@ export type ExamplesStackParamList = {
   [ScreenNames.SCALED_HOST]: undefined;
   [ScreenNames.TRANSITION_REPARENT]: undefined;
   [ScreenNames.STABLE_HOST_REMOUNT]: undefined;
+  [ScreenNames.NESTED_STACK_POP]: undefined;
 };
 
 const Stack = createNativeStackNavigator<ExamplesStackParamList>();
@@ -150,6 +152,7 @@ const options = {
   [ScreenNames.SCALED_HOST]: { title: "Context menu (scaled host)" },
   [ScreenNames.TRANSITION_REPARENT]: { headerShown: false },
   [ScreenNames.STABLE_HOST_REMOUNT]: { headerShown: false },
+  [ScreenNames.NESTED_STACK_POP]: { headerShown: false },
 };
 
 const ExamplesStack = () => (
@@ -293,6 +296,11 @@ const ExamplesStack = () => (
       component={StableHostRemount}
       name={ScreenNames.STABLE_HOST_REMOUNT}
       options={options[ScreenNames.STABLE_HOST_REMOUNT]}
+    />
+    <Stack.Screen
+      component={NestedStackPop}
+      name={ScreenNames.NESTED_STACK_POP}
+      options={options[ScreenNames.NESTED_STACK_POP]}
     />
   </Stack.Navigator>
 );

@@ -1,0 +1,25 @@
+appId: teleport.example
+---
+- launchApp
+- runFlow:
+    file: ../subflows/open-example.yml
+    env:
+      EXAMPLE_ID: "nested_stack_pop"
+
+# Issue #198: removing both nested screens and resetting hostName in the host
+# screen's cleanup must return the persistent child without a native exception.
+- repeat:
+    times: 3
+    commands:
+      - tapOn:
+          id: "nested-stack-pop-open"
+      - assertVisible:
+          id: "nested-stack-pop-close"
+      - assertVisible:
+          text: "Persistent portal child"
+      - tapOn:
+          id: "nested-stack-pop-close"
+      - assertVisible:
+          id: "nested-stack-pop-open"
+      - assertVisible:
+          text: "Persistent portal child"
