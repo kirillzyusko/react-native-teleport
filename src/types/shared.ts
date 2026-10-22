@@ -1,14 +1,14 @@
 export type PortalProviderProps = {
   children: React.ReactNode;
 };
-export type PortalHostProps<Style> = {
+export type PortalHostProps<S> = {
   name: string;
-  style?: Style;
+  style?: S;
   children?: React.ReactNode;
 };
-export type PortalProps<Style> = {
+export type PortalProps<S> = {
   name?: string;
   hostName?: string;
-  style?: Style;
+  style?: S;
   children?: React.ReactNode;
 };
