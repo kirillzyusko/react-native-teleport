@@ -78,6 +78,7 @@ For changes to the public API or Jest mocks, also run `yarn example test` to ver
   - [#166](https://github.com/kirillzyusko/react-native-teleport/pull/166)
   - [#157](https://github.com/kirillzyusko/react-native-teleport/pull/157)
   - [#150](https://github.com/kirillzyusko/react-native-teleport/pull/150)
+  - [#142](https://github.com/kirillzyusko/react-native-teleport/pull/142)
   - [#87](https://github.com/kirillzyusko/react-native-teleport/pull/87)
   - [#48](https://github.com/kirillzyusko/react-native-teleport/pull/48)
   - [#31](https://github.com/kirillzyusko/react-native-teleport/pull/31)
