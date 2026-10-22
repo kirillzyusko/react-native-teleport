@@ -22,8 +22,8 @@ These instructions apply to the entire repository. Follow direct user or maintai
 - Request a minimal runnable project, a focused example change, or a self-contained snippet with the exact target file, setup commands, and interaction steps.
 - Try to prepare and verify a minimal runnable reproduction. It may be:
   - A bare React Native project containing only the dependencies, configuration, and code needed to reproduce the bug.
-  - A focused fork of this repository with the reproduction added to the corresponding `example/` or `FabricExample/` application.
-  - A self-contained snippet that can be pasted into `example/` or `FabricExample/` and reproduces the bug without extra dependencies.
+  - A focused fork of this repository with the reproduction added to the `example/` application.
+  - A self-contained snippet that can be pasted into `example/` and reproduces the bug without extra dependencies.
 - If you have a reproduction, remove unrelated code and private data, run it from a clean setup, and document the exact steps. Put snippets and their target files in **Code snippet**, repository links and the relevant branch or commit in **Repo for reproducing**, and setup commands and interaction steps in **To Reproduce**.
 - If a runnable reproduction is unavailable, say why in **Repo for reproducing**. Include all known symptoms, attempted steps, logs, environment details, and relevant evidence in the report. Put any proposed patch in **Additional context** and label it unverified. Distinguish observed facts from hypotheses.
 
@@ -46,7 +46,7 @@ If any check fails, do not create the issue.
 - `ios/`: iOS implementation in Swift and Objective-C/Objective-C++.
 - `android/`: Android implementation in Kotlin and JNI/C++.
 - `common/` and `cpp/`: shared New Architecture C++ code.
-- `example/` and `FabricExample/`: example applications used to exercise library changes.
+- `example/`: example application used to exercise library changes.
 - `e2e/`: end-to-end test flows and test helpers.
 - `docs/`: documentation site.
 
@@ -83,7 +83,7 @@ For changes to the public API or Jest mocks, also run `yarn example test` to ver
   - [#31](https://github.com/kirillzyusko/react-native-teleport/pull/31)
 - In **📜 Description**, summarize the PR's idea and resulting behavior in one or two sentences. Put reproduction steps, implementation reasoning, and alternatives in **💡 Motivation and Context**.
 - In **💡 Motivation and Context**, describe the exact steps that trigger the bug, the observed and expected behavior, why the chosen solution addresses it, and which alternatives were considered and why they did not fit. Include only alternatives actually considered; do not invent a comparison to fill the section. Link the issues and PRs this change fixes, closes, or supersedes, using `Fixes` or `Closes` where appropriate and explaining related PRs' relevance.
-- For a bug-fix pull request, include runnable reproduction code: a minimal React Native project, a focused example change, a regression test that fails without the fix, or a self-contained snippet that reproduces the bug when pasted into `example/` or `FabricExample/` without extra dependencies.
+- For a bug-fix pull request, include runnable reproduction code: a minimal React Native project, a focused example change, a regression test that fails without the fix, or a self-contained snippet that reproduces the bug when pasted into `example/` without extra dependencies.
 - Verify the reproduction against the unfixed code, then run the same steps or test with the fix. In **💡 Motivation and Context**, link to the reproduction at a specific commit, identify the reproduction files included in the pull request, or include the snippet and where to paste it. Document setup commands, exact interaction steps, the affected platform and versions, the observed and expected behavior, and the before-and-after results there.
 - In **📢 Changelog**, briefly describe changes by file: name the affected files and what was added, moved, or fixed. Group related files when that keeps the list concise. Keep only affected platform or language subsections (`JS`, `iOS`, `Android`); remove unaffected ones instead of writing "No changes". Add appropriate subsections such as `Docs` or `E2E` when those areas change. Remove empty placeholder bullets.
 - In **🤔 How Has This Been Tested?**, include only a list of device models, their OS versions, and whether verification was performed manually or by an agent, using the format `Device model (OS version/manual or agent)`. Identify simulators or emulators as such. Do not list unit-test, lint, type-check, or other CI results; CI reports those checks. If no device verification was performed, state that and explain why.
