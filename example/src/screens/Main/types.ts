@@ -22,7 +22,8 @@ export type ExampleScreen =
   | ScreenNames.ORIENTATION
   | ScreenNames.SCALED_HOST
   | ScreenNames.TRANSITION_REPARENT
-  | ScreenNames.STABLE_HOST_REMOUNT;
+  | ScreenNames.STABLE_HOST_REMOUNT
+  | ScreenNames.NESTED_STACK_POP;
 
 export type Example = {
   testID: string;
