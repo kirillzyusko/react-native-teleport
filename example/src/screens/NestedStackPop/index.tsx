@@ -72,11 +72,7 @@ export default function NestedStackPop() {
   return (
     <View style={styles.container}>
       <Outer.Navigator>
-        <Outer.Screen
-          component={Instructions}
-          name="Instructions"
-          options={{ title: "Nested stack pop (#198)" }}
-        />
+        <Outer.Screen component={Instructions} name="Instructions" />
         <Outer.Screen name="Group" options={{ headerShown: false }}>
           {() => (
             <Inner.Navigator>

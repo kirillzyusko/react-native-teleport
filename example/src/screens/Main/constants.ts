@@ -136,7 +136,7 @@ export const examples: Example[] = [
     icons: "🧨",
   },
   {
-    title: "Nested stack pop (#198)",
+    title: "Nested stack pop",
     testID: "nested_stack_pop",
     info: ScreenNames.NESTED_STACK_POP,
     icons: "🫥",
