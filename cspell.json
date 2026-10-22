@@ -82,7 +82,9 @@
     "vsync",
     "rawvideo",
     "pblack",
-    "teleporting"
+    "teleporting",
+    "lockfiles",
+    "worktree"
   ],
   "ignorePaths": [
     "node_modules",
