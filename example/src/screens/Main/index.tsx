@@ -1,15 +1,30 @@
 import { useCallback } from "react";
 import { StyleSheet } from "react-native";
 import { ScrollView } from "react-native-gesture-handler";
+import {
+  createNativeStackNavigator,
+  type NativeStackNavigationProp,
+} from "@react-navigation/native-stack";
+import {
+  useNavigation,
+  type CompositeNavigationProp,
+} from "@react-navigation/native";
 
-import { StackNames } from "../../constants/screenNames";
+import { MainScreenNames, StackNames } from "../../constants/screenNames";
 
 import ExampleLink from "./components/ExampleLink";
-import { examples } from "./constants";
+import { demos, fixtures } from "./constants";
 
 import type { RootStackParamList } from "../../navigation/index";
-import type { NativeStackScreenProps } from "@react-navigation/native-stack";
-import type { ExampleScreen } from "./types";
+import type { Example, ExampleScreen } from "./types";
+
+export type MainStackParamList = {
+  [MainScreenNames.CATEGORIES]: undefined;
+  [MainScreenNames.DEMOS]: undefined;
+  [MainScreenNames.FIXTURES]: undefined;
+};
+
+const Stack = createNativeStackNavigator<MainStackParamList>();
 
 const styles = StyleSheet.create({
   scrollViewContainer: {
@@ -18,9 +33,47 @@ const styles = StyleSheet.create({
   },
 });
 
-type Props = NativeStackScreenProps<RootStackParamList>;
+type Navigation = CompositeNavigationProp<
+  NativeStackNavigationProp<MainStackParamList>,
+  NativeStackNavigationProp<RootStackParamList>
+>;
 
-const ExampleMain = ({ navigation }: Props) => {
+type ExamplesProps = {
+  examples: Example[];
+};
+
+const Categories = () => {
+  const navigation = useNavigation<Navigation>();
+  const onCategoryPress = useCallback(
+    (screen: MainScreenNames.DEMOS | MainScreenNames.FIXTURES) =>
+      navigation.navigate(screen),
+    [navigation],
+  );
+
+  return (
+    <ScrollView contentContainerStyle={styles.scrollViewContainer}>
+      <ExampleLink
+        icons="🎨"
+        index={1}
+        info={MainScreenNames.DEMOS}
+        onPress={onCategoryPress}
+        testID="demo"
+        title="Demos"
+      />
+      <ExampleLink
+        icons="🧪"
+        index={2}
+        info={MainScreenNames.FIXTURES}
+        onPress={onCategoryPress}
+        testID="fixture"
+        title="Fixtures"
+      />
+    </ScrollView>
+  );
+};
+
+const Examples = ({ examples }: ExamplesProps) => {
+  const navigation = useNavigation<Navigation>();
   const onExamplePress = useCallback(
     (info: ExampleScreen) =>
       navigation.navigate(StackNames.EXAMPLES_STACK, {
@@ -45,5 +98,23 @@ const ExampleMain = ({ navigation }: Props) => {
     </ScrollView>
   );
 };
+
+const Demos = () => <Examples examples={demos} />;
+
+const Fixtures = () => <Examples examples={fixtures} />;
+
+const ExampleMain = () => (
+  <Stack.Navigator
+    screenOptions={{
+      fullScreenGestureEnabled: true,
+      gestureEnabled: true,
+      headerShown: false,
+    }}
+  >
+    <Stack.Screen component={Categories} name={MainScreenNames.CATEGORIES} />
+    <Stack.Screen component={Demos} name={MainScreenNames.DEMOS} />
+    <Stack.Screen component={Fixtures} name={MainScreenNames.FIXTURES} />
+  </Stack.Navigator>
+);
 
 export default ExampleMain;

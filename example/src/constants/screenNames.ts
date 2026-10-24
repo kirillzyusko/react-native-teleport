@@ -32,3 +32,9 @@ export enum StackNames {
   EXAMPLES = "EXAMPLES",
   EXAMPLES_STACK = "EXAMPLES_STACK",
 }
+
+export enum MainScreenNames {
+  CATEGORIES = "CATEGORIES",
+  DEMOS = "DEMOS",
+  FIXTURES = "FIXTURES",
+}

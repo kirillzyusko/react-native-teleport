@@ -3,15 +3,15 @@ import { Text, TouchableOpacity, View } from "react-native";
 
 import styles from "./styles";
 
-import type { Example, ExampleScreen } from "../../types";
-import type { FC } from "react";
+import type { Example } from "../../types";
 
-type Props = {
-  onPress: (info: ExampleScreen) => void;
+type Props<T> = Omit<Example, "info"> & {
+  info: T;
+  onPress: (info: T) => void;
   index: number;
-} & Example;
+};
 
-const ExampleLink: FC<Props> = (props) => {
+const ExampleLink = <T,>(props: Props<T>) => {
   const { onPress, title, testID, info, icons, index } = props;
 
   const onCardPress = useCallback(() => onPress(info), [info, onPress]);

@@ -4,6 +4,7 @@ appId: teleport.example
 - runFlow:
     file: ../subflows/open-example.yml
     env:
+      EXAMPLE_CATEGORY: "fixture"
       EXAMPLE_ID: "nested_stack_pop"
 
 # Issue #198: removing both nested screens and resetting hostName in the host
