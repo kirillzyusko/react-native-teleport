@@ -1,5 +1,5 @@
 import { useCallback } from "react";
-import { StyleSheet, View } from "react-native";
+import { StyleSheet } from "react-native";
 import { ScrollView } from "react-native-gesture-handler";
 import {
   createNativeStackNavigator,
@@ -12,14 +12,14 @@ import {
 
 import { MainScreenNames, StackNames } from "../../constants/screenNames";
 
-import CategorySelector from "./components/CategorySelector";
 import ExampleLink from "./components/ExampleLink";
 import { demos, fixtures } from "./constants";
 
 import type { RootStackParamList } from "../../navigation/index";
-import type { Example, ExampleCategory, ExampleScreen } from "./types";
+import type { Example, ExampleScreen } from "./types";
 
 export type MainStackParamList = {
+  [MainScreenNames.CATEGORIES]: undefined;
   [MainScreenNames.DEMOS]: undefined;
   [MainScreenNames.FIXTURES]: undefined;
 };
@@ -27,9 +27,6 @@ export type MainStackParamList = {
 const Stack = createNativeStackNavigator<MainStackParamList>();
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-  },
   scrollViewContainer: {
     paddingVertical: 10,
     paddingHorizontal: 8,
@@ -42,11 +39,40 @@ type Navigation = CompositeNavigationProp<
 >;
 
 type ExamplesProps = {
-  category: ExampleCategory;
   examples: Example[];
 };
 
-const Examples = ({ category, examples }: ExamplesProps) => {
+const Categories = () => {
+  const navigation = useNavigation<Navigation>();
+  const onCategoryPress = useCallback(
+    (screen: MainScreenNames.DEMOS | MainScreenNames.FIXTURES) =>
+      navigation.navigate(screen),
+    [navigation],
+  );
+
+  return (
+    <ScrollView contentContainerStyle={styles.scrollViewContainer}>
+      <ExampleLink
+        icons="🎨"
+        index={1}
+        info={MainScreenNames.DEMOS}
+        onPress={onCategoryPress}
+        testID="demo"
+        title="Demos"
+      />
+      <ExampleLink
+        icons="🧪"
+        index={2}
+        info={MainScreenNames.FIXTURES}
+        onPress={onCategoryPress}
+        testID="fixture"
+        title="Fixtures"
+      />
+    </ScrollView>
+  );
+};
+
+const Examples = ({ examples }: ExamplesProps) => {
   const navigation = useNavigation<Navigation>();
   const onExamplePress = useCallback(
     (info: ExampleScreen) =>
@@ -55,46 +81,37 @@ const Examples = ({ category, examples }: ExamplesProps) => {
       }),
     [navigation],
   );
-  const onCategoryPress = useCallback(
-    (nextCategory: ExampleCategory) => {
-      navigation.navigate(
-        nextCategory === "demo"
-          ? MainScreenNames.DEMOS
-          : MainScreenNames.FIXTURES,
-      );
-    },
-    [navigation],
-  );
 
   return (
-    <View style={styles.container}>
-      <CategorySelector
-        onCategoryPress={onCategoryPress}
-        selectedCategory={category}
-      />
-      <ScrollView
-        contentContainerStyle={styles.scrollViewContainer}
-        testID="main_scroll_view"
-      >
-        {examples.map((example, index) => (
-          <ExampleLink
-            key={example.title}
-            index={index + 1}
-            onPress={onExamplePress}
-            {...example}
-          />
-        ))}
-      </ScrollView>
-    </View>
+    <ScrollView
+      contentContainerStyle={styles.scrollViewContainer}
+      testID="main_scroll_view"
+    >
+      {examples.map((example, index) => (
+        <ExampleLink
+          key={example.title}
+          index={index + 1}
+          onPress={onExamplePress}
+          {...example}
+        />
+      ))}
+    </ScrollView>
   );
 };
 
-const Demos = () => <Examples category="demo" examples={demos} />;
+const Demos = () => <Examples examples={demos} />;
 
-const Fixtures = () => <Examples category="fixture" examples={fixtures} />;
+const Fixtures = () => <Examples examples={fixtures} />;
 
 const ExampleMain = () => (
-  <Stack.Navigator screenOptions={{ headerShown: false }}>
+  <Stack.Navigator
+    screenOptions={{
+      fullScreenGestureEnabled: true,
+      gestureEnabled: true,
+      headerShown: false,
+    }}
+  >
+    <Stack.Screen component={Categories} name={MainScreenNames.CATEGORIES} />
     <Stack.Screen component={Demos} name={MainScreenNames.DEMOS} />
     <Stack.Screen component={Fixtures} name={MainScreenNames.FIXTURES} />
   </Stack.Navigator>

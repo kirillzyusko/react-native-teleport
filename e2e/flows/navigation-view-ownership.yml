@@ -25,6 +25,7 @@ appId: teleport.example
 # a native-stack removal transition. On Android, react-native-screens keeps the
 # departing subtree in a view transition, which exposes stale parent ownership
 # when the Portal moves to the still-attached app-level overlay host.
+- launchApp
 - runFlow:
     file: ../subflows/open-example.yml
     env:
@@ -51,6 +52,7 @@ appId: teleport.example
 - runFlow:
     file: ../subflows/open-example.yml
     env:
+      EXAMPLE_CATEGORY: "fixture"
       EXAMPLE_ID: "stable_host_remount"
 - tapOn:
     id: "repro_run"

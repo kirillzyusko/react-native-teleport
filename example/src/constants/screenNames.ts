@@ -34,6 +34,7 @@ export enum StackNames {
 }
 
 export enum MainScreenNames {
+  CATEGORIES = "CATEGORIES",
   DEMOS = "DEMOS",
   FIXTURES = "FIXTURES",
 }

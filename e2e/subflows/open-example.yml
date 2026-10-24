@@ -12,6 +12,8 @@ appId: teleport.example
 - runFlow:
     when:
       platform: Web
+      notVisible:
+        id: ${EXAMPLE_ID}
     commands:
       - repeat:
           while:
