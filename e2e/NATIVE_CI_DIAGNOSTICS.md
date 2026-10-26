@@ -93,6 +93,19 @@ simulated push-service behavior, which would matter to push-notification tests.
 The original supplied failure has the same log storm without the additional
 diagnostics: `apsd` produced 37,459 of 41,324 lines during 12:49:36–55 UTC.
 
+The first two `apsd-stopped` trials passed, and their artifacts confirm the
+selected service remained stopped with zero sampled CPU use. Diagnostic-log
+CPU use dropped substantially, but termination still took 35.084 and 21.076
+seconds. Their kernel captures again show runnable background-priority RBS
+threads. Stopping `apsd` alone therefore does not remove the observed mechanism.
+
+The remaining stalls include substantial host Spotlight activity, including
+multiple `mdworker_shared` processes. A separate `no-spotlight` profile disables
+host indexing with `mdutil` before downloading the app and preparing the
+simulator, preserving before/after indexing status. It leaves `apsd` running
+and changes no test flow. This is the next controlled experiment, not a claimed
+fix.
+
 Related upstream reports:
 
 - [#3318](https://github.com/mobile-dev-inc/Maestro/issues/3318) and
