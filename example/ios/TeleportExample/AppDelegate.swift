@@ -16,6 +16,10 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
     didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]? = nil
   ) -> Bool {
     self.launchOptions = launchOptions
+    UserDefaults.standard.set(
+      ProcessInfo.processInfo.environment["TELEPORT_TOUCH_TRACE"] == "1",
+      forKey: "TeleportTouchTrace"
+    )
 
     let delegate = ReactNativeDelegate()
     let factory = RCTReactNativeFactory(delegate: delegate)

@@ -141,6 +141,29 @@ Push, pull-request, and default manual runs apply this temporary pinned
 dependency patch. Explicit comparison profiles keep the stock stop route.
 The final unchanged-candidate series remains a separate verification step.
 
+### Separate press/drag failure during verification
+
+Candidate `9f7d071` failed the third iOS trial in `bottom-sheet` while the
+remaining 17 flows passed. Both open operations and the normal Close tap
+succeeded. After the existing three-second rightward gesture on Close, the
+sheet remained visible and the final `assertNotVisible` failed. The driver
+remained reachable throughout the following flows.
+
+The recorded swipe went from `(201, 591)` to `(361, 591)`. The failure's
+accessibility hierarchy placed Close at `[16,583][386,600]`, containing both
+points; the screenshot shows the sheet still open. The existing artifacts
+do not record the React press state machine or which press callback ran.
+This failure therefore needs its own diagnosis before declaring stability.
+
+The optional `touch-trace` profile keeps the original suite and native-stop
+patch, and enables logging of the two BottomSheet press handlers, actual
+Pressability signals, measured responder regions, and touch coordinates.
+The tracer forwards the original callbacks and state-machine operation.
+It is disabled in ordinary builds and does not change the test gesture or
+assertions. A separate step checks that trace output was actually captured.
+Candidate commit IDs are included in concurrency groups so new experiments
+preserve earlier runs and their remaining trial evidence.
+
 Related upstream reports:
 
 - [#3318](https://github.com/mobile-dev-inc/Maestro/issues/3318) and

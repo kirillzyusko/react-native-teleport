@@ -7,6 +7,7 @@ import Reanimated, {
   useSharedValue,
   withSpring,
 } from "react-native-reanimated";
+import { traceState } from "../../diagnostics/touchTrace";
 
 type BottomSheetContainerProps = {
   children: React.ReactNode;
@@ -23,10 +24,12 @@ export function BottomSheetContainer({
   const height = useSharedValue(9999);
 
   const onLayout = (e: LayoutChangeEvent) => {
+    traceState("sheet.layout", { ...e.nativeEvent.layout });
     height.value = e.nativeEvent.layout.height;
   };
 
   useEffect(() => {
+    traceState("sheet.visibility", { visible });
     if (visible) {
       setShown(true);
     }

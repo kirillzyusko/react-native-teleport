@@ -11,6 +11,7 @@ on:
           - apsd-stopped
           - no-spotlight
           - simctl-stop
+          - touch-trace
       trials:
         description: Independent fresh-runner trials
         type: choice
@@ -153,7 +154,7 @@ jobs:
     runs-on: macos-${{ matrix.devices.macos }}
     timeout-minutes: 90
     concurrency:
-      group: ios-e2e-${{ matrix.devices.ios }}-${{ github.ref }}-${{ matrix.trial }}-${{ inputs.profile || 'simctl-stop' }}
+      group: ios-e2e-${{ matrix.devices.ios }}-${{ github.ref }}-${{ github.sha }}-${{ matrix.trial }}-${{ inputs.profile || 'simctl-stop' }}
       cancel-in-progress: true
     strategy:
       fail-fast: false
@@ -228,7 +229,7 @@ jobs:
       - name: Log Maestro version
         run: maestro --version
       - name: Use simulator-native app termination
-        if: (inputs.profile || 'simctl-stop') == 'simctl-stop'
+        if: (inputs.profile || 'simctl-stop') == 'simctl-stop' || inputs.profile == 'touch-trace'
         run: |
           set -euo pipefail
           python3 e2e/scripts/patch-maestro-ios-stop.py \
@@ -251,6 +252,8 @@ jobs:
         run: cd e2e && npm install
       - name: Run E2E tests
         timeout-minutes: 30
+        env:
+          SIMCTL_CHILD_TELEPORT_TOUCH_TRACE: ${{ inputs.profile == 'touch-trace' && '1' || '0' }}
         run: |
           mkdir -p e2e/reports
           node e2e/snapshot-engine.js > e2e/reports/snapshot-engine.log 2>&1 &
@@ -263,6 +266,12 @@ jobs:
             --debug-output ./e2e/reports/debug --flatten-debug-output
       - name: Check glitches/flickering
         run: node e2e/scripts/check-glitches.mjs e2e/reports/debug
+      - name: Verify touch trace was enabled
+        if: always() && inputs.profile == 'touch-trace'
+        run: |
+          set -euo pipefail
+          grep -F '"phase":"installed"' e2e/reports/native-diagnostics/simulator.log
+          grep -F '"phase":"signal.before"' e2e/reports/native-diagnostics/simulator.log | grep -F '"role":"bottom-sheet.close"'
       - name: Upload native diagnostics
         if: always()
         uses: actions/upload-artifact@v4

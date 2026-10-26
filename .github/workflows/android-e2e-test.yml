@@ -67,7 +67,7 @@ jobs:
     name: 🏗️ Build E2E apk
     runs-on: ubuntu-latest
     concurrency:
-      group: android-e2e-${{ github.ref }}-${{ inputs.mode || 'suite' }}
+      group: android-e2e-${{ github.ref }}-${{ github.sha }}-${{ inputs.mode || 'suite' }}
       cancel-in-progress: true
     steps:
       - name: Checkout
@@ -111,7 +111,7 @@ jobs:
       WORKING_DIRECTORY: example
       NATIVE_MODE: ${{ inputs.mode || 'suite' }}
     concurrency:
-      group: android-e2e-${{ matrix.devices.api }}-${{ github.ref }}-${{ matrix.trial }}-${{ inputs.mode || 'suite' }}
+      group: android-e2e-${{ matrix.devices.api }}-${{ github.ref }}-${{ github.sha }}-${{ matrix.trial }}-${{ inputs.mode || 'suite' }}
       cancel-in-progress: true
     strategy:
       fail-fast: false

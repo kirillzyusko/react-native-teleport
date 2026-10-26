@@ -4,6 +4,7 @@ import { Portal } from "react-native-teleport";
 import BottomSheetContainer from "./sheet";
 import { SafeAreaView } from "react-native-safe-area-context";
 import Slider from "./slider";
+import { tracePress } from "../../diagnostics/touchTrace";
 
 export default function BottomSheet() {
   const [isVisible, setVisible] = useState(false);
@@ -17,13 +18,17 @@ export default function BottomSheet() {
             <View style={styles.column} />
             <TouchableOpacity
               testID="open_bottom_sheet"
-              onPress={() => setVisible(true)}
+              onPress={tracePress("bottom-sheet.open", () => setVisible(true))}
               style={styles.button}
             >
               <Portal hostName="root">
                 <BottomSheetContainer visible={isVisible}>
                   <SafeAreaView edges={["bottom"]} style={styles.bottomSheet}>
-                    <TouchableOpacity onPress={() => setVisible(false)}>
+                    <TouchableOpacity
+                      onPress={tracePress("bottom-sheet.close", () =>
+                        setVisible(false),
+                      )}
+                    >
                       <Text>Close</Text>
                     </TouchableOpacity>
                     <Slider />
