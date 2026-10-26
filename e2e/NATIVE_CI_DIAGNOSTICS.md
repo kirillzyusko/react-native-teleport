@@ -124,7 +124,8 @@ Both native workflows run the existing suite through `scripts/native-diagnostics
   crash reports. Android also saves dumpsys and kernel output when permitted.
 - Bound each diagnostic command to 15 seconds, stop collectors at the end, and
   preserve the test's exit code. Do not retry or turn a failed test green.
-- Upload `e2e-diagnostics-ios-<trial>` / `e2e-diagnostics-android-<trial>` on successful and
+- Upload `e2e-diagnostics-ios-<attempt>-<trial>` /
+  `e2e-diagnostics-android-<attempt>-<trial>` on successful and
   failed runs for comparison, with seven-day retention. Snapshot-engine output
   is retained alongside them, as are Maestro's log and per-flow command
   results, even when the job passes. The existing failure reports are still
@@ -138,7 +139,7 @@ most two running concurrently per platform. Each job uses a fresh hosted
 runner, downloads the same built app, and runs the whole original suite in one
 Maestro session. Push and pull-request events still run one trial. Matrix
 fail-fast is disabled so a failing job does not cancel other observations.
-Artifacts are unique per trial.
+Artifacts are unique per attempt and trial, so reruns retain earlier evidence.
 
 The CI campaign ledger is stored in
 `.argent/evidence/ci-flakiness-2026-10-26/ci-campaign/`. It records the commit,

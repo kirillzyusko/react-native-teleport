@@ -181,7 +181,7 @@ jobs:
             ./e2e/reports/debug/*.log
             ./e2e/reports/debug/**/commands.json
             ./e2e/reports/debug/**/manifest.json
-          name: e2e-diagnostics-android-${{ matrix.trial }}
+          name: e2e-diagnostics-android-${{ github.run_attempt }}-${{ matrix.trial }}
           retention-days: 7
       - name: Upload test report
         if: failure()
@@ -190,4 +190,4 @@ jobs:
           path: |
             ./e2e/reports
             ./e2e/videos
-          name: e2e-report-android-${{ matrix.trial }}
+          name: e2e-report-android-${{ github.run_attempt }}-${{ matrix.trial }}
