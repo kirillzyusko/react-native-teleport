@@ -53,6 +53,36 @@ also capture the pressure-level counter and the kernel stack of the selected
 process. The first passing job had at most two simulator log processes (the
 collector and Maestro's current capture), without accumulation across flows.
 
+The next diagnostic batch reproduced the original fatal signature. In run
+40357432025, trial 1, termination started at 16:37:06.596 UTC and SpringBoard
+received the app's exit at 16:37:06.649. XCTest still timed out at 16:38:07.210
+with `Failed to terminate teleport.example:12041: Failed to terminate
+teleport.example:0`, ending the HTTP-server test. Sixteen remaining flows failed.
+
+The kernel snapshot at 16:37:15.645–18.745 shows the `runningboardd` death-handler
+thread at priority 4 (base 4), runnable for 9.005 seconds before the first sample
+and still runnable throughout the capture. It was not sampled waiting on a
+mutex. Apple's [scheduler definitions](https://github.com/apple-oss-distributions/xnu/blob/main/osfmk/kern/sched.h)
+and [QoS mapping](https://github.com/apple-oss-distributions/xnu/blob/main/osfmk/kern/thread_policy.c)
+associate priority 4 with the background/maintenance band. Other runnable
+threads in this process showed the same delay. Memory pressure remained at
+normal level 1, with only 0.19 MB swap used during the fatal wait.
+
+Host process samples show substantial Spotlight and diagnostic-log CPU use.
+In the unfiltered simulator log, `apsd` produced 29,255 of 31,992 lines between
+16:37:00 and 16:37:19. The captured runnable delay establishes a scheduling
+problem during this failure; it does not yet prove which competing service or
+policy caused it. Profiling itself can affect timing.
+
+Manual iOS dispatch now offers `baseline` and `apsd-stopped` profiles, with
+baseline remaining the default. The comparison stops only `apsd` in the
+selected simulator after validating its namespace and executable path, using
+the same SIGSTOP operation as [yeetd](https://github.com/biscuitehh/yeetd/blob/main/yeetd/main.swift).
+Keyboard-controller already enables yeetd's `killapsd` setting. The experiment
+keeps all test flows, the app, Maestro version, and diagnostic collection
+identical. This is a causal experiment, not a claimed fix; it also disables
+simulated push-service behavior, which would matter to push-notification tests.
+
 Related upstream reports:
 
 - [#3318](https://github.com/mobile-dev-inc/Maestro/issues/3318) and

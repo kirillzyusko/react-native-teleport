@@ -2,6 +2,13 @@ name: 🍏 Test iOS
 on:
   workflow_dispatch:
     inputs:
+      profile:
+        description: Simulator service comparison (diagnostic experiment)
+        type: choice
+        default: baseline
+        options:
+          - baseline
+          - apsd-stopped
       trials:
         description: Independent fresh-runner trials
         type: choice
@@ -119,11 +126,11 @@ jobs:
           path: example/ios/build/Build/Products/Release-iphonesimulator/TeleportExample.app/**
 
   e2e-test:
-    name: ⚙️ Automated test cases (iOS-${{ matrix.devices.ios }}, trial-${{ matrix.trial }})
+    name: ⚙️ Automated test cases (iOS-${{ matrix.devices.ios }}, trial-${{ matrix.trial }}, ${{ inputs.profile || 'baseline' }})
     runs-on: macos-${{ matrix.devices.macos }}
     timeout-minutes: 90
     concurrency:
-      group: ios-e2e-${{ matrix.devices.ios }}-${{ github.ref }}-${{ matrix.trial }}
+      group: ios-e2e-${{ matrix.devices.ios }}-${{ github.ref }}-${{ matrix.trial }}-${{ inputs.profile || 'baseline' }}
       cancel-in-progress: true
     strategy:
       fail-fast: false
@@ -154,6 +161,28 @@ jobs:
           xcrun simctl bootstatus "$UDID"
           osascript -e 'tell application "Simulator" to activate'
           xcrun simctl install "$UDID" example/ios/build/Build/Products/Release-iphonesimulator/TeleportExample.app
+      - name: Stop selected simulator's push service (comparison only)
+        if: inputs.profile == 'apsd-stopped'
+        env:
+          UDID: ${{ steps.simulator.outputs.udid }}
+        run: |
+          # Isolate the apsd behavior from keyboard-controller's broader yeetd setup.
+          # Resolve the PID inside this simulator's launchd namespace.
+          APSD_PID=$(xcrun simctl spawn "$UDID" launchctl list | awk '$3 == "com.apple.apsd" {print $1}')
+          test "$APSD_PID" -gt 1
+          APSD_PATH=$(ps -p "$APSD_PID" -o comm=)
+          case "$APSD_PATH" in
+            *simruntime/Contents/Resources/RuntimeRoot/*/apsd) ;;
+            *) echo "Unexpected simulator apsd path: $APSD_PATH"; exit 1 ;;
+          esac
+          mkdir -p e2e/reports/native-diagnostics
+          {
+            date -u
+            echo "profile=apsd-stopped simulator=$UDID"
+            ps -p "$APSD_PID" -o pid,ppid,state,pcpu,comm
+            kill -STOP "$APSD_PID"
+            ps -p "$APSD_PID" -o pid,ppid,state,pcpu,comm
+          } | tee e2e/reports/native-diagnostics/simulator-profile.log
       - name: Install Maestro CLI
         run: |
           export MAESTRO_VERSION=2.10.0
