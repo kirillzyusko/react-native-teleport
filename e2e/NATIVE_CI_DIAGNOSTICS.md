@@ -68,6 +68,14 @@ associate priority 4 with the background/maintenance band. Other runnable
 threads in this process showed the same delay. Memory pressure remained at
 normal level 1, with only 0.19 MB swap used during the fatal wait.
 
+Re-reporting that same saved capture in timeline format exposes the policy:
+`process darwinbg`, `thread darwinbg`, and effective thread QoS `background`.
+The death-handler thread requested `utility`; other affected threads requested
+`user initiated`, but the process-wide policy clamped them to background.
+This is recorded kernel state, not a policy inferred from the user-space stack.
+The report does not identify who applied that policy or why runnable work
+received no CPU during the captured interval.
+
 Host process samples show substantial Spotlight and diagnostic-log CPU use.
 In the unfiltered simulator log, `apsd` produced 29,255 of 31,992 lines between
 16:37:00 and 16:37:19. The captured runnable delay establishes a scheduling
@@ -178,6 +186,17 @@ disconnects with `adbd`, so diagnostics now read retained lifecycle messages
 through the new daemon after the test; kernel output alone does not identify
 the sender of that signal.
 
+The retained-buffer capture in the third stock probe identifies the sender
+in a fresh CI execution, not the cached AVD's historical logs:
+
+```text
+10-26 17:32:29.547 W livelock: Z 600.000s 458->11941->11941 [sh] [kill]
+10-26 17:32:29.547 I livelock: Killing '/apex/com.android.adbd/bin/adbd' (458)
+```
+
+That is run 40365711624, job 121726807405, within the recorded current test
+window. The real driver then observed the changed `adbd` PID and failed.
+
 The ordinary Android suite now applies that same single-constant change to
 the installed Maestro client JAR before running the existing CLI command.
 `scripts/patch-maestro-instrumentation.py` accepts only the pinned 2.10.0
@@ -225,6 +244,13 @@ Both native workflows run the existing suite through `scripts/native-diagnostics
 
 The workflows select the device explicitly. `-e DEVICE=...` only supplies a
 flow variable for baseline paths; it does not select a simulator or emulator.
+
+The first attempt of each iOS service-comparison run failed before obtaining a
+runner, with zero executed steps. GitHub's annotations say `The job was not
+acquired by Runner of type hosted even after multiple attempts` and explicitly
+mention macOS arm64 capacity constraints. These are separate setup failures.
+The same-commit setup was resubmitted; those reruns are excluded from the final
+independent clean-series counts, and the original annotations are preserved.
 
 Manual dispatch supports one, three, or five independent test jobs, with at
 most two running concurrently per platform. Each job uses a fresh hosted
