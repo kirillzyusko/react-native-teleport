@@ -23,6 +23,7 @@
     "*.podspec",
     "react-native.config.js",
     "jest",
+    "AGENTS.md",
     "!ios/build",
     "!android/build",
     "!android/gradle",
