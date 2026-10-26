@@ -1,0 +1,847 @@
+---
+sidebar_position: 5
+sidebar_label: Building Photos app transitions
+title: Photos app image transition in React Native
+description: Build a Photos app style image transition in React Native. A low-res thumbnail expands to full screen and the full-res photo swaps in as soon as it loads.
+image: /img/photo-gallery-transition/preview.jpg
+keywords:
+  [
+    react-native-teleport,
+    react native photo gallery,
+    react native image gallery,
+    react native image viewer,
+    custom image viewer,
+    photos app transition,
+    image zoom transition,
+    hero transition,
+    shared element transition,
+    lightbox,
+    progressive image loading,
+    low-res thumbnail,
+    full-res image,
+    react-native-reanimated,
+    react-navigation,
+    portal,
+    reparenting,
+    chat media viewer,
+    social feed images,
+  ]
+---
+
+# Building Photos app transitions in React Native
+
+import PhotoTransitionExplainer from "@site/src/components/PhotoTransitionExplainer";
+import Video from "@site/src/components/Video";
+
+In this guide we'll build the image transition you know from photo apps: tap a thumbnail in a grid, it grows into a full-screen photo, and the sharp full-resolution version replaces the blurry preview **the moment it finishes loading**. If the photo arrives while the animation is still running, it swaps in mid-flight. If it arrives later, it swaps in right after the animation ends. Either way there are no flickers, blank frames or jumps.
+
+This is what we're building, recorded on an iPhone simulator from the code in this guide:
+
+<Video
+  src="/video/photos-app-transition.mp4"
+  style={{ height: "60vh" }}
+  aria-label="A React Native photo gallery: tapping a thumbnail expands it to a full-screen photo that becomes sharp as soon as the full-resolution image loads, and closing shrinks it back into the grid."
+/>
+<br />
+
+## At a glance
+
+- **Matches production photo apps.** The tapped thumbnail expands instantly, without waiting for the network, and the sharp photo replaces it as soon as it's downloaded. Slow networks, fast networks and cached photos are all handled.
+- **Resource efficient.**
+  - Lists render small, low-res thumbnails only, which keeps long lists fast and light on memory.
+  - The full-res photo is requested only when the user opens it, and rendered exactly once. There is no hidden second copy of a heavy image during the transition.
+  - The thumbnail is moved, not copied. `<Portal>` re-parents the existing native view, so nothing is re-mounted, re-downloaded or re-decoded.
+  - No aggressive caching or prefetching is required. A plain React Native `<Image>` is enough.
+- **Extensible to stateful content.** Because the native view itself moves, anything stateful inside it keeps its state: videos and GIFs keep playing and Lottie animations keep running throughout the transition.
+- **Applicable beyond galleries.** The same pattern fits chat apps with media attachments, social feeds with multi-image posts (Facebook, X, Instagram carousels) and product galleries in e-commerce apps.
+
+## Why build a custom transition?
+
+Ready-made image viewers such as [Galeria](https://github.com/nandorojo/galeria) give you a polished native viewer with one component: pinch to zoom, swipe to dismiss and paging between images work out of the box, and it supports images and videos. If that's all your app needs, it's a great choice.
+
+The trade-off is control over the viewer UI. Galeria's full-screen viewer is a native view controller, and its README documents only a few appearance options (theme, blur overlay and page indicators). Rendering your own React Native views inside the viewer isn't supported: the maintainer [noted](https://github.com/nandorojo/galeria/issues/9) that it would need a fork and a way to render React Native views in a native view controller, which isn't trivial. Requests for a [custom header](https://github.com/nandorojo/galeria/issues/99), a [custom close button](https://github.com/nandorojo/galeria/issues/49) and [share or save actions](https://github.com/nandorojo/galeria/issues/113) are still open.
+
+With `react-native-teleport`, the full-screen viewer is a regular React Native screen, so it can contain anything your design needs: a custom header, captions, comments, action buttons or a tab bar.
+
+|                          | Ready-made viewer (Galeria)                          | Custom transition (this guide)                                                    |
+| ------------------------ | ---------------------------------------------------- | --------------------------------------------------------------------------------- |
+| Viewer UI                | Native, with a few appearance options                | Any React Native UI: header, captions, actions, tab bar                           |
+| Transition               | Built in                                             | Yours to shape: path, spring and timing are written with Reanimated               |
+| Full-res photo           | A separate image for the expanded state is supported | Low-res thumbnail first, full-res swapped in as soon as it loads, even mid-flight |
+| Content in the viewer    | Images and videos                                    | Any React Native view: images, videos, GIFs, Lottie, keeping their state          |
+| Zoom, paging, swipe away | Built in                                             | Add them with `react-native-gesture-handler` and Reanimated                       |
+| Setup                    | One component                                        | The nine files in this guide                                                      |
+
+## How it works
+
+The animation below breaks the transition into the layers that make it work. Press play, or drag the timeline to inspect any moment.
+
+<PhotoTransitionExplainer />
+
+Three layers take part in the transition:
+
+1. **Gallery screen.** A `FlatList` of low-res thumbnails. Each thumbnail is wrapped in a `<Portal>`.
+2. **Detail screen.** Pushed as a transparent modal, without a native animation. It renders the full-res `<Image>`, hidden at first.
+3. **Root `PortalHost`.** Rendered by `<PortalProvider>` above the navigator, so anything teleported into it is drawn on top of every screen.
+
+When the user taps a thumbnail:
+
+1. **Teleport.** The thumbnail's position is measured and its `<Portal>` switches to `hostName="root"`. The same native view moves above all screens, keeping its place on screen.
+2. **Push.** On the next frame the store starts a spring animation (`progress` from 0 to 1) and pushes the detail screen. Its full-res `<Image>` starts loading at `opacity: 0`.
+3. **Animate both.** The thumbnail and the full-res image calculate their geometry from the same `progress` value, so they cover exactly the same rectangle in every frame.
+4. **Swap as soon as possible.** When the full-res image fires `onLoad`, a single state update hides the thumbnail and shows the photo. Both changes land in the same native frame. This happens mid-flight if the photo is ready early, or right after the animation if it arrives later.
+5. **Teleport back.** Once the animation has finished and the photo is shown, the hidden thumbnail returns to its grid cell. It stays hidden while the photo is open, so the cell doesn't flash behind the viewer.
+6. **Close.** The full-res image animates back to the cell with the same interpolation in reverse. At the end, the thumbnail becomes visible again and the detail screen is removed.
+
+:::info Why the swap can happen mid-flight
+The thumbnail lives in the root `PortalHost` and the full-res image lives in the detail screen, but both derive their position, scale and height from the same shared `progress` value. At any moment they are pixel-aligned, so hiding one and showing the other in a single commit is invisible to the user, at any point of the animation.
+:::
+
+## Prerequisites
+
+Install these packages and follow their setup guides:
+
+- `react-native-teleport`
+- `react-native-reanimated` (with `react-native-worklets`)
+- `@react-navigation/native` and `@react-navigation/native-stack`
+- `react-native-safe-area-context`
+- `zustand`
+
+All files in this guide live in one folder. Every code block is a complete file named after its title:
+
+```text
+App.tsx            root providers
+navigation.tsx     the two screens
+photos.ts          photo data
+constants.ts       grid size and spring config
+hero.ts            the transition store
+useMeasure.ts      measures a thumbnail on screen
+PhotoPreview.tsx   a thumbnail that can teleport
+PhotoGallery.tsx   the grid screen
+PhotoDetail.tsx    the full-screen viewer
+```
+
+## Step 1: Wrap the app with `PortalProvider`
+
+`<PortalProvider>` renders a `PortalHost` named `"root"` above its children. Wrap the navigator with it so teleported content can be drawn above every screen:
+
+```tsx title="App.tsx"
+import { NavigationContainer } from "@react-navigation/native";
+import { SafeAreaProvider } from "react-native-safe-area-context";
+import { PortalProvider } from "react-native-teleport";
+
+import RootStack from "./navigation";
+
+export default function App() {
+  return (
+    <SafeAreaProvider>
+      <PortalProvider>
+        <NavigationContainer>
+          <RootStack />
+        </NavigationContainer>
+      </PortalProvider>
+    </SafeAreaProvider>
+  );
+}
+```
+
+## Step 2: Set up navigation
+
+The gallery is a regular screen with the header title set to "Photos". The detail screen is a transparent modal without a native animation: we draw the transition ourselves, and the gallery must stay visible underneath while the photo is still growing.
+
+```tsx title="navigation.tsx"
+import { createNativeStackNavigator } from "@react-navigation/native-stack";
+
+import PhotoDetail from "./PhotoDetail";
+import PhotoGallery from "./PhotoGallery";
+import type { Photo } from "./photos";
+
+export type RootStackParamList = {
+  PhotoGallery: undefined;
+  PhotoDetail: { photo: Photo };
+};
+
+const Stack = createNativeStackNavigator<RootStackParamList>();
+
+export default function RootStack() {
+  return (
+    <Stack.Navigator>
+      <Stack.Screen
+        name="PhotoGallery"
+        component={PhotoGallery}
+        options={{ title: "Photos" }}
+      />
+      <Stack.Screen
+        name="PhotoDetail"
+        component={PhotoDetail}
+        options={{
+          headerShown: false,
+          animation: "none",
+          presentation: "containedTransparentModal",
+        }}
+      />
+    </Stack.Navigator>
+  );
+}
+```
+
+## Step 3: Photo data and constants
+
+Each photo has a small thumbnail and a full-size version. The thumbnail keeps the **same aspect ratio** as the full image: when both are cropped with `resizeMode="cover"` into the same rectangle, they show exactly the same part of the photo, so the swap doesn't shift the content.
+
+```ts title="photos.ts"
+export type Photo = {
+  id: string;
+  thumbnail: string;
+  fullSize: string;
+  width: number;
+  height: number;
+};
+
+const PHOTO_DATA: { id: number; width: number; height: number }[] = [
+  { id: 10, width: 1080, height: 720 },
+  { id: 15, width: 720, height: 1080 },
+  { id: 20, width: 1080, height: 720 },
+  { id: 25, width: 1080, height: 1080 },
+  { id: 29, width: 1080, height: 720 },
+  { id: 36, width: 720, height: 1080 },
+  { id: 42, width: 1080, height: 720 },
+  { id: 49, width: 1080, height: 720 },
+  { id: 54, width: 720, height: 1080 },
+  { id: 58, width: 1080, height: 720 },
+  { id: 75, width: 1080, height: 720 },
+  { id: 76, width: 720, height: 1080 },
+];
+
+const THUMB_SHORT_SIDE = 150;
+
+const PHOTOS: Photo[] = PHOTO_DATA.map(({ id, width, height }) => {
+  // Match the thumbnail's aspect to the full image so picsum returns the same
+  // crop window — otherwise the cover-cropped thumb and the full image show
+  // different parts of the original, producing a content jump at handoff.
+  const thumbW =
+    width >= height
+      ? Math.round(THUMB_SHORT_SIDE * (width / height))
+      : THUMB_SHORT_SIDE;
+  const thumbH =
+    height > width
+      ? Math.round(THUMB_SHORT_SIDE * (height / width))
+      : THUMB_SHORT_SIDE;
+
+  return {
+    id: String(id),
+    thumbnail: `https://picsum.photos/id/${id}/${thumbW}/${thumbH}`,
+    fullSize: `https://picsum.photos/id/${id}/${width}/${height}`,
+    width,
+    height,
+  };
+});
+
+export default PHOTOS;
+```
+
+The grid has 3 columns, and the spring config drives every transition:
+
+```ts title="constants.ts"
+import { Dimensions } from "react-native";
+
+export const SCREEN_WIDTH = Math.min(Dimensions.get("window").width, 540);
+export const COLUMNS = 3;
+export const THUMB_SIZE = SCREEN_WIDTH / COLUMNS;
+export const SCALE = SCREEN_WIDTH / THUMB_SIZE;
+export const SPRING_CONFIG = {
+  mass: 1.2,
+  damping: 1000,
+  stiffness: 500,
+  overshootClamping: false,
+};
+```
+
+## Step 4: The transition store
+
+A small [Zustand](https://github.com/pmndrs/zustand) store coordinates both screens. Components subscribe only to the slices they need, so a transition re-renders the tapped thumbnail and the detail screen, not the whole grid.
+
+```ts title="hero.ts"
+import {
+  type SharedValue,
+  makeMutable,
+  runOnJS,
+  withSpring,
+  withTiming,
+} from "react-native-reanimated";
+import { create } from "zustand";
+import { SPRING_CONFIG } from "./constants";
+
+type Position = {
+  x: number;
+  y: number;
+};
+
+interface HeroStore {
+  direction: "forward" | "backward" | "neutral";
+  /** Which photo is currently animating (Portal teleport) */
+  id: string;
+  /** Photo that owns the hero pipeline; survives teleportBack so opacity gating works during detail + back */
+  ownerId: string;
+  /** Animation progress [0..1] */
+  progress: SharedValue<number>;
+  /** Measured position of the thumbnail before transition */
+  position: Position | undefined;
+  visibility: {
+    /** Opacity of the source (thumbnail in grid) */
+    source: number;
+    /** Opacity of the target (full-res image on detail screen) */
+    target: number;
+  };
+  set: (newState: Partial<Omit<HeroStore, "set">>) => void;
+  isAnimationCompleted: boolean;
+  isTargetElementAvailable: boolean;
+  transitionCompleted: () => void;
+  targetElementAvailable: () => void;
+  goBack: (callback: () => void) => void;
+  goForward: (id: string, x: number, y: number, callback: () => void) => void;
+}
+
+export const useHeroTransition = create<HeroStore>((set, get) => ({
+  direction: "neutral",
+  id: "",
+  ownerId: "",
+  position: undefined,
+  visibility: { source: 1, target: 0 },
+  progress: makeMutable(0),
+  isAnimationCompleted: false,
+  isTargetElementAvailable: false,
+  set: (newState) => set((state) => ({ ...state, ...newState })),
+
+  transitionCompleted: () => {
+    set({ isAnimationCompleted: true });
+
+    if (get().isTargetElementAvailable) {
+      get().targetElementAvailable();
+    }
+  },
+
+  targetElementAvailable: () => {
+    set({ isTargetElementAvailable: true });
+
+    if (!get().isAnimationCompleted) {
+      // Full-res image is ready mid-flight: it follows the same animation,
+      // so swap it in now and teleport back once the animation completes
+      set({ visibility: { source: 0, target: 1 } });
+      return;
+    }
+
+    const teleportBack = () => {
+      // Wait several frames then reset — detach animated style
+      // and return thumbnail to normal grid rendering
+      setTimeout(() => {
+        set({
+          id: "",
+        });
+        get().progress.set(1);
+      }, 48);
+    };
+
+    // Swap visibility: hide source thumbnail, show target full-res image
+    set({
+      direction: "neutral",
+      visibility: { source: 0, target: 1 },
+      isTargetElementAvailable: false,
+      isAnimationCompleted: false,
+    });
+
+    // Animate progress back to 0 (instantly) to return thumbnail to grid position,
+    // then detach from portal host
+    setTimeout(() => {
+      get().progress.set(
+        withTiming(0, { duration: 0 }, () => {
+          runOnJS(teleportBack)();
+        }),
+      );
+    }, 16);
+  },
+
+  goBack: (callback: () => void) => {
+    set({ direction: "backward" });
+
+    const onAnimationFinished = () => {
+      set({
+        direction: "neutral",
+        id: "",
+        ownerId: "",
+        position: undefined,
+        visibility: { source: 1, target: 0 },
+        isAnimationCompleted: false,
+        isTargetElementAvailable: false,
+      });
+      callback();
+    };
+
+    get().progress.set(
+      withSpring(0, SPRING_CONFIG, () => {
+        runOnJS(onAnimationFinished)();
+      }),
+    );
+  },
+  goForward: (id: string, x: number, y: number, callback: () => void) => {
+    set({
+      direction: "forward",
+      position: { x, y },
+      visibility: { source: 1, target: 0 },
+      isAnimationCompleted: false,
+      isTargetElementAvailable: false,
+      id,
+      ownerId: id,
+    });
+
+    const transitionCompleted = get().transitionCompleted;
+    requestAnimationFrame(() => {
+      get().progress.set(
+        withSpring(1, SPRING_CONFIG, () => {
+          runOnJS(transitionCompleted)();
+        }),
+      );
+      callback();
+    });
+  },
+}));
+```
+
+| Field                      | Purpose                                                                                                             |
+| -------------------------- | ------------------------------------------------------------------------------------------------------------------- |
+| `progress`                 | A Reanimated shared value from `0` (thumbnail in its cell) to `1` (photo full screen). Drives every animated style. |
+| `direction`                | `"forward"` while opening, `"backward"` while closing, `"neutral"` when nothing is animating.                       |
+| `id`                       | The photo whose thumbnail is currently teleported into the root host.                                               |
+| `ownerId`                  | The photo that owns the open viewer. Keeps its thumbnail hidden in the grid until the viewer is closed.             |
+| `position`                 | The measured window position of the tapped thumbnail.                                                               |
+| `visibility`               | Opacity of the thumbnail (`source`) and the full-res image (`target`). Swapping them is the handoff.                |
+| `isAnimationCompleted`     | Set when the opening spring finishes.                                                                               |
+| `isTargetElementAvailable` | Set when the full-res image fires `onLoad`.                                                                         |
+
+The handoff logic lives in `targetElementAvailable` and `transitionCompleted`:
+
+- **Photo loads first** (during the animation): `targetElementAvailable` swaps `visibility` immediately and returns. When the spring finishes, `transitionCompleted` sees that the photo is available and finishes the handoff.
+- **Animation finishes first**: `transitionCompleted` only records that fact. When the photo loads later, `targetElementAvailable` swaps `visibility` and finishes the handoff right away.
+
+Finishing the handoff means resetting `progress` to `0` for the hidden thumbnail and clearing `id`, which teleports the thumbnail back into its cell.
+
+## Step 5: Measure the tapped thumbnail
+
+The animation starts from the thumbnail's position in the window:
+
+```ts title="useMeasure.ts"
+import { Platform, type View } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
+
+type MeasureCallback = (x: number, y: number) => void;
+
+const useMeasure = (viewRef: React.RefObject<View | null>) => {
+  const insets = useSafeAreaInsets();
+
+  return (callback: MeasureCallback) => {
+    // @ts-expect-error
+    viewRef.current?.measureInWindow((x: number, y: number) => {
+      // it looks like enabled edge-to-edge (Android 16+) produces incorrect
+      // measurement offset
+      if (Platform.OS === "android") {
+        return callback(x, y + insets.top);
+      }
+
+      return callback(x, y);
+    });
+  };
+};
+
+export default useMeasure;
+```
+
+## Step 6: Thumbnails that can teleport
+
+Each thumbnail is wrapped in a `<Portal>`. While its photo is animating, the portal targets the `"root"` host, and the thumbnail is positioned at the measured cell position and animated from there:
+
+```tsx title="PhotoPreview.tsx"
+import React, { useCallback, useRef } from "react";
+import { StyleSheet, TouchableWithoutFeedback, View } from "react-native";
+import Animated, {
+  interpolate,
+  useAnimatedStyle,
+} from "react-native-reanimated";
+import { Portal } from "react-native-teleport";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
+
+import type { Photo } from "./photos";
+import { SCALE, SCREEN_WIDTH, THUMB_SIZE } from "./constants";
+import { useHeroTransition } from "./hero";
+import useMeasure from "./useMeasure";
+
+type Props = {
+  photo: Photo;
+  onOpen: (photo: Photo) => void;
+};
+
+function PhotoPreview({ photo, onOpen }: Props) {
+  const ref = useRef<View>(null);
+  const measure = useMeasure(ref);
+  const isAnimating = useHeroTransition((s) => s.id === photo.id);
+  const position = useHeroTransition((s) =>
+    s.id === photo.id ? s.position : undefined,
+  );
+  const progress = useHeroTransition((s) => s.progress);
+  const goForward = useHeroTransition((s) => s.goForward);
+  const source = useHeroTransition((s) =>
+    s.id === photo.id || s.ownerId === photo.id ? s.visibility.source : 1,
+  );
+  const { top: safeAreaTop } = useSafeAreaInsets();
+
+  // Height the full image takes at thumbnail scale
+  const fullImageHeight = SCREEN_WIDTH * (photo.height / photo.width);
+  const diff = fullImageHeight / SCALE - THUMB_SIZE;
+
+  const animatedHeight = useAnimatedStyle(
+    () => ({
+      height: isAnimating
+        ? interpolate(progress.value, [0, 1], [THUMB_SIZE, THUMB_SIZE + diff])
+        : THUMB_SIZE,
+    }),
+    [isAnimating, diff],
+  );
+
+  const transform = useAnimatedStyle(() => {
+    return {
+      transform: [
+        {
+          translateX: interpolate(
+            progress.value,
+            [0, 1],
+            [0, -(position?.x ?? 0)],
+          ),
+        },
+        {
+          translateY: interpolate(
+            progress.value,
+            [0, 1],
+            [0, safeAreaTop - (position?.y ?? 0)],
+          ),
+        },
+        {
+          scale: interpolate(progress.value, [0, 1], [1, SCALE]),
+        },
+      ],
+    };
+  }, [position, safeAreaTop]);
+
+  const onPress = useCallback(() => {
+    if (useHeroTransition.getState().id !== "") return;
+
+    measure((x, y) => {
+      goForward(photo.id, x, y, () => onOpen(photo));
+    });
+  }, [photo, goForward, onOpen, measure]);
+
+  return (
+    <TouchableWithoutFeedback onPress={onPress}>
+      <View
+        // @ts-expect-error ref type mismatch between View component and host instance
+        ref={ref}
+        style={{
+          height: THUMB_SIZE,
+          width: THUMB_SIZE,
+        }}
+      >
+        <Portal hostName={position && isAnimating ? "root" : undefined}>
+          <Animated.View
+            style={
+              isAnimating
+                ? [
+                    styles.animating,
+                    {
+                      top: position?.y,
+                      left: position?.x,
+                    },
+                    transform,
+                  ]
+                : undefined
+            }
+          >
+            <Animated.Image
+              style={[{ width: THUMB_SIZE, opacity: source }, animatedHeight]}
+              source={{ uri: photo.thumbnail }}
+              resizeMode="cover"
+            />
+          </Animated.View>
+        </Portal>
+      </View>
+    </TouchableWithoutFeedback>
+  );
+}
+
+const styles = StyleSheet.create({
+  animating: {
+    transformOrigin: "0% 0%",
+  },
+});
+
+export default React.memo(PhotoPreview);
+```
+
+:::tip Keep animated styles attached
+The animated `height` style is always attached and returns `THUMB_SIZE` when the thumbnail isn't animating. Attaching an animated style only when the animation starts can produce one frame with zero height on Android, because the first Fabric commit happens before Reanimated provides the value.
+:::
+
+## Step 7: The gallery screen
+
+The gallery is a regular `FlatList` of thumbnails. Tapping one opens the detail screen:
+
+```tsx title="PhotoGallery.tsx"
+import { FlatList, StyleSheet, View } from "react-native";
+import { useNavigation } from "@react-navigation/native";
+import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
+
+import PHOTOS, { type Photo } from "./photos";
+import PhotoPreview from "./PhotoPreview";
+import type { RootStackParamList } from "./navigation";
+
+function PhotoGallery() {
+  const navigation =
+    useNavigation<NativeStackNavigationProp<RootStackParamList>>();
+
+  const onPhotoOpen = (photo: Photo) => {
+    navigation.navigate("PhotoDetail", { photo });
+  };
+
+  return (
+    <View style={styles.container}>
+      <FlatList
+        data={PHOTOS}
+        keyExtractor={(item) => item.id}
+        numColumns={3}
+        renderItem={({ item }) => (
+          <PhotoPreview photo={item} onOpen={onPhotoOpen} />
+        )}
+      />
+    </View>
+  );
+}
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: "#000",
+  },
+});
+
+export default PhotoGallery;
+```
+
+## Step 8: The detail screen
+
+The detail screen renders the full-res photo with the **same interpolation** as the thumbnail while opening and closing. Its `onLoad` callback is what triggers the swap:
+
+```tsx title="PhotoDetail.tsx"
+import { useCallback, useEffect } from "react";
+import { BackHandler, Pressable, StyleSheet, Text, View } from "react-native";
+import Animated, {
+  interpolate,
+  useAnimatedStyle,
+  useSharedValue,
+  withTiming,
+} from "react-native-reanimated";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { useNavigation } from "@react-navigation/native";
+import type { StaticScreenProps } from "@react-navigation/native";
+
+import type { Photo } from "./photos";
+import { SCALE, SCREEN_WIDTH } from "./constants";
+import { useHeroTransition } from "./hero";
+
+const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
+
+type PhotoDetailProps = StaticScreenProps<{ photo: Photo }>;
+
+function PhotoDetail({ route }: PhotoDetailProps) {
+  const { photo } = route.params;
+  const { targetElementAvailable, visibility } = useHeroTransition();
+  const progress = useHeroTransition((s) => s.progress);
+  const direction = useHeroTransition((s) => s.direction);
+  const position = useHeroTransition((s) => s.position);
+  const goBack = useHeroTransition((s) => s.goBack);
+  const navigation = useNavigation();
+  const { top: safeAreaTop } = useSafeAreaInsets();
+
+  const fullHeight = SCREEN_WIDTH * (photo.height / photo.width);
+
+  const isTransitionDone = visibility.target === 1 && direction !== "forward";
+  const buttonOpacity = useSharedValue(0);
+
+  const onLoad = useCallback(() => {
+    if (useHeroTransition.getState().id === photo.id) {
+      targetElementAvailable();
+    }
+  }, [photo.id, targetElementAvailable]);
+
+  const onGoBack = useCallback(() => {
+    goBack(navigation.goBack);
+
+    return true;
+  }, [navigation, goBack]);
+
+  useEffect(() => {
+    buttonOpacity.value = withTiming(isTransitionDone ? 1 : 0, {
+      duration: 200,
+    });
+  }, [isTransitionDone, buttonOpacity]);
+
+  useEffect(() => {
+    const listener = BackHandler.addEventListener(
+      "hardwareBackPress",
+      onGoBack,
+    );
+    return () => listener.remove();
+  }, [onGoBack]);
+
+  const buttonStyle = useAnimatedStyle(() => ({
+    opacity: buttonOpacity.value,
+  }));
+  const backdrop = useAnimatedStyle(
+    () => ({
+      opacity: direction === "neutral" ? 1 : progress.value,
+    }),
+    [direction],
+  );
+
+  const heroImage = useAnimatedStyle(() => {
+    if (direction === "neutral" || !position) {
+      return {
+        width: SCREEN_WIDTH,
+        height: fullHeight,
+        transform: [],
+      };
+    }
+    return {
+      width: SCREEN_WIDTH,
+      height: interpolate(progress.value, [0, 1], [SCREEN_WIDTH, fullHeight]),
+      transform: [
+        { translateX: interpolate(progress.value, [0, 1], [position.x, 0]) },
+        {
+          translateY: interpolate(
+            progress.value,
+            [0, 1],
+            [position.y - safeAreaTop, 0],
+          ),
+        },
+        { scale: interpolate(progress.value, [0, 1], [1 / SCALE, 1]) },
+      ],
+    };
+  }, [direction, position, safeAreaTop, fullHeight]);
+
+  return (
+    <View style={styles.container}>
+      <Animated.View style={[styles.backdrop, backdrop]} />
+      <Animated.Image
+        source={{ uri: photo.fullSize }}
+        style={[
+          styles.heroImage,
+          { marginTop: safeAreaTop, opacity: visibility.target },
+          heroImage,
+        ]}
+        resizeMode="cover"
+        fadeDuration={0}
+        onLoad={onLoad}
+      />
+      <AnimatedPressable
+        style={[styles.backButton, { top: safeAreaTop + 10 }, buttonStyle]}
+        onPress={onGoBack}
+        disabled={!isTransitionDone}
+      >
+        <Text style={styles.backText}>Close</Text>
+      </AnimatedPressable>
+    </View>
+  );
+}
+
+const styles = StyleSheet.create({
+  backdrop: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: "#000",
+  },
+  container: {
+    flex: 1,
+  },
+  heroImage: {
+    transformOrigin: "0% 0%",
+  },
+  backButton: {
+    position: "absolute",
+    left: 16,
+    backgroundColor: "rgba(255,255,255,0.2)",
+    paddingHorizontal: 14,
+    paddingVertical: 8,
+    borderRadius: 20,
+  },
+  backText: {
+    color: "#fff",
+    fontSize: 16,
+    fontWeight: "600",
+  },
+});
+
+export default PhotoDetail;
+```
+
+A few details matter here:
+
+- `fadeDuration={0}` disables Android's default image fade-in, so the photo appears in a single frame when it's swapped in.
+- The Close button stays hidden and disabled until the opening animation has fully finished. Closing earlier would interrupt the spring whose completion callback finishes the handoff.
+- The hardware back button on Android runs the same closing animation as the Close button.
+
+That's the whole transition. Run the app, tap a photo, and you should see the result from the video at the top of this page.
+
+## Going further: videos, GIFs and other stateful content
+
+`<Portal>` doesn't render a copy of the thumbnail: it moves the existing native view between parents. Whatever runs inside that view keeps running during the transition:
+
+- a video keeps playing while it grows to full screen, with no restart and no black frame;
+- a GIF or Lottie animation continues from the same frame;
+- any other native state, such as a scroll position or a WebView, is preserved.
+
+For media that loads progressively, apply the same handoff as in this guide: show the cheap version (a poster image or a low-bitrate stream) inside the portal, render the expensive version on the detail screen along the same path, and swap them when the expensive one reports that it's ready, for example `onLoad` for images or `onReadyForDisplay` for `react-native-video`. The [Instagram-like transitions](./instagram-shared-transitions.mdx) recipe shows a video teleported between a feed and a full-screen viewer while it keeps playing.
+
+## Where to use this pattern
+
+- **Chat apps.** Tapping an image or video attachment in a message bubble opens it full screen from the bubble's exact position, and closing returns it to the bubble.
+- **Social feeds.** Posts with several images (as on Facebook, X or in Instagram carousels) can open any image from its tile. Use an id that is unique per attachment, such as `postId` plus the image index, so only the tapped tile teleports.
+- **Photo galleries and e-commerce.** Product images, albums and media pickers share the same thumbnail-to-full-screen flow.
+
+In every case the list keeps rendering lightweight thumbnails, and the expensive media is loaded only for the item the user opens.
+
+## Common pitfalls
+
+- **Content jumps at the swap.** The thumbnail and the full-res image must have the same aspect ratio and the same `resizeMode`, otherwise they crop different parts of the photo.
+- **Blank frame on Android when the animation starts.** Keep animated styles attached for the component's whole lifetime instead of adding them when the animation begins.
+- **The photo fades in instead of swapping.** Set `fadeDuration={0}` on the full-res `<Image>` on Android.
+- **The thumbnail flashes in the grid behind the viewer.** Keep it hidden while the viewer is open: in this guide `ownerId` keeps `visibility.source` applied to the thumbnail after it has been teleported back.
+- **Wrong start position on Android.** With edge-to-edge enabled, `measureInWindow` can be offset by the status bar height. `useMeasure` compensates for it.
+
+## FAQ
+
+**Is the full-res photo downloaded or rendered twice?**
+No. Only the detail screen renders the full-res `<Image>`. The thumbnail that flies across the screen is the original grid view, moved by `<Portal>`.
+
+**What happens if the full-res photo loads after the animation ends?**
+The low-res thumbnail stays on screen in the final position until `onLoad` fires, then the same single-commit swap shows the photo.
+
+**What if the photo is already cached?**
+`onLoad` fires almost immediately, and the swap happens at the very beginning of the animation.
+
+**Does this require a custom image cache or prefetching?**
+No. The guide uses the standard React Native `<Image>`. You can add caching on top, but the transition doesn't depend on it.
+
+**Can I use another image component?**
+Yes, as long as it reports when the image is ready (an `onLoad`-style callback) and supports `cover` cropping, the handoff works the same way.
+
+**Which platforms are supported?**
+`react-native-teleport` supports iOS, Android and web. This transition was verified frame by frame on iOS and Android with the New Architecture.
+
+## Source code
+
+The same transition is part of the example app in [`example/src/screens/PhotoGallery`](https://github.com/kirillzyusko/react-native-teleport/tree/main/example/src/screens/PhotoGallery).

@@ -1,0 +1,351 @@
+.root {
+  margin: 1.5rem 0 2rem;
+}
+
+/* 16:9 stage; the 1920×1080 scene inside is scaled to the container width */
+.stageWrap {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  overflow: hidden;
+  border-radius: 14px;
+  background: radial-gradient(130% 120% at 50% 38%, #141a33 0%, #070912 72%);
+  box-shadow: 0 10px 40px rgba(7, 9, 18, 0.25);
+}
+
+.canvas {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 1920px;
+  height: 1080px;
+  transform-origin: 0 0;
+  transform: scale(0.4);
+  font-family:
+    -apple-system, "SF Pro Display", "Helvetica Neue", Arial, sans-serif;
+  color: #eef1ff;
+  -webkit-font-smoothing: antialiased;
+}
+
+.viewport {
+  position: absolute;
+  inset: 0;
+  perspective: 2300px;
+  perspective-origin: 960px 380px;
+}
+
+.stage {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 390px;
+  height: 844px;
+  transform-style: preserve-3d;
+  transform-origin: 195px 422px;
+}
+
+.layer {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 390px;
+  height: 844px;
+  border-radius: 46px;
+  overflow: hidden;
+}
+
+.gallery {
+  background: #000;
+}
+
+.bezel {
+  position: absolute;
+  left: -13px;
+  top: -13px;
+  width: 416px;
+  height: 870px;
+  border-radius: 58px;
+  transform: translateZ(-6px);
+  background: linear-gradient(145deg, #2a2f45, #0d0f18 60%);
+  box-shadow:
+    0 0 0 1.5px #3a4060,
+    0 40px 120px rgba(0, 0, 0, 0.6);
+}
+
+.cell {
+  position: absolute;
+  width: 130px;
+  height: 130px;
+  background-size: cover;
+  background-position: center;
+}
+
+.slot {
+  position: absolute;
+  left: 130px;
+  top: 104px;
+  width: 130px;
+  height: 130px;
+  box-sizing: border-box;
+  border: 2px dashed transparent;
+}
+
+.header {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 390px;
+  height: 104px;
+  background: #fff;
+  color: #111;
+}
+
+.time {
+  position: absolute;
+  left: 44px;
+  top: 17px;
+  font-weight: 600;
+  font-size: 16px;
+}
+
+.island {
+  position: absolute;
+  left: 134px;
+  top: 11px;
+  width: 122px;
+  height: 34px;
+  border-radius: 18px;
+  background: #000;
+}
+
+.title {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 66px;
+  text-align: center;
+  font-weight: 600;
+  font-size: 17px;
+}
+
+.backdrop {
+  position: absolute;
+  inset: 0;
+  background: #000;
+}
+
+.svgLayer {
+  position: absolute;
+  left: 0;
+  top: 0;
+  overflow: visible;
+}
+
+.closeBtn {
+  position: absolute;
+  left: 16px;
+  top: 69px;
+  padding: 8px 14px;
+  border-radius: 20px;
+  background: rgba(255, 255, 255, 0.2);
+  color: #fff;
+  font-weight: 600;
+  font-size: 16px;
+}
+
+.glass {
+  position: absolute;
+  inset: 0;
+  border-radius: 46px;
+  box-sizing: border-box;
+}
+
+.flyer {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 390px;
+  height: 844px;
+}
+
+.anchor {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+}
+
+/* overlay in scene coordinates; text is sized for a ~40% scaled stage */
+.hud {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.hudSvg {
+  position: absolute;
+  inset: 0;
+  overflow: visible;
+}
+
+.label,
+.chip {
+  position: absolute;
+  left: 0;
+  top: 0;
+  white-space: nowrap;
+  opacity: 0;
+}
+
+.labelName {
+  font-size: 44px;
+  font-weight: 650;
+  letter-spacing: -0.3px;
+}
+
+.labelSub {
+  margin-top: 4px;
+  font-size: 28px;
+  color: #9aa3c7;
+  font-family: "SF Mono", Menlo, monospace;
+}
+
+.chip {
+  padding: 8px 16px;
+  border-radius: 12px;
+  font:
+    600 26px "SF Mono",
+    Menlo,
+    monospace;
+  background: rgba(10, 12, 24, 0.85);
+  border: 1.5px solid rgba(255, 255, 255, 0.2);
+}
+
+/* caption and controls use the docs theme */
+.caption {
+  margin-top: 1rem;
+  min-height: 3.6rem;
+}
+
+.capTitle {
+  font-weight: 700;
+  font-size: 1.05rem;
+}
+
+.capText {
+  margin-top: 0.15rem;
+  color: var(--ifm-color-emphasis-700);
+  font-size: 0.95rem;
+}
+
+.controls {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 0.6rem 0.9rem;
+  align-items: center;
+  margin-top: 0.75rem;
+}
+
+.play {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.25rem;
+  height: 2.25rem;
+  border-radius: 50%;
+  border: 1px solid var(--ifm-color-emphasis-300);
+  background: var(--ifm-background-surface-color);
+  color: var(--ifm-font-color-base);
+  cursor: pointer;
+}
+
+.play:hover {
+  border-color: var(--ifm-color-primary);
+  color: var(--ifm-color-primary);
+}
+
+.scrubber {
+  width: 100%;
+  accent-color: var(--ifm-color-primary);
+}
+
+.state {
+  grid-column: 1 / -1;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem 1.4rem;
+  margin: 0;
+  font-family: var(--ifm-font-family-monospace);
+  font-size: 0.8rem;
+}
+
+.state > div {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+.state dt {
+  color: var(--ifm-color-emphasis-600);
+  font-weight: 400;
+}
+
+.state dd {
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-weight: 700;
+}
+
+.bar {
+  display: inline-block;
+  width: 5rem;
+  height: 0.4rem;
+  border-radius: 0.2rem;
+  background: var(--ifm-color-emphasis-200);
+  overflow: hidden;
+}
+
+.bar > span {
+  display: block;
+  height: 100%;
+  width: 0;
+  background: linear-gradient(90deg, #2fe0c4, #a77bff);
+}
+
+.srOnly {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.labelAnchor {
+  left: 390px;
+  top: 300px;
+}
+
+.cGallery {
+  color: #5b8cff;
+}
+
+.cDetail {
+  color: #a77bff;
+}
+
+.cHost {
+  color: #2fe0c4;
+}
+
+.cLow {
+  color: #cfd6f5;
+}
+
+.cHot {
+  color: #ffd166;
+}

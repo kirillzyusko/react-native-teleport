@@ -84,7 +84,8 @@
     "pblack",
     "teleporting",
     "lockfiles",
-    "worktree"
+    "worktree",
+    "Galeria"
   ],
   "ignorePaths": [
     "node_modules",
