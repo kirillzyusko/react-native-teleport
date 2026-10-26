@@ -12,11 +12,13 @@ on:
       trials:
         description: Independent fresh-runner trials
         type: choice
-        default: "[1,2,3,4,5]"
+        default: "5"
         options:
-          - "[1]"
-          - "[1,2,3]"
-          - "[1,2,3,4,5]"
+          - "1"
+          - "3"
+          - "5"
+          - "20"
+          - "60"
   push:
     branches:
       - main
@@ -47,6 +49,25 @@ env:
   XCODE_VERSION: "16.4"
 
 jobs:
+  plan-trials:
+    name: Plan independent trials
+    runs-on: ubuntu-latest
+    outputs:
+      trials: ${{ steps.trials.outputs.trials }}
+    steps:
+      - id: trials
+        env:
+          TRIAL_COUNT: ${{ inputs.trials || '1' }}
+        run: |
+          node <<'NODE'
+          const fs = require("node:fs");
+          const count = Number(process.env.TRIAL_COUNT);
+          if (!Number.isInteger(count) || count < 1 || count > 60) {
+            throw new Error("Expected between 1 and 60 independent trials");
+          }
+          const trials = Array.from({ length: count }, (_, index) => index + 1);
+          fs.appendFileSync(process.env.GITHUB_OUTPUT, "trials=" + JSON.stringify(trials) + "\n");
+          NODE
   build-ios:
     name: 🏗️ Build E2E ipa
     runs-on: macos-15
@@ -137,8 +158,8 @@ jobs:
       max-parallel: 2
       matrix:
         devices: [{ ios: 18, macos: 15 }]
-        trial: ${{ fromJSON(inputs.trials || '[1]') }}
-    needs: build-ios
+        trial: ${{ fromJSON(needs.plan-trials.outputs.trials) }}
+    needs: [build-ios, plan-trials]
     steps:
       - uses: actions/checkout@v4
         with:

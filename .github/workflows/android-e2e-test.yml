@@ -5,11 +5,13 @@ on:
       trials:
         description: Independent fresh-runner trials
         type: choice
-        default: "[1,2,3,4,5]"
+        default: "5"
         options:
-          - "[1]"
-          - "[1,2,3]"
-          - "[1,2,3,4,5]"
+          - "1"
+          - "3"
+          - "5"
+          - "20"
+          - "60"
       mode:
         description: Original suite or focused Maestro driver lifetime probe
         type: choice
@@ -42,6 +44,25 @@ on:
       - "common/**"
 
 jobs:
+  plan-trials:
+    name: Plan independent trials
+    runs-on: ubuntu-latest
+    outputs:
+      trials: ${{ steps.trials.outputs.trials }}
+    steps:
+      - id: trials
+        env:
+          TRIAL_COUNT: ${{ inputs.mode && inputs.mode != 'suite' && '1' || inputs.trials || '1' }}
+        run: |
+          node <<'NODE'
+          const fs = require("node:fs");
+          const count = Number(process.env.TRIAL_COUNT);
+          if (!Number.isInteger(count) || count < 1 || count > 60) {
+            throw new Error("Expected between 1 and 60 independent trials");
+          }
+          const trials = Array.from({ length: count }, (_, index) => index + 1);
+          fs.appendFileSync(process.env.GITHUB_OUTPUT, "trials=" + JSON.stringify(trials) + "\n");
+          NODE
   build-android:
     name: 🏗️ Build E2E apk
     runs-on: ubuntu-latest
@@ -97,8 +118,8 @@ jobs:
       max-parallel: 2
       matrix:
         devices: [{ api: 31, target: google_apis }]
-        trial: ${{ fromJSON(inputs.trials || '[1]') }}
-    needs: build-android
+        trial: ${{ fromJSON(needs.plan-trials.outputs.trials) }}
+    needs: [build-android, plan-trials]
     steps:
       - name: Checkout
         uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2

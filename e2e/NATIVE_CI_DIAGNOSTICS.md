@@ -252,8 +252,11 @@ mention macOS arm64 capacity constraints. These are separate setup failures.
 The same-commit setup was resubmitted; those reruns are excluded from the final
 independent clean-series counts, and the original annotations are preserved.
 
-Manual dispatch supports one, three, or five independent test jobs, with at
-most two running concurrently per platform. Each job uses a fresh hosted
+Manual dispatch accepts a trial count of 1, 3, 5, 20, or 60, with at
+most two running concurrently per platform. A small planning job generates
+the matrix, and the application is built once for the whole series.
+Android's focused lifecycle modes always select a single trial.
+Each test job uses a fresh hosted
 runner, downloads the same built app, and runs the whole original suite in one
 Maestro session. Push and pull-request events still run one trial. Matrix
 fail-fast is disabled so a failing job does not cancel other observations.
@@ -305,7 +308,7 @@ not reproduced locally; the exact reason XCTest misses the process-state
 transition remains unverified. The local host used macOS 26.6.2 / Xcode 27.0,
 while CI used macOS 15 / Xcode 16.4.
 
-The diagnostic wrapper passed eight device-free regression tests. A separate
+The diagnostic wrapper passed nine device-free regression tests. A separate
 65-second JVM smoke check captured a real `Thread.print` dump successfully.
 The evidence is retained under
 `.argent/evidence/ci-flakiness-2026-10-26/deep-dive/`, including the original
