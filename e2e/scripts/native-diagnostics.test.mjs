@@ -41,6 +41,9 @@ const args = process.argv.slice(2);
 if (name === "test-command") {
   if (args[0] === "--version") console.log("test version");
   else setTimeout(() => process.exit(Number(args[0])), Number(process.env.TEST_DURATION_MS || 0));
+} else if (name === "adb" && args.includes("logcat") && args.includes("-d")) {
+  console.log("retained lifecycle events after adbd restart");
+  console.log(name, args.join(" "));
 } else if ((name === "xcrun" && args.includes("stream")) ||
            (name === "adb" && args.includes("logcat"))) {
   if (process.env.FORK_COLLECTOR === "true") {
@@ -186,6 +189,15 @@ test("android: CI emulator kernel capture does not restart adbd", async () => {
     assert.match(kernel, /Permission denied/);
     assert.match(kernel, /adb -s emulator-ci shell su 0 dmesg/);
     assert.doesNotMatch(kernel, /adb -s emulator-ci root/);
+    const retained = await readFile(
+      path.join(
+        directory,
+        "e2e/reports/native-diagnostics/logcat-final-lifecycle.log",
+      ),
+      "utf8",
+    );
+    assert.match(retained, /retained lifecycle events after adbd restart/);
+    assert.match(retained, /logcat -b all -d .*livelock:I/);
     await assertExited(
       Number(await readFile(path.join(directory, "collector.pid"), "utf8")),
     );

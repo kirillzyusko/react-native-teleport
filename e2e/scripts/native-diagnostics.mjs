@@ -222,6 +222,24 @@ async function finalState() {
       log(`Could not collect crash reports: ${error.message}`);
     }
   } else {
+    // An adbd restart also disconnects our live logcat reader. Read the
+    // retained buffer through the new daemon to recover its final messages.
+    await capture(
+      "logcat-final-lifecycle.log",
+      adb(
+        "logcat",
+        "-b",
+        "all",
+        "-d",
+        "-v",
+        "threadtime",
+        "-s",
+        "livelock:I",
+        "UiAutomationManager:I",
+        "UiAutomation:W",
+        "*:S",
+      ),
+    );
     await capture("adb-state.log", ["adb", ["devices", "-l"]]);
     for (const service of ["activity", "window", "meminfo", "SurfaceFlinger"]) {
       await capture(`dumpsys-${service}.log`, adb("shell", "dumpsys", service));

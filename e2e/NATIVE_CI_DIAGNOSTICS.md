@@ -82,6 +82,8 @@ Keyboard-controller already enables yeetd's `killapsd` setting. The experiment
 keeps all test flows, the app, Maestro version, and diagnostic collection
 identical. This is a causal experiment, not a claimed fix; it also disables
 simulated push-service behavior, which would matter to push-notification tests.
+The original supplied failure has the same log storm without the additional
+diagnostics: `apsd` produced 37,459 of 41,324 lines during 12:49:36–55 UTC.
 
 Related upstream reports:
 
@@ -169,6 +171,12 @@ successfully. Both jobs denied unprivileged `dmesg`, so this new comparison
 does not contain the watchdog's kill message; that message is present in the
 original supplied CI failure. Later captures try emulator `su` after the test,
 without restarting `adbd`, and record guest uptime alongside host timestamps.
+The second stock probe again lost `adbd` after about 700 seconds. Its privileged
+kernel capture confirms PID 458 received SIGKILL at guest uptime 1200.925 and
+the zombie shell was reaped immediately afterward. The live logcat reader also
+disconnects with `adbd`, so diagnostics now read retained lifecycle messages
+through the new daemon after the test; kernel output alone does not identify
+the sender of that signal.
 
 The ordinary Android suite now applies that same single-constant change to
 the installed Maestro client JAR before running the existing CLI command.
@@ -177,6 +185,9 @@ class fingerprint, verifies the rewritten archive, and records both class
 hashes in `maestro-patch.json`. It changes no other JAR entry or driver APK.
 This is a temporary dependency patch pending an upstream release containing
 the fix. Full-suite candidate verification is separate from the focused probe.
+The first two ordinary CLI candidate jobs passed 18/18 flows in 7m43s and
+7m37s. Both retained `adbd` PID 458 with no zombie children across the captured
+snapshots, and recorded the expected installed patched-class fingerprint.
 
 ## Why keyboard-controller behaves differently
 
