@@ -285,13 +285,25 @@ jobs:
             -e DEVICE="iPhone 16 Pro" "${flow_files[@]}" --format html ./e2e/reports/debug \
             --debug-output ./e2e/reports/debug --flatten-debug-output
       - name: Check glitches/flickering
-        run: node e2e/scripts/check-glitches.mjs e2e/reports/debug
+        # The focused press regression has no recording commands. Full suites
+        # still require recordings; any recording in either mode is analyzed.
+        run: node e2e/scripts/check-glitches.mjs e2e/reports/debug ${{ inputs.profile == 'touch-trace-loop' && '--allow-empty' || '' }}
       - name: Verify touch trace was enabled
         if: always() && startsWith(inputs.profile, 'touch-trace')
+        env:
+          TOUCH_TRACE_LOOP: ${{ inputs.profile == 'touch-trace-loop' && '1' || '0' }}
         run: |
           set -euo pipefail
           grep -F '"phase":"installed"' e2e/reports/native-diagnostics/simulator.log
           grep -F '"phase":"signal.before"' e2e/reports/native-diagnostics/simulator.log | grep -F '"role":"bottom-sheet.close"'
+          if [ "$TOUCH_TRACE_LOOP" = "1" ]; then
+            installed_count=$(grep -cF '"phase":"installed"' e2e/reports/native-diagnostics/simulator.log)
+            test "$installed_count" -eq 10
+          fi
+          if grep -qF '"phase":"overflow"' e2e/reports/native-diagnostics/simulator.log; then
+            echo "Touch trace overflowed; diagnostic evidence is incomplete"
+            exit 1
+          fi
       - name: Upload native diagnostics
         if: always()
         uses: actions/upload-artifact@v4

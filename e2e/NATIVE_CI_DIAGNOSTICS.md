@@ -171,6 +171,10 @@ The `touch-trace-loop` profile runs ten byte-identical copies of the original
 BottomSheet flow in one Maestro session. Each copy keeps the original app
 launch, navigation, gesture, and assertions. Any failed copy fails the job;
 these focused observations are excluded from full-suite stability counts.
+This profile permits an empty recording directory because BottomSheet has no
+recording command. Any recording that is present is still analyzed; ordinary
+full suites continue to fail when recordings are missing. The profile also
+requires ten installed trace markers and rejects trace-buffer overflow.
 Candidate commit IDs are included in concurrency groups so new experiments
 preserve earlier runs and their remaining trial evidence.
 
