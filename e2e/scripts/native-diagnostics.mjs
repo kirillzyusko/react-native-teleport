@@ -128,6 +128,10 @@ function observeIOSLog(chunk) {
       }
       const processManager = xctestProcesses.get("runningboardd");
       if (process.env.GITHUB_ACTIONS === "true" && processManager) {
+        const kernelReport = path.join(
+          directory,
+          `${prefix}-runningboardd-kernel.txt`,
+        );
         // CI samples found process-death delivery stopped in __bsdthread_ctl.
         // Include kernel frames for this PID only, rather than the whole host.
         void capture(`${prefix}-runningboardd-kernel.log`, [
@@ -140,9 +144,14 @@ function observeIOSLog(chunk) {
             "10",
             "-onlyTarget",
             "-file",
-            path.join(directory, `${prefix}-runningboardd-kernel.txt`),
+            kernelReport,
           ],
-        ]);
+        ]).then(() =>
+          capture(`${prefix}-runningboardd-kernel.log`, [
+            "sudo",
+            ["-n", "chmod", "a+r", kernelReport],
+          ]),
+        );
       }
     }, 8000);
   }
