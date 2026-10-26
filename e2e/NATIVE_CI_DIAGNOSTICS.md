@@ -131,6 +131,23 @@ engine and skip their installation. The original Android rerun spent over
 before it reached the emulator or Maestro. That observed setup delay is
 separate from the watchdog failure during tests.
 
+The focused CI comparison used the same commit and API 31 setup. The stock
+driver retained one zombie under `adbd` and failed after 707 seconds when
+`adbd` changed from PID 458 to 12885. The foreground variant kept PID 458,
+had no zombie children, produced screenshots through 732 seconds, and closed
+successfully. Both jobs denied unprivileged `dmesg`, so this new comparison
+does not contain the watchdog's kill message; that message is present in the
+original supplied CI failure. Later captures try emulator `su` after the test,
+without restarting `adbd`, and record guest uptime alongside host timestamps.
+
+The ordinary Android suite now applies that same single-constant change to
+the installed Maestro client JAR before running the existing CLI command.
+`scripts/patch-maestro-instrumentation.py` accepts only the pinned 2.10.0
+class fingerprint, verifies the rewritten archive, and records both class
+hashes in `maestro-patch.json`. It changes no other JAR entry or driver APK.
+This is a temporary dependency patch pending an upstream release containing
+the fix. Full-suite candidate verification is separate from the focused probe.
+
 ## Why keyboard-controller behaves differently
 
 Keyboard-controller uses [Detox](https://github.com/kirillzyusko/react-native-keyboard-controller/blob/main/e2e/package.json),

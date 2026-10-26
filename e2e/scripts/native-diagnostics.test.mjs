@@ -72,6 +72,9 @@ if (name === "test-command") {
 } else if (name === "sudo" && args.includes("spindump")) {
   fs.writeFileSync(args[args.indexOf("-file") + 1], "kernel stack for selected pid " + args[2]);
   console.log(name, args.join(" "));
+} else if (name === "adb" && args[args.length - 1] === "dmesg" && process.env.KERNEL_PERMISSION_DENIED) {
+  console.error("dmesg: Permission denied");
+  process.exit(1);
 } else console.log(name, args.join(" "));
 `;
   for (const name of [
@@ -159,6 +162,36 @@ for (const platform of ["ios", "android"]) {
 
 test("requires an explicit native platform, device and command", async () => {
   await assert.rejects(execute(process.execPath, [runner, "ios"]), { code: 2 });
+});
+
+test("android: CI emulator kernel capture does not restart adbd", async () => {
+  const { directory, options } = await fixture();
+  try {
+    await execute(
+      process.execPath,
+      [runner, "android", "emulator-ci", "--", "test-command", "0"],
+      {
+        ...options,
+        env: {
+          ...options.env,
+          GITHUB_ACTIONS: "true",
+          KERNEL_PERMISSION_DENIED: "true",
+        },
+      },
+    );
+    const kernel = await readFile(
+      path.join(directory, "e2e/reports/native-diagnostics/kernel.log"),
+      "utf8",
+    );
+    assert.match(kernel, /Permission denied/);
+    assert.match(kernel, /adb -s emulator-ci shell su 0 dmesg/);
+    assert.doesNotMatch(kernel, /adb -s emulator-ci root/);
+    await assertExited(
+      Number(await readFile(path.join(directory, "collector.pid"), "utf8")),
+    );
+  } finally {
+    await rm(directory, { recursive: true, force: true });
+  }
 });
 
 test("exits when a collector's descendant holds stdout after its parent exits", async () => {

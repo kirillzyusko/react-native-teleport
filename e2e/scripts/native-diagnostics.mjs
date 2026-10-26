@@ -181,6 +181,7 @@ async function sample() {
       adb("shell", "ps -A -o PID,PPID,S,NAME,ARGS"),
     );
     await capture("device-memory.log", adb("shell", "cat /proc/meminfo"));
+    await capture("device-uptime.log", adb("shell", "cat /proc/uptime"));
   }
   // Captures a stuck permission setup/APK transfer before a later ADB failure
   // hides the original wait. Maestro's Unix launcher execs the JVM in place.
@@ -226,6 +227,14 @@ async function finalState() {
       await capture(`dumpsys-${service}.log`, adb("shell", "dumpsys", service));
     }
     await capture("kernel.log", adb("shell", "dmesg"));
+    if (
+      process.env.GITHUB_ACTIONS === "true" &&
+      device.startsWith("emulator-")
+    ) {
+      // Userdebug emulators can expose the kernel ring via su without
+      // restarting adbd. Run after the test so its lifecycle remains intact.
+      await capture("kernel.log", adb("shell", "su 0 dmesg"));
+    }
     const screenshot = "/data/local/tmp/teleport-e2e-final.png";
     await capture(
       "screenshot.log",
@@ -272,7 +281,11 @@ if (platform === "ios") {
   );
 } else {
   await capture("versions.log", adb("shell", "getprop"));
-  void streamLogs("logcat.log", adb("logcat", "-b", "all", "-v", "threadtime"));
+  await capture("versions.log", adb("shell", "date", "-u"));
+  void streamLogs(
+    "logcat.log",
+    adb("logcat", "-b", "all", "-v", "threadtime", "-T", "1"),
+  );
 }
 
 await sample();
