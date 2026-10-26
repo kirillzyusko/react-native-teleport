@@ -5,8 +5,8 @@ import java.util.HexFormat;
 import java.util.zip.ZipFile;
 import jdk.internal.org.objectweb.asm.*;
 
-// Isolated experiment: keep physical-device behavior, use the existing native
-// controller only for Simulator stop. Does not rewrite an installed JAR.
+// Keep physical-device behavior; use the existing native controller for
+// Simulator stop. Emit one class for the installer's verified JAR rewrite.
 public final class PatchIOSStop {
   private static final String EXPECTED =
       "7a77605a3c85845dc0f1174463cc5b63f359429dec27bfd72c696c33c01a94b2";

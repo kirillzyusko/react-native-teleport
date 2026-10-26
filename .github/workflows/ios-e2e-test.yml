@@ -3,9 +3,9 @@ on:
   workflow_dispatch:
     inputs:
       profile:
-        description: Simulator service comparison (diagnostic experiment)
+        description: Maestro driver / simulator profile
         type: choice
-        default: baseline
+        default: simctl-stop
         options:
           - baseline
           - apsd-stopped
@@ -149,11 +149,11 @@ jobs:
           path: example/ios/build/Build/Products/Release-iphonesimulator/TeleportExample.app/**
 
   e2e-test:
-    name: ⚙️ Automated test cases (iOS-${{ matrix.devices.ios }}, trial-${{ matrix.trial }}, ${{ inputs.profile || 'baseline' }})
+    name: ⚙️ Automated test cases (iOS-${{ matrix.devices.ios }}, trial-${{ matrix.trial }}, ${{ inputs.profile || 'simctl-stop' }})
     runs-on: macos-${{ matrix.devices.macos }}
     timeout-minutes: 90
     concurrency:
-      group: ios-e2e-${{ matrix.devices.ios }}-${{ github.ref }}-${{ matrix.trial }}-${{ inputs.profile || 'baseline' }}
+      group: ios-e2e-${{ matrix.devices.ios }}-${{ github.ref }}-${{ matrix.trial }}-${{ inputs.profile || 'simctl-stop' }}
       cancel-in-progress: true
     strategy:
       fail-fast: false
@@ -227,8 +227,8 @@ jobs:
           echo "$HOME/.maestro/bin" >> $GITHUB_PATH
       - name: Log Maestro version
         run: maestro --version
-      - name: Use simulator-native stop route (comparison only)
-        if: inputs.profile == 'simctl-stop'
+      - name: Use simulator-native app termination
+        if: (inputs.profile || 'simctl-stop') == 'simctl-stop'
         run: |
           set -euo pipefail
           python3 e2e/scripts/patch-maestro-ios-stop.py \

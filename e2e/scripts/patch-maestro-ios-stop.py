@@ -1,8 +1,8 @@
-"""Compare pinned Maestro's simulator-native stop with its XCTest stop route.
+"""Use pinned Maestro's existing simulator-native stop controller.
 
 Only LocalIOSDevice.stop changes. The existing SimctlIOSDevice controller
 handles simulators; other controller types retain the original XCTest path.
-Isolated unless --install is explicitly supplied by the CI experiment.
+Isolated unless --install is explicitly supplied by CI.
 """
 import argparse
 import copy

@@ -82,8 +82,8 @@ In the unfiltered simulator log, `apsd` produced 29,255 of 31,992 lines between
 problem during this failure; it does not yet prove which competing service or
 policy caused it. Profiling itself can affect timing.
 
-Manual iOS dispatch now offers `baseline` and `apsd-stopped` profiles, with
-baseline remaining the default. The comparison stops only `apsd` in the
+Manual iOS dispatch retains `baseline` and `apsd-stopped` comparison profiles.
+The latter stops only `apsd` in the
 selected simulator after validating its namespace and executable path, using
 the same SIGSTOP operation as [yeetd](https://github.com/biscuitehh/yeetd/blob/main/yeetd/main.swift).
 Keyboard-controller already enables yeetd's `killapsd` setting. The experiment
@@ -93,18 +93,22 @@ simulated push-service behavior, which would matter to push-notification tests.
 The original supplied failure has the same log storm without the additional
 diagnostics: `apsd` produced 37,459 of 41,324 lines during 12:49:36–55 UTC.
 
-The first two `apsd-stopped` trials passed, and their artifacts confirm the
+All three `apsd-stopped` trials passed, and their artifacts confirm the
 selected service remained stopped with zero sampled CPU use. Diagnostic-log
 CPU use dropped substantially, but termination still took 35.084 and 21.076
-seconds. Their kernel captures again show runnable background-priority RBS
+seconds in the first two trials; the third reached 6.039 seconds. Their kernel captures again show runnable background-priority RBS
 threads. Stopping `apsd` alone therefore does not remove the observed mechanism.
 
 The remaining stalls include substantial host Spotlight activity, including
 multiple `mdworker_shared` processes. A separate `no-spotlight` profile disables
 host indexing with `mdutil` before downloading the app and preparing the
 simulator, preserving before/after indexing status. It leaves `apsd` running
-and changes no test flow. This is the next controlled experiment, not a claimed
-fix.
+and changes no test flow. All three independent trials passed the 18 original
+flows and glitch checks. Their 60 termination calls took at most 2.066, 3.018,
+and 4.080 seconds per trial. Indexing was confirmed disabled while `apsd`
+remained active. The baseline arm of the earlier `apsd` comparison also passed
+three suites, but one retained a 17.083-second termination. These small batches
+does not establish final stability or identify who applied the background policy.
 
 Maestro previously stopped simulator apps through `simctl`.
 [PR #2374](https://github.com/mobile-dev-inc/Maestro/pull/2374) changed that
@@ -112,8 +116,8 @@ routing to XCTest in March 2025. The current simulator controller still
 implements native termination, including its handling of an already-stopped
 app and command failures.
 
-The separate `simctl-stop` profile compares that existing backend while
-leaving host services unchanged. A fingerprint-guarded patch adds only this
+The default `simctl-stop` profile uses that existing backend while leaving
+host services unchanged. A fingerprint-guarded patch adds only this
 branch to `LocalIOSDevice.stop`: use the native controller when it is a
 `SimctlIOSDevice`; retain the original XCTest path for other controllers.
 No app prelaunch or per-flow CLI session is added. The installer verifies
@@ -121,7 +125,21 @@ that no other JAR entry changed and preserves patch metadata and disassembly.
 Isolated JVM checks against the official 2.10.0 class verified the original
 and changed simulator routing, selected device/app arguments, error
 propagation, null rejection, and the unchanged physical-controller fallback.
-They execute no device commands. CI verification of this route is separate.
+They execute no device commands and run again against CI's installed classes.
+
+All three independent native-stop trials passed the 18 original flows and
+glitch checks, with 20 native terminations each and no XCTest app-termination
+calls. Their maximum stop durations were 5.798, 3.495, and 3.270 seconds.
+The same-commit stock control also passed three suites, with maxima of 1.076,
+1.115, and 1.101 seconds. These batches establish that the alternative works
+with the original suite; they do not establish a lower failure rate.
+
+The candidate removes the `XCUIApplication.terminate()` call in which the
+original fatal failure was reproduced after the app had exited. It leaves
+physical-device routing intact and preserves native command failures.
+Push, pull-request, and default manual runs apply this temporary pinned
+dependency patch. Explicit comparison profiles keep the stock stop route.
+The final unchanged-candidate series remains a separate verification step.
 
 Related upstream reports:
 
@@ -235,9 +253,10 @@ class fingerprint, verifies the rewritten archive, and records both class
 hashes in `maestro-patch.json`. It changes no other JAR entry or driver APK.
 This is a temporary dependency patch pending an upstream release containing
 the fix. Full-suite candidate verification is separate from the focused probe.
-The first two ordinary CLI candidate jobs passed 18/18 flows in 7m43s and
-7m37s. Both retained `adbd` PID 458 with no zombie children across the captured
-snapshots, and recorded the expected installed patched-class fingerprint.
+All five ordinary CLI candidate jobs passed 18/18 flows and glitch checks in
+7m12s–7m43s. Each retained `adbd` PID 458 with no zombie children across the
+captured snapshots and recorded the expected installed patched-class fingerprint.
+These five suites precede the final unchanged-candidate verification series.
 
 ## Why keyboard-controller behaves differently
 
@@ -334,9 +353,9 @@ verification used the same Release artifact on that original CI device/OS:
 - The complete original suite passed all 18 flows in 5m 1s, including the
   Reels-to-instant-root transition and snapshot comparisons.
 
-These passes do not establish an iOS fix. The app's termination failure was
-not reproduced locally; the exact reason XCTest misses the process-state
-transition remains unverified. The local host used macOS 26.6.2 / Xcode 27.0,
+These local passes do not establish an iOS fix. The app's termination failure
+was reproduced later on CI, where the kernel capture recorded runnable
+background-priority notification work. The local host used macOS 26.6.2 / Xcode 27.0,
 while CI used macOS 15 / Xcode 16.4.
 
 The diagnostic wrapper passed nine device-free regression tests. A separate
