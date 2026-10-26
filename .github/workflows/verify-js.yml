@@ -53,7 +53,7 @@ jobs:
         run: yarn example test --maxWorkers=2 --coverage
 
       - name: Test native E2E diagnostics
-        run: node --test e2e/scripts/native-diagnostics.test.mjs
+        run: node --test e2e/scripts/native-diagnostics.test.mjs e2e/scripts/check-ios-touch-cancellations.test.mjs
 
   build-library:
     name: 🛠 Build package

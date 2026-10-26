@@ -23,6 +23,7 @@ on:
   pull_request:
     paths:
       - ".github/workflows/android-e2e-test.yml"
+      - ".nvmrc"
       - "package.json"
       - "yarn.lock"
       - "android/**"
@@ -35,6 +36,7 @@ on:
       - main
     paths:
       - ".github/workflows/android-e2e-test.yml"
+      - ".nvmrc"
       - "package.json"
       - "yarn.lock"
       - "android/**"
@@ -132,6 +134,10 @@ jobs:
           tool-cache: true
           # preserve Android
           android: false
+      - name: Use project Node version
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with:
+          node-version-file: .nvmrc
       - name: Download a single artifact
         uses: actions/download-artifact@v4
         with:

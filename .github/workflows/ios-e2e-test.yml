@@ -5,16 +5,14 @@ on:
       profile:
         description: Maestro driver / simulator profile
         type: choice
-        default: simctl-stop
+        default: native-driver
         options:
           - baseline
           - apsd-stopped
           - no-spotlight
           - simctl-stop
-          - touch-trace
-          - touch-trace-loop
           - recap-source
-          - recap-lead-in
+          - native-driver
       trials:
         description: Independent fresh-runner trials
         type: choice
@@ -30,6 +28,7 @@ on:
       - main
     paths:
       - ".github/workflows/ios-e2e-test.yml"
+      - ".nvmrc"
       - "package.json"
       - "yarn.lock"
       - "Teleport.podspec"
@@ -43,6 +42,7 @@ on:
       - main
     paths:
       - ".github/workflows/ios-e2e-test.yml"
+      - ".nvmrc"
       - "package.json"
       - "yarn.lock"
       - "Teleport.podspec"
@@ -53,6 +53,7 @@ on:
       - "common/**"
 env:
   XCODE_VERSION: "16.4"
+  MAESTRO_IOS_PROFILE: ${{ inputs.profile || 'native-driver' }}
 
 jobs:
   plan-trials:
@@ -137,14 +138,8 @@ jobs:
       - name: Install xcpretty
         run: gem install xcpretty
       - name: Build App
-        env:
-          TOUCH_TRACE_BUILD: ${{ startsWith(inputs.profile, 'touch-trace') && '1' || '0' }}
         run: |
           set -o pipefail
-          touch_trace_flags=()
-          if [ "$TOUCH_TRACE_BUILD" = "1" ]; then
-            touch_trace_flags+=('SWIFT_ACTIVE_COMPILATION_CONDITIONS=$(inherited) TELEPORT_TOUCH_TRACE')
-          fi
           xcodebuild \
             CC=clang CPLUSPLUS=clang++ LD=clang LDPLUSPLUS=clang++ \
             -derivedDataPath build -UseModernBuildSystem=YES \
@@ -153,15 +148,14 @@ jobs:
             -sdk iphonesimulator \
             -configuration Release \
             -destination 'platform=iOS Simulator,name=iPhone 16 Pro' \
-            "${touch_trace_flags[@]}" \
             build CODE_SIGNING_ALLOWED=NO | xcpretty
       - name: Build pinned Maestro input driver
         id: maestro-input
-        if: startsWith(inputs.profile, 'recap-')
+        if: env.MAESTRO_IOS_PROFILE == 'native-driver' || env.MAESTRO_IOS_PROFILE == 'recap-source'
         working-directory: ${{ github.workspace }}
         env:
           GH_TOKEN: ${{ github.token }}
-          TOUCH_LEAD_IN: ${{ inputs.profile == 'recap-lead-in' && '0.05' || '0' }}
+          TOUCH_LEAD_IN: ${{ inputs.profile == 'recap-source' && '0' || '0.05' }}
         run: |
           python3 e2e/scripts/maestro-ios-input.py build \
             --source example/ios/build/maestro-input/source \
@@ -181,11 +175,11 @@ jobs:
           path: example/ios/build/Build/Products/Release-iphonesimulator/TeleportExample.app/**
 
   e2e-test:
-    name: ⚙️ Automated test cases (iOS-${{ matrix.devices.ios }}, trial-${{ matrix.trial }}, ${{ inputs.profile || 'simctl-stop' }})
+    name: ⚙️ Automated test cases (iOS-${{ matrix.devices.ios }}, trial-${{ matrix.trial }}, ${{ inputs.profile || 'native-driver' }})
     runs-on: macos-${{ matrix.devices.macos }}
     timeout-minutes: 90
     concurrency:
-      group: ios-e2e-${{ matrix.devices.ios }}-${{ github.ref }}-${{ github.sha }}-${{ matrix.trial }}-${{ inputs.profile || 'simctl-stop' }}
+      group: ios-e2e-${{ matrix.devices.ios }}-${{ github.ref }}-${{ github.sha }}-${{ matrix.trial }}-${{ inputs.profile || 'native-driver' }}
       cancel-in-progress: true
     strategy:
       fail-fast: false
@@ -198,6 +192,10 @@ jobs:
       - uses: actions/checkout@v4
         with:
           ref: ${{ github.event.pull_request.head.sha || github.sha }}
+      - name: Use project Node version
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with:
+          node-version-file: .nvmrc
       - name: Disable host Spotlight indexing (comparison only)
         if: inputs.profile == 'no-spotlight'
         run: |
@@ -260,15 +258,15 @@ jobs:
       - name: Log Maestro version
         run: maestro --version
       - name: Download Maestro input driver
-        if: startsWith(inputs.profile, 'recap-')
+        if: env.MAESTRO_IOS_PROFILE == 'native-driver' || env.MAESTRO_IOS_PROFILE == 'recap-source'
         uses: actions/download-artifact@v4
         with:
           name: maestro-ios-input-driver
           path: e2e/reports/maestro-ios-input
       - name: Install simulator input driver resources
-        if: startsWith(inputs.profile, 'recap-')
+        if: env.MAESTRO_IOS_PROFILE == 'native-driver' || env.MAESTRO_IOS_PROFILE == 'recap-source'
         env:
-          TOUCH_LEAD_IN: ${{ inputs.profile == 'recap-lead-in' && '0.05' || '0' }}
+          TOUCH_LEAD_IN: ${{ inputs.profile == 'recap-source' && '0' || '0.05' }}
         run: |
           python3 e2e/scripts/maestro-ios-input.py install \
             --jar "$HOME/.maestro/lib/maestro-ios-driver.jar" \
@@ -277,7 +275,7 @@ jobs:
           mkdir -p e2e/reports/native-diagnostics
           cp e2e/reports/maestro-ios-input/maestro-ios-input-install.json e2e/reports/native-diagnostics/
       - name: Use simulator-native app termination
-        if: (inputs.profile || 'simctl-stop') == 'simctl-stop' || startsWith(inputs.profile, 'touch-trace') || startsWith(inputs.profile, 'recap-')
+        if: env.MAESTRO_IOS_PROFILE == 'simctl-stop' || env.MAESTRO_IOS_PROFILE == 'native-driver' || env.MAESTRO_IOS_PROFILE == 'recap-source'
         run: |
           set -euo pipefail
           python3 e2e/scripts/patch-maestro-ios-stop.py \
@@ -301,33 +299,19 @@ jobs:
       - name: Run E2E tests
         id: e2e
         timeout-minutes: 30
-        env:
-          TOUCH_TRACE_LOOP: ${{ inputs.profile == 'touch-trace-loop' && '1' || '0' }}
         run: |
           set -euo pipefail
           mkdir -p e2e/reports
-          flow_files=(e2e/flows/*)
-          if [ "$TOUCH_TRACE_LOOP" = "1" ]; then
-            flow_files=()
-            for cycle in {01..10}; do
-              flow="e2e/flows/ci-touch-$cycle.yml"
-              cp e2e/flows/bottom-sheet.yml "$flow"
-              cmp e2e/flows/bottom-sheet.yml "$flow"
-              flow_files+=("$flow")
-            done
-          fi
           node e2e/snapshot-engine.js > e2e/reports/snapshot-engine.log 2>&1 &
           SERVER_PID=$!
           trap 'kill "$SERVER_PID" 2>/dev/null || true' EXIT
           export MAESTRO_DRIVER_STARTUP_TIMEOUT=600000
           node e2e/scripts/native-diagnostics.mjs ios "${{ steps.simulator.outputs.udid }}" -- \
             maestro --platform ios --device "${{ steps.simulator.outputs.udid }}" test \
-            -e DEVICE="iPhone 16 Pro" "${flow_files[@]}" --format html ./e2e/reports/debug \
+            -e DEVICE="iPhone 16 Pro" e2e/flows/* --format html ./e2e/reports/debug \
             --debug-output ./e2e/reports/debug --flatten-debug-output
       - name: Check glitches/flickering
-        # The focused press regression has no recording commands. Full suites
-        # still require recordings; any recording in either mode is analyzed.
-        run: node e2e/scripts/check-glitches.mjs e2e/reports/debug ${{ inputs.profile == 'touch-trace-loop' && '--allow-empty' || '' }}
+        run: node e2e/scripts/check-glitches.mjs e2e/reports/debug
       - name: Validate iOS touch delivery
         if: always() && steps.e2e.outcome != 'skipped' && steps.e2e.outcome != ''
         run: |
@@ -335,28 +319,12 @@ jobs:
             e2e/reports/native-diagnostics/simulator.log \
             e2e/reports/native-diagnostics/ios-touch-cancellations.json
       - name: Verify rebuilt input driver was used
-        if: always() && startsWith(inputs.profile, 'recap-') && steps.e2e.outcome != 'skipped' && steps.e2e.outcome != ''
+        if: always() && (env.MAESTRO_IOS_PROFILE == 'native-driver' || env.MAESTRO_IOS_PROFILE == 'recap-source') && steps.e2e.outcome != 'skipped' && steps.e2e.outcome != ''
         env:
-          EXPECTED_LEAD_IN: ${{ inputs.profile == 'recap-lead-in' && '0.050' || '0.000' }}
+          EXPECTED_LEAD_IN: ${{ inputs.profile == 'recap-source' && '0.000' || '0.050' }}
         run: |
           grep -F "[teleport-maestro-input] touchLeadInSeconds=$EXPECTED_LEAD_IN" \
             e2e/reports/native-diagnostics/simulator.log
-      - name: Verify touch trace was enabled
-        if: always() && startsWith(inputs.profile, 'touch-trace')
-        env:
-          TOUCH_TRACE_LOOP: ${{ inputs.profile == 'touch-trace-loop' && '1' || '0' }}
-        run: |
-          set -euo pipefail
-          grep -F '"phase":"installed"' e2e/reports/native-diagnostics/simulator.log
-          grep -F '"phase":"signal.before"' e2e/reports/native-diagnostics/simulator.log | grep -F '"role":"bottom-sheet.close"'
-          if [ "$TOUCH_TRACE_LOOP" = "1" ]; then
-            installed_count=$(grep -cF '"phase":"installed"' e2e/reports/native-diagnostics/simulator.log)
-            test "$installed_count" -eq 10
-          fi
-          if grep -qF '"phase":"overflow"' e2e/reports/native-diagnostics/simulator.log; then
-            echo "Touch trace overflowed; diagnostic evidence is incomplete"
-            exit 1
-          fi
       - name: Upload native diagnostics
         if: always()
         uses: actions/upload-artifact@v4

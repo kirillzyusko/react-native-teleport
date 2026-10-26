@@ -6,6 +6,11 @@ and [39647963672 (Android)](https://github.com/kirillzyusko/react-native-telepor
 Both used Maestro 2.10.0. Their first failures happen during `launchApp`, before
 the supposedly failing example is opened.
 
+Test jobs explicitly select Node from `.nvmrc`, matching the app-build and local
+environment. The earlier macOS runner used Node 22.23.2 for the diagnostics and
+snapshot server while the project pins 20.19.4. This is an environment pin,
+not an explanation for the native failures below.
+
 ## iOS: XCTest reports a failed termination after the app has exited
 
 Four flows pass, including `instagram-reels-video`. At the start of `instant-root`:
@@ -116,8 +121,8 @@ routing to XCTest in March 2025. The current simulator controller still
 implements native termination, including its handling of an already-stopped
 app and command failures.
 
-The default `simctl-stop` profile uses that existing backend while leaving
-host services unchanged. A fingerprint-guarded patch adds only this
+The `native-driver` default and `simctl-stop` control use that existing backend
+while leaving host services unchanged. A fingerprint-guarded patch adds only this
 branch to `LocalIOSDevice.stop`: use the native controller when it is a
 `SimctlIOSDevice`; retain the original XCTest path for other controllers.
 No app prelaunch or per-flow CLI session is added. The installer verifies
@@ -138,10 +143,11 @@ The candidate removes the `XCUIApplication.terminate()` call in which the
 original fatal failure was reproduced after the app had exited. It leaves
 physical-device routing intact and preserves native command failures.
 Push, pull-request, and default manual runs apply this temporary pinned
-dependency patch. Explicit comparison profiles keep the stock stop route.
+dependency patch. The `baseline`, `apsd-stopped`, and `no-spotlight` controls
+keep the stock stop route; the `recap-source` control uses native termination.
 The final unchanged-candidate series remains a separate verification step.
 
-### Separate press/drag failure during verification
+### Confirmed additional touch-delivery failure
 
 Candidate `9f7d071` failed the third iOS trial in `bottom-sheet` while the
 remaining 17 flows passed. Both open operations and the normal Close tap
@@ -155,41 +161,14 @@ points; the screenshot shows the sheet still open. The existing artifacts
 do not record the React press state machine or which press callback ran.
 The native delivery failure was identified later in the simulator log below.
 
-The optional `touch-trace` profile keeps the original suite and native-stop
-patch, and enables logging of the two BottomSheet press handlers, actual
-Pressability signals, measured responder regions, and touch coordinates.
-The tracer forwards the original callbacks and state-machine operation.
-It is disabled in ordinary builds and does not change the test gesture or
-assertions. Trace events retain capture timestamps and are buffered until the
-final release, so move callbacks perform no native console I/O. An eight-second
-fallback after the second open preserves events if Close never receives the
-swipe. A separate step checks that trace output was actually captured.
-Tracing is enabled at build time only for diagnostic profiles so every app
-relaunch in a diagnostic session keeps the setting.
-
-The `touch-trace-loop` profile runs ten byte-identical copies of the original
-BottomSheet flow in one Maestro session. Each copy keeps the original app
-launch, navigation, gesture, and assertions. Any failed copy fails the job;
-these focused observations are excluded from full-suite stability counts.
-This profile permits an empty recording directory because BottomSheet has no
-recording command. Any recording that is present is still analyzed; ordinary
-full suites continue to fail when recordings are missing. The profile also
-requires ten installed trace markers and rejects trace-buffer overflow.
-Candidate commit IDs are included in concurrency groups so new experiments
-preserve earlier runs and their remaining trial evidence.
-
 The same candidate later failed `nested-stack-pop` before entering its fixture.
 The screenshot and hierarchy still show the initial Demos/Fixtures menu after
 the scroll command timed out. Maestro selected Fixtures at `[8,169][394,218]`
 and sent `/touch` to `(201,193)`; XCTest completed the tap without an error.
 The app did not open Fixtures, so scrolling could not find `nested_stack_pop`.
-No portal is involved in this menu button. The artifacts do not establish
-whether the touch reached React, was cancelled, or invoked navigation.
-
-The diagnostic tracer also labels `ExampleLink` press handlers by their existing
-test IDs. These events flush after release or termination, outside the original
-press callback. `onPress.returned` distinguishes an invoked callback from one
-that returned normally. Ordinary builds retain the original handler identity.
+No portal is involved in this menu button. Temporary buffered Pressability
+tracing was used during diagnosis and removed after the native failure was
+identified; the example app and original test flows require no changes.
 
 Both UI failures have the same native cause: XCTest's new Recap digitizer was
 not registered when its first touch arrived. For each failed gesture, BackBoard
@@ -210,9 +189,9 @@ cancelled contact are accepted. The checker identified exactly the two failed
 gestures across the 36 captured flow logs, without flagging their other 34
 flows. Its JSON report is retained with native diagnostics.
 
-The `recap-source` and `recap-lead-in` profiles build the pinned Maestro 2.10
-XCTest dependency at commit `14a408335e17a090df1e26bdbeaf80d8122a8fd8`.
-They use the same source patch with a first-path offset of zero or 50 ms.
+The `native-driver` default builds the pinned Maestro 2.10 XCTest dependency
+at commit `14a408335e17a090df1e26bdbeaf80d8122a8fd8` with a 50 ms first-path
+offset. The `recap-source` control builds the same source with a zero offset.
 The offset provides time for digitizer registration before DOWN; the existing
 DOWN/MOVE/UP intervals and original test gestures remain unchanged. In the two
 failed jobs, 227 registrations took a median 4.715 ms and a maximum 21.362 ms
@@ -225,9 +204,17 @@ hashes checked against the pinned tree. Builds reuse
 Installation guards the exact official SDK JAR and replaces only its two
 simulator app ZIP resources; Java classes, physical-device resources and the
 existing xctestrun remain unchanged. The runtime marker verifies the rebuilt
-driver was actually used. These comparisons retain the simulator-native stop
+driver was actually used. Both profiles retain the simulator-native stop
 patch, all 18 original flows and both video/input checks, with no gesture or
-suite retries. They do not count toward the final unchanged-candidate series.
+suite retries. Initial source-build comparisons are excluded from the final
+unchanged-candidate series; final verification uses the default profile.
+
+The first 50 ms source-built run passed all 18 original flows and the video
+check. Its raw simulator log contains 112 Recap devices, no unknown senders
+and no active-contact cancellations. Installed resource digests and the
+`touchLeadInSeconds=0.050` runtime marker match the preserved native build.
+This establishes that the rebuilt runner works with the suite; the final
+stability series remains separate.
 
 Related upstream reports:
 
