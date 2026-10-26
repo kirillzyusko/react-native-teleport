@@ -30,7 +30,7 @@ function PhotoDetail({ route }: PhotoDetailProps) {
 
   const fullHeight = SCREEN_WIDTH * (photo.height / photo.width);
 
-  const isTransitionDone = visibility.target === 1;
+  const isTransitionDone = visibility.target === 1 && direction !== "forward";
   const buttonOpacity = useSharedValue(0);
 
   const onLoad = useCallback(() => {
@@ -70,7 +70,7 @@ function PhotoDetail({ route }: PhotoDetailProps) {
   );
 
   const heroImage = useAnimatedStyle(() => {
-    if (direction !== "backward" || !position) {
+    if (direction === "neutral" || !position) {
       return {
         width: SCREEN_WIDTH,
         height: fullHeight,

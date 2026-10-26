@@ -61,6 +61,9 @@ export const useHeroTransition = create<HeroStore>((set, get) => ({
     set({ isTargetElementAvailable: true });
 
     if (!get().isAnimationCompleted) {
+      // Full-res image is ready mid-flight: it follows the same animation,
+      // so swap it in now and teleport back once the animation completes
+      set({ visibility: { source: 0, target: 1 } });
       return;
     }
 
