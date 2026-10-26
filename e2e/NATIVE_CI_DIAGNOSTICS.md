@@ -125,7 +125,11 @@ threshold. The foreground variant prepends one patched `AndroidDriver.class`
 to the probe's classpath; it removes only the background marker, matching
 PR #3708. The installed CLI and its APKs are unchanged. These focused
 reproduction jobs do not count as full-suite verification. The original suite
-remains the default mode.
+remains the default mode. Focused probes do not need FFmpeg or the snapshot
+engine and skip their installation. The original Android rerun spent over
+30 minutes downloading FFmpeg dependencies from `azure.archive.ubuntu.com`
+before it reached the emulator or Maestro. That observed setup delay is
+separate from the watchdog failure during tests.
 
 ## Why keyboard-controller behaves differently
 

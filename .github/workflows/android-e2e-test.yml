@@ -125,6 +125,7 @@ jobs:
       - name: Log Maestro version
         run: maestro --version
       - name: Ensure FFmpeg is available
+        if: ${{ !inputs.mode || inputs.mode == 'suite' }}
         run: command -v ffmpeg >/dev/null || (sudo apt-get update && sudo apt-get install -y ffmpeg)
       - name: Enable KVM group perms
         run: |
@@ -140,9 +141,11 @@ jobs:
             ~/.android/adb*
           key: avd-${{ matrix.devices.api }}-${{ matrix.devices.target }}
       - name: Prepare snapshot engine
+        if: ${{ !inputs.mode || inputs.mode == 'suite' }}
         run: cd e2e && npm install
 
       - name: Start snapshot engine (background)
+        if: ${{ !inputs.mode || inputs.mode == 'suite' }}
         shell: bash
         run: |
           mkdir -p e2e/reports
@@ -168,7 +171,7 @@ jobs:
             adb install -r -d -t example/android/app/build/outputs/apk/release/app-release.apk
             bash e2e/scripts/run-android-ci.sh "$NATIVE_MODE" emulator-5554
       - name: Show snapshot engine logs
-        if: always()
+        if: ${{ always() && (!inputs.mode || inputs.mode == 'suite') }}
         run: |
           cat e2e/reports/snapshot-engine.log || true
       - name: Check glitches/flickering
