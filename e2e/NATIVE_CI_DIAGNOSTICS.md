@@ -160,7 +160,17 @@ patch, and enables logging of the two BottomSheet press handlers, actual
 Pressability signals, measured responder regions, and touch coordinates.
 The tracer forwards the original callbacks and state-machine operation.
 It is disabled in ordinary builds and does not change the test gesture or
-assertions. A separate step checks that trace output was actually captured.
+assertions. Trace events retain capture timestamps and are buffered until the
+final release, so move callbacks perform no native console I/O. An eight-second
+fallback after the second open preserves events if Close never receives the
+swipe. A separate step checks that trace output was actually captured.
+Tracing is enabled at build time only for diagnostic profiles so every app
+relaunch in a diagnostic session keeps the setting.
+
+The `touch-trace-loop` profile runs ten byte-identical copies of the original
+BottomSheet flow in one Maestro session. Each copy keeps the original app
+launch, navigation, gesture, and assertions. Any failed copy fails the job;
+these focused observations are excluded from full-suite stability counts.
 Candidate commit IDs are included in concurrency groups so new experiments
 preserve earlier runs and their remaining trial evidence.
 

@@ -12,6 +12,7 @@ on:
           - no-spotlight
           - simctl-stop
           - touch-trace
+          - touch-trace-loop
       trials:
         description: Independent fresh-runner trials
         type: choice
@@ -134,16 +135,24 @@ jobs:
       - name: Install xcpretty
         run: gem install xcpretty
       - name: Build App
-        run: "set -o pipefail && xcodebuild \
-          CC=clang CPLUSPLUS=clang++ LD=clang LDPLUSPLUS=clang++ \
-          -derivedDataPath build -UseModernBuildSystem=YES \
-          -workspace TeleportExample.xcworkspace \
-          -scheme TeleportExample \
-          -sdk iphonesimulator \
-          -configuration Release \
-          -destination 'platform=iOS Simulator,name=iPhone 16 Pro' \
-          build \
-          CODE_SIGNING_ALLOWED=NO | xcpretty"
+        env:
+          TOUCH_TRACE_BUILD: ${{ startsWith(inputs.profile, 'touch-trace') && '1' || '0' }}
+        run: |
+          set -o pipefail
+          touch_trace_flags=()
+          if [ "$TOUCH_TRACE_BUILD" = "1" ]; then
+            touch_trace_flags+=('SWIFT_ACTIVE_COMPILATION_CONDITIONS=$(inherited) TELEPORT_TOUCH_TRACE')
+          fi
+          xcodebuild \
+            CC=clang CPLUSPLUS=clang++ LD=clang LDPLUSPLUS=clang++ \
+            -derivedDataPath build -UseModernBuildSystem=YES \
+            -workspace TeleportExample.xcworkspace \
+            -scheme TeleportExample \
+            -sdk iphonesimulator \
+            -configuration Release \
+            -destination 'platform=iOS Simulator,name=iPhone 16 Pro' \
+            "${touch_trace_flags[@]}" \
+            build CODE_SIGNING_ALLOWED=NO | xcpretty
       - uses: actions/upload-artifact@v4
         with:
           name: ios-e2e-ipa
@@ -229,7 +238,7 @@ jobs:
       - name: Log Maestro version
         run: maestro --version
       - name: Use simulator-native app termination
-        if: (inputs.profile || 'simctl-stop') == 'simctl-stop' || inputs.profile == 'touch-trace'
+        if: (inputs.profile || 'simctl-stop') == 'simctl-stop' || startsWith(inputs.profile, 'touch-trace')
         run: |
           set -euo pipefail
           python3 e2e/scripts/patch-maestro-ios-stop.py \
@@ -253,21 +262,32 @@ jobs:
       - name: Run E2E tests
         timeout-minutes: 30
         env:
-          SIMCTL_CHILD_TELEPORT_TOUCH_TRACE: ${{ inputs.profile == 'touch-trace' && '1' || '0' }}
+          TOUCH_TRACE_LOOP: ${{ inputs.profile == 'touch-trace-loop' && '1' || '0' }}
         run: |
+          set -euo pipefail
           mkdir -p e2e/reports
+          flow_files=(e2e/flows/*)
+          if [ "$TOUCH_TRACE_LOOP" = "1" ]; then
+            flow_files=()
+            for cycle in {01..10}; do
+              flow="e2e/flows/ci-touch-$cycle.yml"
+              cp e2e/flows/bottom-sheet.yml "$flow"
+              cmp e2e/flows/bottom-sheet.yml "$flow"
+              flow_files+=("$flow")
+            done
+          fi
           node e2e/snapshot-engine.js > e2e/reports/snapshot-engine.log 2>&1 &
           SERVER_PID=$!
           trap 'kill "$SERVER_PID" 2>/dev/null || true' EXIT
           export MAESTRO_DRIVER_STARTUP_TIMEOUT=600000
           node e2e/scripts/native-diagnostics.mjs ios "${{ steps.simulator.outputs.udid }}" -- \
             maestro --platform ios --device "${{ steps.simulator.outputs.udid }}" test \
-            -e DEVICE="iPhone 16 Pro" e2e/flows/* --format html ./e2e/reports/debug \
+            -e DEVICE="iPhone 16 Pro" "${flow_files[@]}" --format html ./e2e/reports/debug \
             --debug-output ./e2e/reports/debug --flatten-debug-output
       - name: Check glitches/flickering
         run: node e2e/scripts/check-glitches.mjs e2e/reports/debug
       - name: Verify touch trace was enabled
-        if: always() && inputs.profile == 'touch-trace'
+        if: always() && startsWith(inputs.profile, 'touch-trace')
         run: |
           set -euo pipefail
           grep -F '"phase":"installed"' e2e/reports/native-diagnostics/simulator.log
