@@ -10,6 +10,14 @@ on:
           - "[1]"
           - "[1,2,3]"
           - "[1,2,3,4,5]"
+      mode:
+        description: Original suite or focused Maestro driver lifetime probe
+        type: choice
+        default: suite
+        options:
+          - suite
+          - stock-driver
+          - foreground-driver
   pull_request:
     paths:
       - ".github/workflows/android-e2e-test.yml"
@@ -38,7 +46,7 @@ jobs:
     name: 🏗️ Build E2E apk
     runs-on: ubuntu-latest
     concurrency:
-      group: android-e2e-${{ github.ref }}
+      group: android-e2e-${{ github.ref }}-${{ inputs.mode || 'suite' }}
       cancel-in-progress: true
     steps:
       - name: Checkout
@@ -75,13 +83,14 @@ jobs:
           path: example/android/app/build/outputs/apk/**
 
   e2e-test:
-    name: ⚙️ Automated test cases (API-${{ matrix.devices.api }}, trial-${{ matrix.trial }})
+    name: ⚙️ Automated test cases (API-${{ matrix.devices.api }}, trial-${{ matrix.trial }}, ${{ inputs.mode || 'suite' }})
     runs-on: ubuntu-latest
     timeout-minutes: 60
     env:
       WORKING_DIRECTORY: example
+      NATIVE_MODE: ${{ inputs.mode || 'suite' }}
     concurrency:
-      group: android-e2e-${{ matrix.devices.api }}-${{ github.ref }}-${{ matrix.trial }}
+      group: android-e2e-${{ matrix.devices.api }}-${{ github.ref }}-${{ matrix.trial }}-${{ inputs.mode || 'suite' }}
       cancel-in-progress: true
     strategy:
       fail-fast: false
@@ -157,12 +166,13 @@ jobs:
           arch: x86_64
           script: |
             adb install -r -d -t example/android/app/build/outputs/apk/release/app-release.apk
-            node e2e/scripts/native-diagnostics.mjs android emulator-5554 -- maestro --platform android --device emulator-5554 test -e DEVICE="e2e_emulator_31" e2e/flows/* --format html ./e2e/reports/debug --debug-output ./e2e/reports/debug --flatten-debug-output
+            bash e2e/scripts/run-android-ci.sh "$NATIVE_MODE" emulator-5554
       - name: Show snapshot engine logs
         if: always()
         run: |
           cat e2e/reports/snapshot-engine.log || true
       - name: Check glitches/flickering
+        if: ${{ !inputs.mode || inputs.mode == 'suite' }}
         run: node e2e/scripts/check-glitches.mjs e2e/reports/debug
       - name: Kill snapshot engine
         if: always()

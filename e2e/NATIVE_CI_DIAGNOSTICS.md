@@ -118,6 +118,15 @@ setup operation or APK transfer was blocked during that interval. The patch
 must not be presented as proof that this earlier delay is fixed. GPU/color-buffer
 warnings also occur during passing flows and do not establish its cause.
 
+Manual Android dispatch also supports `stock-driver` and `foreground-driver`
+modes with one trial. Both open the real installed Maestro 2.10.0 driver and
+check screenshots and its `adbd` process for 720 seconds, beyond the watchdog
+threshold. The foreground variant prepends one patched `AndroidDriver.class`
+to the probe's classpath; it removes only the background marker, matching
+PR #3708. The installed CLI and its APKs are unchanged. These focused
+reproduction jobs do not count as full-suite verification. The original suite
+remains the default mode.
+
 ## Why keyboard-controller behaves differently
 
 Keyboard-controller uses [Detox](https://github.com/kirillzyusko/react-native-keyboard-controller/blob/main/e2e/package.json),
