@@ -1,5 +1,15 @@
 name: 🍏 Test iOS
 on:
+  workflow_dispatch:
+    inputs:
+      trials:
+        description: Independent fresh-runner trials
+        type: choice
+        default: "[1,2,3,4,5]"
+        options:
+          - "[1]"
+          - "[1,2,3]"
+          - "[1,2,3,4,5]"
   push:
     branches:
       - main
@@ -109,15 +119,18 @@ jobs:
           path: example/ios/build/Build/Products/Release-iphonesimulator/TeleportExample.app/**
 
   e2e-test:
-    name: ⚙️ Automated test cases (iOS-${{ matrix.devices.ios }})
+    name: ⚙️ Automated test cases (iOS-${{ matrix.devices.ios }}, trial-${{ matrix.trial }})
     runs-on: macos-${{ matrix.devices.macos }}
     timeout-minutes: 90
     concurrency:
-      group: ios-e2e-${{ matrix.devices.ios }}-${{ github.ref }}
+      group: ios-e2e-${{ matrix.devices.ios }}-${{ github.ref }}-${{ matrix.trial }}
       cancel-in-progress: true
     strategy:
+      fail-fast: false
+      max-parallel: 2
       matrix:
         devices: [{ ios: 18, macos: 15 }]
+        trial: ${{ fromJSON(inputs.trials || '[1]') }}
     needs: build-ios
     steps:
       - uses: actions/checkout@v4
@@ -132,8 +145,11 @@ jobs:
         with:
           xcode-version: ${{ env.XCODE_VERSION }}
       - name: Install app on simulator
+        id: simulator
         run: |
           UDID=$(xcrun simctl list devices | grep "iPhone 16 Pro (" | grep -oE "[0-9A-F-]{36}" | head -n 1)
+          test -n "$UDID"
+          echo "udid=$UDID" >> "$GITHUB_OUTPUT"
           open -a Simulator --args -CurrentDeviceUDID $UDID
           xcrun simctl bootstatus "$UDID"
           osascript -e 'tell application "Simulator" to activate'
@@ -151,13 +167,29 @@ jobs:
         run: cd e2e && npm install
       - name: Run E2E tests
         run: |
-          node e2e/snapshot-engine.js &
+          mkdir -p e2e/reports
+          node e2e/snapshot-engine.js > e2e/reports/snapshot-engine.log 2>&1 &
           SERVER_PID=$!
+          trap 'kill "$SERVER_PID" 2>/dev/null || true' EXIT
           export MAESTRO_DRIVER_STARTUP_TIMEOUT=600000
-          maestro --platform ios test -e DEVICE="iPhone 16 Pro" e2e/flows/* --format html ./e2e/reports/debug --debug-output ./e2e/reports/debug --flatten-debug-output
-          kill $SERVER_PID
+          node e2e/scripts/native-diagnostics.mjs ios "${{ steps.simulator.outputs.udid }}" -- \
+            maestro --platform ios --device "${{ steps.simulator.outputs.udid }}" test \
+            -e DEVICE="iPhone 16 Pro" e2e/flows/* --format html ./e2e/reports/debug \
+            --debug-output ./e2e/reports/debug --flatten-debug-output
       - name: Check glitches/flickering
         run: node e2e/scripts/check-glitches.mjs e2e/reports/debug
+      - name: Upload native diagnostics
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          path: |
+            ./e2e/reports/native-diagnostics
+            ./e2e/reports/snapshot-engine.log
+            ./e2e/reports/debug/*.log
+            ./e2e/reports/debug/**/commands.json
+            ./e2e/reports/debug/**/manifest.json
+          name: e2e-diagnostics-ios-${{ matrix.trial }}
+          retention-days: 7
       - name: Upload test report
         if: failure()
         uses: actions/upload-artifact@v4
@@ -165,4 +197,4 @@ jobs:
           path: |
             ./e2e/reports
             ./e2e/videos
-          name: e2e-report-ios
+          name: e2e-report-ios-${{ matrix.trial }}

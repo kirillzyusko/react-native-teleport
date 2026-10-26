@@ -52,6 +52,9 @@ jobs:
       - name: Run example app unit tests (verify mocks)
         run: yarn example test --maxWorkers=2 --coverage
 
+      - name: Test native E2E diagnostics
+        run: node --test e2e/scripts/native-diagnostics.test.mjs
+
   build-library:
     name: 🛠 Build package
     runs-on: ubuntu-latest
