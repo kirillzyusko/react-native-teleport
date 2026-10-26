@@ -2,6 +2,7 @@ import { useCallback } from "react";
 import { Text, TouchableOpacity, View } from "react-native";
 
 import styles from "./styles";
+import { tracePress } from "../../../../diagnostics/touchTrace";
 
 import type { Example } from "../../types";
 
@@ -20,7 +21,7 @@ const ExampleLink = <T,>(props: Props<T>) => {
     <TouchableOpacity
       style={styles.container}
       testID={testID}
-      onPress={onCardPress}
+      onPress={tracePress(`example.${testID}`, onCardPress)}
     >
       <View style={styles.row}>
         <Text style={styles.text}>

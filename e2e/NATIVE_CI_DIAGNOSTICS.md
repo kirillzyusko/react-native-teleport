@@ -178,6 +178,19 @@ requires ten installed trace markers and rejects trace-buffer overflow.
 Candidate commit IDs are included in concurrency groups so new experiments
 preserve earlier runs and their remaining trial evidence.
 
+The same candidate later failed `nested-stack-pop` before entering its fixture.
+The screenshot and hierarchy still show the initial Demos/Fixtures menu after
+the scroll command timed out. Maestro selected Fixtures at `[8,169][394,218]`
+and sent `/touch` to `(201,193)`; XCTest completed the tap without an error.
+The app did not open Fixtures, so scrolling could not find `nested_stack_pop`.
+No portal is involved in this menu button. The artifacts do not establish
+whether the touch reached React, was cancelled, or invoked navigation.
+
+The diagnostic tracer also labels `ExampleLink` press handlers by their existing
+test IDs. These events flush after release or termination, outside the original
+press callback. `onPress.returned` distinguishes an invoked callback from one
+that returned normally. Ordinary builds retain the original handler identity.
+
 Related upstream reports:
 
 - [#3318](https://github.com/mobile-dev-inc/Maestro/issues/3318) and

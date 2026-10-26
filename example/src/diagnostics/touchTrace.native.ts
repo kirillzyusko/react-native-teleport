@@ -89,6 +89,7 @@ export function tracePress(role: string, handler: PressHandler): PressHandler {
       flushAfter(8000);
     }
     handler(event);
+    traceState("onPress.returned", { role });
   };
   roles.set(traced, role);
   return traced;
@@ -137,6 +138,8 @@ if (enabled) {
         activePresses.delete(this);
         if (role === "bottom-sheet.close" && ++closeCount === 2) {
           finished = true;
+          flushAfter(0);
+        } else if (role.startsWith("example.")) {
           flushAfter(0);
         }
       }
