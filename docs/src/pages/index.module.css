@@ -4,6 +4,7 @@
  */
 
 .heroBanner {
+  flex-grow: 1;
   padding: 4rem 0;
   text-align: center;
   position: relative;
