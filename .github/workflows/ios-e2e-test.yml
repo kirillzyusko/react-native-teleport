@@ -13,6 +13,8 @@ on:
           - simctl-stop
           - touch-trace
           - touch-trace-loop
+          - recap-source
+          - recap-lead-in
       trials:
         description: Independent fresh-runner trials
         type: choice
@@ -153,6 +155,26 @@ jobs:
             -destination 'platform=iOS Simulator,name=iPhone 16 Pro' \
             "${touch_trace_flags[@]}" \
             build CODE_SIGNING_ALLOWED=NO | xcpretty
+      - name: Build pinned Maestro input driver
+        id: maestro-input
+        if: startsWith(inputs.profile, 'recap-')
+        working-directory: ${{ github.workspace }}
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TOUCH_LEAD_IN: ${{ inputs.profile == 'recap-lead-in' && '0.05' || '0' }}
+        run: |
+          python3 e2e/scripts/maestro-ios-input.py build \
+            --source example/ios/build/maestro-input/source \
+            --derived example/ios/build/maestro-input/DerivedData \
+            --output example/ios/build/maestro-input/artifact \
+            --lead-in "$TOUCH_LEAD_IN"
+      - name: Upload Maestro input driver and build evidence
+        if: always() && steps.maestro-input.outcome != 'skipped' && steps.maestro-input.outcome != ''
+        uses: actions/upload-artifact@v4
+        with:
+          name: maestro-ios-input-driver
+          path: example/ios/build/maestro-input/artifact
+          retention-days: 7
       - uses: actions/upload-artifact@v4
         with:
           name: ios-e2e-ipa
@@ -237,8 +259,25 @@ jobs:
           echo "$HOME/.maestro/bin" >> $GITHUB_PATH
       - name: Log Maestro version
         run: maestro --version
+      - name: Download Maestro input driver
+        if: startsWith(inputs.profile, 'recap-')
+        uses: actions/download-artifact@v4
+        with:
+          name: maestro-ios-input-driver
+          path: e2e/reports/maestro-ios-input
+      - name: Install simulator input driver resources
+        if: startsWith(inputs.profile, 'recap-')
+        env:
+          TOUCH_LEAD_IN: ${{ inputs.profile == 'recap-lead-in' && '0.05' || '0' }}
+        run: |
+          python3 e2e/scripts/maestro-ios-input.py install \
+            --jar "$HOME/.maestro/lib/maestro-ios-driver.jar" \
+            --artifact e2e/reports/maestro-ios-input \
+            --expected-lead-in "$TOUCH_LEAD_IN"
+          mkdir -p e2e/reports/native-diagnostics
+          cp e2e/reports/maestro-ios-input/maestro-ios-input-install.json e2e/reports/native-diagnostics/
       - name: Use simulator-native app termination
-        if: (inputs.profile || 'simctl-stop') == 'simctl-stop' || startsWith(inputs.profile, 'touch-trace')
+        if: (inputs.profile || 'simctl-stop') == 'simctl-stop' || startsWith(inputs.profile, 'touch-trace') || startsWith(inputs.profile, 'recap-')
         run: |
           set -euo pipefail
           python3 e2e/scripts/patch-maestro-ios-stop.py \
@@ -260,6 +299,7 @@ jobs:
       - name: Prepare snapshot engine
         run: cd e2e && npm install
       - name: Run E2E tests
+        id: e2e
         timeout-minutes: 30
         env:
           TOUCH_TRACE_LOOP: ${{ inputs.profile == 'touch-trace-loop' && '1' || '0' }}
@@ -288,6 +328,19 @@ jobs:
         # The focused press regression has no recording commands. Full suites
         # still require recordings; any recording in either mode is analyzed.
         run: node e2e/scripts/check-glitches.mjs e2e/reports/debug ${{ inputs.profile == 'touch-trace-loop' && '--allow-empty' || '' }}
+      - name: Validate iOS touch delivery
+        if: always() && steps.e2e.outcome != 'skipped' && steps.e2e.outcome != ''
+        run: |
+          node e2e/scripts/check-ios-touch-cancellations.mjs \
+            e2e/reports/native-diagnostics/simulator.log \
+            e2e/reports/native-diagnostics/ios-touch-cancellations.json
+      - name: Verify rebuilt input driver was used
+        if: always() && startsWith(inputs.profile, 'recap-') && steps.e2e.outcome != 'skipped' && steps.e2e.outcome != ''
+        env:
+          EXPECTED_LEAD_IN: ${{ inputs.profile == 'recap-lead-in' && '0.050' || '0.000' }}
+        run: |
+          grep -F "[teleport-maestro-input] touchLeadInSeconds=$EXPECTED_LEAD_IN" \
+            e2e/reports/native-diagnostics/simulator.log
       - name: Verify touch trace was enabled
         if: always() && startsWith(inputs.profile, 'touch-trace')
         env:

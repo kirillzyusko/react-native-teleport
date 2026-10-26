@@ -295,7 +295,7 @@ if (platform === "ios") {
       "--level",
       "debug",
       "--predicate",
-      'process == "TeleportExample" OR process CONTAINS "maestro" OR process == "testmanagerd" OR process == "runningboardd" OR process == "SpringBoard"',
+      'process == "TeleportExample" OR process CONTAINS "maestro" OR process == "testmanagerd" OR process == "runningboardd" OR process == "backboardd" OR process == "SpringBoard"',
     ),
     observeIOSLog,
   );

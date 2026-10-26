@@ -153,7 +153,7 @@ The recorded swipe went from `(201, 591)` to `(361, 591)`. The failure's
 accessibility hierarchy placed Close at `[16,583][386,600]`, containing both
 points; the screenshot shows the sheet still open. The existing artifacts
 do not record the React press state machine or which press callback ran.
-This failure therefore needs its own diagnosis before declaring stability.
+The native delivery failure was identified later in the simulator log below.
 
 The optional `touch-trace` profile keeps the original suite and native-stop
 patch, and enables logging of the two BottomSheet press handlers, actual
@@ -190,6 +190,44 @@ The diagnostic tracer also labels `ExampleLink` press handlers by their existing
 test IDs. These events flush after release or termination, outside the original
 press callback. `onPress.returned` distinguishes an invoked callback from one
 that returned normally. Ordinary builds retain the original handler identity.
+
+Both UI failures have the same native cause: XCTest's new Recap digitizer was
+not registered when its first touch arrived. For each failed gesture, BackBoard
+records an unknown sender and then cancels a still-touching contact from that
+same sender when the digitizer disappears. The contact targets
+`teleport.example-default`; XCTest nevertheless completes the request.
+
+- BottomSheet: sender `0x1017221c00005`, unknown at `20:14:58.076570`, active
+  contact cancelled at `20:15:01.290446`.
+- Fixtures: sender `0x10532b750003f`, unknown at `21:59:37.735217`, active
+  contact cancelled at `21:59:37.964565`.
+
+This matches [Maestro #3686](https://github.com/mobile-dev-inc/Maestro/issues/3686).
+The native collector now includes `backboardd`, and
+`check-ios-touch-cancellations.mjs` checks sender-matched active-contact
+cancellations. Empty-contact teardown and an unknown sender without a
+cancelled contact are accepted. The checker identified exactly the two failed
+gestures across the 36 captured flow logs, without flagging their other 34
+flows. Its JSON report is retained with native diagnostics.
+
+The `recap-source` and `recap-lead-in` profiles build the pinned Maestro 2.10
+XCTest dependency at commit `14a408335e17a090df1e26bdbeaf80d8122a8fd8`.
+They use the same source patch with a first-path offset of zero or 50 ms.
+The offset provides time for digitizer registration before DOWN; the existing
+DOWN/MOVE/UP intervals and original test gestures remain unchanged. In the two
+failed jobs, 227 registrations took a median 4.715 ms and a maximum 21.362 ms
+from creation to attachment. This is a bounded mitigation to verify, not a
+guarantee against arbitrarily long simulator stalls.
+
+Only the dependency's required source subtree is downloaded, with Git blob
+hashes checked against the pinned tree. Builds reuse
+`example/ios/build/maestro-input/` incrementally without cleaning DerivedData.
+Installation guards the exact official SDK JAR and replaces only its two
+simulator app ZIP resources; Java classes, physical-device resources and the
+existing xctestrun remain unchanged. The runtime marker verifies the rebuilt
+driver was actually used. These comparisons retain the simulator-native stop
+patch, all 18 original flows and both video/input checks, with no gesture or
+suite retries. They do not count toward the final unchanged-candidate series.
 
 Related upstream reports:
 
