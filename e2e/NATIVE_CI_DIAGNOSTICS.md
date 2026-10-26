@@ -106,6 +106,23 @@ simulator, preserving before/after indexing status. It leaves `apsd` running
 and changes no test flow. This is the next controlled experiment, not a claimed
 fix.
 
+Maestro previously stopped simulator apps through `simctl`.
+[PR #2374](https://github.com/mobile-dev-inc/Maestro/pull/2374) changed that
+routing to XCTest in March 2025. The current simulator controller still
+implements native termination, including its handling of an already-stopped
+app and command failures.
+
+The separate `simctl-stop` profile compares that existing backend while
+leaving host services unchanged. A fingerprint-guarded patch adds only this
+branch to `LocalIOSDevice.stop`: use the native controller when it is a
+`SimctlIOSDevice`; retain the original XCTest path for other controllers.
+No app prelaunch or per-flow CLI session is added. The installer verifies
+that no other JAR entry changed and preserves patch metadata and disassembly.
+Isolated JVM checks against the official 2.10.0 class verified the original
+and changed simulator routing, selected device/app arguments, error
+propagation, null rejection, and the unchanged physical-controller fallback.
+They execute no device commands. CI verification of this route is separate.
+
 Related upstream reports:
 
 - [#3318](https://github.com/mobile-dev-inc/Maestro/issues/3318) and
@@ -145,7 +162,8 @@ zombie child of `adbd` until the instrumentation ends or the stream closes.
 
 This mechanism was reproduced on the authorized existing Pixel_8_API_36:
 
-- The unmodified installed Maestro 2.10.0 `AndroidDriver.open()` immediately
+- A local JVM probe using the unmodified `AndroidDriver.class`, byte-identical
+  to the official 2.10.0 class, immediately
   left a zombie shell under `adbd`, with its `am instrument` child reparented
   to PID 1. Screenshots initially still worked.
 - Changing only the command constant to remove `&` kept the shell alive and

@@ -10,6 +10,7 @@ on:
           - baseline
           - apsd-stopped
           - no-spotlight
+          - simctl-stop
       trials:
         description: Independent fresh-runner trials
         type: choice
@@ -226,6 +227,24 @@ jobs:
           echo "$HOME/.maestro/bin" >> $GITHUB_PATH
       - name: Log Maestro version
         run: maestro --version
+      - name: Use simulator-native stop route (comparison only)
+        if: inputs.profile == 'simctl-stop'
+        run: |
+          set -euo pipefail
+          python3 e2e/scripts/patch-maestro-ios-stop.py \
+            "$HOME/.maestro/lib/maestro-ios.jar" "$RUNNER_TEMP/teleport-ios-stop-patch" --install
+          mkdir -p e2e/reports/native-diagnostics
+          cp "$RUNNER_TEMP/teleport-ios-stop-patch/maestro-ios-stop-patch.json" e2e/reports/native-diagnostics/
+          cp "$RUNNER_TEMP/teleport-ios-stop-patch/patch-helper.log" e2e/reports/native-diagnostics/ios-stop-patch-helper.log
+          javap -classpath "$HOME/.maestro/lib/*" -c -p ios.LocalIOSDevice > e2e/reports/native-diagnostics/ios-stop-routing-bytecode.log
+          javac -classpath "$HOME/.maestro/lib/*" -d "$RUNNER_TEMP/teleport-ios-stop-patch/fixture" \
+            e2e/scripts/ios-stop-fixture/ios/xctest/XCTestIOSDevice.java \
+            e2e/scripts/ios-stop-fixture/util/LocalSimulatorUtils.java \
+            e2e/scripts/ios-stop-fixture/VerifyIOSStopRouting.java
+          java -Xverify:all -cp "$RUNNER_TEMP/teleport-ios-stop-patch/fixture:$RUNNER_TEMP/teleport-ios-stop-patch/original:$HOME/.maestro/lib/*" \
+            VerifyIOSStopRouting original | tee e2e/reports/native-diagnostics/ios-stop-routing-original.log
+          java -Xverify:all -cp "$RUNNER_TEMP/teleport-ios-stop-patch/fixture:$HOME/.maestro/lib/*" \
+            VerifyIOSStopRouting patched | tee e2e/reports/native-diagnostics/ios-stop-routing-patched.log
       - name: Ensure FFmpeg is available
         run: command -v ffmpeg >/dev/null || brew install ffmpeg
       - name: Prepare snapshot engine
