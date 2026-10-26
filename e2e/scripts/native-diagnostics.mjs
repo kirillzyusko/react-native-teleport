@@ -201,7 +201,9 @@ async function finalState() {
       "screenshot.log",
       simctl("io", device, "screenshot", path.join(directory, "final.png")),
     );
-    const reports = path.join(homedir(), "Library/Logs/DiagnosticReports");
+    const reports =
+      process.env.TELEPORT_DIAGNOSTIC_REPORTS_DIR ||
+      path.join(homedir(), "Library/Logs/DiagnosticReports");
     try {
       for (const name of readdirSync(reports)) {
         const source = path.join(reports, name);

@@ -104,7 +104,7 @@ if (name === "test-command") {
       env: {
         ...process.env,
         PATH: bin,
-        HOME: directory,
+        TELEPORT_DIAGNOSTIC_REPORTS_DIR: path.join(directory, "crash-reports"),
         FORK_COLLECTOR: String(forkCollector),
       },
       timeout: 10000,
