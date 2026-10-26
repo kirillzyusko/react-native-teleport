@@ -69,6 +69,9 @@ if (name === "test-command") {
 } else if (name === "sample") {
   fs.writeFileSync(args[args.indexOf("-file") + 1], "stack for selected pid " + args[0]);
   console.log(name, args.join(" "));
+} else if (name === "sudo" && args.includes("spindump")) {
+  fs.writeFileSync(args[args.indexOf("-file") + 1], "kernel stack for selected pid " + args[2]);
+  console.log(name, args.join(" "));
 } else console.log(name, args.join(" "));
 `;
   for (const name of [
@@ -84,6 +87,7 @@ if (name === "test-command") {
     "free",
     "adb",
     "sample",
+    "sudo",
   ]) {
     await writeFile(path.join(bin, name), source, { mode: 0o755 });
   }
@@ -189,6 +193,7 @@ for (const state of ["stalled", "completed"]) {
             ...options.env,
             TEST_DURATION_MS: "9000",
             TERMINATION_PROBE: state,
+            GITHUB_ACTIONS: "true",
           },
         },
       );
@@ -215,6 +220,25 @@ for (const state of ["stalled", "completed"]) {
         } else {
           await assert.rejects(readFile(file), { code: "ENOENT" });
         }
+      }
+      const kernel = path.join(
+        logs,
+        "termination-stall-1-runningboardd-kernel.txt",
+      );
+      if (state === "stalled") {
+        assert.equal(
+          await readFile(kernel, "utf8"),
+          "kernel stack for selected pid 3456",
+        );
+        assert.match(
+          await readFile(
+            path.join(logs, "termination-stall-1-runningboardd-kernel.log"),
+            "utf8",
+          ),
+          /sudo -n spindump 3456 3 10 -onlyTarget/,
+        );
+      } else {
+        await assert.rejects(readFile(kernel), { code: "ENOENT" });
       }
       await assertExited(
         Number(await readFile(path.join(directory, "collector.pid"), "utf8")),

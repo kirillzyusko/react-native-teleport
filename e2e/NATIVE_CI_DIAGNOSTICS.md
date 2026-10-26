@@ -36,6 +36,23 @@ Passing local iOS 18.5 terminations do log that process-monitor update. This
 narrows the missing observation to the process-state notification path, but
 does not yet establish why the update is absent in the failing run.
 
+The first diagnostic CI batch captured the same notification delay in a
+passing job. In run 40345511203, trial 2, termination of PID 18887 started at
+15:19:26.904 UTC; SpringBoard recorded its exit at 15:19:26.941. The matching
+`testmanagerd` not-running update arrived at 15:19:46.180, over 19 seconds
+later. The XCTest runner was waiting in `XCUIApplicationProcess.terminate`.
+During that interval, the simulator's `runningboardd` process-death queue
+was sampled in `_handleDeath -> _pthread_set_properties_self ->
+__bsdthread_ctl`. The test daemon's main loop was idle.
+
+This is a captured system-notification delay, not a verified explanation for
+the kernel wait or the original 60-second timeout. The runner reported three
+logical CPUs and 7 GiB RAM. Memory compression was substantial, but this
+observation alone does not establish memory exhaustion. Later CI diagnostics
+also capture the pressure-level counter and the kernel stack of the selected
+process. The first passing job had at most two simulator log processes (the
+collector and Maestro's current capture), without accumulation across flows.
+
 Related upstream reports:
 
 - [#3318](https://github.com/mobile-dev-inc/Maestro/issues/3318) and
@@ -119,7 +136,11 @@ Both native workflows run the existing suite through `scripts/native-diagnostics
 - If an iOS app termination lasts over eight seconds, capture host process
   state and three-second stacks of the selected simulator's XCTest runner,
   `testmanagerd`, and `runningboardd`, while the original operation is still
-  waiting.
+  waiting. Stack sampling uses a 10 ms interval to reduce its CPU cost.
+  On GitHub-hosted runners, a three-second `spindump -onlyTarget` also captures
+  kernel frames for the selected simulator's `runningboardd`. CI samples of
+  delayed terminations stopped in `__bsdthread_ctl`; the kernel snapshot is
+  intended to explain that wait. This collection is not enabled locally.
 - Save final device state, screenshots when available, and new relevant iOS
   crash reports. Android also saves dumpsys and kernel output when permitted.
 - Bound each diagnostic command to 15 seconds, stop collectors at the end, and
@@ -140,6 +161,9 @@ runner, downloads the same built app, and runs the whole original suite in one
 Maestro session. Push and pull-request events still run one trial. Matrix
 fail-fast is disabled so a failing job does not cancel other observations.
 Artifacts are unique per attempt and trial, so reruns retain earlier evidence.
+The test step has a 30-minute deadline inside the longer job deadline, leaving
+time to upload diagnostics for a stuck suite. Reaching it is a failed
+observation, not a successful retry.
 
 The CI campaign ledger is stored in
 `.argent/evidence/ci-flakiness-2026-10-26/ci-campaign/`. It records the commit,

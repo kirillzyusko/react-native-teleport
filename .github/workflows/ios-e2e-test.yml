@@ -166,6 +166,7 @@ jobs:
       - name: Prepare snapshot engine
         run: cd e2e && npm install
       - name: Run E2E tests
+        timeout-minutes: 30
         run: |
           mkdir -p e2e/reports
           node e2e/snapshot-engine.js > e2e/reports/snapshot-engine.log 2>&1 &

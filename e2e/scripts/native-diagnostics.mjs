@@ -96,10 +96,10 @@ function observeIOSLog(chunk) {
   const lines = simulatorLogBuffer.split("\n");
   simulatorLogBuffer = lines.pop().slice(-65536);
   for (const line of lines) {
-    const process = line.match(
+    const processMatch = line.match(
       /\b(testmanagerd|runningboardd|maestro-driver-iosUITests-Runner)\[(\d+)[:\]]/,
     );
-    if (process) xctestProcesses.set(process[1], process[2]);
+    if (processMatch) xctestProcesses.set(processMatch[1], processMatch[2]);
     if (line.includes("[End] Terminating app")) clearTimeout(terminationTimer);
     if (!line.includes("[Start] Terminating app")) continue;
     clearTimeout(terminationTimer);
@@ -120,8 +120,27 @@ function observeIOSLog(chunk) {
           [
             pid,
             "3",
+            "10",
             "-file",
             path.join(directory, `${prefix}-${name}-stack.txt`),
+          ],
+        ]);
+      }
+      const processManager = xctestProcesses.get("runningboardd");
+      if (process.env.GITHUB_ACTIONS === "true" && processManager) {
+        // CI samples found process-death delivery stopped in __bsdthread_ctl.
+        // Include kernel frames for this PID only, rather than the whole host.
+        void capture(`${prefix}-runningboardd-kernel.log`, [
+          "sudo",
+          [
+            "-n",
+            "spindump",
+            processManager,
+            "3",
+            "10",
+            "-onlyTarget",
+            "-file",
+            path.join(directory, `${prefix}-runningboardd-kernel.txt`),
           ],
         ]);
       }
@@ -136,6 +155,10 @@ async function sample() {
   ]);
   if (platform === "ios") {
     await capture("host-memory.log", ["vm_stat", []]);
+    await capture("host-memory.log", [
+      "sysctl",
+      ["kern.memorystatus_vm_pressure_level", "vm.swapusage"],
+    ]);
     await capture(
       "device-processes.log",
       simctl("spawn", device, "launchctl", "list"),
@@ -176,7 +199,7 @@ async function finalState() {
         if (
           info.isFile() &&
           info.mtimeMs >= startedAt &&
-          /TeleportExample|maestro|testmanagerd|Simulator|SpringBoard|JetsamEvent/i.test(
+          /TeleportExample|maestro|testmanagerd|runningboardd|Simulator|SpringBoard|JetsamEvent/i.test(
             name,
           )
         ) {
