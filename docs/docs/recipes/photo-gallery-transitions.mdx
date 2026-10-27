@@ -830,13 +830,13 @@ const styles = StyleSheet.create({
 export default PhotoDetail;
 ```
 
-Run it and tap a photo. The detail screen opens as before, but the thumbnail you tapped stays on top of it, right where it was, and covers part of the full-res photo:
+Run it and tap a photo. The detail screen opens as before, but the thumbnail you tapped is still visible on top of it, right where it was:
 
 <div className="center video">
   <img
     src={useBaseUrl("/img/photo-gallery-transition/step4-teleported.jpg")}
     style={{ height: "60vh" }}
-    alt="The detail screen with the full-res waterfall photo, and the tapped low-res thumbnail of the same photo drawn on top of it at its old grid position."
+    alt="The detail screen with the full-res photo at the top, and the tapped low-res thumbnail still drawn on top of the black backdrop at its old grid position."
   />
 </div>
 

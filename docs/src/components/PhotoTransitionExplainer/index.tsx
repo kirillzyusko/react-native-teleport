@@ -4,34 +4,41 @@ import useBaseUrl from "@docusaurus/useBaseUrl";
 
 import styles from "./styles.module.css";
 
-// Geometry mirrors example/src/screens/PhotoGallery (390×844 screen, 3 columns, portrait 720×1080 photo)
+// Geometry mirrors example/src/screens/PhotoGallery (390×844 screen, 3 columns)
 const SAFE = 59;
 const TOP = 104;
 const TH = 130;
 const SC = 3;
-const DIFF = (390 * 1.5) / SC - TH;
-// the tapped photo is the first cell of the grid
-const X0 = 0;
-const Y0 = TOP;
 const IDS = [15, 10, 20, 25, 29, 36, 42, 49, 54, 58, 75, 76];
+// height / width of the photos that can be tapped
+const ASPECT: Record<number, number> = { 15: 1080 / 720, 49: 720 / 1080 };
 const ZL = [0, 190, 380];
 
 type Rect = { x: number; y: number; w: number; h: number };
-const rect = (p: number): Rect => {
-  const s = 1 + (SC - 1) * p;
-  return {
-    x: X0 * (1 - p),
-    y: Y0 * (1 - p) + SAFE * p,
-    w: TH * s,
-    h: (TH + DIFF * p) * s,
-  };
-};
 const cellRect = (i: number): Rect => ({
   x: (i % 3) * TH,
   y: TOP + Math.floor(i / 3) * TH,
   w: TH,
   h: TH,
 });
+// the tapped photo: its cell in the grid and its proportions
+type Hero = { cell: number; id: number; aspect: number };
+const heroAt = (cell: number): Hero => {
+  const id = IDS[cell] ?? IDS[0]!;
+  return { cell, id, aspect: ASPECT[id] ?? 1 };
+};
+// the photo's frame at progress p: its cell at 0, full width below the status bar at 1
+const heroRect = ({ cell, aspect }: Hero, p: number): Rect => {
+  const c = cellRect(cell);
+  const s = 1 + (SC - 1) * p;
+  const diff = (390 * aspect) / SC - TH;
+  return {
+    x: c.x * (1 - p),
+    y: c.y * (1 - p) + SAFE * p,
+    w: TH * s,
+    h: (TH + diff * p) * s,
+  };
+};
 
 const clamp = (v: number, a = 0, b = 1) => Math.min(b, Math.max(a, v));
 const mix = (a: number, b: number, k: number) => a + (b - a) * k;
@@ -102,6 +109,8 @@ type Core = {
   flashK: number | null;
   closeK: number;
   guides: number;
+  /** guides from the teleported thumbnail down to its empty cell */
+  drop: number;
   chips: Chips;
   readout: Readout;
 };
@@ -135,6 +144,7 @@ const IDLE: Core = {
   flashK: null,
   closeK: 0,
   guides: 0,
+  drop: 0,
   chips: { low: 0, hidden: 0, ghost: 0, full: 0 },
   readout: {
     progress: 0,
@@ -165,6 +175,8 @@ type Chapter = {
   at: (u: number) => Core;
   /** store values that exist at this step; all of them by default */
   readouts?: Array<keyof Readout>;
+  /** the tapped cell; the first one by default */
+  cell?: number;
 };
 
 const H = { F0: 1.6, FS: 4.16, SWAP: 0.24, LAND: 1.3, RESUME: 7.1, FE: 10.7 };
@@ -401,26 +413,27 @@ const CHAPTERS: Record<ChapterId, Chapter> = {
 
 // chapters that tell more when played on their own than as a part of the pipeline
 const ALONE: Partial<Record<ChapterId, Chapter>> = {
-  // step 4: the detail screen opens as is, under the teleported thumbnail
+  // step 4: the detail screen opens as is, under the teleported thumbnail; same photo as the step's screenshot
   teleport: {
     duration: 9.6,
     still: 5.6,
     title:
-      "3D view of the teleport step: tapping a thumbnail moves it into the root PortalHost, above every screen, so it stays on top of the detail screen and its full-res photo.",
+      "3D view of the teleport step: tapping a thumbnail moves it into the root PortalHost, above every screen, so it stays on top of the detail screen.",
     captions: [
       ...CHAPTERS.teleport.captions,
       [
         3.4,
         "The detail screen opens below the thumbnail",
-        "The root host sits above every screen, so the thumbnail covers the full-res photo.",
+        "The root host sits above every screen, so the thumbnail stays on top of the detail screen.",
       ],
       [
         6.9,
-        "What users see: the thumbnail on top of the photo",
+        "What users see: the thumbnail on top of the detail screen",
         "It keeps its grid position until the next step animates it.",
       ],
     ],
     readouts: ["host", "fullRes"],
+    cell: 7,
     at: (u) => {
       const inHost = u >= 0.9;
       const loaded = u >= 4.4;
@@ -430,7 +443,8 @@ const ALONE: Partial<Record<ChapterId, Chapter>> = {
         tapK: (u - 0.9) / 0.7,
         plain: true,
         flat: ss(u, 6.9, 8.1),
-        outline: ss(u, 8, 8.4),
+        outline: ss(u, 2.8, 3.2),
+        drop: ss(u, 2.8, 3.2),
         lift: ss(u, 1.4, 2.8),
         inHost,
         push: ss(u, 3.4, 3.9),
@@ -439,11 +453,8 @@ const ALONE: Partial<Record<ChapterId, Chapter>> = {
         detailShown: loaded,
         ghost: loading,
         closeK: 1,
-        chips: {
-          low: ss(u, 2.5, 3),
-          ghost: loading,
-          full: loaded ? ss(u, 4.4, 4.8) : 0,
-        },
+        // the thumbnail is drawn over the photo in this view, so only it gets a chip
+        chips: { low: ss(u, 2.5, 3) },
         readout: {
           host: inHost ? HOST : "undefined",
           fullRes: u < 3.4 ? "not requested" : loaded ? "loaded" : "loading",
@@ -474,6 +485,7 @@ type Plan = {
   title: string;
   captions: Array<[number, string, string]>;
   readouts: Array<keyof Readout>;
+  hero: Hero;
 };
 
 // a single chapter explodes the phone and loops; several chapters play as one story, from the flat phone and back
@@ -512,6 +524,7 @@ const makePlan = (ids: ChapterId[]): Plan => {
     title: full ? PIPELINE_TITLE : first.chapter.title,
     captions,
     readouts: (!full && first.chapter.readouts) || READOUTS,
+    hero: heroAt((!full && first.chapter.cell) || 0),
   };
 };
 
@@ -630,7 +643,7 @@ const tipFor = (key: TipKey, sc: Core): Tip => {
           ? {
               tone: "hot",
               title: "Full-res photo",
-              body: "A plain <Image> on the detail screen. The thumbnail draws on top of it, because the root host is above every screen.",
+              body: "A plain <Image> on the detail screen. Anything in the root host, like the thumbnail, draws on top of this screen.",
               code: "source={{ uri: photo.fullSize }}",
             }
           : {
@@ -790,7 +803,11 @@ type Fx = {
 };
 type Frame = { vis: Record<TipKey, number>; solidDetail: boolean };
 
-function createScene(root: HTMLElement, palette: { current: Palette }) {
+function createScene(
+  root: HTMLElement,
+  palette: { current: Palette },
+  hero: Hero,
+) {
   const cache = new Map<string, Element>();
   const q = <E extends Element = HTMLElement>(k: string) => {
     let el = cache.get(k);
@@ -806,12 +823,13 @@ function createScene(root: HTMLElement, palette: { current: Palette }) {
   };
   const box = (el: Element, r: Rect) =>
     attrs(el, { x: r.x, y: r.y, width: r.w, height: r.h });
-  const photoBox = (r: Rect): Rect => ({
-    x: r.x,
-    y: r.y - (1.5 * r.w - r.h) / 2,
-    w: r.w,
-    h: 1.5 * r.w,
-  });
+  const rect = (p: number) => heroRect(hero, p);
+  // the photo covers its frame, like resizeMode="cover"
+  const photoBox = (r: Rect): Rect => {
+    const h = Math.max(r.h, r.w * hero.aspect);
+    const w = h / hero.aspect;
+    return { x: r.x - (w - r.w) / 2, y: r.y - (h - r.h) / 2, w, h };
+  };
   const corners4 = (prefix: string, r: Rect) =>
     (
       [
@@ -912,7 +930,7 @@ function createScene(root: HTMLElement, palette: { current: Palette }) {
     corners4("f", fr);
     opacity("thumbImage", sc.thumbShown ? 1 : 0);
     // a hidden thumbnail is drawn as its outline; a visible one is outlined only to point it out on the flat phone
-    const outlineK = sc.thumbShown ? sc.outline * (1 - ex) : ex * sc.outline;
+    const outlineK = sc.thumbShown ? sc.outline : ex * sc.outline;
     opacity("thumbOutline", outlineK);
     q("slot").style.borderColor = rgba(pal.host, 0.9 * ex * sc.lift);
 
@@ -977,15 +995,17 @@ function createScene(root: HTMLElement, palette: { current: Palette }) {
     });
 
     const beam = inHandoff ? Math.sin(Math.PI * handK) : 0;
+    const slotQuad =
+      sc.drop > 0 ? subQuad(corners("c0"), cellRect(hero.cell)) : null;
     for (let i = 0; i < 4; i++) {
       const [x1, y1] = center(q(`f${i}`));
-      const [x2, y2] = center(q(`d${i}`));
+      const [x2, y2] = slotQuad?.[i] ?? center(q(`d${i}`));
       attrs(q(`align${i}`), {
         x1,
         y1,
         x2,
         y2,
-        "opacity": sc.guides * ex,
+        "opacity": Math.max(sc.guides, sc.drop) * ex,
         "stroke-width": 2 + 2.5 * beam,
       });
     }
@@ -1062,7 +1082,7 @@ function createScene(root: HTMLElement, palette: { current: Palette }) {
             ? subQuad(corners("c0"), cellRect(fx.cell))
             : null;
         case "slot":
-          return subQuad(corners("c0"), cellRect(0));
+          return subQuad(corners("c0"), cellRect(hero.cell));
         case "header":
           return subQuad(corners("c0"), { x: 0, y: 0, w: 390, h: TOP });
         case "close": {
@@ -1332,7 +1352,7 @@ function Explainer({ plan, compact }: { plan: Plan; compact: boolean }) {
     const stageWrap = stageRef.current;
     if (!root || !stageWrap) return;
     const palette = { current: readPalette(root) };
-    renderRef.current = createScene(root, palette);
+    renderRef.current = createScene(root, palette, plan.hero);
     const canvas = root.querySelector<HTMLElement>(`.${styles.canvas}`)!;
     const fit = () => {
       canvas.style.transform = `scale(${stageWrap.clientWidth / 1920})`;
@@ -1438,6 +1458,7 @@ function Explainer({ plan, compact }: { plan: Plan; compact: boolean }) {
   const handoffClip = `${uid}-handoffClip`;
   const [, capTitle = "", capText = ""] = plan.captions[caption] ?? [];
   const shows = (key: keyof Readout) => plan.readouts.includes(key);
+  const { hero } = plan;
   const corner = (prefix: string) =>
     [0, 1, 2, 3].map((i) => (
       <div
@@ -1511,7 +1532,7 @@ function Explainer({ plan, compact }: { plan: Plan; compact: boolean }) {
                 data-tip="gallery"
               >
                 {IDS.map((id, i) =>
-                  i === 0 ? null : (
+                  i === hero.cell ? null : (
                     <div
                       key={id}
                       className={styles.cell}
@@ -1525,7 +1546,15 @@ function Explainer({ plan, compact }: { plan: Plan; compact: boolean }) {
                     />
                   ),
                 )}
-                <div className={styles.slot} data-k="slot" data-tip="slot" />
+                <div
+                  className={styles.slot}
+                  data-k="slot"
+                  data-tip="slot"
+                  style={{
+                    left: cellRect(hero.cell).x,
+                    top: cellRect(hero.cell).y,
+                  }}
+                />
                 <div className={styles.header} data-tip="header">
                   <span className={styles.time}>9:41</span>
                   <span className={styles.island} />
@@ -1554,7 +1583,7 @@ function Explainer({ plan, compact }: { plan: Plan; compact: boolean }) {
                   </defs>
                   <image
                     data-k="detailImage"
-                    href={`${base}full_15.jpg`}
+                    href={`${base}full_${hero.id}.jpg`}
                     preserveAspectRatio="none"
                     clipPath={`url(#${detailClip})`}
                   />
@@ -1614,7 +1643,7 @@ function Explainer({ plan, compact }: { plan: Plan; compact: boolean }) {
                   </defs>
                   <image
                     data-k="thumbImage"
-                    href={`${base}thumb_15.jpg`}
+                    href={`${base}thumb_${hero.id}.jpg`}
                     preserveAspectRatio="none"
                     clipPath={`url(#${thumbClip})`}
                   />
@@ -1668,13 +1697,13 @@ function Explainer({ plan, compact }: { plan: Plan; compact: boolean }) {
                   </defs>
                   <image
                     data-k="handoffFull"
-                    href={`${base}full_15.jpg`}
+                    href={`${base}full_${hero.id}.jpg`}
                     preserveAspectRatio="none"
                     clipPath={`url(#${handoffClip})`}
                   />
                   <image
                     data-k="handoffThumb"
-                    href={`${base}thumb_15.jpg`}
+                    href={`${base}thumb_${hero.id}.jpg`}
                     preserveAspectRatio="none"
                     clipPath={`url(#${handoffClip})`}
                   />
