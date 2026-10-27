@@ -85,7 +85,9 @@
     "teleporting",
     "lockfiles",
     "worktree",
-    "Galeria"
+    "Galeria",
+    "Jetpack",
+    "superview"
   ],
   "ignorePaths": [
     "node_modules",
