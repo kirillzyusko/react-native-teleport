@@ -50,7 +50,7 @@ Let's start with a static feed — no navigation, no transitions, just layout.
 
 First, define the dimensions we'll use throughout:
 
-constants.ts
+`constants.ts`
 
 ```
 import { Dimensions } from "react-native";
@@ -68,7 +68,7 @@ export const CARD_HEIGHT = VIDEO_HEIGHT + 100; // video + social section below
 
 Create a simple data model for posts. Each post can have either a video or a photo:
 
-posts.ts
+`posts.ts`
 
 ```
 export type PostType = {
@@ -102,7 +102,7 @@ export const posts: PostType[] = [
 
 Each post card shows a video (or image) with a social section underneath:
 
-Post.tsx
+`Post.tsx`
 
 ```
 import { View, StyleSheet, Image } from "react-native";
@@ -159,7 +159,7 @@ const styles = StyleSheet.create({
 export default Post;
 ```
 
-SocialSection.tsx
+`SocialSection.tsx`
 
 ```
 import { FontAwesome6 } from "@react-native-vector-icons/fontawesome6";
@@ -241,7 +241,7 @@ For simplicity, we'll use a plain `ScrollView` without any virtualization. In a 
 
 So let's create a simple scrollable list of posts:
 
-Feed.tsx
+`Feed.tsx`
 
 ```
 import { useState } from "react";
@@ -278,7 +278,7 @@ The `index` tracks which post is currently visible so we only play one video at 
 
 The Reels screen is a vertical pager — each reel takes up the full screen and snaps into place:
 
-Reels.tsx
+`Reels.tsx`
 
 ```
 import { useState } from "react";
@@ -339,7 +339,7 @@ We use `presentation: "transparentModal"` for the Reels screen for two important
 
 ### Configure the navigator[​](#configure-the-navigator "Direct link to Configure the navigator")
 
-Navigation setup
+`Navigation` setup
 
 ```
 // Screen options
@@ -361,7 +361,7 @@ Setting `animation: "none"` disables the default slide/fade transition because w
 
 Make each video post navigable:
 
-Post.tsx (updated)
+`Post.tsx` (updated)
 
 ```
 import { useNavigation } from "@react-navigation/native";
@@ -409,7 +409,7 @@ This is where the magic happens. We need three things:
 
 The store tracks everything needed to orchestrate the animation:
 
-hooks/useTransition.ts
+`hooks/useTransition.ts`
 
 ```
 import {
@@ -488,7 +488,7 @@ We use Zustand instead of React Context because it gives us **granular subscript
 
 The `"overlay"` `PortalHost` must be placed at the root of your app, **after** the navigation container, so it renders on top of all screens:
 
-App.tsx
+`App.tsx`
 
 ```
 import { StyleSheet } from "react-native";
@@ -515,7 +515,7 @@ export default function App() {
 
 Before animating, we need to know **where** the tapped video is on screen. `measureInWindow` gives us the absolute coordinates:
 
-hooks/useMeasure.ts
+`hooks/useMeasure.ts`
 
 ```
 import { Platform, type View } from "react-native";
@@ -548,7 +548,7 @@ Now we connect everything. This is where `<Portal>` and `<PortalHost>` bring the
 
 The `Post` component is the heart of the transition. It wraps the video in a `<Portal>` whose destination changes based on the transition state:
 
-Post.tsx (final)
+`Post.tsx` (final)
 
 ```
 import { View, StyleSheet, Image } from "react-native";
@@ -661,7 +661,7 @@ Notice that the outer `<View>` always has a fixed `CARD_HEIGHT`, even after the 
 
 The first reel (the one the user tapped) needs a `<PortalHost>` to receive the teleported video:
 
-components/FullScreenReel.tsx
+`components/FullScreenReel.tsx`
 
 ```
 import { View, StyleSheet } from "react-native";
@@ -727,7 +727,7 @@ The action buttons (like, comment, share) are also portaled to the overlay durin
 
 Both screens need to lock scrolling while the animation is in progress. Otherwise, the user could scroll the feed while the video is mid-flight:
 
-Feed.tsx (updated)
+`Feed.tsx` (updated)
 
 ```
 import Reanimated, { useAnimatedProps } from "react-native-reanimated";
@@ -751,7 +751,7 @@ export default function Feed() {
 }
 ```
 
-Reels.tsx (updated)
+`Reels.tsx` (updated)
 
 ```
 const animatedProps = useAnimatedProps(
@@ -766,7 +766,7 @@ const animatedProps = useAnimatedProps(
 
 Instagram uses a custom header in its app, and we'll build one too. The header animates alongside the video — it fades in and slides down from the video's original position:
 
-components/ReelsHeader.tsx
+`components/ReelsHeader.tsx`
 
 ```
 import {
@@ -837,7 +837,7 @@ Notice how `goToFeed` receives `navigation.goBack` as the `onFinish` callback. T
 
 And we need to add rendering of the header on our screen:
 
-Reels.tsx (updated)
+`Reels.tsx` (updated)
 
 ```
 function Reels({ route }: Props) {
@@ -854,7 +854,7 @@ function Reels({ route }: Props) {
 
 On iOS, `transparentModal` presentation allows UI elements to render naturally on top of the modal. On Android, we need to portal them to the root overlay explicitly:
 
-constants.ts
+`constants.ts`
 
 ```
 import { Platform } from "react-native";

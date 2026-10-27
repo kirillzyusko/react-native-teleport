@@ -32,7 +32,7 @@ Animation transcript:
 
 Three layers take part in the transition:
 
-1. **Gallery screen.** A `FlatList` of low-res thumbnails. Each thumbnail is wrapped in a `<Portal>`.
+1. **Gallery screen.** A `FlatList` of low-res thumbnails. Each thumbnail is wrapped in a [`<Portal>`](/react-native-teleport/pr-preview/pr-205/docs/api/components/portal.md).
 2. **Detail screen.** Pushed as a transparent modal, without a native animation. It renders the full-res `<Image>`, hidden at first.
 3. **Root `PortalHost`.** Rendered by `<PortalProvider>` above the navigator, so anything teleported into it is drawn on top of every screen.
 
@@ -87,7 +87,7 @@ Light enough for low-end devices
 
 Teleport adds no heavy allocations to the transition:
 
-* **The thumbnail is moved, not copied.** `<Portal>` re-parents the existing native view, so nothing is re-mounted, re-downloaded or re-decoded.
+* **The thumbnail is moved, not copied.** [`<Portal>`](/react-native-teleport/pr-preview/pr-205/docs/api/components/portal.md) re-parents the existing native view, so nothing is re-mounted, re-downloaded or re-decoded.
 * **The full-res photo is decoded once**, on the detail screen, when the user opens it. It's a separate image, not a copy of the thumbnail, and it needs no prefetching or caching.
 * **The list holds only small thumbnails**, so it stays fast and light however long it gets.
 
@@ -120,7 +120,7 @@ Let's start with a plain photo grid: no viewer, no animations, nothing teleporte
 
 The grid has three columns. `SCALE` is how many times the full-width photo is wider than a thumbnail; we'll need it for the animation:
 
-constants.ts
+`constants.ts`
 
 ```
 import { Dimensions } from "react-native";
@@ -133,7 +133,7 @@ export const SCALE = SCREEN_WIDTH / THUMB_SIZE;
 
 Each photo comes in two sizes: a small thumbnail for the grid and the full-size photo for the viewer. The thumbnail keeps the **same aspect ratio** as the full image: when both are cropped with `resizeMode="cover"` into the same rectangle, they show exactly the same part of the photo, so the swap at the end of this guide doesn't shift the content.
 
-photos.ts
+`photos.ts`
 
 ```
 export type Photo = {
@@ -199,7 +199,7 @@ The full-res photo needs about 50 times more memory than its thumbnail. A grid o
 
 A thumbnail is an image in a fixed-size `View`. That fixed size will matter later: when the image leaves its cell, the cell keeps its place.
 
-PhotoPreview\.tsx
+`PhotoPreview.tsx`
 
 ```
 import React from "react";
@@ -234,7 +234,7 @@ export default React.memo(PhotoPreview);
 
 The gallery is a regular `FlatList`:
 
-PhotoGallery.tsx
+`PhotoGallery.tsx`
 
 ```
 import { FlatList, StyleSheet, View } from "react-native";
@@ -267,7 +267,7 @@ export default PhotoGallery;
 
 It lives in a native stack, so it gets a header titled "Photos":
 
-navigation.tsx
+`navigation.tsx`
 
 ```
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
@@ -293,7 +293,7 @@ export default function RootStack() {
 }
 ```
 
-App.tsx
+`App.tsx`
 
 ```
 import { NavigationContainer } from "@react-navigation/native";
@@ -324,7 +324,7 @@ From here on, when a step changes a file, the changed lines are highlighted and 
 
 The detail screen is a transparent modal without a native animation. We'll draw the transition ourselves later, and the gallery has to stay visible underneath while the photo is still growing:
 
-navigation.tsx (updated)
+`navigation.tsx` (updated)
 
 ```
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
@@ -368,7 +368,7 @@ A regular screen push hides the previous screen. A transparent modal keeps the g
 
 The detail screen draws a black backdrop, the full-res photo at full width and a Close button:
 
-PhotoDetail.tsx
+`PhotoDetail.tsx`
 
 ```
 import { Image, Pressable, StyleSheet, Text, View } from "react-native";
@@ -441,7 +441,7 @@ Each thumbnail reports the tap:
 
 <!-- -->
 
-PhotoPreview\.tsx (updated)
+`PhotoPreview.tsx` (updated)
 
 ```
 import React from "react";
@@ -470,7 +470,7 @@ And the gallery opens the detail screen:
 
 <!-- -->
 
-PhotoGallery.tsx (updated)
+`PhotoGallery.tsx` (updated)
 
 ```
 import { FlatList, StyleSheet, View } from "react-native";
@@ -532,7 +532,7 @@ Three pieces make the transition possible. None of them changes what you see yet
 
 `<PortalProvider>` renders a `PortalHost` named `"root"` above its children. Wrap the navigator with it:
 
-App.tsx (updated)
+`App.tsx` (updated)
 
 ```
 import { NavigationContainer } from "@react-navigation/native";
@@ -562,7 +562,7 @@ Anything teleported into the root host is drawn above every screen: the gallery,
 
 A small [Zustand](https://github.com/pmndrs/zustand) store coordinates both screens. For now it only knows which photo is moving (`id`) and where its thumbnail was on screen (`position`). We'll grow it with every step:
 
-hero.ts
+`hero.ts`
 
 ```
 import { create } from "zustand";
@@ -612,7 +612,7 @@ Components subscribe only to the slices they need. Each thumbnail selects `s.id 
 
 The animation starts from the thumbnail's position in the window:
 
-useMeasure.ts
+`useMeasure.ts`
 
 ```
 import { Platform, type View } from "react-native";
@@ -642,11 +642,11 @@ export default useMeasure;
 
 ## Step 4: Teleport the thumbnail into the root host[​](#step-4-teleport-the-thumbnail-into-the-root-host "Direct link to Step 4: Teleport the thumbnail into the root host")
 
-Here comes the core trick. When the user taps a thumbnail, we measure it, store its position and switch its `<Portal>` to the root host:
+Here comes the core trick. When the user taps a thumbnail, we measure it, store its position and switch its [`<Portal>`](/react-native-teleport/pr-preview/pr-205/docs/api/components/portal.md) to the root host:
 
 <!-- -->
 
-PhotoPreview\.tsx (updated)
+`PhotoPreview.tsx` (updated)
 
 ```
 import React, { useCallback, useRef } from "react";
@@ -715,7 +715,7 @@ The Close button now goes through the store, which clears `id` and sends the thu
 
 <!-- -->
 
-PhotoDetail.tsx (updated)
+`PhotoDetail.tsx` (updated)
 
 ```
 import { useCallback } from "react";
@@ -764,7 +764,7 @@ It looks like a bug, but it's the foundation of the whole transition: the **root
 
 Moved, not copied
 
-The thumbnail isn't re-created in the root host. `<Portal>` re-parents the existing native view, so the image isn't re-downloaded or re-decoded, and a video or GIF in its place would keep playing. Its wrapper `View` stays behind and keeps the cell's size, so the list doesn't reflow.
+The thumbnail isn't re-created in the root host. [`<Portal>`](/react-native-teleport/pr-preview/pr-205/docs/api/components/portal.md) re-parents the existing native view, so the image isn't re-downloaded or re-decoded, and a video or GIF in its place would keep playing. Its wrapper `View` stays behind and keeps the cell's size, so the list doesn't reflow.
 
 ## Step 5: Animate it to full screen[​](#step-5-animate-it-to-full-screen "Direct link to Step 5: Animate it to full screen")
 
@@ -772,7 +772,7 @@ Time to make it fly. Add a spring config:
 
 <!-- -->
 
-constants.ts (updated)
+`constants.ts` (updated)
 
 ```
 // ...
@@ -787,7 +787,7 @@ export const SPRING_CONFIG = {
 
 The store gets a `progress` shared value that goes from `0` (thumbnail in its cell) to `1` (photo at full screen), a `direction`, and `visibility` for the two images. `goForward` updates the store first, which teleports the thumbnail, and starts the spring and the navigation in the next frame:
 
-hero.ts (updated)
+`hero.ts` (updated)
 
 ```
 import {
@@ -875,7 +875,7 @@ The thumbnail turns every `progress` value into a position, a scale and a height
 
 <!-- -->
 
-PhotoPreview\.tsx (updated)
+`PhotoPreview.tsx` (updated)
 
 ```
 import React, { useCallback, useRef } from "react";
@@ -991,7 +991,7 @@ The detail screen fades its backdrop in with `progress`, and keeps the full-res 
 
 <!-- -->
 
-PhotoDetail.tsx (updated)
+`PhotoDetail.tsx` (updated)
 
 ```
 import { useCallback } from "react";
@@ -1065,7 +1065,7 @@ For that, the full-res `<Image>` follows **the same interpolation** as the thumb
 
 <!-- -->
 
-hero.ts (updated)
+`hero.ts` (updated)
 
 ```
 interface HeroStore {
@@ -1094,7 +1094,7 @@ The thumbnail selects its opacity from `visibility.source`, next to the other se
 
 <!-- -->
 
-PhotoPreview\.tsx (updated)
+`PhotoPreview.tsx` (updated)
 
 ```
 const goForward = useHeroTransition((s) => s.goForward);
@@ -1107,7 +1107,7 @@ And applies it to the image:
 
 <!-- -->
 
-PhotoPreview\.tsx (updated)
+`PhotoPreview.tsx` (updated)
 
 ```
 <Animated.Image
@@ -1121,7 +1121,7 @@ The detail screen animates the full-res photo along the same path and calls `tar
 
 <!-- -->
 
-PhotoDetail.tsx (updated)
+`PhotoDetail.tsx` (updated)
 
 ```
 import { useCallback } from "react";
@@ -1230,7 +1230,7 @@ The thumbnail has done its job. Once the animation has finished and the full-res
 
 <!-- -->
 
-hero.ts (updated)
+`hero.ts` (updated)
 
 ```
 import {
@@ -1350,7 +1350,7 @@ Back in its cell, the thumbnail must stay hidden while the photo is open, otherw
 
 <!-- -->
 
-PhotoPreview\.tsx (updated)
+`PhotoPreview.tsx` (updated)
 
 ```
 const source = useHeroTransition((s) =>
@@ -1374,7 +1374,7 @@ The way back doesn't need a teleport at all. The full-res photo is already on th
 
 <!-- -->
 
-hero.ts (updated)
+`hero.ts` (updated)
 
 ```
 export const useHeroTransition = create<HeroStore>((set, get) => ({
@@ -1409,7 +1409,7 @@ The detail screen shows the Close button only when the opening animation has fin
 
 <!-- -->
 
-PhotoDetail.tsx (updated)
+`PhotoDetail.tsx` (updated)
 
 ```
 import { useCallback, useEffect } from "react";
@@ -1506,11 +1506,11 @@ Animation transcript:
 10. Then the thumbnail shows up and the detail screen closes. `visibility` goes back to `{ source: 1, target: 0 }`, and `navigation.goBack()` removes the screen.
 11. What users see: one continuous image, sharp as soon as it’s ready. No flicker, no blank frames, no second decode of the full-res photo.
 
-The complete code of this guide is part of the example app: [`example/src/screens/PhotoGallery`](https://github.com/kirillzyusko/react-native-teleport/tree/main/example/src/screens/PhotoGallery) and [`example/src/hooks/useMeasure.ts`](https://github.com/kirillzyusko/react-native-teleport/blob/main/example/src/hooks/useMeasure.ts). The only differences are the imports that wire the screens into the example's navigation.
+The complete code of this guide is part of the [example](https://github.com/kirillzyusko/react-native-teleport/tree/main/example/src/screens/PhotoGallery) app. The only differences are the imports that wire the screens into the example's navigation.
 
 ## Going further: videos, GIFs and other stateful content[​](#going-further-videos-gifs-and-other-stateful-content "Direct link to Going further: videos, GIFs and other stateful content")
 
-`<Portal>` doesn't render a copy of the thumbnail: it moves the existing native view between parents. Whatever runs inside that view keeps running during the transition:
+[`<Portal>`](/react-native-teleport/pr-preview/pr-205/docs/api/components/portal.md) doesn't render a copy of the thumbnail: it moves the existing native view between parents. Whatever runs inside that view keeps running during the transition:
 
 * a video keeps playing while it grows to full screen, with no restart and no black frame;
 * a GIF or Lottie animation continues from the same frame;
@@ -1537,7 +1537,7 @@ In every case the list keeps rendering lightweight thumbnails, and the expensive
 
 ## FAQ[​](#faq "Direct link to FAQ")
 
-**Is the full-res photo downloaded or rendered twice?** No. Only the detail screen renders the full-res `<Image>`. The thumbnail that flies across the screen is the original grid view, moved by `<Portal>`.
+**Is the full-res photo downloaded or rendered twice?** No. Only the detail screen renders the full-res `<Image>`. The thumbnail that flies across the screen is the original grid view, moved by [`<Portal>`](/react-native-teleport/pr-preview/pr-205/docs/api/components/portal.md).
 
 **What happens if the full-res photo loads after the animation ends?** The low-res thumbnail stays on screen in the final position until `onLoad` fires, then the same single-commit swap shows the photo.
 
@@ -1548,9 +1548,3 @@ In every case the list keeps rendering lightweight thumbnails, and the expensive
 **Can I use another image component?** Yes, as long as it reports when the image is ready (an `onLoad`-style callback) and supports `cover` cropping, the handoff works the same way.
 
 **Which platforms are supported?** `react-native-teleport` supports iOS, Android and web. This transition was verified frame by frame on iOS and Android with the New Architecture.
-
-## Photo credits[​](#photo-credits "Direct link to Photo credits")
-
-<!-- -->
-
-The photos are from [Unsplash](https://unsplash.com), served by [Lorem Picsum](https://picsum.photos), by Paul Jarvis ([1](https://unsplash.com/photos/6J--NXulQCs), [2](https://unsplash.com/photos/NYDo21ssGao)), [Aleks Dorohovich](https://unsplash.com/photos/nJdwUHmaY8A), [Alejandro Escamilla](https://unsplash.com/photos/Iuq0EL4EINY), [Go Wild](https://unsplash.com/photos/V0yAek6BgGk), [Vadim Sherbakov](https://unsplash.com/photos/osSryggkso4), [Luke Chesser](https://unsplash.com/photos/KR2mdHJ5qMg), [Margaret Barley](https://unsplash.com/photos/Qo51KwK1dKg), [Nicholas Swanson](https://unsplash.com/photos/d19by2PLaPc), [Tony Naccarato](https://unsplash.com/photos/-kEr-QltARg), [Jassy Onyae](https://unsplash.com/photos/1gBUXhf0PtA) and [Alexander Shustov](https://unsplash.com/photos/OxzhYtL-00Y).

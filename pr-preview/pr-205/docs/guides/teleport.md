@@ -6,7 +6,7 @@ The **Teleport** concept allows you to move an **existing view** to a different 
 
 ## Example[​](#example "Direct link to Example")
 
-App.tsx
+`App.tsx`
 
 ```
 import { StyleSheet, View } from "react-native";
@@ -39,7 +39,7 @@ const styles = StyleSheet.create({
 });
 ```
 
-Teleport.tsx
+`Teleport.tsx`
 
 ```
 import LottieView from "lottie-react-native";
