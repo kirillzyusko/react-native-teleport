@@ -10,6 +10,8 @@ import { homedir } from "node:os";
 import path from "node:path";
 import {
   ownedSimctlAge,
+  ownedSimctlChildren,
+  ownedSimctlLogStream,
   sameOwnerProcess,
   selectedHostedLaunchd,
   uniqueHostedCoreSimulatorService,
@@ -274,8 +276,68 @@ async function sampleStalledSimctl(processTable) {
         ["-nP", "-p", String(pid)],
       ]),
       sampleHostedWaitChain(processTable, pid),
+      sampleOwnedLogStreamSiblings(processTable, pid),
     ]);
   }
+}
+
+async function sampleOwnedLogStreamSiblings(processTable, clientPid) {
+  if (!hostedCI) return;
+  const candidates = ownedSimctlChildren(processTable, testPid).filter(
+    (pid) => pid !== clientPid,
+  );
+  if (candidates.length > 8) {
+    log(
+      `Owned simctl ${clientPid} has too many siblings; skipping sibling capture`,
+    );
+    return;
+  }
+  await Promise.all(
+    candidates.map(async (pid) => {
+      const prefix = `simctl-${clientPid}-log-stream-${pid}`;
+      const identify = async (suffix) => {
+        let details = "";
+        await capture(
+          `${prefix}-${suffix}.log`,
+          ["ps", ["-p", String(pid), "-o", "pid,ppid,uid,args="]],
+          15000,
+          (chunk) => {
+            details += chunk.toString();
+          },
+        );
+        return ownedSimctlLogStream(
+          details,
+          pid,
+          testPid,
+          process.getuid?.(),
+          device,
+        );
+      };
+      const first = await identify("candidate");
+      if (!first) return;
+      const current = await identify("identity");
+      if (!current || current.command !== first.command) return;
+      log(
+        `Capturing owned log stream ${pid} while owned simctl ${clientPid} is stalled`,
+      );
+      await Promise.all([
+        capture(`${prefix}-sample.log`, [
+          "sample",
+          [
+            String(pid),
+            "3",
+            "10",
+            "-file",
+            path.join(directory, `${prefix}-stack.txt`),
+          ],
+        ]),
+        capture(`${prefix}-descriptors.log`, [
+          "lsof",
+          ["-nP", "-p", String(pid)],
+        ]),
+      ]);
+    }),
+  );
 }
 
 async function sampleHostedWaitChain(processTable, clientPid) {
@@ -441,6 +503,7 @@ async function finalState() {
 
 log(`Starting ${platform} diagnostics for ${device}; output=${directory}`);
 if (platform === "ios") log("iOS native wait-chain diagnostics=1");
+if (platform === "ios" && hostedCI) log("iOS owned log-stream diagnostics=1");
 log(
   `Runner: os=${process.env.RUNNER_OS} arch=${process.env.RUNNER_ARCH} image=${process.env.ImageOS}/${process.env.ImageVersion}; Node=${process.version}`,
 );

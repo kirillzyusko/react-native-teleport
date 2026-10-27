@@ -39,6 +39,36 @@ function processes(table) {
   });
 }
 
+export function ownedSimctlChildren(table, parentPid) {
+  return processes(table)
+    .filter(
+      ({ pid, parent, command }) =>
+        pid > 1 && parent === parentPid && path.basename(command) === "simctl",
+    )
+    .map(({ pid }) => pid);
+}
+
+// A long privacy lookup coincided with launch_sim_spawn in SimLaunchHost.
+// The JVM also owned a simctl log stream, but its stack was not captured.
+// Require the exact JVM parent, owner and selected UDID before observing it.
+export function ownedSimctlLogStream(details, pid, parentPid, uid, device) {
+  const matches = details.split("\n").flatMap((line) => {
+    const match = line.match(
+      /^\s*(\d+)\s+(\d+)\s+(\d+)\s+(\S+\s+spawn\s+(\S+)\s+log\s+stream(?:\s.*)?)$/,
+    );
+    return match &&
+      Number(match[1]) === pid &&
+      Number(match[2]) === parentPid &&
+      Number(match[3]) === uid &&
+      pid > 1 &&
+      path.basename(match[4].split(/\s/)[0]) === "simctl" &&
+      match[5] === device
+      ? [{ pid, parent: parentPid, uid, command: match[4] }]
+      : [];
+  });
+  return matches.length === 1 ? matches[0] : undefined;
+}
+
 export function uniqueHostedSimLaunchHost(table, hosted) {
   if (!hosted) return undefined;
   const candidates = processes(table).filter(

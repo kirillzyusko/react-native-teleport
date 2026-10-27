@@ -512,6 +512,16 @@ only through the parentage of a runtime daemon identified by its scoped log
 stream, with both process identities rechecked. A global launchd name search
 is insufficient. These are read-only, bounded captures; no service is restarted.
 
+A later capture reached `launch_sim_spawn → launch_mig_bridge_spawn` on
+SimLaunchHost's serial queue for the selected simulator. It did not identify
+which operation owned that spawn. Maestro also owned a `simctl log stream` in
+that guest, but its stack was missing. During a long client capture, diagnostics
+now also sample that sibling if two current identity reads confirm the same
+Maestro JVM parent, user, executable, explicit simulator UDID and `spawn … log
+stream` arguments. Other devices, other parents and non-hosted machines are
+excluded. No extra device command is issued. This closes an observation gap;
+it does not establish that log streaming caused the lookup wait.
+
 Hosted samples also record the front application ASN through the read-only
 `lsappinfo -names front` command. The observed output does not resolve the
 application name, so it cannot establish Simulator/Java focus. Existing JVM

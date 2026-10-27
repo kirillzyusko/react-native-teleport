@@ -10,6 +10,8 @@ import test from "node:test";
 import { setTimeout as delay } from "node:timers/promises";
 import {
   ownedSimctlAge,
+  ownedSimctlChildren,
+  ownedSimctlLogStream,
   sameOwnerProcess,
   selectedHostedLaunchd,
   uniqueHostedCoreSimulatorService,
@@ -35,6 +37,40 @@ const chainTable = `
 1000005 1000004 S 0.0 0.0 100 ${daemonCommand}
 1000008 1 S 0.0 0.0 100 launchd_sim
 1000009 1000008 S 0.0 0.0 100 ${runtimeRoot}/usr/libexec/runningboardd`;
+
+test("log stream identity requires the exact JVM, owner, executable and selected UDID", () => {
+  const command =
+    "/native/simctl spawn selected-device log stream --level debug";
+  const row = `24915 9712 501 ${command}`;
+  const identify = (details) =>
+    ownedSimctlLogStream(details, 24915, 9712, 501, "selected-device");
+  assert.deepEqual(identify(row), {
+    pid: 24915,
+    parent: 9712,
+    uid: 501,
+    command,
+  });
+  for (const changed of [
+    row.replace("24915", "24916"),
+    row.replace("9712", "9713"),
+    row.replace("501", "502"),
+    row.replace("/native/simctl", "/native/not-simctl"),
+    row.replace("selected-device", "other-device"),
+    row.replace("selected-device", "booted"),
+    row.replace("log stream", "log show"),
+    row.replace("spawn", "privacy"),
+    `${row}\n${row}`,
+  ]) {
+    assert.equal(identify(changed), undefined);
+  }
+  assert.deepEqual(
+    ownedSimctlChildren(
+      "24915 9712 S 0 0 100 /native/simctl\n24916 9713 S 0 0 100 /native/simctl\n24917 9712 S 0 0 100 /native/other",
+      9712,
+    ),
+    [24915],
+  );
+});
 
 test("uses native process age when two polling observations are less than 15s apart", () => {
   const row = (age) =>
@@ -251,6 +287,8 @@ if (name === "test-command") {
     const service = ${JSON.stringify(serviceCommand)};
     if (args.includes("-A")) {
       console.log("1000001", testPid, "S 0.0 0.0 100 /mock/simctl");
+      console.log("1000006", testPid, "S 0.0 0.0 100 /mock/simctl");
+      console.log("1000007", testPid, "S 0.0 0.0 100 /mock/simctl");
       console.log("1000002 1 S 0.0 0.0 100", service);
       console.log(${JSON.stringify(chainTable)});
     } else if (args.includes("1000001")) {
@@ -263,6 +301,10 @@ if (name === "test-command") {
       console.log("1000004", process.getuid(), "launchd_sim");
     } else if (args.includes("1000005")) {
       console.log("1000005 1000004", ${JSON.stringify(daemonCommand)});
+    } else if (args.includes("1000006")) {
+      console.log("1000006", testPid, process.getuid(), "/mock/simctl spawn test-device log stream --level debug");
+    } else if (args.includes("1000007")) {
+      console.log("1000007", testPid, process.getuid(), "/mock/simctl spawn other-device log stream --level debug");
     }
     process.exit(0);
   }
@@ -445,10 +487,11 @@ test("ios: a long owned client captures the identified hosted service without de
       "simctl-1000001-service-1000002",
       "simctl-1000001-launch-host-1000003",
       "simctl-1000001-launchd-1000004",
+      "simctl-1000001-log-stream-1000006",
     ]) {
       assert.match(
         await readFile(path.join(logs, `${prefix}-stack.txt`), "utf8"),
-        /stack for selected pid 100000[1234]/,
+        /stack for selected pid 100000[12346]/,
       );
     }
     assert.match(
@@ -470,6 +513,10 @@ test("ios: a long owned client captures the identified hosted service without de
       {
         code: "ENOENT",
       },
+    );
+    await assert.rejects(
+      readFile(path.join(logs, "simctl-1000001-log-stream-1000007-stack.txt")),
+      { code: "ENOENT" },
     );
     await assert.rejects(readFile(path.join(logs, "device-processes.log")), {
       code: "ENOENT",
