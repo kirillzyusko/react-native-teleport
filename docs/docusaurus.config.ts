@@ -181,6 +181,18 @@ const config: Config = {
       theme: prismThemes.github,
       darkTheme: prismThemes.dracula,
       additionalLanguages: ["java", "kotlin", "swift", "json", "diff", "bash"],
+      magicComments: [
+        // the first entry also styles line ranges from the metastring, e.g. {2,5-7}
+        {
+          className: "code-block-add-line",
+          line: "add-new-code",
+        },
+        {
+          className: "theme-code-block-highlighted-line",
+          line: "highlight-next-line",
+          block: { start: "highlight-start", end: "highlight-end" },
+        },
+      ],
     },
     metadata: [
       {

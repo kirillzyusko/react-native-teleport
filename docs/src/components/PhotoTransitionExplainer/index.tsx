@@ -201,13 +201,13 @@ const CHAPTERS: Record<ChapterId, Chapter> = {
     captions: [
       [
         0,
-        "Every thumbnail is wrapped in a <Portal>",
-        "Without a host name, it renders in place, inside the FlatList.",
+        "Every thumbnail is wrapped in a `<Portal>`",
+        "Without a host name, it renders in place, inside the `FlatList`.",
       ],
       [
         0.9,
-        "Tap teleports the thumbnail into the root PortalHost",
-        '<Portal hostName="root"> re-parents the same native view, in one frame.',
+        "Tap teleports the thumbnail into the root `PortalHost`",
+        '`<Portal hostName="root">` re-parents the same native view, in one frame.',
       ],
     ],
     at: (u) => {
@@ -231,11 +231,11 @@ const CHAPTERS: Record<ChapterId, Chapter> = {
       [
         0,
         "The detail screen opens on top, transparent",
-        "Its full-res photo is mounted but hidden: visibility.target is 0.",
+        "Its full-res photo is mounted but hidden: `visibility.target` is `0`.",
       ],
       [
         1.4,
-        "A spring drives progress from 0 to 1",
+        "A spring drives `progress` from `0` to `1`",
         "The thumbnail’s translate, scale and height are interpolated from it, above every screen.",
       ],
       [
@@ -274,17 +274,17 @@ const CHAPTERS: Record<ChapterId, Chapter> = {
       [
         0,
         "The detail screen mounts the full-res photo, invisible",
-        "Its <Image> sits at opacity 0 on the thumbnail’s path while it loads.",
+        "Its `<Image>` sits at `opacity: 0` on the thumbnail’s path while it loads.",
       ],
       [
         1.4,
         "Both ride the same spring, but you only see the low-res one",
-        "One progress value drives translate, scale and height on both layers.",
+        "One `progress` value drives translate, scale and height on both layers.",
       ],
       [
         H.FS,
-        "When onLoad fires mid-flight, one commit swaps them",
-        "set({ visibility: { source: 0, target: 1 } }) hands the image over to the detail screen in the same native frame.",
+        "When `onLoad` fires mid-flight, one commit swaps them",
+        "`set({ visibility: { source: 0, target: 1 } })` hands the image over to the detail screen in the same native frame.",
       ],
       [
         H.RESUME,
@@ -374,12 +374,12 @@ const CHAPTERS: Record<ChapterId, Chapter> = {
       [
         0,
         "Close runs the same interpolation in reverse",
-        "goBack springs progress back to 0, and the full-res photo shrinks into the cell on the detail screen.",
+        "`goBack` springs `progress` back to `0`, and the full-res photo shrinks into the cell on the detail screen.",
       ],
       [
         3.9,
         "Then the thumbnail shows up and the detail screen closes",
-        "visibility goes back to { source: 1, target: 0 }, and navigation.goBack() removes the screen.",
+        "`visibility` goes back to `{ source: 1, target: 0 }`, and `navigation.goBack()` removes the screen.",
       ],
     ],
     at: (u) => {
@@ -467,8 +467,8 @@ const ALONE: Partial<Record<ChapterId, Chapter>> = {
 const PIPELINE_TITLE =
   "3D breakdown of the Photo Gallery hero transition: the thumbnail teleports into a root PortalHost, flies to full screen together with an invisible full-res photo, the two swap in one commit as soon as the photo loads, the thumbnail returns to its cell, and Close plays the transition in reverse.";
 const INTRO: [string, string] = [
-  "The gallery: a FlatList of low-res thumbnails",
-  "A PortalHost “root” waits above the navigator.",
+  "The gallery: a `FlatList` of low-res thumbnails",
+  'A `PortalHost` named `"root"` waits above the navigator.',
 ];
 const OUTRO: [string, string] = [
   "What users see: one continuous image, sharp as soon as it’s ready",
@@ -1117,6 +1117,12 @@ function createScene(
   };
 }
 
+// captions mark code with backticks, like Markdown
+const rich = (text: string) =>
+  text
+    .split("`")
+    .map((part, i) => (i % 2 ? <code key={i}>{part}</code> : part));
+
 // Server-rendered placeholder (also what search engines and llms.txt see): same box, plus a text transcript
 function Transcript({ plan }: { plan: Plan }) {
   return (
@@ -1126,7 +1132,7 @@ function Transcript({ plan }: { plan: Plan }) {
         <p>Animation transcript:</p>
         <ol>
           {plan.captions.map(([start, heading, text]) => (
-            <li key={start}>{`${heading}. ${text}`}</li>
+            <li key={start}>{rich(`${heading}. ${text}`)}</li>
           ))}
         </ol>
       </figcaption>
@@ -1847,8 +1853,8 @@ function Explainer({ plan, compact }: { plan: Plan; compact: boolean }) {
       <figcaption className={compact ? styles.compactCaption : styles.caption}>
         {compact ? playButton : null}
         <div>
-          <div className={styles.capTitle}>{capTitle}</div>
-          <div className={styles.capText}>{capText}</div>
+          <div className={styles.capTitle}>{rich(capTitle)}</div>
+          <div className={styles.capText}>{rich(capText)}</div>
         </div>
       </figcaption>
 

@@ -37,7 +37,7 @@ import useBaseUrl from "@docusaurus/useBaseUrl";
 
 Open the Photos app and tap a picture. The thumbnail doesn't vanish to make room for a new screen: it lifts out of the grid, grows until it fills the display, and somewhere on the way it quietly turns into a sharp, full-resolution photo. Close it, and the photo shrinks back into the exact cell it came from.
 
-In this guide we'll build that transition in React Native, one step at a time. The sharp photo replaces the blurry preview **the moment it finishes loading**: in the middle of the animation if the network is fast, right after it if the network is slow. Either way there are no flickers, no blank frames and no jumps.
+In this guide we'll build that transition in React Native, one step at a time. The tapped thumbnail expands instantly, without waiting for the network, and the sharp photo replaces it **the moment it finishes loading**: in the middle of the animation if the network is fast, right after it if the network is slow. Either way there are no flickers, no blank frames and no jumps.
 
 This is what we're building, recorded on an iPhone simulator from the code in this guide:
 
@@ -48,16 +48,7 @@ This is what we're building, recorded on an iPhone simulator from the code in th
 />
 <br />
 
-## At a glance
-
-- **Matches production photo apps.** The tapped thumbnail expands instantly, without waiting for the network, and the sharp photo replaces it as soon as it's downloaded. Slow networks, fast networks and cached photos are all handled.
-- **Resource efficient.**
-  - Lists render small, low-res thumbnails only, which keeps long lists fast and light on memory.
-  - The full-res photo is requested only when the user opens it, and rendered exactly once. There is no hidden second copy of a heavy image during the transition.
-  - The thumbnail is moved, not copied. `<Portal>` re-parents the existing native view, so nothing is re-mounted, re-downloaded or re-decoded.
-  - No aggressive caching or prefetching is required. A plain React Native `<Image>` is enough.
-- **Extensible to stateful content.** Because the native view itself moves, anything stateful inside it keeps its state: videos and GIFs keep playing and Lottie animations keep running throughout the transition.
-- **Applicable beyond galleries.** The same pattern fits chat apps with media attachments, social feeds with multi-image posts (Facebook, X, Instagram carousels) and product galleries in e-commerce apps.
+The same pattern fits [chat attachments, social feeds and product galleries](#where-to-use-this-pattern), and it works for [videos, GIFs and Lottie animations](#going-further-videos-gifs-and-other-stateful-content) too: they keep playing while they move.
 
 ## How it works
 
@@ -118,7 +109,15 @@ There are several ways to animate an item from a list to full screen. They diffe
 
 ✅ yes, 🟡 partially, ❌ no.
 
-The full-res photo on the detail screen isn't a copy of the thumbnail: it's a separate, larger image, rendered only there, and the thumbnail hands over to it as soon as it loads.
+:::tip Light enough for low-end devices
+Teleport adds no heavy allocations to the transition:
+
+- **The thumbnail is moved, not copied.** `<Portal>` re-parents the existing native view, so nothing is re-mounted, re-downloaded or re-decoded.
+- **The full-res photo is decoded once**, on the detail screen, when the user opens it. It's a separate image, not a copy of the thumbnail, and it needs no prefetching or caching.
+- **The list holds only small thumbnails**, so it stays fast and light however long it gets.
+
+A copy of a full-res photo is the most expensive thing a transition can add: a 48 MP iPhone photo takes about 195 MB of memory once decoded (8064 × 6048 × 4 bytes), and its ProRAW file alone is [about 75 MB](https://support.apple.com/en-us/119916).
+:::
 
 :::info What about View Transitions?
 On the web, the [View Transition API](https://developer.mozilla.org/en-US/docs/Web/API/View_Transition_API/Using) and React's [`<ViewTransition>`](https://react.dev/reference/react/ViewTransition) (which [works only in the DOM so far](https://react.dev/blog/2026/09/09/react-19-3)) capture the old state as a static image and animate it into the live new state. The snapshots live only as long as the transition: when its animations finish, they're destroyed, unless you hold them with the experimental [`ViewTransition.waitUntil()`](https://developer.mozilla.org/en-US/docs/Web/API/ViewTransition/waitUntil). If the full-res photo hasn't loaded by then, the page shows whatever the new state renders. So you still need the low-res photo as a placeholder in the new state and a handoff to the full-res one, the same idea as in this guide. Because the new state is live, a photo that loads during the transition does appear mid-flight.
@@ -135,29 +134,13 @@ The second idea goes beyond resolution. The handoff works between any two views 
 
 ## Prerequisites
 
-Install these packages and follow their setup guides:
+This guide assumes you have a React Native project with the following libraries installed:
 
-- `react-native-teleport`
-- `react-native-reanimated` (with `react-native-worklets`)
-- `@react-navigation/native` and `@react-navigation/native-stack`
-- `react-native-safe-area-context`
-- `zustand`
-
-All files in this guide live in one folder. By the end of the guide you'll have nine of them:
-
-```text
-App.tsx            root providers
-navigation.tsx     the two screens
-photos.ts          photo data
-constants.ts       grid size and spring config
-hero.ts            the transition store
-useMeasure.ts      measures a thumbnail on screen
-PhotoPreview.tsx   a thumbnail that can teleport
-PhotoGallery.tsx   the grid screen
-PhotoDetail.tsx    the full-screen viewer
-```
-
-When a step changes a file, the changed lines are highlighted and `// ...` marks code that stays as it was. The complete code is linked [at the end of the guide](#the-full-pipeline).
+- [`react-native-teleport`](../installation) — the star of the show
+- [`@react-navigation/native-stack`](https://reactnavigation.org/docs/native-stack-navigator/) — for navigation (but you can use **any** navigation library)
+- [`react-native-reanimated`](https://docs.swmansion.com/react-native-reanimated/) — for smooth animations
+- [`react-native-safe-area-context`](https://appandflow.github.io/react-native-safe-area-context/) — for safe area insets
+- [`zustand`](https://zustand.docs.pmnd.rs/) — for lightweight state management
 
 ## Step 1: Build the grid
 
@@ -359,10 +342,11 @@ Run the app, and you get a grid of photos:
 
 Now make the photos tappable. A tap opens a detail screen with the full-res photo and a Close button.
 
+From here on, when a step changes a file, the changed lines are highlighted and `// ...` marks code that stays as it was. The complete code is linked [at the end of the guide](#the-full-pipeline).
+
 The detail screen is a transparent modal without a native animation. We'll draw the transition ourselves later, and the gallery has to stay visible underneath while the photo is still growing:
 
-{/* prettier-ignore */}
-```tsx title="navigation.tsx (updated)" {3,5,9,14-22}
+```tsx title="navigation.tsx (updated)" {3,5,9,22-30}
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
 
 import PhotoDetail from "./PhotoDetail";
@@ -373,7 +357,15 @@ export type RootStackParamList = {
   PhotoGallery: undefined;
   PhotoDetail: { photo: Photo };
 };
-// ...
+
+const Stack = createNativeStackNavigator<RootStackParamList>();
+
+export default function RootStack() {
+  return (
+    <Stack.Navigator>
+      <Stack.Screen
+        name="PhotoGallery"
+        component={PhotoGallery}
         options={{ title: "Photos" }}
       />
       <Stack.Screen
@@ -386,6 +378,8 @@ export type RootStackParamList = {
         }}
       />
     </Stack.Navigator>
+  );
+}
 ```
 
 :::info Why a transparent modal?
@@ -464,10 +458,13 @@ export default PhotoDetail;
 Each thumbnail reports the tap:
 
 {/* prettier-ignore */}
-```tsx title="PhotoPreview.tsx (updated)" {2,6,9,11,13}
+```tsx title="PhotoPreview.tsx (updated)" {2,9,12,14,16}
 import React from "react";
 import { Image, TouchableWithoutFeedback, View } from "react-native";
-// ...
+
+import type { Photo } from "./photos";
+import { THUMB_SIZE } from "./constants";
+
 type Props = {
   photo: Photo;
   onOpen: (photo: Photo) => void;
@@ -480,12 +477,14 @@ function PhotoPreview({ photo, onOpen }: Props) {
     </TouchableWithoutFeedback>
   );
 }
+
+// ...
 ```
 
 And the gallery opens the detail screen:
 
 {/* prettier-ignore */}
-```tsx title="PhotoGallery.tsx (updated)" {2-3,5,7,10-11,13-15,18-20}
+```tsx title="PhotoGallery.tsx (updated)" {2-3,5,7,10-11,13-15,23-25}
 import { FlatList, StyleSheet, View } from "react-native";
 import { useNavigation } from "@react-navigation/native";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
@@ -501,12 +500,22 @@ function PhotoGallery() {
   const onPhotoOpen = (photo: Photo) => {
     navigation.navigate("PhotoDetail", { photo });
   };
-  // ...
+
+  return (
+    <View style={styles.container}>
+      <FlatList
+        data={PHOTOS}
+        keyExtractor={(item) => item.id}
         numColumns={3}
         renderItem={({ item }) => (
           <PhotoPreview photo={item} onOpen={onPhotoOpen} />
         )}
       />
+    </View>
+  );
+}
+
+// ...
 ```
 
 It works, but it doesn't feel like a photo app yet. Watch the moment right after each tap:
@@ -645,7 +654,7 @@ export default useMeasure;
 Here comes the core trick. When the user taps a thumbnail, we measure it, store its position and switch its `<Portal>` to the root host:
 
 {/* prettier-ignore */}
-```tsx title="PhotoPreview.tsx (updated)" {1,3,7-8,11-17,19-20,22-25,28,30-31,37-47,49-50}
+```tsx title="PhotoPreview.tsx (updated)" {1,3,7-8,13-19,21-22,24-27,30,32-33,39-49,51-52}
 import React, { useCallback, useRef } from "react";
 import { Image, TouchableWithoutFeedback, View } from "react-native";
 import { Portal } from "react-native-teleport";
@@ -654,7 +663,9 @@ import type { Photo } from "./photos";
 import { THUMB_SIZE } from "./constants";
 import { useHeroTransition } from "./hero";
 import useMeasure from "./useMeasure";
+
 // ...
+
 function PhotoPreview({ photo, onOpen }: Props) {
   const ref = useRef<View>(null);
   const measure = useMeasure(ref);
@@ -700,6 +711,8 @@ function PhotoPreview({ photo, onOpen }: Props) {
     </TouchableWithoutFeedback>
   );
 }
+
+// ...
 ```
 
 From the user's point of view, nothing has moved yet: the thumbnail is positioned at exactly the coordinates it had in the grid. But it isn't in the grid anymore. The same native view now lives in the root host, above every screen.
@@ -707,15 +720,18 @@ From the user's point of view, nothing has moved yet: the thumbnail is positione
 The Close button now goes through the store, which clears `id` and sends the thumbnail back into its cell:
 
 {/* prettier-ignore */}
-```tsx title="PhotoDetail.tsx (updated)" {1,3,7,9-11,18}
+```tsx title="PhotoDetail.tsx (updated)" {1,3,9,12-14,21}
 import { useCallback } from "react";
 // ...
 import { useHeroTransition } from "./hero";
-// ...
+
+type PhotoDetailProps = StaticScreenProps<{ photo: Photo }>;
+
 function PhotoDetail({ route }: PhotoDetailProps) {
   const { photo } = route.params;
   const goBack = useHeroTransition((s) => s.goBack);
   // ...
+
   const onGoBack = useCallback(() => {
     goBack(navigation.goBack);
   }, [navigation, goBack]);
@@ -727,6 +743,13 @@ function PhotoDetail({ route }: PhotoDetailProps) {
         style={[styles.backButton, { top: safeAreaTop + 10 }]}
         onPress={onGoBack}
       >
+        <Text style={styles.backText}>Close</Text>
+      </Pressable>
+    </View>
+  );
+}
+
+// ...
 ```
 
 Run it and tap a photo. The detail screen opens as before, but the thumbnail you tapped is still visible on top of it, right where it was:
@@ -850,7 +873,7 @@ export const useHeroTransition = create<HeroStore>((set, get) => ({
 The thumbnail turns every `progress` value into a position, a scale and a height:
 
 {/* prettier-ignore */}
-```tsx title="PhotoPreview.tsx (updated)" {2-6,8,11,15,17,19-21,23-30,32-54,57,60-67,71-72,76,83-87}
+```tsx title="PhotoPreview.tsx (updated)" {2-6,8,11,19,21,23-25,27-34,36-58,73,76-83,87-88,92,99-103}
 import React, { useCallback, useRef } from "react";
 import { StyleSheet, TouchableWithoutFeedback, View } from "react-native";
 import Animated, {
@@ -862,7 +885,11 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import type { Photo } from "./photos";
 import { SCALE, SCREEN_WIDTH, THUMB_SIZE } from "./constants";
+import { useHeroTransition } from "./hero";
+import useMeasure from "./useMeasure";
+
 // ...
+
 function PhotoPreview({ photo, onOpen }: Props) {
   // ...
   const progress = useHeroTransition((s) => s.progress);
@@ -905,7 +932,19 @@ function PhotoPreview({ photo, onOpen }: Props) {
       ],
     };
   }, [position, safeAreaTop]);
+
   // ...
+
+  return (
+    <TouchableWithoutFeedback onPress={onPress}>
+      <View
+        // @ts-expect-error ref type mismatch between View component and host instance
+        ref={ref}
+        style={{
+          height: THUMB_SIZE,
+          width: THUMB_SIZE,
+        }}
+      >
         <Portal hostName={position && isAnimating ? "root" : undefined}>
           <Animated.View
             style={
@@ -938,6 +977,8 @@ const styles = StyleSheet.create({
     transformOrigin: "0% 0%",
   },
 });
+
+// ...
 ```
 
 The math is simpler than it looks. The thumbnail is square, the photo usually isn't. So we animate the height in thumbnail units, from `THUMB_SIZE` to `fullImageHeight / SCALE`, and scale the whole view by `SCALE`, using the top-left corner as the origin. At `progress` 1, the thumbnail covers exactly the rectangle where the full-res photo will be drawn.
@@ -945,17 +986,19 @@ The math is simpler than it looks. The thumbnail is square, the photo usually is
 The detail screen fades its backdrop in with `progress`, and keeps the full-res photo hidden for now (`visibility.target` is `0`):
 
 {/* prettier-ignore */}
-```tsx title="PhotoDetail.tsx (updated)" {3,7-9,11-16,20,27}
+```tsx title="PhotoDetail.tsx (updated)" {3,8-10,13-18,22,29}
 import { useCallback } from "react";
 import { Image, Pressable, StyleSheet, Text, View } from "react-native";
 import Animated, { useAnimatedStyle } from "react-native-reanimated";
 // ...
+
 function PhotoDetail({ route }: PhotoDetailProps) {
   const { photo } = route.params;
   const { visibility } = useHeroTransition();
   const progress = useHeroTransition((s) => s.progress);
   const direction = useHeroTransition((s) => s.direction);
   // ...
+
   const backdrop = useAnimatedStyle(
     () => ({
       opacity: direction === "neutral" ? 1 : progress.value,
@@ -974,11 +1017,20 @@ function PhotoDetail({ route }: PhotoDetailProps) {
           height: fullHeight,
           opacity: visibility.target,
         }}
+        resizeMode="cover"
+        fadeDuration={0}
+      />
+      {/* ... */}
+    </View>
+  );
+}
+
+// ...
 ```
 
 <PhotoTransitionExplainer chapters={["animate"]} />
 
-The thumbnail now flies from its cell to full screen. But look closely at the result: it's the 150 px thumbnail, stretched to the full width of the screen.
+The thumbnail now flies from its cell to full screen. Here is where the animation ends:
 
 <div className="center video">
   <img
@@ -987,6 +1039,10 @@ The thumbnail now flies from its cell to full screen. But look closely at the re
     alt="A blurry, low-resolution photo of camera parts stretched to full screen at the end of the animation."
   />
 </div>
+
+:::warning The photo is still low-res
+This isn't the final result yet. The screen shows the 150 px thumbnail, stretched to the full width of the screen. The full-res photo is already loading on the detail screen, but it stays hidden. [Step 6](#step-6-hand-off-to-the-full-res-photo) swaps it in as soon as it loads.
+:::
 
 :::note Close doesn't work yet
 Try tapping Close: nothing happens. The thumbnail still lives in the root host, above every screen, and it covers the button. We'll fix that in step 7. Until then, reload the app to get back to the grid.
@@ -1003,36 +1059,54 @@ Now the most interesting part. The full-res photo starts loading as soon as the 
 For that, the full-res `<Image>` follows **the same interpolation** as the thumbnail, at `opacity: 0`. Both images cover the same rectangle in every frame, so we can swap them at any moment. The swap itself is a single store update. Declare `targetElementAvailable` in the `HeroStore` interface and add it to the store:
 
 {/* prettier-ignore */}
-```ts title="hero.ts (updated)" {2,4-7}
+```ts title="hero.ts (updated)" {4,14-17}
+interface HeroStore {
+  // ...
   transitionCompleted: () => void;
   targetElementAvailable: () => void;
   // ...
+}
+
+export const useHeroTransition = create<HeroStore>((set, get) => ({
+  // ...
+  transitionCompleted: () => {
+    set({ isAnimationCompleted: true });
+  },
+
   targetElementAvailable: () => {
     // Swap visibility: hide source thumbnail, show target full-res image
     set({ visibility: { source: 0, target: 1 } });
   },
+
+  // ...
+}));
 ```
 
-The thumbnail takes its opacity from `visibility.source`:
+The thumbnail selects its opacity from `visibility.source`, next to the other selectors:
 
 {/* prettier-ignore */}
-```tsx title="PhotoPreview.tsx (updated)" {2-4,7}
-  const goForward = useHeroTransition((s) => s.goForward);
-  const source = useHeroTransition((s) =>
-    s.id === photo.id ? s.visibility.source : 1,
-  );
-  // ...
-            <Animated.Image
-              style={[{ width: THUMB_SIZE, opacity: source }, animatedHeight]}
-              source={{ uri: photo.thumbnail }}
-              resizeMode="cover"
-            />
+```tsx title="PhotoPreview.tsx (updated)" {2-4}
+const goForward = useHeroTransition((s) => s.goForward);
+const source = useHeroTransition((s) =>
+  s.id === photo.id ? s.visibility.source : 1,
+);
+```
+
+And applies it to the image:
+
+{/* prettier-ignore */}
+```tsx title="PhotoPreview.tsx (updated)" {2}
+<Animated.Image
+  style={[{ width: THUMB_SIZE, opacity: source }, animatedHeight]}
+  source={{ uri: photo.thumbnail }}
+  resizeMode="cover"
+/>
 ```
 
 The detail screen animates the full-res photo along the same path and calls `targetElementAvailable` from `onLoad`:
 
 {/* prettier-ignore */}
-```tsx title="PhotoDetail.tsx (updated)" {2-6,8,12,15,17-21,23-46,51,53-57,60,65-67}
+```tsx title="PhotoDetail.tsx (updated)" {2-6,8,15,18,21-25,29-52,57,59-63,66,75-77}
 import { useCallback } from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 import Animated, {
@@ -1041,7 +1115,10 @@ import Animated, {
 } from "react-native-reanimated";
 // ...
 import { SCALE, SCREEN_WIDTH } from "./constants";
-// ...
+import { useHeroTransition } from "./hero";
+
+type PhotoDetailProps = StaticScreenProps<{ photo: Photo }>;
+
 function PhotoDetail({ route }: PhotoDetailProps) {
   const { photo } = route.params;
   const { targetElementAvailable, visibility } = useHeroTransition();
@@ -1049,12 +1126,15 @@ function PhotoDetail({ route }: PhotoDetailProps) {
   const direction = useHeroTransition((s) => s.direction);
   const position = useHeroTransition((s) => s.position);
   // ...
+
   const onLoad = useCallback(() => {
     if (useHeroTransition.getState().id === photo.id) {
       targetElementAvailable();
     }
   }, [photo.id, targetElementAvailable]);
+
   // ...
+
   const heroImage = useAnimatedStyle(() => {
     if (direction === "neutral" || !position) {
       return {
@@ -1094,12 +1174,20 @@ function PhotoDetail({ route }: PhotoDetailProps) {
         fadeDuration={0}
         onLoad={onLoad}
       />
-// ...
+      {/* ... */}
+    </View>
+  );
+}
+
 const styles = StyleSheet.create({
   // ...
   heroImage: {
     transformOrigin: "0% 0%",
   },
+  // ...
+});
+
+// ...
 ```
 
 <PhotoTransitionExplainer chapters={["handoff"]} />
@@ -1114,16 +1202,12 @@ The thumbnail lives in the root `PortalHost` and the full-res image lives in the
 `fadeDuration={0}` turns off Android's default image fade-in, so the photo appears in a single frame when it's swapped in.
 :::
 
-:::note Close still doesn't respond
-The thumbnail is invisible now, but it's still in the root host, on top of the Close button. The next step takes care of it.
-:::
-
 ## Step 7: Return the thumbnail to its cell
 
 The thumbnail has done its job. Once the animation has finished and the full-res photo is shown, we send the thumbnail back to its cell:
 
 {/* prettier-ignore */}
-```ts title="hero.ts (updated)" {6,13-14,17,24,27,33-35,39,41-46,48-57,60-65,67-75,83,87,97,99}
+```ts title="hero.ts (updated)" {6,14-15,18,25,28,34-36,40,42-47,49-58,61-66,68-76,84,88,98,100}
 import {
   type SharedValue,
   makeMutable,
@@ -1132,6 +1216,7 @@ import {
   withTiming,
 } from "react-native-reanimated";
 // ...
+
 interface HeroStore {
   direction: "forward" | "backward" | "neutral";
   /** Which photo is currently animating (Portal teleport) */
@@ -1240,15 +1325,15 @@ Back in its cell, the thumbnail must stay hidden while the photo is open, otherw
 
 {/* prettier-ignore */}
 ```tsx title="PhotoPreview.tsx (updated)" {2}
-  const source = useHeroTransition((s) =>
-    s.id === photo.id || s.ownerId === photo.id ? s.visibility.source : 1,
-  );
+const source = useHeroTransition((s) =>
+  s.id === photo.id || s.ownerId === photo.id ? s.visibility.source : 1,
+);
 ```
 
 <PhotoTransitionExplainer chapters={["return"]} />
 
 :::warning Invisible doesn't mean gone
-`opacity: 0` hides a view, but it still receives touches. A hidden thumbnail left in the root host would sit above every screen and swallow taps meant for the detail screen, which is exactly why Close didn't respond in steps 5 and 6. Returning the thumbnail frees the root host for the next transition too.
+`opacity: 0` hides a view, but it still receives touches. A hidden thumbnail left in the root host would sit above every screen and swallow taps meant for the detail screen. Returning the thumbnail frees the root host for the next transition too.
 :::
 
 Close works again. It closes instantly for now; let's animate it.
@@ -1258,7 +1343,9 @@ Close works again. It closes instantly for now; let's animate it.
 The way back doesn't need a teleport at all. The full-res photo is already on the detail screen, and it uses the same interpolation as on the way in. So closing is just `progress` going back to `0`: the photo shrinks into the cell where its thumbnail is waiting, hidden. When the spring finishes, the store shows the thumbnail again and `navigation.goBack()` removes the detail screen:
 
 {/* prettier-ignore */}
-```ts title="hero.ts (updated)" {2,4-15,17-21}
+```ts title="hero.ts (updated)" {4,6-17,19-23}
+export const useHeroTransition = create<HeroStore>((set, get) => ({
+  // ...
   goBack: (callback: () => void) => {
     set({ direction: "backward" });
 
@@ -1281,12 +1368,14 @@ The way back doesn't need a teleport at all. The full-res photo is already on th
       }),
     );
   },
+  // ...
+}));
 ```
 
 The detail screen shows the Close button only when the opening animation has finished, and the Android back button runs the same animation:
 
 {/* prettier-ignore */}
-```tsx title="PhotoDetail.tsx (updated)" {1-2,6-7,12,16-17,22,25-29,31-37,39-41,43-44,46,49}
+```tsx title="PhotoDetail.tsx (updated)" {1-2,6-7,12,19-20,27,30-34,36-42,44-46,52-53,55,58}
 import { useCallback, useEffect } from "react";
 import { BackHandler, Pressable, StyleSheet, Text, View } from "react-native";
 import Animated, {
@@ -1299,12 +1388,17 @@ import Animated, {
 import { useHeroTransition } from "./hero";
 
 const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
-// ...
+
+type PhotoDetailProps = StaticScreenProps<{ photo: Photo }>;
+
 function PhotoDetail({ route }: PhotoDetailProps) {
   // ...
+
   const isTransitionDone = visibility.target === 1 && direction !== "forward";
   const buttonOpacity = useSharedValue(0);
+
   // ...
+
   const onGoBack = useCallback(() => {
     goBack(navigation.goBack);
 
@@ -1329,6 +1423,10 @@ function PhotoDetail({ route }: PhotoDetailProps) {
     opacity: buttonOpacity.value,
   }));
   // ...
+
+  return (
+    <View style={styles.container}>
+      {/* ... */}
       <AnimatedPressable
         style={[styles.backButton, { top: safeAreaTop + 10 }, buttonStyle]}
         onPress={onGoBack}
@@ -1336,6 +1434,11 @@ function PhotoDetail({ route }: PhotoDetailProps) {
       >
         <Text style={styles.backText}>Close</Text>
       </AnimatedPressable>
+    </View>
+  );
+}
+
+// ...
 ```
 
 <PhotoTransitionExplainer chapters={["close"]} />
