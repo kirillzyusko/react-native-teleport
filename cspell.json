@@ -87,7 +87,9 @@
     "worktree",
     "Galeria",
     "Jetpack",
-    "superview"
+    "superview",
+    "WWDC",
+    "ARGB"
   ],
   "ignorePaths": [
     "node_modules",
