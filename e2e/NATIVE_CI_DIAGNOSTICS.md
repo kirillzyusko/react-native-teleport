@@ -732,3 +732,53 @@ The report correlates unchanged native static responses with notification reply
 times. A nil reply alone is not proof of a presented frame. This is an explicit
 diagnostic with zero final stability credit; actual runtime callback behavior
 must be reviewed before using these notifications for synchronization.
+
+The fresh-static pilot passed all 18 application flows and mandatory video, but
+failed its diagnostic gate. After an original app restart, it registered two
+notifications against the old cached PID; both returned `NSCocoaErrorDomain 4099`.
+The next original hierarchy request refreshed the process and subsequent replies
+succeeded. This is a diagnostic context-lifetime bug, and the job remains failed.
+Separately, three actual static-true responses with two fresh nil replies were
+followed by changing original static captures before another gesture. Existing
+hierarchy queries intervened; neither query causation nor the underlying rendering
+pause has been established. No idle barrier is enabled.
+
+### Application event, mount and presentation measurements
+
+`indigo-visual-touch-trace` uses the original persistent input and frame-response
+observers without the private idle-notification observers. Its explicit builder
+applies a pinned example-app patch only for this diagnostic. Ordinary builds keep
+the original application sources. Local preparation restores only its own verified
+changes; restoration refuses unrelated edits. Original flows, screenshot limits,
+video requirements, input timing and configured deadlines remain unchanged.
+
+The app records native UP dispatch timestamps, coordinates and ancestor test IDs;
+original `go_next` and `persisted_portal_toggle_host` handlers forward their exact
+event once and retain their return/error behavior. JavaScript records handler
+entry/exit, React layout effects and native-stack transition event receipts.
+The existing Fabric surface presenter supplies mount callbacks through an
+observer. A bounded three-second display-link observation records the target's
+ancestor presentation-layer frames. It adds no UI input, screenshot, accessibility
+query, app prelaunch, synchronization wait or native idle RPC.
+
+These boundaries have different meanings. A layout effect is not a native mount;
+a transition event received in JavaScript is not the native completion instant;
+CADisplayLink and presentation-layer samples are not physical display transactions.
+The native UP and JS event timestamps share the original touch identity, while
+wall and monotonic clocks retain their own labels. Logging and sampling can change
+scheduling, so every result has zero final stability credit.
+
+Native and JS buffers have explicit bounds. Large native records use bounded,
+hashed log chunks; missing chunks, overflow or malformed identities fail the
+measurement gate. The build archives pinned original/patched sources and compiled
+helper fingerprints. Actual runtime records identify the selected Simulator, PID,
+source, application executable and JS bundle. The gate independently matches both
+selected JS handlers to native UPs and requires layout, mount, transition and
+presentation coverage alongside every original input/frame/video gate. A sampling
+window interrupted by an original app exit is reported only with matching raw
+process-exit evidence. It is not reported as a completed presentation window.
+
+Generic compilation and host fixtures validate source/API access, disabled behavior,
+exact handler forwarding, bounds and log decoding. Actual UIKit dispatch, selected
+app targets and runtime measurement coverage still require the fresh CI pilot.
+This diagnostic implements no synchronization fix.

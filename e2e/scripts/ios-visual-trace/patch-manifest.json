@@ -1,0 +1,28 @@
+{
+  "version": 1,
+  "originals": {
+    "example/ios/TeleportExample.xcodeproj/project.pbxproj": "947266f6a9cac723638bf28a22a75fe585c56ded1223441b98460b6d84d1266c",
+    "example/ios/TeleportExample/AppDelegate.swift": "f4da4687299154f20411b475ff0bdc59554a952fe683256b49f8797b4b7dd484",
+    "example/src/App.tsx": "fbd7a68d5cdbc4e8cc813e26468901b06c4e813ca470c5f72b3cca7cd8db3b4f",
+    "example/src/screens/DeepNavigation/Screen1.tsx": "8ef1575ec666cf27cb5388958295fd5ca306678f538b05f370fbbeb164accaf6",
+    "example/src/screens/DeepNavigation/Screen2.tsx": "b4ad60da9d07ca9c9f753b9bd1da6299b56febd33080b4bb2237b15958960d49",
+    "example/src/screens/PersistedPortal/index.tsx": "119922bf6868fe8ae31d2a51e8902f74c552492769f7dcb4368c11eabdfc5208",
+    "example/src/navigation/ExamplesStack/index.tsx": "f4f7298243cf1764e8d24a7655d9e0105d305d091422eedc900543a2f1a11b9f"
+  },
+  "patched": {
+    "example/ios/TeleportExample.xcodeproj/project.pbxproj": "0d74a2eacb315a361bc26cae90f8ddaa3c9ea6b42c34ead011968ffb2e286d40",
+    "example/ios/TeleportExample/AppDelegate.swift": "5fd4dab304c9670f4d311e0bfa85fe629c209b144a9cb6f3c5f076a9fd5a6a3c",
+    "example/src/App.tsx": "de1d747beda99504a9c38f8cbfcb6f95b491b5e1978ce5b263c29314bee9ae1a",
+    "example/src/screens/DeepNavigation/Screen1.tsx": "da6fb706c4b81c5a5dc23ab5a98382d983d37bc743ed4b32d950d7bea2376c5e",
+    "example/src/screens/DeepNavigation/Screen2.tsx": "bc2db176fda04e385dcd5ed7fcc23fa48c143451e9fa54c37b8db7c2fff42030",
+    "example/src/screens/PersistedPortal/index.tsx": "9fa110c5aad397714772aa3bca746e492b29511a939abe4ebe73ee6dd6988593",
+    "example/src/navigation/ExamplesStack/index.tsx": "3fd0bd4f001513390bf6e992a8a9482458412c8e50bda7f77c7a62273344abee"
+  },
+  "helpers": {
+    "VisualEventTrace.swift": "example/ios/TeleportExample/VisualEventTrace.swift",
+    "visualTrace.ts": "example/src/diagnostics/visualTrace.ts",
+    "visualTraceBuffer.ts": "example/src/diagnostics/visualTraceBuffer.ts"
+  },
+  "info": "example/ios/TeleportExample/Info.plist",
+  "info_original_sha256": "1773b52dfa0182f2ef346a2319fd03333ab70f176b5081fe2f36625ec8e4d5b6"
+}

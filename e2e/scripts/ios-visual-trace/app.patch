@@ -1,0 +1,246 @@
+diff --git a/example/ios/TeleportExample.xcodeproj/project.pbxproj b/example/ios/TeleportExample.xcodeproj/project.pbxproj
+index 8be1aa35..8b7d60f8 100644
+--- a/example/ios/TeleportExample.xcodeproj/project.pbxproj
++++ b/example/ios/TeleportExample.xcodeproj/project.pbxproj
+@@ -13,6 +13,7 @@
+ 		66BDE8CAF7ED411794BDBD63 /* Urbanist-Italic.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 431AE9C12B154E58B28517BD /* Urbanist-Italic.ttf */; };
+ 		761780ED2CA45674006654EE /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 761780EC2CA45674006654EE /* AppDelegate.swift */; };
+ 		761780EF2E00A000006654EE /* SceneDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 761780EE2E00A000006654EE /* SceneDelegate.swift */; };
++		761780F12E00A000006654EE /* VisualEventTrace.swift in Sources */ = {isa = PBXBuildFile; fileRef = 761780F02E00A000006654EE /* VisualEventTrace.swift */; };
+ 		81AB9BB82411601600AC10FF /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 81AB9BB72411601600AC10FF /* LaunchScreen.storyboard */; };
+ 		8C86E4776B66E30D0FC31B5A /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = 13B07FB81A68108700A75B9A /* PrivacyInfo.xcprivacy */; };
+ 		BE3E9A6D672348AFBC15F479 /* Urbanist-ExtraBold.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 38F62F8569964905A26CDA1B /* Urbanist-ExtraBold.ttf */; };
+@@ -33,6 +34,7 @@
+ 		5DCACB8F33CDC322A6C60F78 /* libPods-TeleportExample.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = "libPods-TeleportExample.a"; sourceTree = BUILT_PRODUCTS_DIR; };
+ 		761780EC2CA45674006654EE /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = AppDelegate.swift; path = TeleportExample/AppDelegate.swift; sourceTree = "<group>"; };
+ 		761780EE2E00A000006654EE /* SceneDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = SceneDelegate.swift; path = TeleportExample/SceneDelegate.swift; sourceTree = "<group>"; };
++		761780F02E00A000006654EE /* VisualEventTrace.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = VisualEventTrace.swift; path = TeleportExample/VisualEventTrace.swift; sourceTree = "<group>"; };
+ 		7D8C4EEE55FD4DA585C580F7 /* Urbanist-SemiBold.ttf */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = undefined; includeInIndex = 0; lastKnownFileType = unknown; name = "Urbanist-SemiBold.ttf"; path = "../assets/fonts/Urbanist-SemiBold.ttf"; sourceTree = "<group>"; };
+ 		81AB9BB72411601600AC10FF /* LaunchScreen.storyboard */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.storyboard; name = LaunchScreen.storyboard; path = TeleportExample/LaunchScreen.storyboard; sourceTree = "<group>"; };
+ 		BC061485FB5044C583633F55 /* Urbanist-Bold.ttf */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = undefined; includeInIndex = 0; lastKnownFileType = unknown; name = "Urbanist-Bold.ttf"; path = "../assets/fonts/Urbanist-Bold.ttf"; sourceTree = "<group>"; };
+@@ -57,6 +59,7 @@
+ 				13B07FB51A68108700A75B9A /* Images.xcassets */,
+ 				761780EC2CA45674006654EE /* AppDelegate.swift */,
+ 				761780EE2E00A000006654EE /* SceneDelegate.swift */,
++				761780F02E00A000006654EE /* VisualEventTrace.swift */,
+ 				13B07FB61A68108700A75B9A /* Info.plist */,
+ 				81AB9BB72411601600AC10FF /* LaunchScreen.storyboard */,
+ 				13B07FB81A68108700A75B9A /* PrivacyInfo.xcprivacy */,
+@@ -280,6 +283,7 @@
+ 			files = (
+ 				761780ED2CA45674006654EE /* AppDelegate.swift in Sources */,
+ 				761780EF2E00A000006654EE /* SceneDelegate.swift in Sources */,
++				761780F12E00A000006654EE /* VisualEventTrace.swift in Sources */,
+ 			);
+ 			runOnlyForDeploymentPostprocessing = 0;
+ 		};
+diff --git a/example/ios/TeleportExample/AppDelegate.swift b/example/ios/TeleportExample/AppDelegate.swift
+index 4e2f7792..d38d9099 100644
+--- a/example/ios/TeleportExample/AppDelegate.swift
++++ b/example/ios/TeleportExample/AppDelegate.swift
+@@ -2,6 +2,7 @@ import UIKit
+ import React
+ import React_RCTAppDelegate
+ import ReactAppDependencyProvider
++// The trace reuses cached Objective-C getters from the existing factory.
+ 
+ @main
+ class AppDelegate: UIResponder, UIApplicationDelegate {
+@@ -23,6 +24,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
+ 
+     reactNativeDelegate = delegate
+     reactNativeFactory = factory
++    VisualEventTrace.shared.install()
+ 
+     return true
+   }
+@@ -46,8 +48,19 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
+     reactNativeFactory?.startReactNative(
+       withModuleName: "TeleportExample",
+       in: window,
++      initialProperties: VisualEventTrace.enabled ? [
++        "teleportVisualTrace": true,
++        "visualTraceSourceSHA": Bundle.main.object(forInfoDictionaryKey: "TeleportVisualTraceSourceSHA") ?? "",
++        "visualTracePID": ProcessInfo.processInfo.processIdentifier,
++        "visualTraceDevice": ProcessInfo.processInfo.environment["SIMULATOR_UDID"] ?? ""
++      ] : nil,
+       launchOptions: launchOptions
+     )
++    if VisualEventTrace.enabled {
++      VisualEventTrace.shared.attachFactory(
++        reactNativeFactory?.rootViewFactory
++      )
++    }
+   }
+ }
+ 
+diff --git a/example/src/App.tsx b/example/src/App.tsx
+index 0992f54a..5f8e0582 100644
+--- a/example/src/App.tsx
++++ b/example/src/App.tsx
+@@ -10,13 +10,27 @@ import RootStack from "./navigation";
+ import { GestureHandlerRootView } from "react-native-gesture-handler";
+ import PreloadedEditor from "./screens/RichTextEditor/PreloadedEditor";
+ import { configureInputTrace } from "./diagnostics/inputTrace";
++import { configureVisualTrace } from "./diagnostics/visualTrace";
+ 
+ export default function App({
+   teleportInputTrace = false,
++  teleportVisualTrace = false,
++  visualTraceSourceSHA = "",
++  visualTracePID = 0,
++  visualTraceDevice = "",
+ }: {
+   teleportInputTrace?: boolean;
++  teleportVisualTrace?: boolean;
++  visualTraceSourceSHA?: string;
++  visualTracePID?: number;
++  visualTraceDevice?: string;
+ }) {
+   configureInputTrace(teleportInputTrace);
++  configureVisualTrace(teleportVisualTrace, {
++    sourceSHA: visualTraceSourceSHA,
++    pid: visualTracePID,
++    simulatorUDID: visualTraceDevice,
++  });
+   return (
+     <SafeAreaProvider initialMetrics={initialWindowMetrics}>
+       <GestureHandlerRootView style={styles.container}>
+diff --git a/example/src/navigation/ExamplesStack/index.tsx b/example/src/navigation/ExamplesStack/index.tsx
+index c45fcc67..450ed74f 100644
+--- a/example/src/navigation/ExamplesStack/index.tsx
++++ b/example/src/navigation/ExamplesStack/index.tsx
+@@ -35,6 +35,10 @@ import TransitionReparent from "../../screens/TransitionReparent";
+ import StableHostRemount from "../../screens/StableHostRemount";
+ import NestedStackPop from "../../screens/NestedStackPop";
+ import Menu from "../../screens/Menu";
++import {
++  traceVisualTransition,
++  visualTraceEnabled,
++} from "../../diagnostics/visualTrace";
+ 
+ export type ExamplesStackParamList = {
+   [ScreenNames.GESTURE_HANDLER_TOUCHABLE]: undefined;
+@@ -156,7 +160,26 @@ const options = {
+ };
+ 
+ const ExamplesStack = () => (
+-  <Stack.Navigator>
++  <Stack.Navigator
++    screenListeners={
++      visualTraceEnabled()
++        ? ({ route }) => ({
++            transitionStart: (event) =>
++              traceVisualTransition(
++                route.name,
++                "transitionStart",
++                event.data.closing,
++              ),
++            transitionEnd: (event) =>
++              traceVisualTransition(
++                route.name,
++                "transitionEnd",
++                event.data.closing,
++              ),
++          })
++        : undefined
++    }
++  >
+     <Stack.Screen
+       component={GestureHandlerTouchableExample}
+       name={ScreenNames.GESTURE_HANDLER_TOUCHABLE}
+diff --git a/example/src/screens/DeepNavigation/Screen1.tsx b/example/src/screens/DeepNavigation/Screen1.tsx
+index 756f6504..56d0d9ae 100644
+--- a/example/src/screens/DeepNavigation/Screen1.tsx
++++ b/example/src/screens/DeepNavigation/Screen1.tsx
+@@ -1,13 +1,20 @@
+-import { useState } from "react";
++import { useLayoutEffect, useState } from "react";
+ import { Button, View } from "react-native";
+ import { ScreenNames } from "../../constants/screenNames";
+ import { Portal } from "react-native-teleport";
+ import { useNavigation } from "@react-navigation/native";
+ import type { ExamplesStackNavigation } from "../../navigation/ExamplesStack";
++import {
++  traceVisualLayout,
++  traceVisualPress,
++} from "../../diagnostics/visualTrace";
+ 
+ function Screen1() {
+   const [mounted, setMounted] = useState(true);
+   const navigation = useNavigation<ExamplesStackNavigation>();
++  useLayoutEffect(() => {
++    traceVisualLayout("lifecycle.screen1", { mounted });
++  }, [mounted]);
+ 
+   return (
+     <View style={{ flex: 1 }}>
+@@ -20,9 +27,9 @@ function Screen1() {
+       <Button
+         title="Go to next screen"
+         testID="go_next"
+-        onPress={() =>
+-          navigation.navigate(ScreenNames.NAVIGATION_LIFECYCLE_NESTED)
+-        }
++        onPress={traceVisualPress("go_next", () =>
++          navigation.navigate(ScreenNames.NAVIGATION_LIFECYCLE_NESTED),
++        )}
+       />
+       {mounted && (
+         <Portal hostName="overlay">
+diff --git a/example/src/screens/DeepNavigation/Screen2.tsx b/example/src/screens/DeepNavigation/Screen2.tsx
+index c3656d8c..67b88bfe 100644
+--- a/example/src/screens/DeepNavigation/Screen2.tsx
++++ b/example/src/screens/DeepNavigation/Screen2.tsx
+@@ -1,8 +1,13 @@
+ import { useNavigation } from "@react-navigation/native";
++import { useLayoutEffect } from "react";
+ import { Button, Text, View } from "react-native";
++import { traceVisualLayout } from "../../diagnostics/visualTrace";
+ 
+ function Screen2() {
+   const navigation = useNavigation();
++  useLayoutEffect(() => {
++    traceVisualLayout("lifecycle.screen2");
++  }, []);
+ 
+   return (
+     <View style={{ flex: 1, alignItems: "center", justifyContent: "center" }}>
+diff --git a/example/src/screens/PersistedPortal/index.tsx b/example/src/screens/PersistedPortal/index.tsx
+index d642dc46..a99aa09a 100644
+--- a/example/src/screens/PersistedPortal/index.tsx
++++ b/example/src/screens/PersistedPortal/index.tsx
+@@ -1,12 +1,19 @@
+-import { useState } from "react";
++import { useLayoutEffect, useState } from "react";
+ import { Button, StyleSheet, Text, View } from "react-native";
+ import { Portal, PortalHost } from "react-native-teleport";
+ 
+ import { PERSISTED_PORTAL_HOST } from "./hostName";
++import {
++  traceVisualLayout,
++  traceVisualPress,
++} from "../../diagnostics/visualTrace";
+ 
+ export default function PersistedPortal() {
+   const [hostMounted, setHostMounted] = useState(false);
+   const [toggleCount, setToggleCount] = useState(0);
++  useLayoutEffect(() => {
++    traceVisualLayout("persisted.portal", { hostMounted, toggleCount });
++  }, [hostMounted, toggleCount]);
+ 
+   return (
+     <View style={styles.container}>
+@@ -24,10 +31,10 @@ export default function PersistedPortal() {
+               ? `Unmount host (toggles: ${toggleCount})`
+               : `Mount host (toggles: ${toggleCount})`
+           }
+-          onPress={() => {
++          onPress={traceVisualPress("persisted_portal_toggle_host", () => {
+             setHostMounted((v) => !v);
+             setToggleCount((c) => c + 1);
+-          }}
++          })}
+         />
+       </View>
+ 
