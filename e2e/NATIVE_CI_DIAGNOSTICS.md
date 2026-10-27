@@ -358,6 +358,31 @@ runner size does not imply the same automation lifecycle or failure behavior.
 
 ## Diagnostics
 
+### iOS screenshot comparison control
+
+The iOS workflow accepts `comparison=paired` to run `stock` and `one-pass`
+variants on independent guests using the same app and input-driver artifacts.
+Both keep the original 18 flows, recording checks, driver configuration and
+timeouts. The variants have separate concurrency groups and artifact names.
+This is a diagnostic comparison, not final stability verification.
+
+In failing native-driver trial 27, a requested 2000 ms animation wait took
+631 seconds. Three JVM captures show
+`ImageComparison.createRectangle → populateRectangles → compareImages`.
+The dependency scans the entire difference matrix once for each region.
+`patch-maestro-image-comparison.py` replaces only the private bounds collector
+with one matrix pass, retaining the original grouping, region order, filtering,
+merging, rendering and difference metric. It rejects an unknown dependency
+class and verifies that every other field, method and JAR entry is unchanged.
+
+`test-maestro-image-comparison.py` compares the original and patched class on
+125 deterministic public-configuration and edge cases, checking state, exact
+float bits, ordered rectangles and rendered ARGB hashes. Optional captured
+frames add four controls. The paired CI runs execute this contract before
+installing the optimized class. The local controls establish equivalence and
+reduced CPU time, but do not establish the cause of subsequent native
+`simctl` or recording delays.
+
 ### Android menu tap after the foreground-instrumentation patch
 
 The unchanged `2bdf4eb` candidate failed trial 14 before entering the stable

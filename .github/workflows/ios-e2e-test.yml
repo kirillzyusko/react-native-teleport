@@ -13,6 +13,14 @@ on:
           - simctl-stop
           - recap-source
           - native-driver
+      comparison:
+        description: Screenshot region bounds algorithm (paired shares one app build)
+        type: choice
+        default: stock
+        options:
+          - stock
+          - one-pass
+          - paired
       trials:
         description: Independent fresh-runner trials
         type: choice
@@ -175,11 +183,11 @@ jobs:
           path: example/ios/build/Build/Products/Release-iphonesimulator/TeleportExample.app/**
 
   e2e-test:
-    name: ⚙️ Automated test cases (iOS-${{ matrix.devices.ios }}, trial-${{ matrix.trial }}, ${{ inputs.profile || 'native-driver' }})
+    name: ⚙️ Automated test cases (iOS-${{ matrix.devices.ios }}, trial-${{ matrix.trial }}, ${{ inputs.profile || 'native-driver' }}) / image-${{ matrix.comparison }}
     runs-on: macos-${{ matrix.devices.macos }}
     timeout-minutes: 90
     concurrency:
-      group: ios-e2e-${{ matrix.devices.ios }}-${{ github.ref }}-${{ github.sha }}-${{ matrix.trial }}-${{ inputs.profile || 'native-driver' }}
+      group: ios-e2e-${{ matrix.devices.ios }}-${{ github.ref }}-${{ github.sha }}-${{ matrix.trial }}-${{ inputs.profile || 'native-driver' }}-${{ matrix.comparison }}
       cancel-in-progress: true
     strategy:
       fail-fast: false
@@ -187,6 +195,7 @@ jobs:
       matrix:
         devices: [{ ios: 18, macos: 15 }]
         trial: ${{ fromJSON(needs.plan-trials.outputs.trials) }}
+        comparison: ${{ fromJSON(inputs.comparison == 'paired' && '["stock", "one-pass"]' || inputs.comparison == 'one-pass' && '["one-pass"]' || '["stock"]') }}
     needs: [build-ios, plan-trials]
     steps:
       - uses: actions/checkout@v4
@@ -292,6 +301,22 @@ jobs:
             VerifyIOSStopRouting original | tee e2e/reports/native-diagnostics/ios-stop-routing-original.log
           java -Xverify:all -cp "$RUNNER_TEMP/teleport-ios-stop-patch/fixture:$HOME/.maestro/lib/*" \
             VerifyIOSStopRouting patched | tee e2e/reports/native-diagnostics/ios-stop-routing-patched.log
+      - name: Verify screenshot comparison contract
+        if: github.event_name == 'workflow_dispatch' && inputs.comparison != ''
+        run: |
+          set -euo pipefail
+          python3 e2e/scripts/test-maestro-image-comparison.py \
+            "$HOME/.maestro/lib/image-comparison-4.4.0.jar" "$RUNNER_TEMP/teleport-comparison-contract"
+          mkdir -p e2e/reports/native-diagnostics
+          cp "$RUNNER_TEMP/teleport-comparison-contract"/contract-*.json e2e/reports/native-diagnostics/
+      - name: Use one-pass screenshot region bounds
+        if: matrix.comparison == 'one-pass'
+        run: |
+          set -euo pipefail
+          python3 e2e/scripts/patch-maestro-image-comparison.py \
+            "$HOME/.maestro/lib/image-comparison-4.4.0.jar" "$RUNNER_TEMP/teleport-image-comparison" --install
+          mkdir -p e2e/reports/native-diagnostics
+          cp "$RUNNER_TEMP/teleport-image-comparison/maestro-image-comparison-patch.json" e2e/reports/native-diagnostics/
       - name: Ensure FFmpeg is available
         run: command -v ffmpeg >/dev/null || brew install ffmpeg
       - name: Prepare snapshot engine
@@ -335,7 +360,7 @@ jobs:
             ./e2e/reports/debug/*.log
             ./e2e/reports/debug/**/commands.json
             ./e2e/reports/debug/**/manifest.json
-          name: e2e-diagnostics-ios-${{ github.run_attempt }}-${{ matrix.trial }}
+          name: e2e-diagnostics-ios-${{ github.run_attempt }}-${{ matrix.trial }}${{ matrix.comparison == 'one-pass' && '-one-pass' || '' }}
           retention-days: 7
       - name: Upload test report
         if: failure()
@@ -344,4 +369,4 @@ jobs:
           path: |
             ./e2e/reports
             ./e2e/videos
-          name: e2e-report-ios-${{ github.run_attempt }}-${{ matrix.trial }}
+          name: e2e-report-ios-${{ github.run_attempt }}-${{ matrix.trial }}${{ matrix.comparison == 'one-pass' && '-one-pass' || '' }}
