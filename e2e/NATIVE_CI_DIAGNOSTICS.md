@@ -192,11 +192,12 @@ flows. Its JSON report is retained with native diagnostics.
 The `native-driver` default builds the pinned Maestro 2.10 XCTest dependency
 at commit `14a408335e17a090df1e26bdbeaf80d8122a8fd8` with a 50 ms first-path
 offset. The `recap-source` control builds the same source with a zero offset.
-The offset provides time for digitizer registration before DOWN; the existing
+The offset was intended to allow registration before DOWN; the existing
 DOWN/MOVE/UP intervals and original test gestures remain unchanged. In the two
 failed jobs, 227 registrations took a median 4.715 ms and a maximum 21.362 ms
 from creation to attachment. This is a bounded mitigation to verify, not a
-guarantee against arbitrarily long simulator stalls.
+guarantee against arbitrarily long simulator stalls. A later counterexample
+also disproved it for a short registration interval, as described below.
 
 Only the dependency's required source subtree is downloaded, with Git blob
 hashes checked against the pinned tree. Builds reuse
@@ -207,12 +208,29 @@ existing xctestrun remain unchanged. The runtime marker verifies the rebuilt
 driver was actually used. Both profiles retain the simulator-native stop
 patch, all 18 original flows and both video/input checks, with no gesture or
 suite retries. Initial source-build comparisons are excluded from the final
-unchanged-candidate series; final verification uses the default profile.
+unchanged-candidate series. No final candidate is frozen yet.
 
 The first 50 ms source-built run passed all 18 original flows and the video
 check. Its raw simulator log contains 112 Recap devices, no unknown senders
 and no active-contact cancellations. Installed resource digests and the
 `touchLeadInSeconds=0.050` runtime marker match the preserved native build.
+
+The paired stock trial 5 at `d3a7d5e` reproduced the Fixtures-menu tap failure
+despite the verified 50 ms offset. XCTest scheduled DOWN at 0.05 s and UP at
+0.15 s, yet the first actual Recap packet already carried `Touch:1` before
+BackBoard attached sender `0x105421ad00006`. Service-added at 07:01:36.858 and
+attached at .870 were only 12 ms apart. BackBoard created two touch-state
+objects and cancelled the active contact at 07:01:37.096; the screenshot still
+shows the Examples menu. The next scroll failed, leaving 17/18 flows passed.
+This failure occurs before Reels and cannot be attributed to its screenshot
+comparison algorithm. A path offset is not a registration handshake; increasing
+it again without tracing the actual event implementation is unjustified.
+
+The device-free `hid-contract` manual profile inspects Xcode 16.4's persistent
+SimulatorKit/Indigo contract before an alternative input backend is implemented.
+It uses no app, simulator, HID client, or delivered events. Details and upstream
+source attribution are in `scripts/ios-hid/README.md`. This compatibility probe
+is not a verified input fix and has no stability-suite credit.
 This establishes that the rebuilt runner works with the suite; the final
 stability series remains separate.
 
@@ -481,9 +499,23 @@ For a uniquely identified CoreSimulatorService on a GitHub-hosted guest, the
 collector now captures the service's stack and recent PID-scoped host logs
 concurrently with the stalled client. It rechecks the service's path, PID and
 owner before sampling. Developer and self-hosted machines are excluded.
-Hosted samples also record the front application's name through the read-only
-`lsappinfo -names front` command. This can distinguish Simulator/Java focus
-state without changing activation. Existing JVM dumps show AppKit and Metal
+The first server capture caught a 32.822-second privacy command; 200 service
+samples waited in `SimLaunchHostClient.findServiceInSession →
+SimLaunchHostConnection.sendMessageSyncWithReply`. A second guest captured the
+same service-side chain during 49.585- and 31.062-second commands. These guests
+have no periodic device `launchctl` probes. The wait has therefore been traced
+to SimLaunchHost, but the reason it does not reply remains unresolved.
+
+Diagnostics now sample a unique same-owner hosted SimLaunchHost concurrently
+with the service and client. The selected simulator's `launchd_sim` is eligible
+only through the parentage of a runtime daemon identified by its scoped log
+stream, with both process identities rechecked. A global launchd name search
+is insufficient. These are read-only, bounded captures; no service is restarted.
+
+Hosted samples also record the front application ASN through the read-only
+`lsappinfo -names front` command. The observed output does not resolve the
+application name, so it cannot establish Simulator/Java focus. Existing JVM
+dumps show AppKit and Metal
 rendering threads, but whether that contributes to the native delay is unproven.
 Periodic iOS `simctl spawn … launchctl list` probes are removed so that process
 observation does not add repeated device RPCs. Android's process snapshots
@@ -491,7 +523,7 @@ remain available for the adbd/zombie verification. This is a diagnostics
 change; the flows, permissions, app startup and timeouts are unchanged.
 
 - Stream native logs independently of Maestro.
-- Sample host processes/memory and device processes every 15 seconds.
+- Sample host processes/memory every 15 seconds and Android device processes.
 - Capture the Maestro JVM's thread dump every minute, including permission
   setup or APK-transfer waits that precede an ADB disconnect.
 - If an iOS app termination lasts over eight seconds, capture host process

@@ -8,7 +8,12 @@ import {
 } from "node:fs";
 import { homedir } from "node:os";
 import path from "node:path";
-import { uniqueHostedCoreSimulatorService } from "./native-diagnostics-processes.mjs";
+import {
+  sameOwnerProcess,
+  selectedHostedLaunchd,
+  uniqueHostedCoreSimulatorService,
+  uniqueHostedSimLaunchHost,
+} from "./native-diagnostics-processes.mjs";
 
 // Keep collecting outside Maestro: a dead XCTest/UiAutomation session cannot
 // reliably take its own final screenshot, hierarchy, or device logs.
@@ -272,16 +277,27 @@ async function sampleStalledSimctl(processTable) {
         "lsof",
         ["-nP", "-p", String(pid)],
       ]),
-      sampleHostedCoreSimulator(processTable, pid),
+      sampleHostedWaitChain(processTable, pid),
     ]);
   }
 }
 
-async function sampleHostedCoreSimulator(processTable, clientPid) {
-  const service = uniqueHostedCoreSimulatorService(processTable, hostedCI);
-  if (!service) return;
+async function sampleHostedWaitChain(processTable, clientPid) {
+  const targets = [
+    ["service", uniqueHostedCoreSimulatorService(processTable, hostedCI)],
+    ["launch-host", uniqueHostedSimLaunchHost(processTable, hostedCI)],
+    ["launchd", selectedHostedLaunchd(processTable, xctestProcesses, hostedCI)],
+  ];
+  await Promise.all(
+    targets.map(([kind, target]) =>
+      target ? sampleHostedProcess(kind, target, clientPid) : undefined,
+    ),
+  );
+}
+
+async function sampleHostedProcess(kind, service, clientPid) {
   let details = "";
-  const prefix = `simctl-${clientPid}-service-${service.pid}`;
+  const prefix = `simctl-${clientPid}-${kind}-${service.pid}`;
   await capture(
     `${prefix}-identity.log`,
     ["ps", ["-p", String(service.pid), "-o", "pid,uid,comm="]],
@@ -290,21 +306,36 @@ async function sampleHostedCoreSimulator(processTable, clientPid) {
       details += chunk.toString();
     },
   );
-  const live = details.split("\n").some((line) => {
-    const match = line.match(/^\s*(\d+)\s+(\d+)\s+(.+)$/);
-    return (
-      match &&
-      Number(match[1]) === service.pid &&
-      Number(match[2]) === process.getuid?.() &&
-      match[3] === service.command
-    );
-  });
-  if (!live) {
-    log(`CoreSimulatorService ${service.pid} identity/owner changed; skipping`);
+  if (!sameOwnerProcess(details, service, process.getuid?.())) {
+    log(`Hosted ${kind} ${service.pid} identity/owner changed; skipping`);
     return;
   }
+  if (service.childPid) {
+    let childDetails = "";
+    await capture(
+      `${prefix}-child-identity.log`,
+      ["ps", ["-p", String(service.childPid), "-o", "pid,ppid,comm="]],
+      15000,
+      (chunk) => {
+        childDetails += chunk.toString();
+      },
+    );
+    const childLive = childDetails.split("\n").some((line) => {
+      const match = line.match(/^\s*(\d+)\s+(\d+)\s+(.+)$/);
+      return (
+        match &&
+        Number(match[1]) === service.childPid &&
+        Number(match[2]) === service.pid &&
+        match[3] === service.childCommand
+      );
+    });
+    if (!childLive) {
+      log(`Selected simulator's child ${service.childPid} changed; skipping`);
+      return;
+    }
+  }
   log(
-    `Capturing hosted CoreSimulatorService ${service.pid} while owned simctl ${clientPid} is stalled`,
+    `Capturing hosted ${kind === "service" ? "CoreSimulatorService" : kind} ${service.pid} while owned simctl ${clientPid} is stalled`,
   );
   await Promise.all([
     capture(`${prefix}-sample.log`, [
@@ -413,6 +444,7 @@ async function finalState() {
 }
 
 log(`Starting ${platform} diagnostics for ${device}; output=${directory}`);
+if (platform === "ios") log("iOS native wait-chain diagnostics=1");
 log(
   `Runner: os=${process.env.RUNNER_OS} arch=${process.env.RUNNER_ARCH} image=${process.env.ImageOS}/${process.env.ImageVersion}; Node=${process.version}`,
 );

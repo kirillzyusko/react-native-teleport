@@ -7,7 +7,12 @@ import { promisify } from "node:util";
 import { fileURLToPath } from "node:url";
 import test from "node:test";
 import { setTimeout as delay } from "node:timers/promises";
-import { uniqueHostedCoreSimulatorService } from "./native-diagnostics-processes.mjs";
+import {
+  sameOwnerProcess,
+  selectedHostedLaunchd,
+  uniqueHostedCoreSimulatorService,
+  uniqueHostedSimLaunchHost,
+} from "./native-diagnostics-processes.mjs";
 
 const execute = promisify(execFile);
 const runner =
@@ -17,6 +22,90 @@ const runner =
 const serviceCommand =
   "/Library/Developer/PrivateFrameworks/CoreSimulator.framework/Versions/A/XPCServices/com.apple.CoreSimulator.CoreSimulatorService.xpc/Contents/MacOS/com.apple.CoreSimulator.CoreSimulatorService";
 const serviceRow = (pid) => `${pid} 1 S 0.8 0.2 11344 ${serviceCommand}`;
+const launchHostCommand =
+  "/Library/Developer/PrivateFrameworks/CoreSimulator.framework/Versions/A/XPCServices/SimLaunchHost.arm64.xpc/Contents/MacOS/SimLaunchHost.arm64";
+const runtimeRoot =
+  "/Library/Developer/CoreSimulator/Volumes/iOS_22F77/Library/Developer/CoreSimulator/Profiles/Runtimes/iOS 18.5.simruntime/Contents/Resources/RuntimeRoot";
+const daemonCommand = `${runtimeRoot}/usr/libexec/testmanagerd`;
+const chainTable = `
+1000003 1 S 0.0 0.0 100 ${launchHostCommand}
+1000004 1 S 0.0 0.0 100 launchd_sim
+1000005 1000004 S 0.0 0.0 100 ${daemonCommand}
+1000008 1 S 0.0 0.0 100 launchd_sim
+1000009 1000008 S 0.0 0.0 100 ${runtimeRoot}/usr/libexec/runningboardd`;
+
+test("selects a unique hosted SimLaunchHost executable", () => {
+  assert.deepEqual(uniqueHostedSimLaunchHost(chainTable, true), {
+    pid: 1000003,
+    command: launchHostCommand,
+  });
+  assert.equal(uniqueHostedSimLaunchHost(chainTable, false), undefined);
+  assert.equal(
+    uniqueHostedSimLaunchHost(
+      `${chainTable}\n1000010 1 S 0 0 100 ${launchHostCommand}`,
+      true,
+    ),
+    undefined,
+  );
+  assert.equal(
+    uniqueHostedSimLaunchHost(
+      chainTable.replace("/Library/Developer/PrivateFrameworks/", "/tmp/"),
+      true,
+    ),
+    undefined,
+  );
+});
+
+test("uses selected simulator daemon parentage instead of a global launchd name", () => {
+  const scoped = new Map([["testmanagerd", "1000005"]]);
+  assert.deepEqual(selectedHostedLaunchd(chainTable, scoped, true), {
+    pid: 1000004,
+    command: "launchd_sim",
+    childPid: 1000005,
+    childCommand: daemonCommand,
+  });
+  assert.equal(selectedHostedLaunchd(chainTable, scoped, false), undefined);
+  assert.equal(selectedHostedLaunchd(chainTable, new Map(), true), undefined);
+});
+
+test("rejects stale PID reuse and conflicting selected simulator parents", () => {
+  const scoped = new Map([["testmanagerd", "1000005"]]);
+  assert.equal(
+    selectedHostedLaunchd(
+      chainTable.replace(daemonCommand, "/usr/libexec/testmanagerd"),
+      scoped,
+      true,
+    ),
+    undefined,
+  );
+  assert.equal(
+    selectedHostedLaunchd(
+      chainTable,
+      new Map([...scoped, ["runningboardd", "1000009"]]),
+      true,
+    ),
+    undefined,
+  );
+});
+
+test("revalidates exact process PID, owner and executable", () => {
+  const expected = { pid: 1000003, command: launchHostCommand };
+  const details = `1000003 501 ${launchHostCommand}`;
+  assert.equal(sameOwnerProcess(details, expected, 501), true);
+  assert.equal(sameOwnerProcess(details, expected, 502), false);
+  assert.equal(
+    sameOwnerProcess(details, { ...expected, pid: 1000004 }, 501),
+    false,
+  );
+  assert.equal(
+    sameOwnerProcess(
+      details.replace(launchHostCommand, "/tmp/SimLaunchHost.arm64"),
+      expected,
+      501,
+    ),
+    false,
+  );
+});
 
 test("selects the unique actual hosted CoreSimulator service path", () => {
   assert.deepEqual(uniqueHostedCoreSimulatorService(serviceRow(1463), true), {
@@ -113,6 +202,9 @@ if (name === "test-command") {
   }
   fs.writeFileSync("collector.pid", String(process.pid));
   console.log("native log stream");
+  if (process.env.SERVICE_PROBE) {
+    console.log("testmanagerd[1000005:abcd] selected simulator daemon");
+  }
   if (process.env.TERMINATION_PROBE) {
     console.log("testmanagerd[1234:abcd] selected simulator daemon");
     console.log("runningboardd[3456:abcd] selected simulator process manager");
@@ -132,10 +224,17 @@ if (name === "test-command") {
     if (args.includes("-A")) {
       console.log("1000001", testPid, "S 0.0 0.0 100 /mock/simctl");
       console.log("1000002 1 S 0.0 0.0 100", service);
+      console.log(${JSON.stringify(chainTable)});
     } else if (args.includes("1000001")) {
       console.log("1000001", testPid, "/mock/simctl privacy test-device grant location-always teleport.example");
     } else if (args.includes("1000002")) {
       console.log("1000002", process.getuid(), service);
+    } else if (args.includes("1000003")) {
+      console.log("1000003", process.getuid(), ${JSON.stringify(launchHostCommand)});
+    } else if (args.includes("1000004")) {
+      console.log("1000004", process.getuid(), "launchd_sim");
+    } else if (args.includes("1000005")) {
+      console.log("1000005 1000004", ${JSON.stringify(daemonCommand)});
     }
     process.exit(0);
   }
@@ -269,6 +368,10 @@ test("ios: hosted foreground observation adds no device RPC or activation", asyn
       path.join(logs, "host-foreground.log"),
       "utf8",
     );
+    assert.match(
+      await readFile(path.join(logs, "timeline.log"), "utf8"),
+      /iOS native wait-chain diagnostics=1/,
+    );
     assert.match(foreground, /lsappinfo -names front/);
     assert.doesNotMatch(foreground, /setfront|launch|activate/);
     await assert.rejects(
@@ -309,10 +412,15 @@ test("ios: a long owned client captures the identified hosted service without de
       /Capturing hosted CoreSimulatorService 1000002/,
     );
     const logs = path.join(directory, "e2e/reports/native-diagnostics");
-    for (const prefix of ["simctl-1000001", "simctl-1000001-service-1000002"]) {
+    for (const prefix of [
+      "simctl-1000001",
+      "simctl-1000001-service-1000002",
+      "simctl-1000001-launch-host-1000003",
+      "simctl-1000001-launchd-1000004",
+    ]) {
       assert.match(
         await readFile(path.join(logs, `${prefix}-stack.txt`), "utf8"),
-        /stack for selected pid 100000[12]/,
+        /stack for selected pid 100000[1234]/,
       );
     }
     assert.match(
@@ -321,6 +429,19 @@ test("ios: a long owned client captures the identified hosted service without de
         "utf8",
       ),
       /log show --last 3m --info --style compact --predicate processIdentifier == 1000002/,
+    );
+    assert.match(
+      await readFile(
+        path.join(logs, "simctl-1000001-launchd-1000004-child-identity.log"),
+        "utf8",
+      ),
+      /1000005 1000004/,
+    );
+    await assert.rejects(
+      readFile(path.join(logs, "simctl-1000001-launchd-1000008-stack.txt")),
+      {
+        code: "ENOENT",
+      },
     );
     await assert.rejects(readFile(path.join(logs, "device-processes.log")), {
       code: "ENOENT",
