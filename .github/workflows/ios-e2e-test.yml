@@ -16,6 +16,7 @@ on:
           - hid-contract
           - indigo
           - indigo-touch-trace
+          - indigo-idle-touch-trace
       comparison:
         description: Screenshot region bounds algorithm (paired shares one app build)
         type: choice
@@ -186,15 +187,16 @@ jobs:
             build CODE_SIGNING_ALLOWED=NO | xcpretty
       - name: Build pinned Maestro input driver
         id: maestro-input
-        if: env.MAESTRO_IOS_PROFILE == 'native-driver' || env.MAESTRO_IOS_PROFILE == 'recap-source' || (env.MAESTRO_IOS_PROFILE == 'indigo' || env.MAESTRO_IOS_PROFILE == 'indigo-touch-trace')
+        if: env.MAESTRO_IOS_PROFILE == 'native-driver' || env.MAESTRO_IOS_PROFILE == 'recap-source' || (env.MAESTRO_IOS_PROFILE == 'indigo' || env.MAESTRO_IOS_PROFILE == 'indigo-touch-trace' || env.MAESTRO_IOS_PROFILE == 'indigo-idle-touch-trace')
         working-directory: ${{ github.workspace }}
         env:
           GH_TOKEN: ${{ github.token }}
-          TOUCH_LEAD_IN: ${{ (inputs.profile == 'recap-source' || (inputs.profile == 'indigo' || inputs.profile == 'indigo-touch-trace')) && '0' || '0.05' }}
-          INPUT_BACKEND: ${{ (inputs.profile == 'indigo' || inputs.profile == 'indigo-touch-trace') && 'indigo' || 'recap' }}
+          TOUCH_LEAD_IN: ${{ (inputs.profile == 'recap-source' || (inputs.profile == 'indigo' || inputs.profile == 'indigo-touch-trace' || inputs.profile == 'indigo-idle-touch-trace')) && '0' || '0.05' }}
+          INPUT_BACKEND: ${{ (inputs.profile == 'indigo' || inputs.profile == 'indigo-touch-trace' || inputs.profile == 'indigo-idle-touch-trace') && 'indigo' || 'recap' }}
         run: |
           args=()
-          if [ "$MAESTRO_IOS_PROFILE" = indigo-touch-trace ]; then args=(--trace-frames); fi
+          if [[ "$MAESTRO_IOS_PROFILE" = indigo-touch-trace || "$MAESTRO_IOS_PROFILE" = indigo-idle-touch-trace ]]; then args=(--trace-frames); fi
+          if [ "$MAESTRO_IOS_PROFILE" = indigo-idle-touch-trace ]; then args+=(--observe-idle); fi
           python3 e2e/scripts/maestro-ios-input.py build \
             --source example/ios/build/maestro-input/source \
             --derived example/ios/build/maestro-input/DerivedData \
@@ -204,11 +206,17 @@ jobs:
             python3 -B e2e/scripts/test-maestro-ios-hid-source.py
             node --test e2e/scripts/ios-hid-bridge.test.mjs e2e/scripts/check-ios-hid-delivery.test.mjs
           fi
-          if [ "$MAESTRO_IOS_PROFILE" = indigo-touch-trace ]; then
+          if [[ "$MAESTRO_IOS_PROFILE" = indigo-touch-trace || "$MAESTRO_IOS_PROFILE" = indigo-idle-touch-trace ]]; then
             python3 -B e2e/scripts/test-maestro-ios-screen-source.py
             python3 -B e2e/scripts/test-maestro-ios-screen-runtime.py \
               --artifact example/ios/build/maestro-input/artifact --output "$RUNNER_TEMP/teleport-screen-fixture"
             MAESTRO_SCREEN_FIXTURE="$RUNNER_TEMP/teleport-screen-fixture" python3 -B e2e/scripts/test-ios-screen-trace.py
+          fi
+          if [ "$MAESTRO_IOS_PROFILE" = indigo-idle-touch-trace ]; then
+            export MAESTRO_IDLE_FIXTURE_OUTPUT=example/ios/build/maestro-input/artifact/idle-fixture
+            export MAESTRO_IDLE_SOURCE_ARTIFACT=example/ios/build/maestro-input/artifact
+            python3 -B e2e/scripts/test-maestro-ios-idle-observe.py
+            python3 -B e2e/scripts/test-ios-idle-observe.py
           fi
       - name: Upload Maestro input driver and build evidence
         if: always() && steps.maestro-input.outcome != 'skipped' && steps.maestro-input.outcome != ''
@@ -307,19 +315,20 @@ jobs:
       - name: Log Maestro version
         run: maestro --version
       - name: Download Maestro input driver
-        if: env.MAESTRO_IOS_PROFILE == 'native-driver' || env.MAESTRO_IOS_PROFILE == 'recap-source' || (env.MAESTRO_IOS_PROFILE == 'indigo' || env.MAESTRO_IOS_PROFILE == 'indigo-touch-trace')
+        if: env.MAESTRO_IOS_PROFILE == 'native-driver' || env.MAESTRO_IOS_PROFILE == 'recap-source' || (env.MAESTRO_IOS_PROFILE == 'indigo' || env.MAESTRO_IOS_PROFILE == 'indigo-touch-trace' || env.MAESTRO_IOS_PROFILE == 'indigo-idle-touch-trace')
         uses: actions/download-artifact@v4
         with:
           name: maestro-ios-input-driver
           path: e2e/reports/maestro-ios-input
       - name: Install simulator input driver resources
-        if: env.MAESTRO_IOS_PROFILE == 'native-driver' || env.MAESTRO_IOS_PROFILE == 'recap-source' || (env.MAESTRO_IOS_PROFILE == 'indigo' || env.MAESTRO_IOS_PROFILE == 'indigo-touch-trace')
+        if: env.MAESTRO_IOS_PROFILE == 'native-driver' || env.MAESTRO_IOS_PROFILE == 'recap-source' || (env.MAESTRO_IOS_PROFILE == 'indigo' || env.MAESTRO_IOS_PROFILE == 'indigo-touch-trace' || env.MAESTRO_IOS_PROFILE == 'indigo-idle-touch-trace')
         env:
-          TOUCH_LEAD_IN: ${{ (inputs.profile == 'recap-source' || (inputs.profile == 'indigo' || inputs.profile == 'indigo-touch-trace')) && '0' || '0.05' }}
-          INPUT_BACKEND: ${{ (inputs.profile == 'indigo' || inputs.profile == 'indigo-touch-trace') && 'indigo' || 'recap' }}
+          TOUCH_LEAD_IN: ${{ (inputs.profile == 'recap-source' || (inputs.profile == 'indigo' || inputs.profile == 'indigo-touch-trace' || inputs.profile == 'indigo-idle-touch-trace')) && '0' || '0.05' }}
+          INPUT_BACKEND: ${{ (inputs.profile == 'indigo' || inputs.profile == 'indigo-touch-trace' || inputs.profile == 'indigo-idle-touch-trace') && 'indigo' || 'recap' }}
         run: |
           args=()
-          if [ "$MAESTRO_IOS_PROFILE" = indigo-touch-trace ]; then args=(--expected-frame-trace); fi
+          if [[ "$MAESTRO_IOS_PROFILE" = indigo-touch-trace || "$MAESTRO_IOS_PROFILE" = indigo-idle-touch-trace ]]; then args=(--expected-frame-trace); fi
+          if [ "$MAESTRO_IOS_PROFILE" = indigo-idle-touch-trace ]; then args+=(--expected-idle-observation); fi
           python3 e2e/scripts/maestro-ios-input.py install \
             --jar "$HOME/.maestro/lib/maestro-ios-driver.jar" \
             --artifact e2e/reports/maestro-ios-input \
@@ -330,7 +339,7 @@ jobs:
             cp e2e/reports/maestro-ios-input/indigo-host-manifest.json e2e/reports/native-diagnostics/
           fi
       - name: Use simulator-native app termination
-        if: env.MAESTRO_IOS_PROFILE == 'simctl-stop' || env.MAESTRO_IOS_PROFILE == 'native-driver' || env.MAESTRO_IOS_PROFILE == 'recap-source' || (env.MAESTRO_IOS_PROFILE == 'indigo' || env.MAESTRO_IOS_PROFILE == 'indigo-touch-trace')
+        if: env.MAESTRO_IOS_PROFILE == 'simctl-stop' || env.MAESTRO_IOS_PROFILE == 'native-driver' || env.MAESTRO_IOS_PROFILE == 'recap-source' || (env.MAESTRO_IOS_PROFILE == 'indigo' || env.MAESTRO_IOS_PROFILE == 'indigo-touch-trace' || env.MAESTRO_IOS_PROFILE == 'indigo-idle-touch-trace')
         run: |
           set -euo pipefail
           python3 e2e/scripts/patch-maestro-ios-stop.py \
@@ -371,7 +380,7 @@ jobs:
         id: e2e
         timeout-minutes: 30
         env:
-          MAESTRO_IOS_INPUT_BACKEND: ${{ (inputs.profile == 'indigo' || inputs.profile == 'indigo-touch-trace') && 'indigo' || 'recap' }}
+          MAESTRO_IOS_INPUT_BACKEND: ${{ (inputs.profile == 'indigo' || inputs.profile == 'indigo-touch-trace' || inputs.profile == 'indigo-idle-touch-trace') && 'indigo' || 'recap' }}
           MAESTRO_IOS_HID_MANIFEST: ${{ github.workspace }}/e2e/reports/maestro-ios-input/indigo-host-manifest.json
         run: |
           set -euo pipefail
@@ -390,7 +399,7 @@ jobs:
         if: always() && steps.e2e.outcome != 'skipped' && steps.e2e.outcome != ''
         run: |
           args=()
-          if [[ "$MAESTRO_IOS_PROFILE" == "indigo" || "$MAESTRO_IOS_PROFILE" == "indigo-touch-trace" ]]; then
+          if [[ "$MAESTRO_IOS_PROFILE" == "indigo" || "$MAESTRO_IOS_PROFILE" == "indigo-touch-trace" || "$MAESTRO_IOS_PROFILE" == "indigo-idle-touch-trace" ]]; then
             xctest_logs=(e2e/reports/debug/xctest_runner*.log)
             [[ ${#xctest_logs[@]} == 1 && -f "${xctest_logs[0]}" ]]
             args=(--indigo "${xctest_logs[0]}")
@@ -406,17 +415,22 @@ jobs:
           grep -F "[teleport-maestro-input] touchLeadInSeconds=$EXPECTED_LEAD_IN" \
             e2e/reports/native-diagnostics/simulator.log
       - name: Verify persistent Simulator HID delivery
-        if: always() && (env.MAESTRO_IOS_PROFILE == 'indigo' || env.MAESTRO_IOS_PROFILE == 'indigo-touch-trace') && steps.e2e.outcome != 'skipped' && steps.e2e.outcome != ''
+        if: always() && (env.MAESTRO_IOS_PROFILE == 'indigo' || env.MAESTRO_IOS_PROFILE == 'indigo-touch-trace' || env.MAESTRO_IOS_PROFILE == 'indigo-idle-touch-trace') && steps.e2e.outcome != 'skipped' && steps.e2e.outcome != ''
         run: |
           xctest_logs=(e2e/reports/debug/xctest_runner*.log)
           [[ ${#xctest_logs[@]} == 1 && -f "${xctest_logs[0]}" ]]
           node e2e/scripts/check-ios-hid-delivery.mjs \
             e2e/reports/native-diagnostics e2e/reports/native-diagnostics/ios-hid-delivery.json "${xctest_logs[0]}"
       - name: Verify native screen response observation
-        if: always() && env.MAESTRO_IOS_PROFILE == 'indigo-touch-trace' && steps.e2e.outcome != 'skipped' && steps.e2e.outcome != ''
+        if: always() && (env.MAESTRO_IOS_PROFILE == 'indigo-touch-trace' || env.MAESTRO_IOS_PROFILE == 'indigo-idle-touch-trace') && steps.e2e.outcome != 'skipped' && steps.e2e.outcome != ''
         run: |
           python3 -B e2e/scripts/check-ios-screen-trace.py e2e/reports/debug e2e/reports/maestro-ios-input \
             e2e/reports/native-diagnostics/ios-screen-trace.json
+      - name: Verify native idle notification observation
+        if: always() && env.MAESTRO_IOS_PROFILE == 'indigo-idle-touch-trace' && steps.e2e.outcome != 'skipped' && steps.e2e.outcome != ''
+        run: |
+          python3 -B e2e/scripts/check-ios-idle-observe.py e2e/reports/debug e2e/reports/maestro-ios-input \
+            e2e/reports/native-diagnostics/ios-idle-observe.json --device "${{ steps.simulator.outputs.udid }}"
       - name: Upload native diagnostics
         if: always()
         uses: actions/upload-artifact@v4
@@ -427,7 +441,7 @@ jobs:
             ./e2e/reports/debug/*.log
             ./e2e/reports/debug/**/commands.json
             ./e2e/reports/debug/**/manifest.json
-            ${{ inputs.profile == 'indigo-touch-trace' && './e2e/reports/debug/**/takeScreenshot/**/*.png' || '' }}
+            ${{ (inputs.profile == 'indigo-touch-trace' || inputs.profile == 'indigo-idle-touch-trace') && './e2e/reports/debug/**/takeScreenshot/**/*.png' || '' }}
           name: e2e-diagnostics-ios-${{ github.run_attempt }}-${{ matrix.trial }}${{ matrix.comparison == 'one-pass' && '-one-pass' || '' }}
           retention-days: 7
       - name: Upload test report

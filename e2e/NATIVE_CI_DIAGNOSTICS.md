@@ -677,3 +677,39 @@ The artifact includes these PNGs and the pinned original/patched handler sources
 All original input, termination, image-comparison, video and Node gates remain.
 A passing diagnostic establishes observation coverage; it does not prove that
 an animation finished or fix premature settling.
+
+The first frame-observed cohort captured another `lifecycle` failure. The actual
+post-tap response was `isScreenStatic=true`, with identical PNG hashes from two
+captures 139 ms apart. The next exact screenshot response, captured 152 ms after
+the second static capture, showed a visibly incomplete navigation transition.
+The saved PNG's hash matches that response. Its original comparison failed at
+0.711%, while the later diagnostic image was aligned and differed by 0.074%
+under the same 0.3% limit. The original test remains failed. This confirms a
+premature settling signal; it does not identify the application/compositor pause
+or establish that another native idle API would fix it.
+
+### Native idle notification observation
+
+The separate `indigo-idle-touch-trace` diagnostic registers XCTest event-loop and
+animation-idle notifications after the original input handler returns. It reuses
+the application/process already resolved by the original hierarchy request,
+without another foreground, state, running, launch or AX query. Notification
+registration adds native RPCs and can itself take time; its begin/return times
+are recorded. Neither reply is awaited, and replies do not change a response or
+the original PNG equality decision. The original CLI deadlines stay intact.
+
+The captured Xcode 16.4 arm64 binary's callback descriptor has one `NSError`
+parameter. Its older class-dump header declares a different callback signature
+and is not used. Runtime method encodings and the loaded arm64 XCTest image UUID
+are checked before invoking it.
+Every completed HTTP gesture must have two actual typed nil-error replies with
+matching process, selected Simulator and source identities. Missing, rejected,
+duplicate or invalid notifications fail the diagnostic evidence gate. At most
+four pairs can remain outstanding; the observer introduces no reply wait, timer,
+gesture replay or fallback. Physical sources and all existing suite/input/video
+gates remain intact. Fixture sources/results are archived with the driver.
+
+The report correlates unchanged native static responses with notification reply
+times. A nil reply alone is not proof of a presented frame. This is an explicit
+diagnostic with zero final stability credit; actual runtime callback behavior
+must be reviewed before using these notifications for synchronization.

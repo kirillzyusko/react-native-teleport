@@ -228,6 +228,24 @@ def build(args):
                 observation[label] = {"original_sha256": sha256(raw), "patched_sha256": sha256(changed)}
             (output / "ScreenTrace.swift").write_bytes(trace.HELPER.read_bytes())
             metadata["frame_trace"] = observation
+        if getattr(args, "observe_idle", False):
+            if args.backend != "indigo" or not args.trace_frames:
+                raise RuntimeError("Idle notification observation requires the explicit Indigo frame diagnostic")
+            spec = importlib.util.spec_from_file_location("idle_observe", Path(__file__).with_name("maestro-ios-idle-observe.py"))
+            idle = importlib.util.module_from_spec(spec)
+            spec.loader.exec_module(idle)
+            observation = {"version": 1, "helper_sha256": idle.helper_hash(), "sources": {}}
+            for name in idle.PINNED:
+                raw = (source / name).read_bytes()
+                changed = idle.patch(name, raw)
+                label = Path(name).name
+                (output / f"idle-{label}.original").write_bytes(raw)
+                (output / f"idle-{label}.patched").write_bytes(changed)
+                (source / name).write_bytes(changed)
+                observation["sources"][name] = {"original_sha256": sha256(raw), "patched_sha256": sha256(changed)}
+            for name in ["IdleObserve.h", "IdleObserve.m", "IdleObserve.swift"]:
+                (output / name).write_bytes((idle.HELPERS / name).read_bytes())
+            metadata["idle_observation"] = observation
         original = (source / EVENT_FILE).read_bytes()
         if args.backend == "indigo":
             if args.lead_in != "0":
@@ -325,6 +343,8 @@ def install(args):
         raise RuntimeError("The built input backend does not match this trial")
     if bool(metadata.get("frame_trace")) != args.expected_frame_trace:
         raise RuntimeError("The built frame-observation profile does not match this trial")
+    if bool(metadata.get("idle_observation")) != getattr(args, "expected_idle_observation", False):
+        raise RuntimeError("The built idle-observation profile does not match this trial")
     if os.environ.get("GITHUB_SHA") and metadata["candidate_sha"] != os.environ["GITHUB_SHA"]:
         raise RuntimeError("The built driver belongs to a different candidate")
     expected_names = {RESOURCE_PREFIX + name.removesuffix(".app") + ".zip" for name in APP_NAMES}
@@ -376,6 +396,7 @@ def main():
     prepare.add_argument("--lead-in", required=True, choices=("0", "0.05"))
     prepare.add_argument("--prepare-only", action="store_true")
     prepare.add_argument("--trace-frames", action="store_true")
+    prepare.add_argument("--observe-idle", action="store_true")
     prepare.add_argument("--backend", choices=("recap", "indigo"), default="recap")
     use = commands.add_parser("install")
     use.add_argument("--jar", required=True, type=Path)
@@ -383,6 +404,7 @@ def main():
     use.add_argument("--expected-lead-in", required=True, choices=("0", "0.05"))
     use.add_argument("--expected-backend", choices=("recap", "indigo"), default="recap")
     use.add_argument("--expected-frame-trace", action="store_true")
+    use.add_argument("--expected-idle-observation", action="store_true")
     args = parser.parse_args()
     (build if args.command == "build" else install)(args)
 
