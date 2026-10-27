@@ -798,8 +798,6 @@ type Fx = {
   now: number;
   fadeIn: number;
   motion: boolean;
-  /** draw the hovered part without lifting it, for hit testing */
-  noLift: boolean;
 };
 type Frame = { vis: Record<TipKey, number>; solidDetail: boolean };
 
@@ -864,7 +862,7 @@ function createScene(
       center(q(`${prefix}3`)),
     ];
 
-    // hover: the hovered part lifts and glows, everything else steps back
+    // hover: the hovered part glows and everything else steps back; nothing moves, so the scene stays put under the pointer
     const hv = (key: TipKey) => fx.hk[key];
     const focusAll = Math.max(...KEYS.map(hv));
     const own0 = Math.max(hv("gallery"), hv("cell"), hv("header"), hv("slot"));
@@ -873,7 +871,6 @@ function createScene(
     const ownFly = Math.max(hv("thumb"), sc.inHost ? own2 : own0);
     const dim = (own: number) => 1 - 0.5 * clamp(focusAll - own);
     const breathe = fx.motion ? 0.85 + 0.15 * Math.sin(fx.now * 0.005) : 1;
-    const lifting = fx.noLift ? 0 : 1;
 
     // camera
     const { ex } = sc;
@@ -885,10 +882,11 @@ function createScene(
     q("viewport").style.opacity = String(sc.fade * fx.fadeIn);
 
     // layers; the detail screen exists only while it's pushed
-    const [z0, z1, z2] = ZL.map(
-      (zz, i) =>
-        mix(i * 0.6, zz, ex) + 36 * lifting * [own0, own1, own2][i]! * ex,
-    ) as [number, number, number];
+    const [z0, z1, z2] = ZL.map((zz, i) => mix(i * 0.6, zz, ex)) as [
+      number,
+      number,
+      number,
+    ];
     q("bezel").style.opacity = String((1 - 0.75 * ex) * dim(own0));
     q("L0").style.transform = `translateZ(${px(z0)})`;
     q("L1").style.transform = `translateZ(${px(z1)})`;
@@ -920,7 +918,7 @@ function createScene(
     opacity("closeBtn", sc.closeK);
 
     // the thumbnail: moves along z between its cell and the root host, geometry drawn in SVG
-    const fz = mix(z0, z2, sc.lift) + 2 + 24 * lifting * hv("thumb") * ex;
+    const fz = mix(z0, z2, sc.lift) + 2;
     const fr = rect(sc.thumbP);
     q("flyer").style.transform = `translate3d(0, 0, ${px(fz)})`;
     q("flyer").style.opacity = String(dim(ownFly));
@@ -1143,7 +1141,7 @@ function Transcript({ plan }: { plan: Plan }) {
 type Props = {
   /** chapters to play, in order; defaults to the whole pipeline */
   chapters?: ChapterId[];
-  /** only the animation, its caption and a play button: for a looping overview */
+  /** the animation, its caption and the timeline, without the store values: for an overview */
   compact?: boolean;
 };
 
@@ -1213,7 +1211,6 @@ function Explainer({ plan, compact }: { plan: Plan; compact: boolean }) {
     now: 0,
     fadeIn: 1,
     motion: true,
-    noLift: false,
     key: null,
     tipId: "",
   });
@@ -1286,11 +1283,7 @@ function Explainer({ plan, compact }: { plan: Plan; compact: boolean }) {
     const stage = stageRef.current;
     fx.now = now;
 
-    // hit-test against the resting scene, so a lifted layer can't slide out from under the pointer and back
     if ((ptr.inside || ptr.tapped) && root) {
-      fx.noLift = true;
-      renderRef.current?.(sceneAt(plan, t), fx);
-      fx.noLift = false;
       const [key, cell] = pick(ptr.x, ptr.y);
       ptr.tapped = false;
       fx.key = key;
@@ -1850,28 +1843,27 @@ function Explainer({ plan, compact }: { plan: Plan; compact: boolean }) {
         <code className={styles.tipCode}>{tip?.code}</code>
       </div>
 
-      <figcaption className={compact ? styles.compactCaption : styles.caption}>
-        {compact ? playButton : null}
+      <figcaption className={styles.caption}>
         <div>
           <div className={styles.capTitle}>{rich(capTitle)}</div>
           <div className={styles.capText}>{rich(capText)}</div>
         </div>
       </figcaption>
 
-      {compact ? null : (
-        <div className={styles.controls}>
-          {playButton}
-          <input
-            ref={scrubRef}
-            className={styles.scrubber}
-            type="range"
-            min={0}
-            max={plan.total}
-            step={1 / 60}
-            defaultValue={0}
-            onChange={scrub}
-            aria-label="Animation timeline"
-          />
+      <div className={styles.controls}>
+        {playButton}
+        <input
+          ref={scrubRef}
+          className={styles.scrubber}
+          type="range"
+          min={0}
+          max={plan.total}
+          step={1 / 60}
+          defaultValue={0}
+          onChange={scrub}
+          aria-label="Animation timeline"
+        />
+        {compact ? null : (
           <dl className={styles.state}>
             {shows("progress") ? (
               <div>
@@ -1917,8 +1909,8 @@ function Explainer({ plan, compact }: { plan: Plan; compact: boolean }) {
               </div>
             ) : null}
           </dl>
-        </div>
-      )}
+        )}
+      </div>
     </figure>
   );
 }

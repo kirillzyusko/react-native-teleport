@@ -35,11 +35,9 @@ import PhotoTransitionExplainer from "@site/src/components/PhotoTransitionExplai
 import Video from "@site/src/components/Video";
 import useBaseUrl from "@docusaurus/useBaseUrl";
 
-Open the Photos app and tap a picture. The thumbnail doesn't vanish to make room for a new screen: it lifts out of the grid, grows until it fills the display, and somewhere on the way it quietly turns into a sharp, full-resolution photo. Close it, and the photo shrinks back into the exact cell it came from.
+In this guide we'll build the image transition from the Photos app in React Native, one step at a time: a thumbnail grows out of the grid to full screen, and closing shrinks it back into its cell. The thumbnail expands instantly, without waiting for the network, and the sharp photo replaces it **the moment it finishes loading**: in the middle of the animation if the network is fast, right after it if the network is slow. Either way there are **no flickers, no blank frames and no jumps**.
 
-In this guide we'll build that transition in React Native, one step at a time. The tapped thumbnail expands instantly, without waiting for the network, and the sharp photo replaces it **the moment it finishes loading**: in the middle of the animation if the network is fast, right after it if the network is slow. Either way there are no flickers, no blank frames and no jumps.
-
-This is what we're building, recorded on an iPhone simulator from the code in this guide:
+This is what we're building:
 
 <Video
   src="/video/photos-app-transition.mp4"
@@ -62,7 +60,7 @@ Three layers take part in the transition:
 2. **Detail screen.** Pushed as a transparent modal, without a native animation. It renders the full-res `<Image>`, hidden at first.
 3. **Root `PortalHost`.** Rendered by `<PortalProvider>` above the navigator, so anything teleported into it is drawn on top of every screen.
 
-The thumbnail starts the animation, because it's already on screen. The full-res photo finishes it, because it's the one worth looking at. The trick is to hand over from one to the other without the user noticing. Each step below adds one piece of this, with its own part of the animation.
+The thumbnail starts the animation, because it's already on screen. The full-res photo finishes it, because it's the one worth looking at. The trick is to hand over from one to the other without the user noticing.
 
 ## Why build a custom transition?
 
@@ -98,17 +96,18 @@ These APIs work well when you need exactly the transition they provide. As soon 
 
 There are several ways to animate an item from a list to full screen. They differ in what happens to the item's content while it moves:
 
-|                                      | Animate in place                                             | Render a copy                                               | Animate a snapshot<sup>1</sup>                      | Teleport (this guide)                           |
+|                                      | Animate in place                                             | Render a copy                                               | Animate a snapshot                                  | Teleport (this guide)                           |
 | ------------------------------------ | ------------------------------------------------------------ | ----------------------------------------------------------- | --------------------------------------------------- | ----------------------------------------------- |
 | How it works                         | Scale the cell with `transform` and `zIndex` inside the list | Mount a second instance in an overlay or on the next screen | Capture a bitmap of the view and animate the bitmap | Move the native view into the root `PortalHost` |
-| Heavy content rendered once          | ✅                                                           | ❌ Twice, two instances in memory                           | 🟠 Once, plus a bitmap of it                        | ✅                                              |
+| Heavy content rendered once          | ✅                                                           | ❌ Twice, two instances in memory                           | 🟠 Once, plus a bitmap of it<sup>1</sup>            | ✅                                              |
 | Videos, GIFs and Lottie keep playing | ✅                                                           | ❌ The copy starts over                                     | ❌ Frozen for the whole animation                   | ✅ It's the same native view                    |
 | Not clipped by the list              | ❌                                                           | ✅                                                          | ✅                                                  | ✅                                              |
 | Drawn above headers and tab bars     | ❌                                                           | ✅                                                          | ✅                                                  | ✅                                              |
 | Works in React Native                | ✅                                                           | ✅                                                          | ✅                                                  | ✅ On iOS, Android and web                      |
 
-> <sup>1</sup> View Transitions on the web animate a snapshot too: the browser
-> captures the old state as a static image. More on them below.
+> <sup>1</sup> The snapshot is a bitmap of the view's pixels. It stays in memory
+> next to the view itself until the animation ends, so the content is rendered
+> once but held twice.
 
 :::tip Light enough for low-end devices
 Teleport adds no heavy allocations to the transition:
@@ -120,18 +119,16 @@ Teleport adds no heavy allocations to the transition:
 A copy of a full-res photo is the most expensive thing a transition can add: a 48 MP iPhone photo takes about 195 MB of memory once decoded (8064 × 6048 × 4 bytes), and its ProRAW file alone is [about 75 MB](https://support.apple.com/en-us/119916).
 :::
 
-:::info What about View Transitions?
-On the web, the [View Transition API](https://developer.mozilla.org/en-US/docs/Web/API/View_Transition_API/Using) and React's [`<ViewTransition>`](https://react.dev/reference/react/ViewTransition) (which [works only in the DOM so far](https://react.dev/blog/2026/09/09/react-19-3)) capture the old state as a static image and animate it into the live new state. The snapshots live only as long as the transition: when its animations finish, they're destroyed, unless you hold them with the experimental [`ViewTransition.waitUntil()`](https://developer.mozilla.org/en-US/docs/Web/API/ViewTransition/waitUntil). If the full-res photo hasn't loaded by then, the page shows whatever the new state renders. So you still need the low-res photo as a placeholder in the new state and a handoff to the full-res one, the same idea as in this guide. Because the new state is live, a photo that loads during the transition does appear mid-flight.
-:::
-
 ## Compared with the Instagram-like transitions
 
 If you've read the [Instagram-like transitions](./instagram-shared-transitions.mdx) recipe, most of the building blocks will look familiar: a root `PortalHost`, a Zustand store with a shared `progress` value, `measureInWindow` and a transparent modal. Two ideas are new here:
 
 - **The thumbnail goes back.** In the Instagram recipe, the video travels from the feed into the Reels screen and stays there until you go back. Here the thumbnail only carries the animation: once the full-res photo has taken over, the thumbnail returns to its cell, and the detail screen owns the photo.
-- **Two sources in one transition.** The Instagram recipe moves one video from start to finish. Here a cheap low-res thumbnail starts the animation instantly, and the full-res photo replaces it the moment it loads, even mid-flight.
+- **Two sources in one transition.** The Instagram recipe moves one video from start to finish. Here a cheap **low-res thumbnail** starts the animation instantly, and the **full-res photo** replaces it the moment it loads, even mid-flight.
 
-The second idea goes beyond resolution. The handoff works between any two views that cover the same rectangle, so the detail screen could, for example, swap in an HDR version of the photo while the list keeps lightweight SDR thumbnails.
+:::tip Beyond resolution
+The handoff works between any two views that cover the same rectangle, so the detail screen could, for example, swap in an HDR version of the photo while the list keeps lightweight SDR thumbnails.
+:::
 
 ## Prerequisites
 
@@ -535,10 +532,10 @@ The full-res photo isn't in memory yet. The tap starts the download, then the im
 :::
 
 :::warning Can't we just prefetch the full-res photos?
-`Image.prefetch(url)` downloads an image into the cache ahead of time. That's fine for a handful of images, but galleries, chats and feeds have thousands. Prefetching every full-res photo downloads megabytes that most users never look at, and keeping them decoded in memory for an instant display is how apps get killed with out-of-memory errors: a single 12-megapixel photo takes about 48 MB once decoded (4032 × 3024 × 4 bytes). And even a cached photo still has to be decoded before it shows up, so prefetching shortens the black screen, but doesn't remove it.
+`Image.prefetch(url)` downloads an image into the cache ahead of time. That's fine for a handful of images, but galleries, chats and feeds have **thousands**. Prefetching every full-res photo downloads megabytes that most users never look at, and keeping them decoded in memory for an instant display is how apps get killed with out-of-memory errors: a single 12-megapixel photo takes about 48 MB once decoded (4032 × 3024 × 4 bytes). And even a cached photo still has to be decoded before it shows up, so prefetching shortens the black screen, but doesn't remove it.
 :::
 
-So instead of waiting for the full-res photo, we'll start the animation with what's already on screen: the thumbnail.
+So instead of waiting for the full-res photo, we'll start the animation with what's **already** on screen: **the thumbnail**.
 
 ## Step 3: Add the teleport infrastructure
 
@@ -765,10 +762,10 @@ Run it and tap a photo. The detail screen opens as before, but the thumbnail you
 
 <PhotoTransitionExplainer chapters={["teleport"]} />
 
-It looks like a bug, but it's the foundation of the whole transition: the root host sits above every screen, so the thumbnail can now travel over the detail screen. The next step makes it travel.
+It looks like a bug, but it's the foundation of the whole transition: the **root** host sits **above** every screen, so the thumbnail can now travel over the detail screen. The next step makes it travel.
 
 :::tip Moved, not copied
-The thumbnail isn't re-created in the root host. `<Portal>` re-parents the existing native view, so the image isn't re-downloaded or re-decoded, and a video in its place would keep playing. Its wrapper `View` stays behind and keeps the cell's size, so the list doesn't reflow.
+The thumbnail isn't re-created in the root host. `<Portal>` re-parents the existing native view, so the image isn't re-downloaded or re-decoded, and a video or GIF in its place would keep playing. Its wrapper `View` stays behind and keeps the cell's size, so the list doesn't reflow.
 :::
 
 ## Step 5: Animate it to full screen

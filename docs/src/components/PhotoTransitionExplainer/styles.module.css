@@ -305,18 +305,6 @@
   min-height: 3.6rem;
 }
 
-.compactCaption {
-  display: flex;
-  gap: 0.9rem;
-  align-items: flex-start;
-  margin-top: 0.75rem;
-  min-height: 3.6rem;
-}
-
-.compactCaption > button {
-  flex: none;
-}
-
 .capTitle {
   font-weight: 700;
   font-size: 1.05rem;
