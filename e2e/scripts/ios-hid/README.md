@@ -5,6 +5,11 @@ before it is connected to Maestro. It never resolves a simulator, instantiates a
 HID client, or sends an event. `--fixtures` uses only owned memory;
 `--inspect` loads the selected Xcode's frameworks, records Objective-C method
 encodings, and invokes the packet builder without delivering its output.
+The collector resolves SimulatorKit only inside the selected Xcode: the
+`Developer/Library/PrivateFrameworks` location used by pinned idb, or the
+`Contents/SharedFrameworks` location used by newer Xcodes. It rejects ambiguous
+frameworks and links outside that Xcode, and passes both resolved binaries
+explicitly to the native probe.
 
 The dispatch-only `hid-contract` profile in `ios-e2e-test.yml` runs this probe on the same
 macOS 15 / Xcode 16.4 toolchain as E2E. It preserves compiler output, framework

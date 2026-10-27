@@ -10,6 +10,26 @@ import subprocess
 import time
 
 
+def simulator_kit(developer):
+    # Xcode16-era idb loads the first location. New Xcodes (including the local
+    # Xcode27) moved this framework to SharedFrameworks. Never choose another
+    # installed Xcode just because its bundle is easier to find.
+    candidates = [developer / "Library/PrivateFrameworks/SimulatorKit.framework",
+                  developer.parent / "SharedFrameworks/SimulatorKit.framework"]
+    found = {}
+    for folder in candidates:
+        binary = folder / "SimulatorKit"
+        if binary.is_file():
+            resolved = binary.resolve(strict=True)
+            if not resolved.is_relative_to(developer.parent.resolve()):
+                raise RuntimeError("SimulatorKit resolves outside the selected Xcode")
+            found[resolved] = folder
+    if len(found) != 1:
+        raise RuntimeError(f"Expected one SimulatorKit in selected Xcode; found {len(found)}; "
+                           f"candidates: {[str(p) for p in candidates]}")
+    return next(iter(found.values())), candidates
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--output", required=True, type=Path)
@@ -64,8 +84,10 @@ def main():
             if report["xcode"].splitlines()[0] != "Xcode 16.4":
                 raise RuntimeError("Runtime inspection requires the CI toolchain Xcode 16.4")
             developer = run("developer-directory", ["xcode-select", "-p"]).strip()
+            kit_folder, candidates = simulator_kit(Path(developer))
+            report["simulator_kit_candidates"] = [str(p) for p in candidates]
             frameworks = {
-                "SimulatorKit": Path(developer).parent / "SharedFrameworks/SimulatorKit.framework",
+                "SimulatorKit": kit_folder,
                 "CoreSimulator": Path("/Library/Developer/PrivateFrameworks/CoreSimulator.framework"),
             }
             report["frameworks"] = {}
@@ -83,7 +105,8 @@ def main():
             symbols = run("simulator-kit-symbols", ["xcrun", "nm", "-gU", kit])
             report["hid_symbols"] = [line for line in symbols.splitlines()
                                      if "IndigoHID" in line or "LegacyHIDClient" in line]
-            result = json.loads(run("runtime-contract", [str(executable), "--inspect", developer, str(output)]))
+            result = json.loads(run("runtime-contract", [str(executable), "--inspect",
+                report["frameworks"]["CoreSimulator"]["binary"], kit, str(output)]))
             if any(result[key] != 0 for key in ("deviceAPICalls", "clientInstances", "messagesSent")):
                 raise RuntimeError("Probe unexpectedly accessed a device")
             report["runtime"] = result

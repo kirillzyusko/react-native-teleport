@@ -89,10 +89,7 @@ static NSDictionary *methodInfo(Class cls, NSString *name, BOOL classMethod) {
            @"arguments": @(method_getNumberOfArguments(method))};
 }
 
-static NSDictionary *inspect(NSString *developer, NSString *output) {
-  NSString *corePath = @"/Library/Developer/PrivateFrameworks/CoreSimulator.framework/CoreSimulator";
-  NSString *kitPath = [[developer stringByDeletingLastPathComponent]
-      stringByAppendingPathComponent:@"SharedFrameworks/SimulatorKit.framework/SimulatorKit"];
+static NSDictionary *inspect(NSString *corePath, NSString *kitPath, NSString *output) {
   for (NSString *path in @[corePath, kitPath]) {
     void *handle = dlopen(path.fileSystemRepresentation, RTLD_NOW | RTLD_GLOBAL);
     require(handle != NULL, [NSString stringWithFormat:@"Cannot load %@: %s", path, dlerror()]);
@@ -151,10 +148,10 @@ int main(int argc, const char *argv[]) {
       NSDictionary *result;
       if (argc == 2 && strcmp(argv[1], "--fixtures") == 0) {
         result = fixtures();
-      } else if (argc == 4 && strcmp(argv[1], "--inspect") == 0) {
-        result = inspect(@(argv[2]), @(argv[3]));
+      } else if (argc == 5 && strcmp(argv[1], "--inspect") == 0) {
+        result = inspect(@(argv[2]), @(argv[3]), @(argv[4]));
       } else {
-        fprintf(stderr, "Usage: IndigoProbe --fixtures | --inspect DEVELOPER_DIR OUTPUT\n");
+        fprintf(stderr, "Usage: IndigoProbe --fixtures | --inspect CORE_BINARY KIT_BINARY OUTPUT\n");
         return 2;
       }
       NSData *json = [NSJSONSerialization dataWithJSONObject:result
