@@ -32,5 +32,5 @@ Teleport views across your component tree for seamless transitions and powerful 
 - [Building Instagram-like Transitions](/docs/recipes/instagram-shared-transitions.md): Build Instagram-like shared transitions between a feed and full-screen reels viewer using react-native-teleport.
 - [Jest testing guide](/docs/recipes/jest-testing-guide.md): A testing-guide showing how to write unit-tests using jest
 - [Working with Modals](/docs/recipes/modals.md): Learn how modals work on iOS/Android and how to use Portal within modal screens.
-- [Building Photos app transitions in React Native](/docs/recipes/photo-gallery-transitions.md): Build a Photos app style image transition in React Native. A low-res thumbnail expands to full screen and the full-res photo swaps in as soon as it loads.
+- [Building Photos app transitions in React Native](/docs/recipes/photo-gallery-transitions.md): Build a Photos app style image transition in React Native step by step. A low-res thumbnail expands to full screen and the full-res photo swaps in as soon as it loads.
 - [Pre-loading Heavy Components](/docs/recipes/preloading-heavy-components.md): Pre-load expensive components (WebViews, maps, charts) offscreen and teleport them in instantly when the user navigates to them.
