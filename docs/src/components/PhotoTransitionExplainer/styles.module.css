@@ -214,7 +214,12 @@
   pointer-events: none;
 }
 
-/* layer corners, used to project hover outlines and sparkles */
+/* layer corners, used to project hover outlines */
+.closeAnchor {
+  left: 52px;
+  top: 87px;
+}
+
 .corner0 {
   left: 0;
   top: 0;
@@ -298,6 +303,18 @@
 .caption {
   margin-top: 1rem;
   min-height: 3.6rem;
+}
+
+.compactCaption {
+  display: flex;
+  gap: 0.9rem;
+  align-items: flex-start;
+  margin-top: 0.75rem;
+  min-height: 3.6rem;
+}
+
+.compactCaption > button {
+  flex: none;
 }
 
 .capTitle {
