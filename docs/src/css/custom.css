@@ -26,7 +26,8 @@
 .code-block-add-line {
   display: block;
   margin: 0 calc(-1 * var(--ifm-pre-padding));
-  padding: 0 var(--ifm-pre-padding);
+  /* the border takes its width from the padding, so the code stays aligned with other lines */
+  padding: 0 var(--ifm-pre-padding) 0 calc(var(--ifm-pre-padding) - 3px);
   border-left: 3px solid;
 }
 
