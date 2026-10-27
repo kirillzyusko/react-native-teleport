@@ -407,6 +407,20 @@ run the Reels recording or contribute to final full-suite counts.
 
 Both native workflows run the existing suite through `scripts/native-diagnostics.mjs`:
 
+Each diagnostic command and the test launcher own a process group. If the
+workflow shell exits without forwarding a signal, the wrapper detects the
+parent change, interrupts the test group, and kills remaining descendants
+after a two-second cleanup interval. This handles the observed trial-40 case
+where the shell died at the step deadline but Maestro and collectors kept
+running during artifact upload. Collector groups also stop when their launcher
+exits, including descendants that ignore a closed output pipe. Mock-command
+integration checks reproduce the old orphan and verify cleanup and exit codes.
+For a direct Maestro-owned `simctl privacy`, `terminate`, or `launch` process
+seen across samples for over 15 seconds, diagnostics also record its arguments,
+native stack and open descriptors. This is intended to identify the native
+wait behind the later five-minute command timeouts; no service or command is
+restarted by the collector.
+
 - Stream native logs independently of Maestro.
 - Sample host processes/memory and device processes every 15 seconds.
 - Capture the Maestro JVM's thread dump every minute, including permission

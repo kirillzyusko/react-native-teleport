@@ -9,9 +9,26 @@ import test from "node:test";
 import { setTimeout as delay } from "node:timers/promises";
 
 const execute = promisify(execFile);
-const runner = fileURLToPath(
-  new URL("native-diagnostics.mjs", import.meta.url),
-);
+const runner =
+  process.env.TELEPORT_TEST_NATIVE_RUNNER ||
+  fileURLToPath(new URL("native-diagnostics.mjs", import.meta.url));
+
+async function cleanupCollector(directory) {
+  try {
+    const pid = Number(
+      await readFile(path.join(directory, "collector.pid"), "utf8"),
+    );
+    const { stdout } = await execute("/bin/ps", [
+      "-p",
+      String(pid),
+      "-o",
+      "command=",
+    ]);
+    if (stdout.includes(directory)) process.kill(pid, "SIGKILL");
+  } catch (error) {
+    if (!["ENOENT", "ESRCH", 1].includes(error.code)) throw error;
+  }
+}
 
 async function assertExited(pid) {
   for (let attempt = 0; attempt < 50; attempt++) {
@@ -48,7 +65,7 @@ if (name === "test-command") {
            (name === "adb" && args.includes("logcat"))) {
   if (process.env.FORK_COLLECTOR === "true") {
     const { spawn } = require("node:child_process");
-    const child = spawn(process.execPath, ["-e", 'setInterval(() => console.log("native log stream"), 25)'], { stdio: "inherit" });
+    const child = spawn(process.execPath, ["-e", 'process.stdout.on("error", () => {}); setInterval(() => console.log("native log stream"), 25)', process.cwd()], { stdio: "inherit" });
     fs.writeFileSync("collector.pid", String(child.pid));
     process.exit(0);
   }
@@ -206,7 +223,7 @@ test("android: CI emulator kernel capture does not restart adbd", async () => {
   }
 });
 
-test("exits when a collector's descendant holds stdout after its parent exits", async () => {
+test("stops collector descendants that ignore closed stdout after their parent exits", async () => {
   const { directory, options } = await fixture(true);
   try {
     const result = await execute(
@@ -220,6 +237,7 @@ test("exits when a collector's descendant holds stdout after its parent exits", 
     );
     await assertExited(pid);
   } finally {
+    await cleanupCollector(directory);
     await rm(directory, { recursive: true, force: true });
   }
 });

@@ -29,8 +29,12 @@ const startedAt = Date.now();
 mkdirSync(directory, { recursive: true });
 const timeline = createWriteStream(path.join(directory, "timeline.log"));
 const collectors = new Set();
+const ownerPid = process.ppid;
 let testPid;
 let processSamples = 0;
+let interrupted = false;
+const simctlFirstSeen = new Map();
+const sampledSimctl = new Set();
 const adb = (...parameters) => ["adb", ["-s", device, ...parameters]];
 const simctl = (...parameters) => ["xcrun", ["simctl", ...parameters]];
 const timestamp = () => new Date().toISOString();
@@ -41,14 +45,26 @@ function log(message) {
   process.stdout.write(line);
 }
 
+function signalGroup(child, signal) {
+  if (!child.pid) return;
+  try {
+    process.kill(-child.pid, signal);
+  } catch (error) {
+    if (error.code !== "ESRCH")
+      log(`Unable to signal owned group: ${error.code}`);
+  }
+}
+
 // Diagnostics must not turn an unresponsive device into an unbounded CI hang.
 function capture(file, [executable, parameters], timeout = 15000, observe) {
+  if (interrupted) return Promise.resolve();
   return new Promise((resolve) => {
     const stream = createWriteStream(path.join(directory, file), {
       flags: "a",
     });
     stream.write(`\n${timestamp()} ${executable} ${parameters.join(" ")}\n`);
     const child = spawn(executable, parameters, {
+      detached: true,
       stdio: ["ignore", "pipe", "pipe"],
     });
     collectors.add(child);
@@ -59,13 +75,14 @@ function capture(file, [executable, parameters], timeout = 15000, observe) {
       stream.write(
         `\n${timestamp()} diagnostic timed out after ${timeout}ms\n`,
       );
-      child.kill("SIGKILL");
+      signalGroup(child, "SIGKILL");
     }, timeout);
     // simctl can leave a spawned log process holding its stdout after the
     // client exits. Allow buffered output to drain, then close those pipes so
     // a diagnostic collector cannot keep this wrapper alive indefinitely.
     let drainTimer;
     child.on("exit", () => {
+      signalGroup(child, "SIGKILL");
       drainTimer = setTimeout(() => {
         child.stdout.destroy();
         child.stderr.destroy();
@@ -158,10 +175,15 @@ function observeIOSLog(chunk) {
 }
 
 async function sample() {
-  await capture("host-processes.log", [
-    "ps",
-    ["-A", "-o", "pid,ppid,state,pcpu,pmem,rss,comm"],
-  ]);
+  let processTable = "";
+  await capture(
+    "host-processes.log",
+    ["ps", ["-A", "-o", "pid,ppid,state,pcpu,pmem,rss,comm"]],
+    15000,
+    (chunk) => {
+      processTable += chunk.toString();
+    },
+  );
   if (platform === "ios") {
     await capture("host-memory.log", ["vm_stat", []]);
     await capture("host-memory.log", [
@@ -172,6 +194,7 @@ async function sample() {
       "device-processes.log",
       simctl("spawn", device, "launchctl", "list"),
     );
+    await sampleStalledSimctl(processTable);
   } else {
     await capture("host-memory.log", ["free", ["-m"]]);
     // Includes zombie shells and their parents, which preceded adbd's death in
@@ -189,6 +212,56 @@ async function sample() {
     await capture("host-jvm-threads.log", [
       "jcmd",
       [String(testPid), "Thread.print"],
+    ]);
+  }
+}
+
+async function sampleStalledSimctl(processTable) {
+  if (!testPid) return;
+  for (const line of processTable.split("\n")) {
+    const match = line.match(
+      /^\s*(\d+)\s+(\d+)\s+\S+\s+\S+\s+\S+\s+\S+\s+(.+)$/,
+    );
+    if (
+      !match ||
+      Number(match[2]) !== testPid ||
+      path.basename(match[3]) !== "simctl"
+    )
+      continue;
+    const pid = Number(match[1]);
+    if (!simctlFirstSeen.has(pid)) simctlFirstSeen.set(pid, Date.now());
+    if (sampledSimctl.has(pid) || Date.now() - simctlFirstSeen.get(pid) < 15000)
+      continue;
+    let details = "";
+    await capture(
+      `simctl-${pid}-arguments.log`,
+      ["ps", ["-p", String(pid), "-o", "pid,ppid,args="]],
+      15000,
+      (chunk) => {
+        details += chunk.toString();
+      },
+    );
+    const owned = details
+      .split("\n")
+      .find((row) => new RegExp(`^\\s*${pid}\\s+${testPid}\\s+`).test(row));
+    if (!owned || !/simctl\s+(?:privacy|terminate|launch)\b/.test(owned))
+      continue;
+    sampledSimctl.add(pid);
+    log(
+      `Owned simctl ${pid} exceeded 15s; capturing native stack and open descriptors`,
+    );
+    await capture(`simctl-${pid}-sample.log`, [
+      "sample",
+      [
+        String(pid),
+        "3",
+        "-file",
+        path.join(directory, `simctl-${pid}-stack.txt`),
+      ],
+    ]);
+    await capture(`simctl-${pid}-descriptors.log`, [
+      "lsof",
+      ["-nP", "-p", String(pid)],
     ]);
   }
 }
@@ -319,18 +392,35 @@ const interval = setInterval(() => {
   }
 }, 15000);
 
-const test = spawn(command, args, { stdio: "inherit" });
+const test = spawn(command, args, { stdio: "inherit", detached: true });
 testPid = test.pid;
-let interrupted = false;
-for (const signal of ["SIGINT", "SIGTERM"]) {
-  process.on(signal, () => {
-    interrupted = true;
-    clearTimeout(terminationTimer);
-    log(`Received ${signal}; stopping test and diagnostic collectors`);
-    test.kill(signal);
-    for (const child of collectors) child.kill("SIGKILL");
+let stopCompletion;
+function stop(signal, reason) {
+  if (interrupted) return;
+  interrupted = true;
+  clearInterval(interval);
+  clearTimeout(terminationTimer);
+  log(`${reason}; stopping test and diagnostic process groups`);
+  signalGroup(test, signal);
+  for (const child of collectors) signalGroup(child, "SIGKILL");
+  stopCompletion = new Promise((resolve) => {
+    setTimeout(() => {
+      signalGroup(test, "SIGKILL");
+      resolve();
+    }, 2000);
   });
 }
+for (const signal of ["SIGINT", "SIGTERM"]) {
+  process.on(signal, () => stop(signal, `Received ${signal}`));
+}
+// Actions can kill only the owning shell on a step timeout. In that case this
+// wrapper receives no signal and is reparented, so it must stop its own groups.
+const checkOwner = () => {
+  if (process.ppid !== ownerPid) stop("SIGINT", `Owner ${ownerPid} exited`);
+};
+const ownerInterval = setInterval(checkOwner, 1000);
+ownerInterval.unref();
+checkOwner();
 test.on("error", (error) =>
   log(`Failed to start ${command}: ${error.message}`),
 );
@@ -338,14 +428,16 @@ const exitCode = await new Promise((resolve) => {
   test.on("close", (code, signal) => {
     testPid = undefined;
     log(`Test finished: exit=${code} signal=${signal}`);
-    resolve(code ?? 1);
+    resolve(interrupted ? 1 : (code ?? 1));
   });
 });
 clearInterval(interval);
 clearTimeout(terminationTimer);
 await sampling;
 if (!interrupted) await finalState();
-for (const child of collectors) child.kill("SIGKILL");
+for (const child of collectors) signalGroup(child, "SIGKILL");
+if (stopCompletion) await stopCompletion;
+clearInterval(ownerInterval);
 timeline.end();
 // Diagnostic failures never replace the test's exit status or retry a failure.
 process.exitCode = exitCode;
