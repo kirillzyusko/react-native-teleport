@@ -9,6 +9,7 @@ import {
 import { homedir } from "node:os";
 import path from "node:path";
 import {
+  ownedSimctlAge,
   sameOwnerProcess,
   selectedHostedLaunchd,
   uniqueHostedCoreSimulatorService,
@@ -40,7 +41,6 @@ let testPid;
 let indigoBridge;
 let processSamples = 0;
 let interrupted = false;
-const simctlFirstSeen = new Map();
 const sampledSimctl = new Set();
 const hostedCI =
   process.env.GITHUB_ACTIONS === "true" &&
@@ -242,26 +242,21 @@ async function sampleStalledSimctl(processTable) {
     )
       continue;
     const pid = Number(match[1]);
-    if (!simctlFirstSeen.has(pid)) simctlFirstSeen.set(pid, Date.now());
-    if (sampledSimctl.has(pid) || Date.now() - simctlFirstSeen.get(pid) < 15000)
-      continue;
+    if (sampledSimctl.has(pid)) continue;
     let details = "";
     await capture(
       `simctl-${pid}-arguments.log`,
-      ["ps", ["-p", String(pid), "-o", "pid,ppid,args="]],
+      ["ps", ["-p", String(pid), "-o", "pid,ppid,etime,args="]],
       15000,
       (chunk) => {
         details += chunk.toString();
       },
     );
-    const owned = details
-      .split("\n")
-      .find((row) => new RegExp(`^\\s*${pid}\\s+${testPid}\\s+`).test(row));
-    if (!owned || !/simctl\s+(?:privacy|terminate|launch)\b/.test(owned))
-      continue;
+    const elapsedSeconds = ownedSimctlAge(details, pid, testPid);
+    if (elapsedSeconds === undefined || elapsedSeconds < 15) continue;
     sampledSimctl.add(pid);
     log(
-      `Owned simctl ${pid} exceeded 15s; capturing native stack and open descriptors`,
+      `Owned simctl ${pid} elapsed=${elapsedSeconds}s; capturing native stack and open descriptors`,
     );
     await Promise.all([
       capture(`simctl-${pid}-sample.log`, [

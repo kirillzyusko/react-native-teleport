@@ -1,5 +1,33 @@
 import path from "node:path";
 
+// ps reports elapsed process time independently of our polling interval. A
+// 33-second client was missed when two nominal 15-second observations were
+// only 14.831 seconds apart after the other diagnostic commands finished.
+export function ownedSimctlAge(details, pid, parentPid) {
+  for (const line of details.split("\n")) {
+    const match = line.match(
+      /^\s*(\d+)\s+(\d+)\s+(?:(\d+)-)?(?:(\d+):)?(\d{2}):(\d{2})\s+(\S+)\s+(privacy|terminate|launch)\b/,
+    );
+    if (
+      match &&
+      Number(match[1]) === pid &&
+      Number(match[2]) === parentPid &&
+      path.basename(match[7]) === "simctl" &&
+      Number(match[5]) < 60 &&
+      Number(match[6]) < 60 &&
+      (!match[3] || (match[4] !== undefined && Number(match[4]) < 24))
+    ) {
+      return (
+        Number(match[3] || 0) * 86400 +
+        Number(match[4] || 0) * 3600 +
+        Number(match[5]) * 60 +
+        Number(match[6])
+      );
+    }
+  }
+  return undefined;
+}
+
 function processes(table) {
   return table.split("\n").flatMap((line) => {
     const match = line.match(

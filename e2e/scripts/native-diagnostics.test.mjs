@@ -9,6 +9,7 @@ import { fileURLToPath } from "node:url";
 import test from "node:test";
 import { setTimeout as delay } from "node:timers/promises";
 import {
+  ownedSimctlAge,
   sameOwnerProcess,
   selectedHostedLaunchd,
   uniqueHostedCoreSimulatorService,
@@ -34,6 +35,32 @@ const chainTable = `
 1000005 1000004 S 0.0 0.0 100 ${daemonCommand}
 1000008 1 S 0.0 0.0 100 launchd_sim
 1000009 1000008 S 0.0 0.0 100 ${runtimeRoot}/usr/libexec/runningboardd`;
+
+test("uses native process age when two polling observations are less than 15s apart", () => {
+  const row = (age) =>
+    `25112 13137 ${age} /native/simctl privacy selected-device grant location-always teleport.example`;
+  assert.equal(ownedSimctlAge(row("00:24"), 25112, 13137), 24);
+  assert.equal(ownedSimctlAge(row("00:14"), 25112, 13137), 14);
+  assert.equal(ownedSimctlAge(row("01:02:03"), 25112, 13137), 3723);
+  assert.equal(ownedSimctlAge(row("2-03:04:05"), 25112, 13137), 183845);
+  assert.equal(ownedSimctlAge(row("00:24"), 25113, 13137), undefined);
+  assert.equal(ownedSimctlAge(row("00:24"), 25112, 13138), undefined);
+  assert.equal(ownedSimctlAge(row("00:60"), 25112, 13137), undefined);
+  assert.equal(ownedSimctlAge(row("2-24:00:00"), 25112, 13137), undefined);
+  assert.equal(ownedSimctlAge(row("bad"), 25112, 13137), undefined);
+  assert.equal(
+    ownedSimctlAge(
+      row("00:24").replace("/native/simctl", "/native/other"),
+      25112,
+      13137,
+    ),
+    undefined,
+  );
+  assert.equal(
+    ownedSimctlAge(row("00:24").replace(" privacy ", " spawn "), 25112, 13137),
+    undefined,
+  );
+});
 
 test("selects a unique hosted SimLaunchHost executable", () => {
   assert.deepEqual(uniqueHostedSimLaunchHost(chainTable, true), {
@@ -227,7 +254,7 @@ if (name === "test-command") {
       console.log("1000002 1 S 0.0 0.0 100", service);
       console.log(${JSON.stringify(chainTable)});
     } else if (args.includes("1000001")) {
-      console.log("1000001", testPid, "/mock/simctl privacy test-device grant location-always teleport.example");
+      console.log("1000001", testPid, "00:20 /mock/simctl privacy test-device grant location-always teleport.example");
     } else if (args.includes("1000002")) {
       console.log("1000002", process.getuid(), service);
     } else if (args.includes("1000003")) {
@@ -398,9 +425,9 @@ test("ios: a long owned client captures the identified hosted service without de
         timeout: 70000,
         env: {
           ...options.env,
-          // The first sighting is at the first 15s sample. Allow a third
-          // sample so small scheduling differences cannot hide the 15s age.
-          TEST_DURATION_MS: "51000",
+          // The native client is already 20s old at the first sighting. The
+          // wrapper must capture it before a second 15s sample is needed.
+          TEST_DURATION_MS: "24000",
           SERVICE_PROBE: "true",
           GITHUB_ACTIONS: "true",
           RUNNER_ENVIRONMENT: "github-hosted",
