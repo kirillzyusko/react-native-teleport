@@ -223,6 +223,7 @@ jobs:
         if: ${{ always() && (inputs.mode == 'input-trace' || inputs.mode == 'input-repeat') }}
         run: |
           grep -q 'TeleportInputTrace.*"phase":"installed"' e2e/reports/native-diagnostics/logcat.log
+          grep -q 'TeleportInputTrace.*"traceVersion":2' e2e/reports/native-diagnostics/logcat.log
           grep -q 'TeleportInputTrace.*"phase":"received"' e2e/reports/native-diagnostics/logcat.log
           grep -q '\[teleport-input\].*"phase":"installed"' e2e/reports/native-diagnostics/logcat.log
           if grep -q '\[teleport-input\].*"phase":"overflow"' e2e/reports/native-diagnostics/logcat.log; then exit 1; fi

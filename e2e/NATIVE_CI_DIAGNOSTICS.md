@@ -381,6 +381,14 @@ Pressability state, region and `onPress` callback. The original dispatch and
 callback execute once with unchanged arguments; the recorder does not consume
 events or add waits. The ordinary build leaves this tracing disabled.
 
+Trace version 2 also records the visible scroll container's bounds, whether it
+contains the event point, and passive React ScrollView drag/momentum/scroller
+state before and after dispatch. Available private fields are listed in the
+installation marker; missing fields are reported as unavailable. These reads
+do not advance or stop the scroller. They are intended to distinguish a
+native scroll interception from missing injection or React responder delivery
+when a missed tap is captured; they do not establish that cause by themselves.
+
 The trace gate requires both native and JavaScript installation markers and
 native input delivery, and rejects recording errors or buffer overflow.
 These diagnostic runs are excluded from final stability counts. The hosted
