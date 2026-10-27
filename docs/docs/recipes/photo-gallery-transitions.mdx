@@ -157,7 +157,7 @@ PhotoGallery.tsx   the grid screen
 PhotoDetail.tsx    the full-screen viewer
 ```
 
-When a step changes a file, the changed lines are highlighted.
+When a step changes a file, the changed lines are highlighted and `// ...` marks code that stays as it was. The complete code is linked [at the end of the guide](#the-full-pipeline).
 
 ## Step 1: Build the grid
 
@@ -361,7 +361,8 @@ Now make the photos tappable. A tap opens a detail screen with the full-res phot
 
 The detail screen is a transparent modal without a native animation. We'll draw the transition ourselves later, and the gallery has to stay visible underneath while the photo is still growing:
 
-```tsx title="navigation.tsx (updated)" {3,5,9,22-30}
+{/* prettier-ignore */}
+```tsx title="navigation.tsx (updated)" {3,5,9,14-22}
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
 
 import PhotoDetail from "./PhotoDetail";
@@ -372,15 +373,7 @@ export type RootStackParamList = {
   PhotoGallery: undefined;
   PhotoDetail: { photo: Photo };
 };
-
-const Stack = createNativeStackNavigator<RootStackParamList>();
-
-export default function RootStack() {
-  return (
-    <Stack.Navigator>
-      <Stack.Screen
-        name="PhotoGallery"
-        component={PhotoGallery}
+// ...
         options={{ title: "Photos" }}
       />
       <Stack.Screen
@@ -393,8 +386,6 @@ export default function RootStack() {
         }}
       />
     </Stack.Navigator>
-  );
-}
 ```
 
 :::info Why a transparent modal?
@@ -472,13 +463,11 @@ export default PhotoDetail;
 
 Each thumbnail reports the tap:
 
-```tsx title="PhotoPreview.tsx (updated)" {2,9,12,14-27}
+{/* prettier-ignore */}
+```tsx title="PhotoPreview.tsx (updated)" {2,6,9,11,13}
 import React from "react";
 import { Image, TouchableWithoutFeedback, View } from "react-native";
-
-import type { Photo } from "./photos";
-import { THUMB_SIZE } from "./constants";
-
+// ...
 type Props = {
   photo: Photo;
   onOpen: (photo: Photo) => void;
@@ -487,28 +476,16 @@ type Props = {
 function PhotoPreview({ photo, onOpen }: Props) {
   return (
     <TouchableWithoutFeedback onPress={() => onOpen(photo)}>
-      <View
-        style={{
-          height: THUMB_SIZE,
-          width: THUMB_SIZE,
-        }}
-      >
-        <Image
-          style={{ width: THUMB_SIZE, height: THUMB_SIZE }}
-          source={{ uri: photo.thumbnail }}
-          resizeMode="cover"
-        />
-      </View>
+      {/* the View with the Image from step 1 */}
     </TouchableWithoutFeedback>
   );
 }
-
-export default React.memo(PhotoPreview);
 ```
 
 And the gallery opens the detail screen:
 
-```tsx title="PhotoGallery.tsx (updated)" {2-3,5,7,10-11,13-15,23-25}
+{/* prettier-ignore */}
+```tsx title="PhotoGallery.tsx (updated)" {2-3,5,7,10-11,13-15,18-20}
 import { FlatList, StyleSheet, View } from "react-native";
 import { useNavigation } from "@react-navigation/native";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
@@ -524,29 +501,12 @@ function PhotoGallery() {
   const onPhotoOpen = (photo: Photo) => {
     navigation.navigate("PhotoDetail", { photo });
   };
-
-  return (
-    <View style={styles.container}>
-      <FlatList
-        data={PHOTOS}
-        keyExtractor={(item) => item.id}
+  // ...
         numColumns={3}
         renderItem={({ item }) => (
           <PhotoPreview photo={item} onOpen={onPhotoOpen} />
         )}
       />
-    </View>
-  );
-}
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: "#000",
-  },
-});
-
-export default PhotoGallery;
 ```
 
 It works, but it doesn't feel like a photo app yet. Watch the moment right after each tap:
@@ -684,7 +644,8 @@ export default useMeasure;
 
 Here comes the core trick. When the user taps a thumbnail, we measure it, store its position and switch its `<Portal>` to the root host:
 
-```tsx title="PhotoPreview.tsx (updated)" {1,3,7-8,16-22,24-25,27-30,33,35-36,42-59}
+{/* prettier-ignore */}
+```tsx title="PhotoPreview.tsx (updated)" {1,3,7-8,11-17,19-20,22-25,28,30-31,37-47,49-50}
 import React, { useCallback, useRef } from "react";
 import { Image, TouchableWithoutFeedback, View } from "react-native";
 import { Portal } from "react-native-teleport";
@@ -693,12 +654,7 @@ import type { Photo } from "./photos";
 import { THUMB_SIZE } from "./constants";
 import { useHeroTransition } from "./hero";
 import useMeasure from "./useMeasure";
-
-type Props = {
-  photo: Photo;
-  onOpen: (photo: Photo) => void;
-};
-
+// ...
 function PhotoPreview({ photo, onOpen }: Props) {
   const ref = useRef<View>(null);
   const measure = useMeasure(ref);
@@ -737,97 +693,40 @@ function PhotoPreview({ photo, onOpen }: Props) {
                 : undefined
             }
           >
-            <Image
-              style={{ width: THUMB_SIZE, height: THUMB_SIZE }}
-              source={{ uri: photo.thumbnail }}
-              resizeMode="cover"
-            />
+            {/* the Image from step 1 */}
           </View>
         </Portal>
       </View>
     </TouchableWithoutFeedback>
   );
 }
-
-export default React.memo(PhotoPreview);
 ```
 
 From the user's point of view, nothing has moved yet: the thumbnail is positioned at exactly the coordinates it had in the grid. But it isn't in the grid anymore. The same native view now lives in the root host, above every screen.
 
 The Close button now goes through the store, which clears `id` and sends the thumbnail back into its cell:
 
-```tsx title="PhotoDetail.tsx (updated)" {1,9,15,21-23,40}
+{/* prettier-ignore */}
+```tsx title="PhotoDetail.tsx (updated)" {1,3,7,9-11,18}
 import { useCallback } from "react";
-import { Image, Pressable, StyleSheet, Text, View } from "react-native";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { useNavigation } from "@react-navigation/native";
-import type { StaticScreenProps } from "@react-navigation/native";
-
-import type { Photo } from "./photos";
-import { SCREEN_WIDTH } from "./constants";
+// ...
 import { useHeroTransition } from "./hero";
-
-type PhotoDetailProps = StaticScreenProps<{ photo: Photo }>;
-
+// ...
 function PhotoDetail({ route }: PhotoDetailProps) {
   const { photo } = route.params;
   const goBack = useHeroTransition((s) => s.goBack);
-  const navigation = useNavigation();
-  const { top: safeAreaTop } = useSafeAreaInsets();
-
-  const fullHeight = SCREEN_WIDTH * (photo.height / photo.width);
-
+  // ...
   const onGoBack = useCallback(() => {
     goBack(navigation.goBack);
   }, [navigation, goBack]);
 
   return (
     <View style={styles.container}>
-      <View style={styles.backdrop} />
-      <Image
-        source={{ uri: photo.fullSize }}
-        style={{
-          marginTop: safeAreaTop,
-          width: SCREEN_WIDTH,
-          height: fullHeight,
-        }}
-        resizeMode="cover"
-        fadeDuration={0}
-      />
+      {/* ... */}
       <Pressable
         style={[styles.backButton, { top: safeAreaTop + 10 }]}
         onPress={onGoBack}
       >
-        <Text style={styles.backText}>Close</Text>
-      </Pressable>
-    </View>
-  );
-}
-
-const styles = StyleSheet.create({
-  backdrop: {
-    ...StyleSheet.absoluteFillObject,
-    backgroundColor: "#000",
-  },
-  container: {
-    flex: 1,
-  },
-  backButton: {
-    position: "absolute",
-    left: 16,
-    backgroundColor: "rgba(255,255,255,0.2)",
-    paddingHorizontal: 14,
-    paddingVertical: 8,
-    borderRadius: 20,
-  },
-  backText: {
-    color: "#fff",
-    fontSize: 16,
-    fontWeight: "600",
-  },
-});
-
-export default PhotoDetail;
 ```
 
 Run it and tap a photo. The detail screen opens as before, but the thumbnail you tapped is still visible on top of it, right where it was:
@@ -852,12 +751,9 @@ The thumbnail isn't re-created in the root host. `<Portal>` re-parents the exist
 
 Time to make it fly. Add a spring config:
 
-```ts title="constants.ts (updated)" {7-12}
-import { Dimensions } from "react-native";
-
-export const SCREEN_WIDTH = Math.min(Dimensions.get("window").width, 540);
-export const COLUMNS = 3;
-export const THUMB_SIZE = SCREEN_WIDTH / COLUMNS;
+{/* prettier-ignore */}
+```ts title="constants.ts (updated)" {3-8}
+// ...
 export const SCALE = SCREEN_WIDTH / THUMB_SIZE;
 export const SPRING_CONFIG = {
   mass: 1.2,
@@ -953,7 +849,8 @@ export const useHeroTransition = create<HeroStore>((set, get) => ({
 
 The thumbnail turns every `progress` value into a position, a scale and a height:
 
-```tsx title="PhotoPreview.tsx (updated)" {2-6,8,11,27,29,31-33,35-42,44-66,87,90-97,101-102,106,113-117}
+{/* prettier-ignore */}
+```tsx title="PhotoPreview.tsx (updated)" {2-6,8,11,15,17,19-21,23-30,32-54,57,60-67,71-72,76,83-87}
 import React, { useCallback, useRef } from "react";
 import { StyleSheet, TouchableWithoutFeedback, View } from "react-native";
 import Animated, {
@@ -965,21 +862,9 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import type { Photo } from "./photos";
 import { SCALE, SCREEN_WIDTH, THUMB_SIZE } from "./constants";
-import { useHeroTransition } from "./hero";
-import useMeasure from "./useMeasure";
-
-type Props = {
-  photo: Photo;
-  onOpen: (photo: Photo) => void;
-};
-
+// ...
 function PhotoPreview({ photo, onOpen }: Props) {
-  const ref = useRef<View>(null);
-  const measure = useMeasure(ref);
-  const isAnimating = useHeroTransition((s) => s.id === photo.id);
-  const position = useHeroTransition((s) =>
-    s.id === photo.id ? s.position : undefined,
-  );
+  // ...
   const progress = useHeroTransition((s) => s.progress);
   const goForward = useHeroTransition((s) => s.goForward);
   const { top: safeAreaTop } = useSafeAreaInsets();
@@ -1020,25 +905,7 @@ function PhotoPreview({ photo, onOpen }: Props) {
       ],
     };
   }, [position, safeAreaTop]);
-
-  const onPress = useCallback(() => {
-    if (useHeroTransition.getState().id !== "") return;
-
-    measure((x, y) => {
-      goForward(photo.id, x, y, () => onOpen(photo));
-    });
-  }, [photo, goForward, onOpen, measure]);
-
-  return (
-    <TouchableWithoutFeedback onPress={onPress}>
-      <View
-        // @ts-expect-error ref type mismatch between View component and host instance
-        ref={ref}
-        style={{
-          height: THUMB_SIZE,
-          width: THUMB_SIZE,
-        }}
-      >
+  // ...
         <Portal hostName={position && isAnimating ? "root" : undefined}>
           <Animated.View
             style={
@@ -1071,43 +938,24 @@ const styles = StyleSheet.create({
     transformOrigin: "0% 0%",
   },
 });
-
-export default React.memo(PhotoPreview);
 ```
 
 The math is simpler than it looks. The thumbnail is square, the photo usually isn't. So we animate the height in thumbnail units, from `THUMB_SIZE` to `fullImageHeight / SCALE`, and scale the whole view by `SCALE`, using the top-left corner as the origin. At `progress` 1, the thumbnail covers exactly the rectangle where the full-res photo will be drawn.
 
 The detail screen fades its backdrop in with `progress`, and keeps the full-res photo hidden for now (`visibility.target` is `0`):
 
-```tsx title="PhotoDetail.tsx (updated)" {3,16-18,29-34,38,45}
+{/* prettier-ignore */}
+```tsx title="PhotoDetail.tsx (updated)" {3,7-9,11-16,20,27}
 import { useCallback } from "react";
 import { Image, Pressable, StyleSheet, Text, View } from "react-native";
 import Animated, { useAnimatedStyle } from "react-native-reanimated";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { useNavigation } from "@react-navigation/native";
-import type { StaticScreenProps } from "@react-navigation/native";
-
-import type { Photo } from "./photos";
-import { SCREEN_WIDTH } from "./constants";
-import { useHeroTransition } from "./hero";
-
-type PhotoDetailProps = StaticScreenProps<{ photo: Photo }>;
-
+// ...
 function PhotoDetail({ route }: PhotoDetailProps) {
   const { photo } = route.params;
   const { visibility } = useHeroTransition();
   const progress = useHeroTransition((s) => s.progress);
   const direction = useHeroTransition((s) => s.direction);
-  const goBack = useHeroTransition((s) => s.goBack);
-  const navigation = useNavigation();
-  const { top: safeAreaTop } = useSafeAreaInsets();
-
-  const fullHeight = SCREEN_WIDTH * (photo.height / photo.width);
-
-  const onGoBack = useCallback(() => {
-    goBack(navigation.goBack);
-  }, [navigation, goBack]);
-
+  // ...
   const backdrop = useAnimatedStyle(
     () => ({
       opacity: direction === "neutral" ? 1 : progress.value,
@@ -1126,43 +974,6 @@ function PhotoDetail({ route }: PhotoDetailProps) {
           height: fullHeight,
           opacity: visibility.target,
         }}
-        resizeMode="cover"
-        fadeDuration={0}
-      />
-      <Pressable
-        style={[styles.backButton, { top: safeAreaTop + 10 }]}
-        onPress={onGoBack}
-      >
-        <Text style={styles.backText}>Close</Text>
-      </Pressable>
-    </View>
-  );
-}
-
-const styles = StyleSheet.create({
-  backdrop: {
-    ...StyleSheet.absoluteFillObject,
-    backgroundColor: "#000",
-  },
-  container: {
-    flex: 1,
-  },
-  backButton: {
-    position: "absolute",
-    left: 16,
-    backgroundColor: "rgba(255,255,255,0.2)",
-    paddingHorizontal: 14,
-    paddingVertical: 8,
-    borderRadius: 20,
-  },
-  backText: {
-    color: "#fff",
-    fontSize: 16,
-    fontWeight: "600",
-  },
-});
-
-export default PhotoDetail;
 ```
 
 <PhotoTransitionExplainer chapters={["animate"]} />
@@ -1192,80 +1003,58 @@ Now the most interesting part. The full-res photo starts loading as soon as the 
 For that, the full-res `<Image>` follows **the same interpolation** as the thumbnail, at `opacity: 0`. Both images cover the same rectangle in every frame, so we can swap them at any moment. The swap itself is a single store update. Declare `targetElementAvailable` in the `HeroStore` interface and add it to the store:
 
 {/* prettier-ignore */}
-```ts title="hero.ts (updated)" {2,4-6}
-transitionCompleted: () => void;
-targetElementAvailable: () => void;
-// ...
-targetElementAvailable: () => {
-  // Swap visibility: hide source thumbnail, show target full-res image
-  set({ visibility: { source: 0, target: 1 } });
-},
+```ts title="hero.ts (updated)" {2,4-7}
+  transitionCompleted: () => void;
+  targetElementAvailable: () => void;
+  // ...
+  targetElementAvailable: () => {
+    // Swap visibility: hide source thumbnail, show target full-res image
+    set({ visibility: { source: 0, target: 1 } });
+  },
 ```
 
 The thumbnail takes its opacity from `visibility.source`:
 
 {/* prettier-ignore */}
 ```tsx title="PhotoPreview.tsx (updated)" {2-4,7}
-const goForward = useHeroTransition((s) => s.goForward);
-const source = useHeroTransition((s) =>
-  s.id === photo.id ? s.visibility.source : 1,
-);
-// ...
-<Animated.Image
-  style={[{ width: THUMB_SIZE, opacity: source }, animatedHeight]}
-  source={{ uri: photo.thumbnail }}
-  resizeMode="cover"
-/>
+  const goForward = useHeroTransition((s) => s.goForward);
+  const source = useHeroTransition((s) =>
+    s.id === photo.id ? s.visibility.source : 1,
+  );
+  // ...
+            <Animated.Image
+              style={[{ width: THUMB_SIZE, opacity: source }, animatedHeight]}
+              source={{ uri: photo.thumbnail }}
+              resizeMode="cover"
+            />
 ```
 
 The detail screen animates the full-res photo along the same path and calls `targetElementAvailable` from `onLoad`:
 
-```tsx title="PhotoDetail.tsx (updated)" {2-6,12,19,22,29-33,46-69,74,76-80,83,103-105}
+{/* prettier-ignore */}
+```tsx title="PhotoDetail.tsx (updated)" {2-6,8,12,15,17-21,23-46,51,53-57,60,65-67}
 import { useCallback } from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 import Animated, {
   interpolate,
   useAnimatedStyle,
 } from "react-native-reanimated";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { useNavigation } from "@react-navigation/native";
-import type { StaticScreenProps } from "@react-navigation/native";
-
-import type { Photo } from "./photos";
+// ...
 import { SCALE, SCREEN_WIDTH } from "./constants";
-import { useHeroTransition } from "./hero";
-
-type PhotoDetailProps = StaticScreenProps<{ photo: Photo }>;
-
+// ...
 function PhotoDetail({ route }: PhotoDetailProps) {
   const { photo } = route.params;
   const { targetElementAvailable, visibility } = useHeroTransition();
   const progress = useHeroTransition((s) => s.progress);
   const direction = useHeroTransition((s) => s.direction);
   const position = useHeroTransition((s) => s.position);
-  const goBack = useHeroTransition((s) => s.goBack);
-  const navigation = useNavigation();
-  const { top: safeAreaTop } = useSafeAreaInsets();
-
-  const fullHeight = SCREEN_WIDTH * (photo.height / photo.width);
-
+  // ...
   const onLoad = useCallback(() => {
     if (useHeroTransition.getState().id === photo.id) {
       targetElementAvailable();
     }
   }, [photo.id, targetElementAvailable]);
-
-  const onGoBack = useCallback(() => {
-    goBack(navigation.goBack);
-  }, [navigation, goBack]);
-
-  const backdrop = useAnimatedStyle(
-    () => ({
-      opacity: direction === "neutral" ? 1 : progress.value,
-    }),
-    [direction],
-  );
-
+  // ...
   const heroImage = useAnimatedStyle(() => {
     if (direction === "neutral" || !position) {
       return {
@@ -1305,43 +1094,12 @@ function PhotoDetail({ route }: PhotoDetailProps) {
         fadeDuration={0}
         onLoad={onLoad}
       />
-      <Pressable
-        style={[styles.backButton, { top: safeAreaTop + 10 }]}
-        onPress={onGoBack}
-      >
-        <Text style={styles.backText}>Close</Text>
-      </Pressable>
-    </View>
-  );
-}
-
+// ...
 const styles = StyleSheet.create({
-  backdrop: {
-    ...StyleSheet.absoluteFillObject,
-    backgroundColor: "#000",
-  },
-  container: {
-    flex: 1,
-  },
+  // ...
   heroImage: {
     transformOrigin: "0% 0%",
   },
-  backButton: {
-    position: "absolute",
-    left: 16,
-    backgroundColor: "rgba(255,255,255,0.2)",
-    paddingHorizontal: 14,
-    paddingVertical: 8,
-    borderRadius: 20,
-  },
-  backText: {
-    color: "#fff",
-    fontSize: 16,
-    fontWeight: "600",
-  },
-});
-
-export default PhotoDetail;
 ```
 
 <PhotoTransitionExplainer chapters={["handoff"]} />
@@ -1364,7 +1122,8 @@ The thumbnail is invisible now, but it's still in the root host, on top of the C
 
 The thumbnail has done its job. Once the animation has finished and the full-res photo is shown, we send the thumbnail back to its cell:
 
-```ts title="hero.ts (updated)" {6,20-21,34,44,49,55-57,61,63-68,70-79,82-87,89-97,105,109,119,121}
+{/* prettier-ignore */}
+```ts title="hero.ts (updated)" {6,13-14,17,24,27,33-35,39,41-46,48-57,60-65,67-75,83,87,97,99}
 import {
   type SharedValue,
   makeMutable,
@@ -1372,46 +1131,24 @@ import {
   withSpring,
   withTiming,
 } from "react-native-reanimated";
-import { create } from "zustand";
-import { SPRING_CONFIG } from "./constants";
-
-type Position = {
-  x: number;
-  y: number;
-};
-
+// ...
 interface HeroStore {
   direction: "forward" | "backward" | "neutral";
   /** Which photo is currently animating (Portal teleport) */
   id: string;
   /** Photo that owns the hero pipeline; survives teleportBack so opacity gating works during detail + back */
   ownerId: string;
-  /** Animation progress [0..1] */
-  progress: SharedValue<number>;
-  /** Measured position of the thumbnail before transition */
-  position: Position | undefined;
-  visibility: {
-    /** Opacity of the source (thumbnail in grid) */
-    source: number;
-    /** Opacity of the target (full-res image on detail screen) */
-    target: number;
-  };
-  set: (newState: Partial<Omit<HeroStore, "set">>) => void;
+  // ...
   isAnimationCompleted: boolean;
   isTargetElementAvailable: boolean;
-  transitionCompleted: () => void;
-  targetElementAvailable: () => void;
-  goBack: (callback: () => void) => void;
-  goForward: (id: string, x: number, y: number, callback: () => void) => void;
+  // ...
 }
 
 export const useHeroTransition = create<HeroStore>((set, get) => ({
   direction: "neutral",
   id: "",
   ownerId: "",
-  position: undefined,
-  visibility: { source: 1, target: 0 },
-  progress: makeMutable(0),
+  // ...
   isAnimationCompleted: false,
   isTargetElementAvailable: false,
   set: (newState) => set((state) => ({ ...state, ...newState })),
@@ -1487,16 +1224,7 @@ export const useHeroTransition = create<HeroStore>((set, get) => ({
       id,
       ownerId: id,
     });
-
-    const transitionCompleted = get().transitionCompleted;
-    requestAnimationFrame(() => {
-      get().progress.set(
-        withSpring(1, SPRING_CONFIG, () => {
-          runOnJS(transitionCompleted)();
-        }),
-      );
-      callback();
-    });
+    // ...
   },
 }));
 ```
@@ -1512,9 +1240,9 @@ Back in its cell, the thumbnail must stay hidden while the photo is open, otherw
 
 {/* prettier-ignore */}
 ```tsx title="PhotoPreview.tsx (updated)" {2}
-const source = useHeroTransition((s) =>
-  s.id === photo.id || s.ownerId === photo.id ? s.visibility.source : 1,
-);
+  const source = useHeroTransition((s) =>
+    s.id === photo.id || s.ownerId === photo.id ? s.visibility.source : 1,
+  );
 ```
 
 <PhotoTransitionExplainer chapters={["return"]} />
@@ -1531,33 +1259,34 @@ The way back doesn't need a teleport at all. The full-res photo is already on th
 
 {/* prettier-ignore */}
 ```ts title="hero.ts (updated)" {2,4-15,17-21}
-goBack: (callback: () => void) => {
-  set({ direction: "backward" });
+  goBack: (callback: () => void) => {
+    set({ direction: "backward" });
 
-  const onAnimationFinished = () => {
-    set({
-      direction: "neutral",
-      id: "",
-      ownerId: "",
-      position: undefined,
-      visibility: { source: 1, target: 0 },
-      isAnimationCompleted: false,
-      isTargetElementAvailable: false,
-    });
-    callback();
-  };
+    const onAnimationFinished = () => {
+      set({
+        direction: "neutral",
+        id: "",
+        ownerId: "",
+        position: undefined,
+        visibility: { source: 1, target: 0 },
+        isAnimationCompleted: false,
+        isTargetElementAvailable: false,
+      });
+      callback();
+    };
 
-  get().progress.set(
-    withSpring(0, SPRING_CONFIG, () => {
-      runOnJS(onAnimationFinished)();
-    }),
-  );
-},
+    get().progress.set(
+      withSpring(0, SPRING_CONFIG, () => {
+        runOnJS(onAnimationFinished)();
+      }),
+    );
+  },
 ```
 
 The detail screen shows the Close button only when the opening animation has finished, and the Android back button runs the same animation:
 
-```tsx title="PhotoDetail.tsx (updated)" {1-2,6-7,17,33-34,45,48-52,54-60,62-64,111-112,114,117}
+{/* prettier-ignore */}
+```tsx title="PhotoDetail.tsx (updated)" {1-2,6-7,12,16-17,22,25-29,31-37,39-41,43-44,46,49}
 import { useCallback, useEffect } from "react";
 import { BackHandler, Pressable, StyleSheet, Text, View } from "react-native";
 import Animated, {
@@ -1566,39 +1295,16 @@ import Animated, {
   useSharedValue,
   withTiming,
 } from "react-native-reanimated";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { useNavigation } from "@react-navigation/native";
-import type { StaticScreenProps } from "@react-navigation/native";
-
-import type { Photo } from "./photos";
-import { SCALE, SCREEN_WIDTH } from "./constants";
+// ...
 import { useHeroTransition } from "./hero";
 
 const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
-
-type PhotoDetailProps = StaticScreenProps<{ photo: Photo }>;
-
+// ...
 function PhotoDetail({ route }: PhotoDetailProps) {
-  const { photo } = route.params;
-  const { targetElementAvailable, visibility } = useHeroTransition();
-  const progress = useHeroTransition((s) => s.progress);
-  const direction = useHeroTransition((s) => s.direction);
-  const position = useHeroTransition((s) => s.position);
-  const goBack = useHeroTransition((s) => s.goBack);
-  const navigation = useNavigation();
-  const { top: safeAreaTop } = useSafeAreaInsets();
-
-  const fullHeight = SCREEN_WIDTH * (photo.height / photo.width);
-
+  // ...
   const isTransitionDone = visibility.target === 1 && direction !== "forward";
   const buttonOpacity = useSharedValue(0);
-
-  const onLoad = useCallback(() => {
-    if (useHeroTransition.getState().id === photo.id) {
-      targetElementAvailable();
-    }
-  }, [photo.id, targetElementAvailable]);
-
+  // ...
   const onGoBack = useCallback(() => {
     goBack(navigation.goBack);
 
@@ -1622,52 +1328,7 @@ function PhotoDetail({ route }: PhotoDetailProps) {
   const buttonStyle = useAnimatedStyle(() => ({
     opacity: buttonOpacity.value,
   }));
-  const backdrop = useAnimatedStyle(
-    () => ({
-      opacity: direction === "neutral" ? 1 : progress.value,
-    }),
-    [direction],
-  );
-
-  const heroImage = useAnimatedStyle(() => {
-    if (direction === "neutral" || !position) {
-      return {
-        width: SCREEN_WIDTH,
-        height: fullHeight,
-        transform: [],
-      };
-    }
-    return {
-      width: SCREEN_WIDTH,
-      height: interpolate(progress.value, [0, 1], [SCREEN_WIDTH, fullHeight]),
-      transform: [
-        { translateX: interpolate(progress.value, [0, 1], [position.x, 0]) },
-        {
-          translateY: interpolate(
-            progress.value,
-            [0, 1],
-            [position.y - safeAreaTop, 0],
-          ),
-        },
-        { scale: interpolate(progress.value, [0, 1], [1 / SCALE, 1]) },
-      ],
-    };
-  }, [direction, position, safeAreaTop, fullHeight]);
-
-  return (
-    <View style={styles.container}>
-      <Animated.View style={[styles.backdrop, backdrop]} />
-      <Animated.Image
-        source={{ uri: photo.fullSize }}
-        style={[
-          styles.heroImage,
-          { marginTop: safeAreaTop, opacity: visibility.target },
-          heroImage,
-        ]}
-        resizeMode="cover"
-        fadeDuration={0}
-        onLoad={onLoad}
-      />
+  // ...
       <AnimatedPressable
         style={[styles.backButton, { top: safeAreaTop + 10 }, buttonStyle]}
         onPress={onGoBack}
@@ -1675,37 +1336,6 @@ function PhotoDetail({ route }: PhotoDetailProps) {
       >
         <Text style={styles.backText}>Close</Text>
       </AnimatedPressable>
-    </View>
-  );
-}
-
-const styles = StyleSheet.create({
-  backdrop: {
-    ...StyleSheet.absoluteFillObject,
-    backgroundColor: "#000",
-  },
-  container: {
-    flex: 1,
-  },
-  heroImage: {
-    transformOrigin: "0% 0%",
-  },
-  backButton: {
-    position: "absolute",
-    left: 16,
-    backgroundColor: "rgba(255,255,255,0.2)",
-    paddingHorizontal: 14,
-    paddingVertical: 8,
-    borderRadius: 20,
-  },
-  backText: {
-    color: "#fff",
-    fontSize: 16,
-    fontWeight: "600",
-  },
-});
-
-export default PhotoDetail;
 ```
 
 <PhotoTransitionExplainer chapters={["close"]} />
