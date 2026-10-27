@@ -87,17 +87,22 @@ These APIs work well when you need exactly the transition they provide. As soon 
 
 There are several ways to animate an item from a list to full screen. They differ in what happens to the item's content while it moves:
 
-|                                      | Animate in place                                             | Render a copy                                               | Animate a snapshot                                  | Teleport (this guide)                           |
-| ------------------------------------ | ------------------------------------------------------------ | ----------------------------------------------------------- | --------------------------------------------------- | ----------------------------------------------- |
-| How it works                         | Scale the cell with `transform` and `zIndex` inside the list | Mount a second instance in an overlay or on the next screen | Capture a bitmap of the view and animate the bitmap | Move the native view into the root `PortalHost` |
-| Heavy content rendered once          | ✅                                                           | ❌ Twice, two instances in memory                           | 🟡 Once, plus a bitmap of it                        | ✅                                              |
-| Videos, GIFs and Lottie keep playing | ✅                                                           | ❌ The copy starts over                                     | ❌ Frozen for the whole animation                   | ✅ It's the same native view                    |
-| Not clipped by the list              | ❌                                                           | ✅                                                          | ✅                                                  | ✅                                              |
-| Drawn above headers and tab bars     | ❌                                                           | ✅                                                          | ✅                                                  | ✅                                              |
+|                                      | Animate in place                                             | Render a copy                                               | Animate a snapshot                                  | View Transitions (web)                                                                     | Teleport (this guide)                           |
+| ------------------------------------ | ------------------------------------------------------------ | ----------------------------------------------------------- | --------------------------------------------------- | ------------------------------------------------------------------------------------------ | ----------------------------------------------- |
+| How it works                         | Scale the cell with `transform` and `zIndex` inside the list | Mount a second instance in an overlay or on the next screen | Capture a bitmap of the view and animate the bitmap | The browser captures the old state as a static image and morphs it into the live new state | Move the native view into the root `PortalHost` |
+| Heavy content rendered once          | ✅                                                           | ❌ Twice, two instances in memory                           | 🟡 Once, plus a bitmap of it                        | 🟡 Once, plus a bitmap of the old state                                                    | ✅                                              |
+| Videos, GIFs and Lottie keep playing | ✅                                                           | ❌ The copy starts over                                     | ❌ Frozen for the whole animation                   | 🟡 Frozen in the old state, live in the new one                                            | ✅ It's the same native view                    |
+| Not clipped by the list              | ❌                                                           | ✅                                                          | ✅                                                  | ✅                                                                                         | ✅                                              |
+| Drawn above headers and tab bars     | ❌                                                           | ✅                                                          | ✅                                                  | ✅                                                                                         | ✅                                              |
+| Works in React Native                | ✅                                                           | ✅                                                          | ✅                                                  | ❌ Web only                                                                                | ✅ On iOS, Android and web                      |
 
 ✅ yes, 🟡 partially, ❌ no.
 
 The full-res photo on the detail screen isn't a copy of the thumbnail: it's a separate, larger image, rendered only there, and the thumbnail hands over to it as soon as it loads.
+
+What about View Transitions?
+
+On the web, the [View Transition API](https://developer.mozilla.org/en-US/docs/Web/API/View_Transition_API/Using) and React's [`<ViewTransition>`](https://react.dev/reference/react/ViewTransition) (which [works only in the DOM so far](https://react.dev/blog/2026/09/09/react-19-3)) capture the old state as a static image and animate it into the live new state. The snapshots live only as long as the transition: when its animations finish, they're destroyed, unless you hold them with the experimental [`ViewTransition.waitUntil()`](https://developer.mozilla.org/en-US/docs/Web/API/ViewTransition/waitUntil). If the full-res photo hasn't loaded by then, the page shows whatever the new state renders. So you still need the low-res photo as a placeholder in the new state and a handoff to the full-res one, the same idea as in this guide. Because the new state is live, a photo that loads during the transition does appear mid-flight.
 
 ## Compared with the Instagram-like transitions[​](#compared-with-the-instagram-like-transitions "Direct link to Compared with the Instagram-like transitions")
 
@@ -208,7 +213,14 @@ export default PHOTOS;
 
 Why thumbnails matter
 
-A decoded image takes 4 bytes per pixel, whatever its file size. A 150 × 225 thumbnail takes about 135 KB of memory, while the 720 × 1080 photo behind it takes about 3.1 MB: 23 times more. A grid of thumbnails stays fast and light no matter how long the list gets.
+An image's memory use depends on its dimensions, not its file size. Compression only shrinks the download: to draw a JPEG, iOS and Android decode it into 4 bytes per pixel (red, green, blue and an alpha or padding byte; see [Apple's WWDC talk on memory](https://developer.apple.com/videos/play/wwdc2018/416/) and Android's [`ARGB_8888`](https://developer.android.com/reference/android/graphics/Bitmap.Config#ARGB_8888)). Take the square photo from this guide:
+
+|           | Pixels      | File (JPEG) | In memory |
+| --------- | ----------- | ----------- | --------- |
+| Thumbnail | 150 × 150   | 8 KB        | 90 KB     |
+| Full-res  | 1080 × 1080 | 225 KB      | 4.7 MB    |
+
+The full-res photo needs about 50 times more memory than its thumbnail. A grid of thumbnails stays fast and light no matter how long the list gets.
 
 A thumbnail is an image in a fixed-size `View`. That fixed size will matter later: when the image leaves its cell, the cell keeps its place.
 
