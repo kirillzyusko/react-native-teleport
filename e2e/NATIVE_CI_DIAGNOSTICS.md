@@ -333,6 +333,22 @@ All five ordinary CLI candidate jobs passed 18/18 flows and glitch checks in
 captured snapshots and recorded the expected installed patched-class fingerprint.
 These five suites precede the final unchanged-candidate verification series.
 
+## Separate Android setup delay: FFmpeg package downloads
+
+The FFmpeg installation can take much longer than the emulator and test suite.
+The original baseline downloaded 63.3 MB in 25 minutes 43 seconds; the seventh
+input-trace trial downloaded 71.3 MB in 11 minutes 7 seconds. Both fetched
+package indexes quickly, then downloaded archives from
+`azure.archive.ubuntu.com` slowly. These delays precede emulator startup.
+
+[runner-images #14823](https://github.com/actions/runner-images/issues/14823)
+tracks the same slow archive transfers. The runner's apt timeout only covers
+stalled connections, so a slow transfer can continue without mirror failover.
+The FFmpeg step removes the Azure entry from the runner's mirror list before
+installation, leaving the standard Ubuntu archive and security mirrors. It
+also logs the selected mirrors and installed FFmpeg version. This addresses
+the observed setup delay; it does not explain the missed Android menu tap.
+
 ## Why keyboard-controller behaves differently
 
 Keyboard-controller uses [Detox](https://github.com/kirillzyusko/react-native-keyboard-controller/blob/main/e2e/package.json),
