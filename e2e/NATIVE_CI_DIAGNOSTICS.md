@@ -789,9 +789,10 @@ window interrupted by an original app exit is reported only with matching raw
 process-exit evidence. It is not reported as a completed presentation window.
 
 Generic compilation and host fixtures validate source/API access, disabled behavior,
-exact handler forwarding, bounds and log decoding. Actual UIKit dispatch, selected
-app targets and runtime measurement coverage still require the fresh CI pilot.
-This diagnostic implements no synchronization fix.
+exact handler forwarding, bounds and log decoding. A subsequent original-suite
+pilot observed 20 real presenter attachments and 15 mount callback pairs, passed
+all 18 flows and the mandatory video check. It validates the repaired diagnostic;
+it implements no synchronization fix and earns no final stability credit.
 
 The first application-trace pilot stopped before compilation or UI tests: the
 preparer compared the dependency-generated Xcode project with its Git bytes.
@@ -808,3 +809,36 @@ intact; every other project byte and application-source pin remains checked.
 Different compilers, cache paths, deployment targets, configurations or source
 references fail the gate. Observed inputs are now archived before validation so
 an unexpected generated project can be reviewed even when preparation fails.
+
+### Existing static PNG body archive
+
+The separate `archive_frames` workflow input defaults to false and is accepted only
+for one `indigo-visual-touch-trace` trial with one-pass comparison. It uses the same
+app patch, JavaScript handlers, Indigo backend and frame observer. It enables no
+private idle RPCs or synchronization barrier.
+
+The SDK retains each of the two PNG values already encoded for the original static
+hash comparison. Each original screenshot and encoding still runs once, in the
+same order. A separate Simulator-only helper submits those existing bytes to a
+serial background writer after constructing the original response body. Equality,
+HTTP response bytes, physical-device source and every original test assertion and
+deadline remain unchanged. No additional screenshot, accessibility query, app query,
+input, encoding, retry, sleep or reply wait is added. File I/O and retained data can
+change scheduling, so this archive remains diagnostic evidence with zero credit.
+
+The writer permits at most 1,024 pairs, 16 MiB per PNG, 256 MiB total and eight
+pending pairs. Rejection, write error, missing file or mismatched identity fails the
+evidence gate. The post-test collector accepts only the selected runner PID's
+logged temporary directory inside its own app container on the selected Simulator.
+It checks the container's bundle identity, refuses links and path escapes, and
+copies only the named PNG files. It invokes no device APIs and does not wait for
+unfinished writes. Sources, runtime markers, every original static response and
+copied PNG bytes are independently compared before qualification.
+
+Earlier premature-equality failures did not retain the two compared PNG bodies.
+The passing mount-observer pilot also returned differing PNG hashes after observed
+mount callbacks and a JavaScript transition-end receipt. Those API-return times
+do not identify capture transactions, and the missing bodies prevent interpreting
+their visual contents. Archiving the existing bytes closes that evidence gap; it
+does not establish screenshot caching, native transition completion or physical
+display timing.

@@ -194,6 +194,11 @@ def hid_host_manifest(artifact, metadata):
 
 
 def build(args):
+    if getattr(args, "archive_frame_bodies", False) and (
+        args.backend != "indigo" or not args.trace_frames or
+        getattr(args, "observe_idle", False) or getattr(args, "observe_static_idle", False)
+    ):
+        raise RuntimeError("Frame bodies require the explicit Indigo frame diagnostic without idle RPCs")
     source = args.source.resolve()
     output = args.output.resolve()
     derived = args.derived.resolve()
@@ -228,6 +233,17 @@ def build(args):
                 observation[label] = {"original_sha256": sha256(raw), "patched_sha256": sha256(changed)}
             (output / "ScreenTrace.swift").write_bytes(trace.HELPER.read_bytes())
             metadata["frame_trace"] = observation
+        if getattr(args, "archive_frame_bodies", False):
+            spec = importlib.util.spec_from_file_location("frame_bodies", Path(__file__).with_name("maestro-ios-frame-bodies.py"))
+            bodies = importlib.util.module_from_spec(spec)
+            spec.loader.exec_module(bodies)
+            original_screen = (output / "ScreenDiffHandler.original.swift").read_bytes()
+            intermediate = (source / bodies.FRAME.SCREEN).read_bytes()
+            changed = bodies.patch(original_screen, intermediate)
+            (source / bodies.FRAME.SCREEN).write_bytes(changed)
+            (output / "frame-body-ScreenDiffHandler.patched.swift").write_bytes(changed)
+            (output / "FrameBodyArchive.swift").write_bytes(bodies.HELPER.read_bytes())
+            metadata["frame_body_archive"] = bodies.metadata(intermediate, changed)
         if getattr(args, "observe_idle", False):
             if args.backend != "indigo" or not args.trace_frames:
                 raise RuntimeError("Idle notification observation requires the explicit Indigo frame diagnostic")
@@ -347,6 +363,11 @@ def build(args):
 
 
 def install(args):
+    if getattr(args, "expected_frame_bodies", False) and (
+        args.expected_backend != "indigo" or not args.expected_frame_trace or
+        getattr(args, "expected_idle_observation", False) or getattr(args, "expected_static_idle_observation", False)
+    ):
+        raise RuntimeError("Frame-body archive install requires the explicit Indigo frame diagnostic without idle RPCs")
     jar = args.jar.resolve()
     artifact = args.artifact.resolve()
     metadata = json.loads((artifact / "maestro-ios-input.json").read_text())
@@ -362,6 +383,8 @@ def install(args):
         raise RuntimeError("The built idle-observation profile does not match this trial")
     if bool(metadata.get("idle_static_observation")) != getattr(args, "expected_static_idle_observation", False):
         raise RuntimeError("The built post-static idle-observation profile does not match this trial")
+    if bool(metadata.get("frame_body_archive")) != getattr(args, "expected_frame_bodies", False):
+        raise RuntimeError("The built frame-body archive profile does not match this trial")
     if os.environ.get("GITHUB_SHA") and metadata["candidate_sha"] != os.environ["GITHUB_SHA"]:
         raise RuntimeError("The built driver belongs to a different candidate")
     expected_names = {RESOURCE_PREFIX + name.removesuffix(".app") + ".zip" for name in APP_NAMES}
@@ -413,6 +436,7 @@ def main():
     prepare.add_argument("--lead-in", required=True, choices=("0", "0.05"))
     prepare.add_argument("--prepare-only", action="store_true")
     prepare.add_argument("--trace-frames", action="store_true")
+    prepare.add_argument("--archive-frame-bodies", action="store_true")
     prepare.add_argument("--observe-idle", action="store_true")
     prepare.add_argument("--observe-static-idle", action="store_true")
     prepare.add_argument("--backend", choices=("recap", "indigo"), default="recap")
@@ -422,6 +446,7 @@ def main():
     use.add_argument("--expected-lead-in", required=True, choices=("0", "0.05"))
     use.add_argument("--expected-backend", choices=("recap", "indigo"), default="recap")
     use.add_argument("--expected-frame-trace", action="store_true")
+    use.add_argument("--expected-frame-bodies", action="store_true")
     use.add_argument("--expected-idle-observation", action="store_true")
     use.add_argument("--expected-static-idle-observation", action="store_true")
     args = parser.parse_args()

@@ -33,6 +33,14 @@ def source_audit(artifact):
         expected = SOURCE.patch(name, original)
         if patched != expected or observed.get(label) != {'original_sha256': sha(original), 'patched_sha256': sha(expected)}:
             errors.append(f'Pinned frame source differs: {label}')
+    if metadata.get('frame_body_archive'):
+        spec = importlib.util.spec_from_file_location('frame_body_source_contract', Path(__file__).with_name('ios-frame-bodies.py'))
+        bodies = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(bodies)
+        try:
+            bodies.source_audit(artifact)
+        except (OSError, ValueError, KeyError) as error:
+            errors.append(f'Compiled final frame-body composition differs: {error}')
     return errors
 
 
