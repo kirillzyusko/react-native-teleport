@@ -830,17 +830,19 @@ const styles = StyleSheet.create({
 export default PhotoDetail;
 ```
 
-Run it and tap a photo. The detail screen opens as before, but the thumbnail you tapped is still visible on top of it, right where it was:
+Run it and tap a photo. The detail screen opens as before, but the thumbnail you tapped stays on top of it, right where it was, and covers part of the full-res photo:
 
 <div className="center video">
   <img
     src={useBaseUrl("/img/photo-gallery-transition/step4-teleported.jpg")}
     style={{ height: "60vh" }}
-    alt="The detail screen with the full-res photo at the top, and the tapped low-res thumbnail still drawn on top of the black backdrop at its old grid position."
+    alt="The detail screen with the full-res waterfall photo, and the tapped low-res thumbnail of the same photo drawn on top of it at its old grid position."
   />
 </div>
 
 <PhotoTransitionExplainer chapters={["teleport"]} />
+
+It looks like a bug, but it's the foundation of the whole transition: the root host sits above every screen, so the thumbnail can now travel over the detail screen. The next step makes it travel.
 
 :::tip Moved, not copied
 The thumbnail isn't re-created in the root host. `<Portal>` re-parents the existing native view, so the image isn't re-downloaded or re-decoded, and a video in its place would keep playing. Its wrapper `View` stays behind and keeps the cell's size, so the list doesn't reflow.

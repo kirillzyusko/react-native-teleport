@@ -70,10 +70,21 @@ type Readout = {
   host: string;
   fullRes: string;
 };
+const READOUTS: Array<keyof Readout> = [
+  "progress",
+  "host",
+  "source",
+  "target",
+  "fullRes",
+];
 // what the app looks like at a moment of a chapter
 type Core = {
   tap: "thumb" | "close" | null;
   tapK: number;
+  /** step 4: nothing animates yet, the detail screen opens as is */
+  plain: boolean;
+  /** collapses the exploded layers: 1 shows the phone as users see it */
+  flat: number;
   /** thumbnail z: 0 in its cell, 1 in the root host */
   lift: number;
   inHost: boolean;
@@ -107,6 +118,8 @@ const HOST = '"root"';
 const IDLE: Core = {
   tap: null,
   tapK: -1,
+  plain: false,
+  flat: 0,
   lift: 0,
   inHost: false,
   thumbP: 0,
@@ -150,6 +163,8 @@ type Chapter = {
   title: string;
   captions: Array<[number, string, string]>;
   at: (u: number) => Core;
+  /** store values that exist at this step; all of them by default */
+  readouts?: Array<keyof Readout>;
 };
 
 const H = { F0: 1.6, FS: 4.16, SWAP: 0.24, LAND: 1.3, RESUME: 7.1, FE: 10.7 };
@@ -384,6 +399,60 @@ const CHAPTERS: Record<ChapterId, Chapter> = {
   },
 };
 
+// chapters that tell more when played on their own than as a part of the pipeline
+const ALONE: Partial<Record<ChapterId, Chapter>> = {
+  // step 4: the detail screen opens as is, under the teleported thumbnail
+  teleport: {
+    duration: 9.6,
+    still: 5.6,
+    title:
+      "3D view of the teleport step: tapping a thumbnail moves it into the root PortalHost, above every screen, so it stays on top of the detail screen and its full-res photo.",
+    captions: [
+      ...CHAPTERS.teleport.captions,
+      [
+        3.4,
+        "The detail screen opens below the thumbnail",
+        "The root host sits above every screen, so the thumbnail covers the full-res photo.",
+      ],
+      [
+        6.9,
+        "What users see: the thumbnail on top of the photo",
+        "It keeps its grid position until the next step animates it.",
+      ],
+    ],
+    readouts: ["host", "fullRes"],
+    at: (u) => {
+      const inHost = u >= 0.9;
+      const loaded = u >= 4.4;
+      const loading = loaded ? 0 : ss(u, 3.6, 3.9);
+      return core({
+        tap: "thumb",
+        tapK: (u - 0.9) / 0.7,
+        plain: true,
+        flat: ss(u, 6.9, 8.1),
+        outline: ss(u, 8, 8.4),
+        lift: ss(u, 1.4, 2.8),
+        inHost,
+        push: ss(u, 3.4, 3.9),
+        backdrop: 1,
+        detailP: 1,
+        detailShown: loaded,
+        ghost: loading,
+        closeK: 1,
+        chips: {
+          low: ss(u, 2.5, 3),
+          ghost: loading,
+          full: loaded ? ss(u, 4.4, 4.8) : 0,
+        },
+        readout: {
+          host: inHost ? HOST : "undefined",
+          fullRes: u < 3.4 ? "not requested" : loaded ? "loaded" : "loading",
+        },
+      });
+    },
+  },
+};
+
 const PIPELINE_TITLE =
   "3D breakdown of the Photo Gallery hero transition: the thumbnail teleports into a root PortalHost, flies to full screen together with an invisible full-res photo, the two swap in one commit as soon as the photo loads, the thumbnail returns to its cell, and Close plays the transition in reverse.";
 const INTRO: [string, string] = [
@@ -397,29 +466,35 @@ const OUTRO: [string, string] = [
 
 type Plan = {
   full: boolean;
-  chapters: Array<{ id: ChapterId; start: number }>;
+  chapters: Array<{ id: ChapterId; start: number; chapter: Chapter }>;
   end: number;
   total: number;
   loopTo: number;
   still: number;
   title: string;
   captions: Array<[number, string, string]>;
+  readouts: Array<keyof Readout>;
 };
 
 // a single chapter explodes the phone and loops; several chapters play as one story, from the flat phone and back
 const makePlan = (ids: ChapterId[]): Plan => {
   const full = ids.length > 1;
-  const first = ids[0] ?? "teleport";
   let t = full ? 3.3 : 2;
   const chapters = ids.map((id) => {
-    const c = { id, start: t };
-    t += CHAPTERS[id].duration;
+    const chapter = (!full && ALONE[id]) || CHAPTERS[id];
+    const c = { id, start: t, chapter };
+    t += chapter.duration;
     return c;
   });
+  const first = chapters[0] ?? {
+    id: "teleport" as ChapterId,
+    start: 0,
+    chapter: CHAPTERS.teleport,
+  };
   const captions: Array<[number, string, string]> = [];
   if (full) captions.push([0, ...INTRO]);
   chapters.forEach((c, i) =>
-    CHAPTERS[c.id].captions.forEach(([s, a, b]) =>
+    c.chapter.captions.forEach(([s, a, b]) =>
       captions.push([!full && i === 0 && s === 0 ? 0 : c.start + s, a, b]),
     ),
   );
@@ -430,25 +505,33 @@ const makePlan = (ids: ChapterId[]): Plan => {
     chapters,
     end: t,
     total: full ? t + 4 : t + 1.4,
-    loopTo: full ? 0 : (chapters[0]?.start ?? 0),
+    loopTo: full ? 0 : first.start,
     still: handoff
       ? handoff.start + CHAPTERS.handoff.still
-      : (chapters[0]?.start ?? 0) + CHAPTERS[first].still,
-    title: full ? PIPELINE_TITLE : CHAPTERS[first].title,
+      : first.start + first.chapter.still,
+    title: full ? PIPELINE_TITLE : first.chapter.title,
     captions,
+    readouts: (!full && first.chapter.readouts) || READOUTS,
   };
 };
 
 const sceneAt = (plan: Plan, t: number): Scene => {
-  let ch = plan.chapters[0] ?? { id: "teleport" as ChapterId, start: 0 };
+  let ch = plan.chapters[0] ?? {
+    id: "teleport" as ChapterId,
+    start: 0,
+    chapter: CHAPTERS.teleport,
+  };
   for (const c of plan.chapters) if (t >= c.start) ch = c;
-  const chapter = CHAPTERS[ch.id];
+  const { chapter } = ch;
   const c = chapter.at(clamp(t - ch.start, 0, chapter.duration));
   const { full, end } = plan;
-  const ex = full
-    ? ss(t, 0.6, 2.9) * (1 - ss(t, end + 0.4, end + 2.4))
-    : ss(t, 0.3, 1.8);
-  const hud = full ? 1 - ss(t, end, end + 0.4) : 1;
+  const ex =
+    (full
+      ? ss(t, 0.6, 2.9) * (1 - ss(t, end + 0.4, end + 2.4))
+      : ss(t, 0.3, 1.8)) *
+    (1 - c.flat);
+  // labels and chips fade out before the layers collapse
+  const hud = (full ? 1 - ss(t, end, end + 0.4) : 1) * (1 - ss(c.flat, 0, 0.3));
   const [in0, in2] = full ? [2.2, 2.7] : [1.2, 1.5];
   let caption = 0;
   plan.captions.forEach(([start], i) => {
@@ -528,6 +611,13 @@ const tipFor = (key: TipKey, sc: Core): Tip => {
         code: "<View style={{ width, height }}>",
       };
     case "detail":
+      if (sc.plain)
+        return {
+          tone: "detail",
+          title: "Detail screen",
+          body: "A transparent modal with a black backdrop. It covers the gallery, but not the root host above it, so the teleported thumbnail stays in sight.",
+          code: 'presentation: "containedTransparentModal"',
+        };
       return {
         tone: "detail",
         title: "Detail screen",
@@ -535,6 +625,20 @@ const tipFor = (key: TipKey, sc: Core): Tip => {
         code: 'presentation: "containedTransparentModal"',
       };
     case "full":
+      if (sc.plain)
+        return sc.detailShown
+          ? {
+              tone: "hot",
+              title: "Full-res photo",
+              body: "A plain <Image> on the detail screen. The thumbnail draws on top of it, because the root host is above every screen.",
+              code: "source={{ uri: photo.fullSize }}",
+            }
+          : {
+              tone: "detail",
+              title: "Full-res photo, loading",
+              body: "A plain <Image> on the detail screen. Until it’s downloaded and decoded, the screen stays black, as in step 2.",
+              code: "source={{ uri: photo.fullSize }}",
+            };
       if (sc.detailShown)
         return {
           tone: "hot",
@@ -556,6 +660,13 @@ const tipFor = (key: TipKey, sc: Core): Tip => {
             code: "opacity: visibility.target",
           };
     case "close":
+      if (sc.plain)
+        return {
+          tone: "detail",
+          title: "Close button",
+          body: "Goes through the store: goBack clears id, so the thumbnail’s <Portal> renders in its cell again.",
+          code: "goBack(navigation.goBack)",
+        };
       return {
         tone: "detail",
         title: "Close button",
@@ -581,7 +692,9 @@ const tipFor = (key: TipKey, sc: Core): Tip => {
         return {
           tone: "host",
           title: "Teleported thumbnail",
-          body: "The same native view, now a child of the root PortalHost: nothing is re-mounted or re-decoded. progress drives its translate, scale and height.",
+          body: sc.plain
+            ? "The same native view, now a child of the root PortalHost: nothing is re-mounted or re-decoded. It keeps its grid position, above every screen."
+            : "The same native view, now a child of the root PortalHost: nothing is re-mounted or re-decoded. progress drives its translate, scale and height.",
           code: '<Portal hostName="root">',
         };
       if (sc.inHost)
@@ -798,7 +911,8 @@ function createScene(root: HTMLElement, palette: { current: Palette }) {
     box(q("thumbImage"), photoBox(fr));
     corners4("f", fr);
     opacity("thumbImage", sc.thumbShown ? 1 : 0);
-    const outlineK = sc.thumbShown ? 0 : ex * sc.outline;
+    // a hidden thumbnail is drawn as its outline; a visible one is outlined only to point it out on the flat phone
+    const outlineK = sc.thumbShown ? sc.outline * (1 - ex) : ex * sc.outline;
     opacity("thumbOutline", outlineK);
     q("slot").style.borderColor = rgba(pal.host, 0.9 * ex * sc.lift);
 
@@ -1323,6 +1437,7 @@ function Explainer({ plan, compact }: { plan: Plan; compact: boolean }) {
   const thumbClip = `${uid}-thumbClip`;
   const handoffClip = `${uid}-handoffClip`;
   const [, capTitle = "", capText = ""] = plan.captions[caption] ?? [];
+  const shows = (key: keyof Readout) => plan.readouts.includes(key);
   const corner = (prefix: string) =>
     [0, 1, 2, 3].map((i) => (
       <div
@@ -1723,39 +1838,49 @@ function Explainer({ plan, compact }: { plan: Plan; compact: boolean }) {
             aria-label="Animation timeline"
           />
           <dl className={styles.state}>
-            <div>
-              <dt>progress</dt>
-              <dd>
-                <span ref={progressRef}>0.00</span>
-                <span className={styles.bar}>
-                  <span ref={barRef} />
-                </span>
-              </dd>
-            </div>
-            <div>
-              <dt>hostName</dt>
-              <dd>
-                <span ref={hostRef}>undefined</span>
-              </dd>
-            </div>
-            <div>
-              <dt>visibility.source</dt>
-              <dd>
-                <span ref={sourceRef}>1</span>
-              </dd>
-            </div>
-            <div>
-              <dt>visibility.target</dt>
-              <dd>
-                <span ref={targetRef}>0</span>
-              </dd>
-            </div>
-            <div>
-              <dt>full-res</dt>
-              <dd>
-                <span ref={loadRef}>not requested</span>
-              </dd>
-            </div>
+            {shows("progress") ? (
+              <div>
+                <dt>progress</dt>
+                <dd>
+                  <span ref={progressRef}>0.00</span>
+                  <span className={styles.bar}>
+                    <span ref={barRef} />
+                  </span>
+                </dd>
+              </div>
+            ) : null}
+            {shows("host") ? (
+              <div>
+                <dt>hostName</dt>
+                <dd>
+                  <span ref={hostRef}>undefined</span>
+                </dd>
+              </div>
+            ) : null}
+            {shows("source") ? (
+              <div>
+                <dt>visibility.source</dt>
+                <dd>
+                  <span ref={sourceRef}>1</span>
+                </dd>
+              </div>
+            ) : null}
+            {shows("target") ? (
+              <div>
+                <dt>visibility.target</dt>
+                <dd>
+                  <span ref={targetRef}>0</span>
+                </dd>
+              </div>
+            ) : null}
+            {shows("fullRes") ? (
+              <div>
+                <dt>full-res</dt>
+                <dd>
+                  <span ref={loadRef}>not requested</span>
+                </dd>
+              </div>
+            ) : null}
           </dl>
         </div>
       )}
