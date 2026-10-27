@@ -19,6 +19,7 @@ on:
         options:
           - suite
           - input-trace
+          - input-repeat
           - stock-driver
           - foreground-driver
   pull_request:
@@ -55,7 +56,7 @@ jobs:
     steps:
       - id: trials
         env:
-          TRIAL_COUNT: ${{ inputs.mode && inputs.mode != 'suite' && inputs.mode != 'input-trace' && '1' || inputs.trials || '1' }}
+          TRIAL_COUNT: ${{ inputs.mode && inputs.mode != 'suite' && inputs.mode != 'input-trace' && inputs.mode != 'input-repeat' && '1' || inputs.trials || '1' }}
         run: |
           node <<'NODE'
           const fs = require("node:fs");
@@ -100,7 +101,7 @@ jobs:
         run: sed -i.bak 's/reactNativeArchitectures=.*/reactNativeArchitectures=x86_64/' example/android/gradle.properties
       - name: Run Gradle Build for example/android/
         env:
-          TELEPORT_INPUT_TRACE: ${{ inputs.mode == 'input-trace' && 'true' || 'false' }}
+          TELEPORT_INPUT_TRACE: ${{ (inputs.mode == 'input-trace' || inputs.mode == 'input-repeat') && 'true' || 'false' }}
         run: cd example/android && ./gradlew assembleRelease --build-cache -PteleportInputTrace="$TELEPORT_INPUT_TRACE" && cd ../..
       - name: Upload artifact
         uses: actions/upload-artifact@v4
@@ -219,13 +220,18 @@ jobs:
         if: ${{ !inputs.mode || inputs.mode == 'suite' || inputs.mode == 'input-trace' }}
         run: node e2e/scripts/check-glitches.mjs e2e/reports/debug
       - name: Verify Android input tracing
-        if: ${{ always() && inputs.mode == 'input-trace' }}
+        if: ${{ always() && (inputs.mode == 'input-trace' || inputs.mode == 'input-repeat') }}
         run: |
           grep -q 'TeleportInputTrace.*"phase":"installed"' e2e/reports/native-diagnostics/logcat.log
           grep -q 'TeleportInputTrace.*"phase":"received"' e2e/reports/native-diagnostics/logcat.log
           grep -q '\[teleport-input\].*"phase":"installed"' e2e/reports/native-diagnostics/logcat.log
           if grep -q '\[teleport-input\].*"phase":"overflow"' e2e/reports/native-diagnostics/logcat.log; then exit 1; fi
           if grep -q 'TeleportInputTrace.*trace.error' e2e/reports/native-diagnostics/logcat.log; then exit 1; fi
+          if [ "$NATIVE_MODE" = input-repeat ]; then
+            press_count=$(grep -c '\[teleport-input\].*"phase":"onPress","role":"stable_host_remount"' e2e/reports/native-diagnostics/logcat.log || true)
+            echo "Recorded stable_host_remount callbacks: $press_count / 20"
+            test "$press_count" -eq 20
+          fi
       - name: Kill snapshot engine
         if: always()
         shell: bash

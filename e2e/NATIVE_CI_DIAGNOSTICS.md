@@ -387,6 +387,16 @@ These diagnostic runs are excluded from final stability counts. The hosted
 API 31 guest ended with its job, and no Android device was running locally
 when checked through Argent, so this new failure is being investigated on CI.
 
+The manual `input-repeat` profile focuses on that same original
+`navigation-view-ownership.yml`: each fresh trial executes it 20 times in a
+fixed Maestro `repeat` block, stopping on the first failure. The generated
+wrapper is included in native diagnostics. The imported flow keeps all three
+app launches, navigation interactions and assertions unchanged. It runs with
+the same input tracing and foreground instrumentation patch. Its trace gate
+also requires 20 matching target callbacks. The original 18-flow
+diagnostic series continues separately; this focused profile does not
+run the Reels recording or contribute to final full-suite counts.
+
 Both native workflows run the existing suite through `scripts/native-diagnostics.mjs`:
 
 - Stream native logs independently of Maestro.
