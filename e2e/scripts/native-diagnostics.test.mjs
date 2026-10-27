@@ -280,7 +280,22 @@ if (name === "test-command") {
       }
     }, 10);
   }
+  if (process.env.SDK_CLICK_PROBE) {
+    const clickTimer = setInterval(() => {
+      if (!fs.existsSync("test.pid")) return;
+      clearInterval(clickTimer);
+      const line = '10-27 11:00:00.123 1234 1235 I MaestroNativeInput: {"phase":"native.click.complete","x":540,"y":1512,"accepted":true,"completedUptimeMs":12345}';
+      process.stdout.write(line.slice(0, 100));
+      setTimeout(() => { console.log(line.slice(100)); console.log(line); }, 10);
+    }, 25);
+  }
   setInterval(() => {}, 1000);
+} else if (name === "adb" && args.includes("path")) {
+  fs.appendFileSync("sdk-identity-queries.log", JSON.stringify(args) + "\\n");
+  console.log("package:/data/app/~~fixture/dev.mobile.maestro.test-fixture/base.apk");
+} else if (name === "adb" && args.includes("sha256sum")) {
+  fs.appendFileSync("sdk-identity-queries.log", JSON.stringify(args) + "\\n");
+  console.log("a".repeat(64) + "  /data/app/~~fixture/dev.mobile.maestro.test-fixture/base.apk");
 } else if (name === "ps") {
   if (process.env.SERVICE_PROBE && fs.existsSync("test.pid")) {
     const testPid = fs.readFileSync("test.pid", "utf8");
@@ -753,3 +768,61 @@ for (const state of ["stalled", "completed"]) {
     }
   });
 }
+
+test("android: first post-click marker captures live selected SDK APK exactly once", async () => {
+  const { directory, options } = await fixture();
+  try {
+    options.env.SDK_CLICK_PROBE = "1";
+    options.env.TELEPORT_SDK_CLICK_TRACE = "1";
+    options.env.TEST_DURATION_MS = "1200";
+    await execute(
+      process.execPath,
+      [runner, "android", "emulator-5554", "--", "test-command", "0"],
+      options,
+    );
+    const native = path.join(directory, "e2e/reports/native-diagnostics");
+    const identity = JSON.parse(
+      await readFile(path.join(native, "native-click-installed.json"), "utf8"),
+    );
+    assert.equal(identity.device, "emulator-5554");
+    assert.equal(identity.sha256, "a".repeat(64));
+    assert.equal(identity.error, undefined);
+    const queries = (
+      await readFile(path.join(directory, "sdk-identity-queries.log"), "utf8")
+    )
+      .trim()
+      .split("\n")
+      .map(JSON.parse);
+    assert.equal(queries.length, 3);
+    assert.ok(queries.every((q) => q[0] === "-s" && q[1] === "emulator-5554"));
+    assert.equal(queries.filter((q) => q.includes("sha256sum")).length, 1);
+    const pid = Number(
+      await readFile(path.join(directory, "collector.pid"), "utf8"),
+    );
+    await assertExited(pid);
+  } finally {
+    await cleanupCollector(directory);
+    await rm(directory, { recursive: true, force: true });
+  }
+});
+
+test("android: ordinary suite never captures SDK package identity", async () => {
+  const { directory, options } = await fixture();
+  try {
+    options.env.SDK_CLICK_PROBE = "1";
+    options.env.TEST_DURATION_MS = "600";
+    delete options.env.TELEPORT_SDK_CLICK_TRACE;
+    await execute(
+      process.execPath,
+      [runner, "android", "emulator-5554", "--", "test-command", "0"],
+      options,
+    );
+    await assert.rejects(
+      readFile(path.join(directory, "sdk-identity-queries.log")),
+      { code: "ENOENT" },
+    );
+  } finally {
+    await cleanupCollector(directory);
+    await rm(directory, { recursive: true, force: true });
+  }
+});

@@ -19,6 +19,7 @@ on:
         options:
           - suite
           - input-trace
+          - input-trace-sdk
           - input-repeat
           - stock-driver
           - foreground-driver
@@ -56,7 +57,7 @@ jobs:
     steps:
       - id: trials
         env:
-          TRIAL_COUNT: ${{ inputs.mode && inputs.mode != 'suite' && inputs.mode != 'input-trace' && inputs.mode != 'input-repeat' && '1' || inputs.trials || '1' }}
+          TRIAL_COUNT: ${{ inputs.mode && inputs.mode != 'suite' && inputs.mode != 'input-trace' && inputs.mode != 'input-trace-sdk' && inputs.mode != 'input-repeat' && '1' || inputs.trials || '1' }}
         run: |
           node <<'NODE'
           const fs = require("node:fs");
@@ -156,7 +157,7 @@ jobs:
       - name: Log Maestro version
         run: maestro --version
       - name: Ensure FFmpeg is available
-        if: ${{ !inputs.mode || inputs.mode == 'suite' || inputs.mode == 'input-trace' }}
+        if: ${{ !inputs.mode || inputs.mode == 'suite' || inputs.mode == 'input-trace' || inputs.mode == 'input-trace-sdk' }}
         run: |
           if ! command -v ffmpeg >/dev/null; then
             # The Azure mirror can trickle packages for 20+ minutes without an apt timeout.
@@ -169,6 +170,17 @@ jobs:
             sudo apt-get install -y ffmpeg
           fi
           ffmpeg -version
+      - name: Prepare SDK-only native click diagnostics
+        if: ${{ inputs.mode == 'input-trace-sdk' }}
+        shell: bash
+        run: |
+          probe="$RUNNER_TEMP/teleport-maestro-driver-probe"
+          python3 e2e/scripts/patch-maestro-instrumentation.py "$HOME/.maestro/lib/maestro-client.jar" "$probe" --install
+          signer=$(find "$ANDROID_HOME/build-tools" -mindepth 2 -maxdepth 2 -name apksigner -type f | sort -V | tail -1)
+          test -n "$signer"
+          echo "TELEPORT_APKSIGNER=$signer" >> "$GITHUB_ENV"
+          python3 e2e/scripts/patch-maestro-native-click.py "$HOME/.maestro/lib/maestro-client.jar" \
+            "$probe/sdk-click" --apksigner "$signer" --install
       - name: Enable KVM group perms
         run: |
           echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
@@ -183,11 +195,11 @@ jobs:
             ~/.android/adb*
           key: avd-${{ matrix.devices.api }}-${{ matrix.devices.target }}
       - name: Prepare snapshot engine
-        if: ${{ !inputs.mode || inputs.mode == 'suite' || inputs.mode == 'input-trace' }}
+        if: ${{ !inputs.mode || inputs.mode == 'suite' || inputs.mode == 'input-trace' || inputs.mode == 'input-trace-sdk' }}
         run: cd e2e && npm install
 
       - name: Start snapshot engine (background)
-        if: ${{ !inputs.mode || inputs.mode == 'suite' || inputs.mode == 'input-trace' }}
+        if: ${{ !inputs.mode || inputs.mode == 'suite' || inputs.mode == 'input-trace' || inputs.mode == 'input-trace-sdk' }}
         shell: bash
         run: |
           mkdir -p e2e/reports
@@ -213,11 +225,11 @@ jobs:
             adb install -r -d -t example/android/app/build/outputs/apk/release/app-release.apk
             bash e2e/scripts/run-android-ci.sh "$NATIVE_MODE" emulator-5554
       - name: Show snapshot engine logs
-        if: ${{ always() && (!inputs.mode || inputs.mode == 'suite' || inputs.mode == 'input-trace') }}
+        if: ${{ always() && (!inputs.mode || inputs.mode == 'suite' || inputs.mode == 'input-trace' || inputs.mode == 'input-trace-sdk') }}
         run: |
           cat e2e/reports/snapshot-engine.log || true
       - name: Check glitches/flickering
-        if: ${{ !inputs.mode || inputs.mode == 'suite' || inputs.mode == 'input-trace' }}
+        if: ${{ !inputs.mode || inputs.mode == 'suite' || inputs.mode == 'input-trace' || inputs.mode == 'input-trace-sdk' }}
         run: node e2e/scripts/check-glitches.mjs e2e/reports/debug
       - name: Verify Android input tracing
         if: ${{ always() && (inputs.mode == 'input-trace' || inputs.mode == 'input-repeat') }}
@@ -232,6 +244,24 @@ jobs:
             press_count=$(grep -c '\[teleport-input\].*"phase":"onPress","role":"stable_host_remount"' e2e/reports/native-diagnostics/logcat.log || true)
             echo "Recorded stable_host_remount callbacks: $press_count / 20"
             test "$press_count" -eq 20
+          fi
+      - name: Verify SDK-only native click diagnostics
+        if: ${{ always() && inputs.mode == 'input-trace-sdk' }}
+        run: |
+          python3 e2e/scripts/check-android-native-click.py e2e/reports/native-diagnostics \
+            e2e/reports/debug/maestro.log --apksigner "$TELEPORT_APKSIGNER" > e2e/reports/native-diagnostics/native-click-audit.json
+      - name: Preserve SDK preparation diagnostics
+        if: ${{ always() && inputs.mode == 'input-trace-sdk' }}
+        shell: bash
+        run: |
+          probe="$RUNNER_TEMP/teleport-maestro-driver-probe"
+          mkdir -p e2e/reports/native-diagnostics/sdk-click
+          if [ -d "$probe/sdk-click" ]; then
+            find "$probe/sdk-click" -maxdepth 1 -type f \( -name '*.json' -o -name '*.apk' -o -name '*.smali' -o -name '*.log' \) \
+              -exec cp {} e2e/reports/native-diagnostics/sdk-click/ \;
+          fi
+          if [ -f "$probe/maestro-patch.json" ]; then
+            cp "$probe/maestro-patch.json" e2e/reports/native-diagnostics/
           fi
       - name: Kill snapshot engine
         if: always()

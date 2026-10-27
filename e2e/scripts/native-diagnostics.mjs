@@ -5,7 +5,12 @@ import {
   mkdirSync,
   readdirSync,
   statSync,
+  writeFileSync,
 } from "node:fs";
+import {
+  installedSDKIdentity,
+  nativeClickLine,
+} from "./android-native-click.mjs";
 import { homedir } from "node:os";
 import path from "node:path";
 import {
@@ -116,6 +121,55 @@ function capture(file, [executable, parameters], timeout = 15000, observe) {
 function streamLogs(file, invocation, observe) {
   // A job timeout is the upper bound; cleanup stops these long-lived collectors.
   return capture(file, invocation, 90 * 60 * 1000, observe);
+}
+
+const sdkClickTrace =
+  platform === "android" && process.env.TELEPORT_SDK_CLICK_TRACE === "1";
+let sdkClickBuffer = "";
+let sdkIdentityCapture;
+function observeAndroidLog(chunk) {
+  if (!sdkClickTrace || sdkIdentityCapture || !testPid) return;
+  sdkClickBuffer += chunk.toString();
+  const lines = sdkClickBuffer.split("\n");
+  sdkClickBuffer = lines.pop().slice(-65536);
+  for (const line of lines) {
+    let click;
+    try {
+      click = nativeClickLine(line);
+    } catch {
+      continue;
+    }
+    if (!click) continue;
+    const triggeredAt = timestamp();
+    log(
+      "First post-click SDK marker; capturing live installed server APK identity",
+    );
+    sdkIdentityCapture = installedSDKIdentity(device, async (parameters) => {
+      let output = "";
+      await capture(
+        "native-click-installed-commands.log",
+        adb(...parameters),
+        15000,
+        (data) => {
+          output += data.toString();
+        },
+      );
+      return output;
+    })
+      .then((identity) => ({
+        ...identity,
+        triggeredAt,
+        capturedAt: timestamp(),
+      }))
+      .catch((error) => ({ device, triggeredAt, error: error.message }))
+      .then((identity) =>
+        writeFileSync(
+          path.join(directory, "native-click-installed.json"),
+          JSON.stringify(identity, null, 2) + "\n",
+        ),
+      );
+    break;
+  }
 }
 
 let terminationTimer;
@@ -503,6 +557,8 @@ async function finalState() {
 
 log(`Starting ${platform} diagnostics for ${device}; output=${directory}`);
 if (platform === "ios") log("iOS native wait-chain diagnostics=1");
+if (sdkClickTrace)
+  log("Android SDK post-click diagnostics=1; app hooks disabled");
 if (platform === "ios" && hostedCI) log("iOS owned log-stream diagnostics=1");
 log(
   `Runner: os=${process.env.RUNNER_OS} arch=${process.env.RUNNER_ARCH} image=${process.env.ImageOS}/${process.env.ImageVersion}; Node=${process.version}`,
@@ -540,6 +596,7 @@ if (platform === "ios") {
   void streamLogs(
     "logcat.log",
     adb("logcat", "-b", "all", "-v", "threadtime", "-T", "1"),
+    observeAndroidLog,
   );
 }
 
@@ -636,6 +693,7 @@ const exitCode = await new Promise((resolve) => {
 clearInterval(interval);
 clearTimeout(terminationTimer);
 await sampling;
+await sdkIdentityCapture;
 if (indigoBridge) await indigoBridge.stop();
 if (!interrupted) await finalState();
 for (const child of collectors) signalGroup(child, "SIGKILL");

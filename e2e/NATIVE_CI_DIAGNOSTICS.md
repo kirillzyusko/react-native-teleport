@@ -628,3 +628,29 @@ The evidence is retained under
 CI/local process-state comparison and the full-suite logs. Both iOS simulators
 started for this investigation were shut down afterward. The Android emulator
 was already running before the investigation and was left running.
+
+## Android SDK-only click diagnostics
+
+The manual `input-trace-sdk` profile runs the original 18 flows and mandatory
+video checks with application input hooks disabled. It patches only Maestro
+2.10.0's isolated `UiDeviceExt` DEX. After the original `clickNoSync` returns,
+it records its aggregate Boolean, coordinates and a post-call uptime under the
+`MaestroNativeInput` log tag. DOWN, the existing 100 ms hold, UP and their
+control flow remain unchanged. No event is replayed. A true result reports API
+acceptance, not application delivery; false does not identify which event failed.
+
+The builder verifies Apktool 3.0.1, the original APK, source and foreground
+instrumentation class, preserves all other DEX/resources and SDK JAR entries,
+and verifies the signed APK and disassembly roundtrip. The key is Maestro's
+pinned public upstream debug fixture, with the original SDK certificate.
+Unsupported input fails before replacing the private CI dependency.
+
+On the first post-click SDK marker, bounded read-only commands hash the selected
+emulator's installed server APK and confirm its package path before and after.
+This happens during the session because `AndroidDriver.close` can uninstall the
+server. No manual installation or application launch is added. The audit checks
+raw installed-APK identity, source/DEX provenance and every CLI tap coordinate
+against the native JSON sequence. Missing records, rejected input, enabled app
+hooks or mismatched APKs fail the diagnostic gate. These runs always have zero
+final stability credit. Runtime delivery is unverified until an actual CI pilot
+has passed these checks; the offline assembly alone does not diagnose a missed tap.
