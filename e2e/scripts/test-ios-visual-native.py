@@ -14,6 +14,7 @@ import ObjectiveC
 enum FixtureState {
   static var forwarded = 0
   static var added = 0
+  static var removed = 0
   static var cachedGetterReads = 0
   static var activeLinks = 0
   static var clock = 100.0
@@ -41,26 +42,35 @@ final class FixtureBundle {
   @objc(addObserver:) func add(_ observer: RCTSurfacePresenterObserver)
   @objc(removeObserver:) func remove(_ observer: RCTSurfacePresenterObserver)
 }
-final class FixturePresenter: NSObject, RCTSurfacePresenterStub {
+// Match the actual linked RN class: observer selectors, no Stub conformance.
+final class FixturePresenter: NSObject {
   weak var observer: RCTSurfacePresenterObserver?
-  func add(_ next: RCTSurfacePresenterObserver) { FixtureState.added += 1; observer = next }
-  func remove(_ previous: RCTSurfacePresenterObserver) { observer = nil }
+  @objc(addObserver:) func add(_ next: RCTSurfacePresenterObserver) { FixtureState.added += 1; observer = next }
+  @objc(removeObserver:) func remove(_ previous: RCTSurfacePresenterObserver) { FixtureState.removed += 1; observer = nil }
   func mount() {
     observer?.willMountComponents?(withRootTag: 1)
     observer?.didMountComponents?(withRootTag: 1)
   }
 }
+final class WrongAddPresenter: NSObject {
+  @objc(addObserver:) func add(_ observer: RCTSurfacePresenterObserver) -> Int32 { fatalError("ABI guard did not reject wrong add") }
+  @objc(removeObserver:) func remove(_ observer: RCTSurfacePresenterObserver) { fatalError("Wrong add receiver used") }
+}
+final class WrongRemovePresenter: NSObject {
+  @objc(addObserver:) func add(_ observer: RCTSurfacePresenterObserver) { fatalError("Wrong remove receiver used") }
+  @objc(removeObserver:) func remove(_ observer: RCTSurfacePresenterObserver) -> Int32 { fatalError("ABI guard did not reject wrong remove") }
+}
 final class FixtureHost: NSObject {
-  let presenter: FixturePresenter
-  init(_ presenter: FixturePresenter) { self.presenter = presenter }
-  @objc func surfacePresenter() -> NSObject {
+  let presenter: NSObject?
+  init(_ presenter: NSObject?) { self.presenter = presenter }
+  @objc func surfacePresenter() -> NSObject? {
     FixtureState.cachedGetterReads += 1
     return presenter
   }
 }
 final class FixtureFactory: NSObject {
   let host: FixtureHost
-  init(_ presenter: FixturePresenter) { host = FixtureHost(presenter) }
+  init(_ presenter: NSObject?) { host = FixtureHost(presenter) }
   @objc func reactHost() -> NSObject {
     FixtureState.cachedGetterReads += 1
     return host
@@ -115,9 +125,11 @@ extension VisualEventTrace {
   static func main() throws {
     let mode = CommandLine.arguments[1]
     let trace = VisualEventTrace.shared
-    let presenter = FixturePresenter()
+    let presenter: NSObject? = mode == "wrong-add" ? WrongAddPresenter() :
+      mode == "wrong-remove" ? WrongRemovePresenter() : mode == "nil-presenter" ? nil : FixturePresenter()
     trace.install()
     trace.attachFactory(FixtureFactory(presenter))
+    if mode == "reattach" { trace.attachFactory(FixtureFactory(presenter)) }
     let app = UIApplication()
     let touch = UITouch()
     let view = UIView()
@@ -140,7 +152,7 @@ extension VisualEventTrace {
         }
       }
       app.sendEvent(event)
-      presenter.mount()
+      (presenter as? FixturePresenter)?.mount()
       CADisplayLink.last?.fire()
       FixtureState.clock += 3.1
       CADisplayLink.last?.fire()
@@ -150,6 +162,8 @@ extension VisualEventTrace {
     let report: [String: Any] = [
       "mode": mode, "originalCalls": FixtureState.forwarded,
       "mountObservers": FixtureState.added, "activeLinks": FixtureState.activeLinks,
+      "removedObservers": FixtureState.removed,
+      "presenterConformsToStub": presenter is RCTSurfacePresenterStub,
       "cachedGetterReads": FixtureState.cachedGetterReads,
       "deviceAPICalls": 0
     ]
@@ -173,13 +187,14 @@ def run(output):
                         '-parse-as-library', str(fixture), '-o', str(binary)],
                        stdout=log, stderr=subprocess.STDOUT, check=True)
     results = []
-    for mode in ['disabled', 'enabled', 'chunked', 'overflow']:
+    for mode in ['disabled', 'enabled', 'chunked', 'overflow', 'wrong-add', 'wrong-remove', 'nil-presenter', 'reattach']:
         result = subprocess.run([str(binary), mode], capture_output=True, text=True, timeout=30)
         (output / f'{mode}.stdout').write_text(result.stdout)
         (output / f'{mode}.stderr').write_text(result.stderr)
         if result.returncode:
             raise ValueError(f'Host mock exited {result.returncode}: {mode}')
         report = json.loads(result.stdout)
+        assert report['presenterConformsToStub'] is False
         spec = importlib.util.spec_from_file_location('visual_trace_raw', Path(__file__).with_name('check-ios-visual-trace.py'))
         checker = importlib.util.module_from_spec(spec)
         spec.loader.exec_module(checker)
@@ -193,15 +208,21 @@ def run(output):
         assert report['deviceAPICalls'] == 0 and report['activeLinks'] == 0
         if mode == 'disabled':
             assert report['originalCalls'] == 2 and report['mountObservers'] == 0 and report['cachedGetterReads'] == 0 and not records
-        elif mode in ('enabled', 'chunked'):
-            assert report['originalCalls'] == 2 and report['mountObservers'] == 1 and report['cachedGetterReads'] == 2
+        elif mode in ('enabled', 'chunked', 'reattach'):
+            assert report['originalCalls'] == 2 and report['mountObservers'] == (2 if mode == 'reattach' else 1)
+            assert report['cachedGetterReads'] == (4 if mode == 'reattach' else 2)
+            assert report['removedObservers'] == (1 if mode == 'reattach' else 0)
             assert phases.count('touch.up.dispatched') == 1
             assert phases.count('fabric.willMount') == phases.count('fabric.didMount') == 1
             assert phases.count('presentation.sample') == 2 and phases.count('presentation.end') == 1
             touch = next(r for r in records if r['phase'] == 'touch.up.dispatched')
             assert touch['touchTimestampMs'] == 100000 and touch['identifiers'] == ['go_next']
-        else:
+        elif mode == 'overflow':
             assert report['originalCalls'] == 4201 and phases.count('buffer.overflow') == 1
+        else:
+            assert report['originalCalls'] == 2 and report['mountObservers'] == 0 and report['removedObservers'] == 0
+            assert report['cachedGetterReads'] == 2 and phases.count('setup.error') == 1
+            assert 'mount.observer.installed' not in phases and 'fabric.willMount' not in phases and 'fabric.didMount' not in phases
         numbered = [r['sequence'] for r in records if 'sequence' in r]
         assert numbered == sorted(numbered) and len(numbered) == len(set(numbered))
         results.append(report)

@@ -761,6 +761,16 @@ observer. A bounded three-second display-link observation records the target's
 ancestor presentation-layer frames. It adds no UI input, screenshot, accessibility
 query, app prelaunch, synchronization wait or native idle RPC.
 
+The first runtime trace reached the original navigation handler and second-screen
+React layout effect, but screenshot equality returned true before an unfinished
+navigation screenshot failed the original assertion. Its mount logger also failed:
+the linked presenter implements the observer methods without runtime adoption of
+the stub protocol declared in its header category. The diagnostic now checks the
+two observer method encodings on that same cached object and invokes their typed
+implementations. Host fixtures use the actual class shape, reject incorrect method
+signatures and nil objects, and verify observer removal on replacement. This repairs
+measurement setup; it does not synchronize navigation or fix the visual failure.
+
 These boundaries have different meanings. A layout effect is not a native mount;
 a transition event received in JavaScript is not the native completion instant;
 CADisplayLink and presentation-layer samples are not physical display transactions.

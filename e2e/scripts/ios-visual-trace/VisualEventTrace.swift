@@ -21,7 +21,7 @@ final class VisualEventTrace: NSObject, RCTSurfacePresenterObserver {
   private var sequence = 0
   private var gesture = 0
   private var installed = false
-  private weak var presenter: RCTSurfacePresenterStub?
+  private weak var presenter: NSObject?
   private var displayLink: CADisplayLink?
   private var sampleUntil: Double = 0
   private var sampledViews: [WeakView] = []
@@ -80,13 +80,13 @@ final class VisualEventTrace: NSObject, RCTSurfacePresenterObserver {
 
   private func attachHost(_ host: NSObject?) {
     guard Self.enabled else { return }
-    // RCTHost's existing public cached getter returns a C++-declared class.
-    // The Objective-C stub protocol avoids exposing that class to Swift.
+    // The cached C++-declared object is not exported to Swift. Its header's
+    // category declares a stub protocol that the compiled class does not adopt.
     let selector = NSSelectorFromString("surfacePresenter")
     guard let host,
       let method = class_getInstanceMethod(type(of: host), selector),
       let encoding = method_getTypeEncoding(method), String(cString: encoding) == "@16@0:8",
-      let next = host.perform(selector)?.takeUnretainedValue() as? RCTSurfacePresenterStub
+      let next = host.perform(selector)?.takeUnretainedValue() as? NSObject
     else {
       emit("setup.error", ["reason": "Original ReactHost cached surface presenter unavailable"])
       return
@@ -94,15 +94,40 @@ final class VisualEventTrace: NSObject, RCTSurfacePresenterObserver {
     attachPresenter(next)
   }
 
-  private func attachPresenter(_ next: RCTSurfacePresenterStub?) {
+  private func observerMethod(_ object: NSObject, _ selector: Selector) -> Method? {
+    guard let method = class_getInstanceMethod(type(of: object), selector),
+      let encoding = method_getTypeEncoding(method), String(cString: encoding) == "v24@0:8@16"
+    else { return nil }
+    return method
+  }
+
+  private func invokeObserver(_ method: Method, _ object: NSObject, _ selector: Selector) {
+    typealias ObserverCall = @convention(c) (AnyObject, Selector, AnyObject) -> Void
+    let call = unsafeBitCast(method_getImplementation(method), to: ObserverCall.self)
+    call(object, selector, self)
+  }
+
+  private func attachPresenter(_ next: NSObject?) {
     guard Self.enabled else { return }
     guard let next else {
       emit("setup.error", ["reason": "Original ReactHost surface presenter unavailable"])
       return
     }
-    presenter?.remove(self)
+    let add = NSSelectorFromString("addObserver:")
+    let remove = NSSelectorFromString("removeObserver:")
+    guard let addMethod = observerMethod(next, add), observerMethod(next, remove) != nil else {
+      emit("setup.error", ["reason": "Original surface presenter observer method ABI unavailable"])
+      return
+    }
+    if let previous = presenter {
+      guard let method = observerMethod(previous, remove) else {
+        emit("setup.error", ["reason": "Previous surface presenter observer method ABI unavailable"])
+        return
+      }
+      invokeObserver(method, previous, remove)
+    }
     presenter = next
-    next.add(self)
+    invokeObserver(addMethod, next, add)
     emit("mount.observer.installed")
   }
 
