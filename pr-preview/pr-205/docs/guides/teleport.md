@@ -158,6 +158,6 @@ export default function Messenger() {
 ## Why use Teleport?[​](#why-use-teleport "Direct link to Why use Teleport?")
 
 * **Preserve state**: No unmount/remount — animations, scroll, video, inputs remain intact.
-* **Build advanced transitions**: Implement shared-element–style transitions between screens.
+* **Build advanced transitions**: Implement shared-element–style transitions between screens, as in the [Instagram-like](/react-native-teleport/pr-preview/pr-205/docs/recipes/instagram-shared-transitions.md) and [Photos app](/react-native-teleport/pr-preview/pr-205/docs/recipes/photo-gallery-transitions.md) recipes.
 * **Escape container limits**: Move a view to an overlay while keeping its internal logic alive.
-* **Power complex UI**: Great for photo galleries, YouTube-like mini players, context menu transitions, app tours, off-screen pre-rendering, etc.
+* **Power complex UI**: Great for [photo galleries](/react-native-teleport/pr-preview/pr-205/docs/recipes/photo-gallery-transitions.md), YouTube-like mini players, context menu transitions, app tours, [off-screen pre-rendering](/react-native-teleport/pr-preview/pr-205/docs/recipes/preloading-heavy-components.md), etc.
