@@ -831,16 +831,16 @@ const styles = StyleSheet.create({
 export default PhotoDetail;
 ```
 
-Run it and tap a photo. The detail screen opens as before, but the thumbnail you tapped stays on top of it, right where it was, and covers part of the full-res photo:
+Run it and tap a photo. The detail screen opens as before, but the thumbnail you tapped is still visible on top of it, right where it was:
 
-![The detail screen with the full-res waterfall photo, and the tapped low-res thumbnail of the same photo drawn on top of it at its old grid position.](/react-native-teleport/pr-preview/pr-205/img/photo-gallery-transition/step4-teleported.jpg)
+![The detail screen with the full-res photo at the top, and the tapped low-res thumbnail still drawn on top of the black backdrop at its old grid position.](/react-native-teleport/pr-preview/pr-205/img/photo-gallery-transition/step4-teleported.jpg)
 
 Animation transcript:
 
 1. Every thumbnail is wrapped in a \<Portal>. Without a host name, it renders in place, inside the FlatList.
 2. Tap teleports the thumbnail into the root PortalHost. \<Portal hostName="root"> re-parents the same native view, in one frame.
-3. The detail screen opens below the thumbnail. The root host sits above every screen, so the thumbnail covers the full-res photo.
-4. What users see: the thumbnail on top of the photo. It keeps its grid position until the next step animates it.
+3. The detail screen opens below the thumbnail. The root host sits above every screen, so the thumbnail stays on top of the detail screen.
+4. What users see: the thumbnail on top of the detail screen. It keeps its grid position until the next step animates it.
 
 It looks like a bug, but it's the foundation of the whole transition: the root host sits above every screen, so the thumbnail can now travel over the detail screen. The next step makes it travel.
 
