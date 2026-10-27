@@ -835,6 +835,24 @@ copies only the named PNG files. It invokes no device APIs and does not wait for
 unfinished writes. Sources, runtime markers, every original static response and
 copied PNG bytes are independently compared before qualification.
 
+The first archive pilot passed the original 18 flows and mandatory video, but its
+collector failed before reading files: two background save messages were interleaved
+with request logging in XCTest stdout. The existing unified log retained all 471
+complete queued/saved pairs. Its compact presentation also escaped a JSON backslash
+as `\134`; decoding that one layer reproduces the independently captured root
+record exactly. This is a diagnostic transport failure, not an application UI
+failure or evidence of a fixed log-size limit. The required PNG files were never
+collected, so that job remains failed with zero credit.
+
+The collector now reads body messages from that already captured unified stream,
+while the original static-response gate continues reading XCTest stdout. It strictly
+decodes the compact presentation layer and binds the source hashes, process prefix,
+PID, helper and selected Simulator. Malformed, duplicate or missing unified records
+still fail. There is no fallback that drops broken rows. Captured transport fixtures
+retain the failed stdout records and verify that they remain rejected. SDK producer,
+app, captures, file limits and original assertions are unchanged; corrected live
+file collection still requires its own fresh diagnostic pilot.
+
 Earlier premature-equality failures did not retain the two compared PNG bodies.
 The passing mount-observer pilot also returned differing PNG hashes after observed
 mount callbacks and a JavaScript transition-end receipt. Those API-return times

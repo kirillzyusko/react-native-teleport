@@ -90,19 +90,21 @@ def selected_root(raw_root, pid, device, devices_root):
                  'containerMetadataSHA256': BODY.sha(metadata_raw)}
 
 
-def collect(text, artifact, device, devices_root, output):
+def collect(text, artifact, device, devices_root, output, *, body_text):
     output = Path(output)
     if output.exists():
         raise ValueError('Refusing to replace a previous body archive')
     output.mkdir(parents=True)
     result = {'version': 1, 'deviceUDID': device, 'helperSHA': BODY.sha(BODY.PATCH.HELPER.read_bytes()),
+              'bodySource': BODY.transport_source(text, body_text),
+              'collectorSourceSHA256': BODY.sha(Path(__file__).read_bytes()),
               'roots': [], 'files': [], 'deviceAPICalls': 0, 'errors': [], 'final_stability_credit': False}
     try:
         metadata = BODY.source_audit(artifact)
         errors = SCREEN.source_audit(artifact)
         if errors:
             raise ValueError(str(errors))
-        contract = BODY.runtime_contract(BODY.parse(text), SCREEN.parse(text), metadata, device)
+        contract = BODY.runtime_contract(BODY.parse_unified(body_text), SCREEN.parse(text), metadata, device)
         for pid, raw_root in contract['roots'].items():
             root, receipt = selected_root(raw_root, pid, device, Path(devices_root))
             result['roots'].append(receipt)
@@ -138,12 +140,14 @@ def collect(text, artifact, device, devices_root, output):
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--log', type=Path, required=True)
+    parser.add_argument('--body-log', type=Path, required=True)
     parser.add_argument('--artifact', type=Path, required=True)
     parser.add_argument('--device', required=True)
     parser.add_argument('--output', type=Path, required=True)
     parser.add_argument('--devices-root', type=Path, default=Path.home() / 'Library/Developer/CoreSimulator/Devices')
     args = parser.parse_args()
-    result = collect(args.log.read_text(), args.artifact, args.device, args.devices_root, args.output)
+    result = collect(args.log.read_bytes().decode(), args.artifact, args.device, args.devices_root, args.output,
+                     body_text=args.body_log.read_bytes().decode())
     print(json.dumps({k: v for k, v in result.items() if k != 'files'}))
     raise SystemExit(bool(result['errors']))
 

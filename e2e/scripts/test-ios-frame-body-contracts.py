@@ -33,13 +33,17 @@ def text_of(bodies, screens):
     for r in screens:
         rows.append('[teleport-screen-trace] ' + json.dumps(r))
     for r in bodies:
-        rows.append(f"2026-10-27 20:00:00 maestro-driver-iosUITests-Runner[{r['pid']}:1] " +
+        rows.append(f"2026-10-27 20:00:00.000 Df maestro-driver-iosUITests-Runner[{r['pid']}:1] (Foundation) " +
                     BODY.MARKER + json.dumps(r))
     return '\n'.join(rows)
 
 
 def run(artifact, output):
     cases = []
+    transport_cases = []
+    fixture_file = Path(__file__).with_name('ios-hid') / 'FrameBodyTransportFixture.json'
+    fixture_raw = fixture_file.read_bytes()
+    fixture = json.loads(fixture_raw)
 
     def rejected(name, callback):
         try:
@@ -104,14 +108,14 @@ def run(artifact, output):
                             'secondCaptured': second, 'firstHash': q['firstHash'], 'secondHash': q['secondHash'],
                             'isScreenStatic': True})
         text = text_of(bodies, screens)
-        contract = BODY.runtime_contract(BODY.parse(text), screens, metadata, DEVICE)
+        contract = BODY.runtime_contract(BODY.parse_unified(text), screens, metadata, DEVICE)
         assert len(contract['pairs']) == 2 and contract['totalBytes'] == len(PNG) * 4
         cases.append('exact_raw_route_hash_clock_correspondence')
         archive = tmp / 'positive-output'
-        manifest = COLLECT.collect(text, local, DEVICE, tmp / 'Devices', archive)
+        manifest = COLLECT.collect(text, local, DEVICE, tmp / 'Devices', archive, body_text=text)
         assert manifest['errors'] == [], manifest
         names = ['manifest.json', *(f['file'] for f in manifest['files'])]
-        result = CHECK.check(text, local, manifest, lambda n: (archive / n).read_bytes(), names, DEVICE)
+        result = CHECK.check(text, local, manifest, lambda n: (archive / n).read_bytes(), names, DEVICE, body_text=text)
         assert result['errors'] == [] and result['pairs'] == 2 and result['PNGs'] == 4, result
         cases.append('owned_container_collect_and_independent_PNG_check')
         virtual = '/var/mobile/Containers/Data/Application/' + CONTAINER + '/tmp/' + root.name
@@ -121,7 +125,7 @@ def run(artifact, output):
         def bad_raw(name, change):
             changed = copy.deepcopy(bodies)
             change(changed)
-            rejected(name, lambda: BODY.runtime_contract(BODY.parse(text_of(changed, screens)), screens, metadata, DEVICE))
+            rejected(name, lambda: BODY.runtime_contract(BODY.parse_unified(text_of(changed, screens)), screens, metadata, DEVICE))
 
         bad_raw('missing_body_markers', lambda r: r.clear())
         bad_raw('wrong_source_marker', lambda r: r[1].update(helperSHA='0' * 64))
@@ -144,7 +148,7 @@ def run(artifact, output):
         bad_raw('queued_before_capture_return', lambda r: r[1].update(uptime=1.0))
         bad_raw('saved_before_queued', lambda r: r[2].update(uptime=1.0))
         bad_raw('nonfinite_clock', lambda r: r[1].update(wallTime=float('nan')))
-        rejected('actual_log_PID_mismatch', lambda: BODY.parse(text.replace('Runner[123:1]', 'Runner[124:1]')))
+        rejected('actual_log_PID_mismatch', lambda: BODY.parse_unified(text.replace('Runner[123:1]', 'Runner[124:1]')))
 
         for name, raw in [('foreign_device_root', str(root).replace(DEVICE, CONTAINER)),
                           ('path_escape', str(root) + '/../other'),
@@ -164,19 +168,19 @@ def run(artifact, output):
         png.unlink()
         png.write_bytes(PNG)
         rejected('bounded_file_read', lambda: COLLECT.regular_bytes(png, 1))
-        rejected('existing_output_preserved', lambda: COLLECT.collect(text, local, DEVICE, tmp / 'Devices', archive))
+        rejected('existing_output_preserved', lambda: COLLECT.collect(text, local, DEVICE, tmp / 'Devices', archive, body_text=text))
         bad_png = PNG[:-1]
         rejected('PNG_truncation', lambda: BODY.png_info(bad_png))
         rejected('PNG_CRC', lambda: BODY.png_info(PNG[:30] + b'\x00' + PNG[31:]))
         rejected('PNG_trailing_data', lambda: BODY.png_info(PNG + b'x'))
-        bad_result = CHECK.check(text, local, manifest, lambda n: b'x', names, DEVICE)
+        bad_result = CHECK.check(text, local, manifest, lambda n: b'x', names, DEVICE, body_text=text)
         assert bad_result['errors']
         cases.append('independent_archive_bytes_hash_mismatch')
-        bad_result = CHECK.check(text, local, manifest, lambda n: (archive / n).read_bytes(), names + ['unexpected.png'], DEVICE)
+        bad_result = CHECK.check(text, local, manifest, lambda n: (archive / n).read_bytes(), names + ['unexpected.png'], DEVICE, body_text=text)
         assert bad_result['errors']
         cases.append('unexpected_archive_member')
         png.unlink()
-        failure = COLLECT.collect(text, local, DEVICE, tmp / 'Devices', tmp / 'missing-source-output')
+        failure = COLLECT.collect(text, local, DEVICE, tmp / 'Devices', tmp / 'missing-source-output', body_text=text)
         assert failure['errors'] and (tmp / 'missing-source-output/manifest.json').is_file()
         cases.append('collection_error_receipt_preserved')
 
@@ -202,10 +206,74 @@ def run(artifact, output):
                 jar=tmp / 'absent.jar', artifact=local, expected_lead_in='0', expected_backend='indigo',
                 expected_frame_trace=True, expected_frame_bodies=not enabled)))
         file.write_bytes(original)
+
+        # Real captured records exercise the exact failed stdout and complete
+        # unified transport without reconstructing or qualifying missing PNGs.
+        root = BODY.parse_unified(fixture['unifiedInitialized'])[0]
+        assert root == BODY.parse(fixture['xctestInitialized'])[0]
+        transport_cases.append('actual_compact_root_matches_independent_XCTest_record')
+        saved = BODY.parse_unified('\n'.join(fixture['unifiedSaved']))
+        assert sorted(r['ordinal'] for r in saved) == [87, 321]
+        transport_cases.append('actual_unified_saved_records_complete')
+        assert len(fixture['unifiedInitialized'].split(BODY.MARKER, 1)[1]) > 512
+        transport_cases.append('long_complete_record_is_not_truncation')
+        before = len(cases)
+        for line in fixture['interleavedXCTest']:
+            rejected('temporary_legacy_negative', lambda line=line: BODY.parse(line))
+            rejected('temporary_unified_negative', lambda line=line: BODY.parse_unified(line))
+        del cases[before:]
+        transport_cases.extend(['legacy_interleaved_stdout_still_rejected', 'malformed_unified_never_ignored'])
+        line = fixture['unifiedSaved'][0]
+        before = len(cases)
+        for label, changed in [
+            ('wrong_unified_process', line.replace('maestro-driver-iosUITests-Runner', 'another-app')),
+            ('wrong_unified_PID', line.replace('Runner[9881:', 'Runner[9882:')),
+            ('duplicate_marker', line + BODY.MARKER + '{}'),
+            ('truncated_unified_JSON', line[:-1])
+        ]:
+            rejected(label, lambda changed=changed: BODY.parse_unified(changed))
+            transport_cases.append(label)
+        del cases[before:]
+        before = len(cases)
+        rejected('temporary_stdout_transport', lambda: BODY.parse_unified(fixture['xctestInitialized']))
+        prefix = line.split(BODY.MARKER, 1)[0]
+        rejected('temporary_non_object', lambda: BODY.parse_unified(prefix + BODY.MARKER + '[]'))
+        del cases[before:]
+        transport_cases.extend(['XCTest_transport_not_accepted_as_unified', 'non_object_unified_JSON'])
+        import re
+        hex_line = re.sub(r'Runner\[9881:[0-9a-fA-F]+\]', 'Runner[9881:ab1f]', line)
+        assert BODY.parse_unified(hex_line)[0] == saved[0]
+        transport_cases.append('unified_hex_thread_identity')
+        value = {'pid': 123, 'value': 'π/\n\\134'}
+        compact = json.dumps(value).replace('\\', '\\134')
+        generated = '2026-10-27 20:00:00.000 Df maestro-driver-iosUITests-Runner[123:ab1f] (Foundation) ' + BODY.MARKER + compact
+        assert BODY.parse_unified(generated)[0] == value
+        transport_cases.append('exactly_one_presentation_escape_layer')
+        for name, change in [
+            ('missing_transport_identity', lambda m: m.pop('bodySource')),
+            ('wrong_unified_source_hash', lambda m: m['bodySource'].update(bodyLogSHA256='0' * 64)),
+            ('wrong_XCTest_source_hash', lambda m: m['bodySource'].update(xctestSHA256='0' * 64)),
+            ('wrong_collector_source', lambda m: m.update(collectorSourceSHA256='0' * 64))
+        ]:
+            changed = copy.deepcopy(manifest)
+            change(changed)
+            assert CHECK.check(text, local, changed, lambda n: (archive / n).read_bytes(), names, DEVICE,
+                               body_text=text)['errors']
+            transport_cases.append(name)
+        before = len(cases)
+        rejected('temporary_explicit_source_required', lambda: COLLECT.collect(text, local, DEVICE,
+                 tmp / 'Devices', tmp / 'no-body-source'))
+        del cases[before:]
+        assert not (tmp / 'no-body-source').exists()
+        transport_cases.append('explicit_body_source_required_without_fallback')
     result = {'version': 1, 'helperSHA256': BODY.sha(BODY.PATCH.HELPER.read_bytes()),
-              'cases': cases, 'caseCount': len(cases), 'deviceAPICalls': 0, 'final_stability_credit': False}
+              'cases': cases, 'caseCount': len(cases), 'transportCases': transport_cases, 'transportCaseCount': len(transport_cases),
+              'transportFixtureSHA256': BODY.sha(fixture_raw),
+              'testSourceSHA256': BODY.sha(Path(__file__).read_bytes()), 'deviceAPICalls': 0, 'final_stability_credit': False}
     output.parent.mkdir(parents=True, exist_ok=True)
     output.write_text(json.dumps(result, indent=2) + '\n')
+    (output.parent / 'transport-fixture.json').write_bytes(fixture_raw)
+    (output.parent / 'contracts-source.py').write_bytes(Path(__file__).read_bytes())
     print(json.dumps(result))
 
 

@@ -18,8 +18,11 @@ SCREEN = load('frame_body_original_screen', 'check-ios-screen-trace.py')
 COLLECT = load('frame_body_file_contract', 'collect-ios-frame-bodies.py')
 
 
-def check(text, artifact, manifest, read_file, names, device):
-    result = {'version': 1, 'helperSHA': BODY.sha(BODY.PATCH.HELPER.read_bytes()),
+def check(text, artifact, manifest, read_file, names, device, *, body_text):
+    result = {'version': 2, 'helperSHA': BODY.sha(BODY.PATCH.HELPER.read_bytes()),
+              'bodySource': BODY.transport_source(text, body_text),
+              'collectorSourceSHA256': BODY.sha(Path(__file__).with_name('collect-ios-frame-bodies.py').read_bytes()),
+              'checkerSourceSHA256': BODY.sha(Path(__file__).read_bytes()),
               'deviceUDID': device, 'errors': [], 'final_stability_credit': False,
               'limit': 'Original PNG bytes and API-return times are not physical display transaction timestamps.'}
     try:
@@ -28,7 +31,11 @@ def check(text, artifact, manifest, read_file, names, device):
         if errors:
             raise ValueError(str(errors))
         screens = SCREEN.parse(text)
-        contract = BODY.runtime_contract(BODY.parse(text), screens, metadata, device)
+        contract = BODY.runtime_contract(BODY.parse_unified(body_text), screens, metadata, device)
+        if manifest.get('bodySource') != result['bodySource']:
+            raise ValueError('Body collection log source/provenance differs')
+        if manifest.get('collectorSourceSHA256') != result['collectorSourceSHA256']:
+            raise ValueError('Body collector source identity differs')
         if (manifest.get('deviceUDID') != device or manifest.get('deviceAPICalls') != 0 or
                 manifest.get('errors') != [] or manifest.get('final_stability_credit') is not False):
             raise ValueError('Collection device/scope/error receipt differs')
@@ -64,6 +71,7 @@ def check(text, artifact, manifest, read_file, names, device):
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--log', type=Path, required=True)
+    parser.add_argument('--body-log', type=Path, required=True)
     parser.add_argument('--artifact', type=Path, required=True)
     parser.add_argument('--archive', type=Path, required=True)
     parser.add_argument('--device', required=True)
@@ -77,8 +85,9 @@ def main():
         COLLECT.no_links(path, args.archive)
         return COLLECT.regular_bytes(path, BODY.PATCH.LIMITS['pngBytes'])
 
-    result = check(args.log.read_text(), args.artifact,
-                   json.loads((args.archive / 'manifest.json').read_text()), read_file, names, args.device)
+    result = check(args.log.read_bytes().decode(), args.artifact,
+                   json.loads((args.archive / 'manifest.json').read_text()), read_file, names, args.device,
+                   body_text=args.body_log.read_bytes().decode())
     args.output.write_text(json.dumps(result, indent=2) + '\n')
     print(json.dumps({k: v for k, v in result.items() if k not in ('files', 'staticPairs')}))
     raise SystemExit(bool(result['errors']))

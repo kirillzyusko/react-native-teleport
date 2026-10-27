@@ -54,6 +54,37 @@ def parse(text):
     return records
 
 
+def parse_unified(text):
+    """Read complete unified-log messages, not multiplexed XCTest stdout.
+
+    Compact log presentation writes a JSON backslash as the octal text \\134.
+    Decode that single presentation layer before strict JSON parsing. Never
+    repair interleaved messages, ignore malformed records or invent missing rows.
+    """
+    records = []
+    for line in text.splitlines():
+        if MARKER not in line:
+            continue
+        if line.count(MARKER) != 1:
+            raise ValueError('Multiple body messages in one unified record')
+        prefix, message = line.split(MARKER, 1)
+        match = re.fullmatch(
+            r'\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}\.\d+ Df '
+            r'maestro-driver-iosUITests-Runner\[(\d+):[0-9a-fA-F]+\] \(Foundation\) ', prefix)
+        if not match:
+            raise ValueError('Body unified record is not from the actual XCTest runner')
+        record = json.loads(message.replace('\\134', '\\'))
+        if not isinstance(record, dict) or type(record.get('pid')) is not int or int(match[1]) != record['pid']:
+            raise ValueError('Body unified record PID differs from its process prefix')
+        records.append(record)
+    return records
+
+
+def transport_source(xctest, unified):
+    return {'format': 'simulator-compact-v1', 'xctestSHA256': sha(xctest.encode()),
+            'bodyLogSHA256': sha(unified.encode())}
+
+
 def png_info(raw):
     if not raw.startswith(PNG):
         raise ValueError('Archived body is not PNG')
