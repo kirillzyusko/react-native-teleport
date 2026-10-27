@@ -74,22 +74,35 @@ def source_audit(folder, candidate):
     metadata = json.loads((folder / 'app-identity.json').read_text())
     scope = json.loads((builder.SOURCE / 'patch-manifest.json').read_text())
     digest = lambda data: hashlib.sha256(data).hexdigest()
-    if (metadata.get('version') != 1 or metadata.get('profile') != builder.PROFILE or
+    if (metadata.get('version') != 2 or metadata.get('profile') != builder.PROFILE or
         metadata.get('candidateSHA') != candidate or metadata.get('sourceSHA') != builder.source_identity() or
         metadata.get('builderSHA256') != digest(Path(builder.__file__).read_bytes()) or
         metadata.get('helperSourceHashes') != builder.helper_hashes() or metadata.get('final_stability_credit') is not False):
         raise ValueError('Visual app source/profile/candidate/builder identity differs')
     if (folder / 'prepare-ios-visual-trace.py').read_bytes() != Path(builder.__file__).read_bytes():
         raise ValueError('Archived application builder differs')
-    originals = {**scope['originals'], scope['info']: scope['info_original_sha256']}
+    original_project = (folder / 'originals' / builder.PROJECT).read_bytes()
+    patched_project = (folder / 'patched' / builder.PROJECT).read_bytes()
+    generation = builder.project_variant(original_project, scope['originals'][builder.PROJECT])
+    if (builder.project_variant(patched_project, scope['patched'][builder.PROJECT]) != generation or
+        metadata.get('project_generation') != generation):
+        raise ValueError('Original generated ccache project settings were not preserved')
+    originals = {**scope['originals'], scope['info']: scope['info_original_sha256'],
+                 builder.PROJECT: digest(original_project)}
     if metadata.get('originals') != originals:
         raise ValueError('Visual app original source scope differs')
+    observed = json.loads((folder / 'observed-inputs.json').read_text())
+    if observed != originals:
+        raise ValueError('Observed prevalidation app inputs differ from original source archive')
     for name, value in originals.items():
+        if digest((folder / 'observed-inputs' / name).read_bytes()) != value:
+            raise ValueError(f'Observed prevalidation input differs: {name}')
         if digest((folder / 'originals' / name).read_bytes()) != value:
             raise ValueError(f'Archived app original differs: {name}')
     info = plistlib.loads((folder / 'originals' / scope['info']).read_bytes())
     info.update(TeleportVisualTrace=True, TeleportVisualTraceSourceSHA=metadata['sourceSHA'])
-    patched = {**scope['patched'], scope['info']: digest(plistlib.dumps(info, sort_keys=False))}
+    patched = {**scope['patched'], scope['info']: digest(plistlib.dumps(info, sort_keys=False)),
+               builder.PROJECT: digest(patched_project)}
     helpers = {name: digest(builder.helper_bytes(label)) for label, name in scope['helpers'].items()}
     if metadata.get('patched') != patched or metadata.get('helpers') != helpers:
         raise ValueError('Visual app prepared source scope differs')

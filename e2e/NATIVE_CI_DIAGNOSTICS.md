@@ -782,3 +782,19 @@ Generic compilation and host fixtures validate source/API access, disabled behav
 exact handler forwarding, bounds and log decoding. Actual UIKit dispatch, selected
 app targets and runtime measurement coverage still require the fresh CI pilot.
 This diagnostic implements no synchronization fix.
+
+The first application-trace pilot stopped before compilation or UI tests: the
+preparer compared the dependency-generated Xcode project with its Git bytes.
+That job logged React Native enabling ccache. Its actual changed project was
+not uploaded because the guard failed before creating the evidence directory;
+the raw build log is preserved, but the full remote project diff is unavailable.
+
+A local invocation of the pinned React Native ccache mutator reproduces the
+rejection. The corrected preparer accepts only its exact five compiler/cache
+settings in the two pinned project configurations. Removing those ten generated
+lines must recover the exact original project SHA, and after adding the trace
+source it must recover the exact pinned patched SHA. The generated settings stay
+intact; every other project byte and application-source pin remains checked.
+Different compilers, cache paths, deployment targets, configurations or source
+references fail the gate. Observed inputs are now archived before validation so
+an unexpected generated project can be reviewed even when preparation fails.

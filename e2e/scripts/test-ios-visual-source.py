@@ -19,11 +19,49 @@ def run(artifact):
     candidate = metadata['candidateSHA']
     CHECK.source_audit(artifact, candidate)
     cases = ['actual_archived_source_build']
+    builder = CHECK.load_builder()
+    scope = json.loads((builder.SOURCE / 'patch-manifest.json').read_text())
+    raw_project = (artifact / 'originals' / builder.PROJECT).read_bytes()
+    original = b''.join(line for line in raw_project.splitlines(keepends=True)
+                        if line not in {f'\t\t\t\t{k} = {v};\n'.encode() for k, v in builder.CCACHE_SETTINGS.items()})
+    assert builder.sha(original) == scope['originals'][builder.PROJECT]
+    # Insert only the exact five generated settings into the two project configs.
+    generated = []
+    current = None
+    for line in original.splitlines(keepends=True):
+        match = builder.re.fullmatch(rb'\t\t([A-F0-9]{24}) /\* [^\n]* \*/ = \{\n', line)
+        if match:
+            current = match[1].decode()
+        generated.append(line)
+        if line == b'\t\t\tbuildSettings = {\n' and current in builder.PROJECT_CONFIGS:
+            generated.extend(f'\t\t\t\t{k} = {v};\n'.encode() for k, v in builder.CCACHE_SETTINGS.items())
+    generated = b''.join(generated)
+    assert builder.project_variant(generated, scope['originals'][builder.PROJECT]) == 'rn-ccache-project-settings'
+    traced = builder.patched_project(generated)
+    assert builder.project_variant(traced, scope['patched'][builder.PROJECT]) == 'rn-ccache-project-settings'
+    project_cases = ['exact_generated_settings', 'trace_patch_preserves_generated_settings']
+    bad_projects = {
+        'wrong_compiler': generated.replace(b'ccache-clang.sh', b'other-clang.sh', 1),
+        'wrong_cache_binary': generated.replace(b'/opt/homebrew/bin/ccache', b'/other/ccache', 1),
+        'missing_generated_field': generated.replace(b'\t\t\t\tCXX = "$(REACT_NATIVE_PATH)/scripts/xcode/ccache-clang++.sh";\n', b'', 1),
+        'duplicate_generated_field': generated.replace(b'\t\t\t\tCCACHE_BINARY = /opt/homebrew/bin/ccache;\n', b'\t\t\t\tCCACHE_BINARY = /opt/homebrew/bin/ccache;\n' * 2, 1),
+        'different_deployment_target': generated.replace(b'IPHONEOS_DEPLOYMENT_TARGET = 15.1;', b'IPHONEOS_DEPLOYMENT_TARGET = 16.0;', 1),
+        'unrelated_source_reference': generated.replace(b'AppDelegate.swift', b'Other.swift', 1),
+        'extra_configuration': generated.replace(b'83CBBA201A601CBA00E9B192', b'83CBBA201A601CBA00E9B199'),
+    }
+    for label, raw in bad_projects.items():
+        try:
+            builder.project_variant(raw, scope['originals'][builder.PROJECT])
+        except ValueError:
+            project_cases.append(label)
+        else:
+            raise AssertionError('Invalid generated project accepted: ' + label)
     with tempfile.TemporaryDirectory(prefix='teleport-visual-proof-fixtures-') as tmp:
         root = Path(tmp)
         proof = root / 'archive'
         proof.mkdir()
-        names = ['app-identity.json', 'source-manifest.json', 'prepare-ios-visual-trace.py']
+        names = ['app-identity.json', 'source-manifest.json', 'prepare-ios-visual-trace.py', 'observed-inputs.json']
+        names += ['observed-inputs/' + n for n in metadata['originals']]
         names += ['originals/' + n for n in metadata['originals']]
         names += ['patched/' + n for n in {**metadata['patched'], **metadata['helpers']}]
         for name in names:
@@ -63,6 +101,19 @@ def run(artifact):
             else:
                 raise AssertionError('Altered archived source accepted')
             target.write_bytes(saved)
+        failure_builder = CHECK.load_builder()
+        failure_builder.ROOT = root / 'unexpected-input-fixture'
+        unexpected = failure_builder.ROOT / builder.PROJECT
+        unexpected.parent.mkdir(parents=True)
+        unexpected.write_bytes(bad_projects['different_deployment_target'])
+        try:
+            failure_builder.prepare(root / 'failed-preparation-proof')
+        except ValueError:
+            assert (root / 'failed-preparation-proof/observed-inputs' / builder.PROJECT).read_bytes() == unexpected.read_bytes()
+            assert (root / 'failed-preparation-proof/preparation-failure.json').exists()
+            project_cases.append('unexpected_input_archived_before_rejection')
+        else:
+            raise AssertionError('Unexpected project accepted')
         builder = CHECK.load_builder()
         builder.ROOT = root / 'restore-fixture'
         for name in {**metadata['patched'], **metadata['helpers']}:
@@ -89,7 +140,7 @@ def run(artifact):
         assert wrong.returncode != 0 and 'Explicit indigo-visual-touch-trace profile required before accessing app sources' in wrong.stderr
         assert not (root / 'must-not-exist').exists()
         cases.append('wrong_profile_rejected_before_app_access')
-    return {'sourceSHA': metadata['sourceSHA'], 'cases': cases, 'deviceAPICalls': 0,
+    return {'sourceSHA': metadata['sourceSHA'], 'cases': cases, 'project_controls': project_cases, 'deviceAPICalls': 0,
             'scope': 'Focused archived-source fixtures only; not application runtime verification.'}
 
 
