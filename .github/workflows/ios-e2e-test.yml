@@ -521,6 +521,8 @@ jobs:
           python3 -B e2e/scripts/collect-ios-frame-bodies.py \
             --log "${xctest_logs[0]}" --artifact e2e/reports/maestro-ios-input \
             --body-log e2e/reports/native-diagnostics/simulator.log \
+            --live-archive e2e/reports/native-diagnostics/live-frame-bodies \
+            --live-process e2e/reports/native-diagnostics/live-frame-body-process.json \
             --device "${{ steps.simulator.outputs.udid }}" \
             --output e2e/reports/native-diagnostics/frame-bodies
       - name: Verify original static PNG body archive
@@ -531,6 +533,7 @@ jobs:
           python3 -B e2e/scripts/check-ios-frame-bodies.py \
             --log "${xctest_logs[0]}" --artifact e2e/reports/maestro-ios-input \
             --body-log e2e/reports/native-diagnostics/simulator.log \
+            --live-process e2e/reports/native-diagnostics/live-frame-body-process.json \
             --device "${{ steps.simulator.outputs.udid }}" \
             --archive e2e/reports/native-diagnostics/frame-bodies \
             --output e2e/reports/native-diagnostics/ios-frame-bodies.json

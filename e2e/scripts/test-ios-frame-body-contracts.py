@@ -3,9 +3,12 @@ import argparse
 import copy
 import importlib.util
 import json
+import os
 from pathlib import Path
 import plistlib
 import shutil
+import subprocess
+import sys
 import tempfile
 from types import SimpleNamespace
 
@@ -274,6 +277,17 @@ def run(artifact, output):
     output.write_text(json.dumps(result, indent=2) + '\n')
     (output.parent / 'transport-fixture.json').write_bytes(fixture_raw)
     (output.parent / 'contracts-source.py').write_bytes(Path(__file__).read_bytes())
+    live_output = output.parent / 'live'
+    live_output.mkdir(exist_ok=True)
+    subprocess.run([sys.executable, '-B', str(Path(__file__).with_name('test-ios-frame-body-live.py')),
+                    '--artifact', str(artifact.resolve()), '--output', str(live_output / 'report.json')], check=True)
+    env = dict(os.environ, TELEPORT_FRAME_BODY_FIXTURE_ARTIFACT=str(artifact.resolve()),
+               TELEPORT_FRAME_BODY_FIXTURE_RECEIPT=str((live_output / 'node-integration.json').resolve()))
+    with (live_output / 'node.tap').open('w') as stream:
+        subprocess.run(['node', '--test', str(Path(__file__).with_name('ios-frame-body-live.test.mjs'))],
+                       env=env, stdout=stream, stderr=subprocess.STDOUT, check=True)
+    (live_output / 'node-tests-source.mjs').write_bytes(Path(__file__).with_name('ios-frame-body-live.test.mjs').read_bytes())
+    (live_output / 'wrapper-source.mjs').write_bytes(Path(__file__).with_name('native-diagnostics.mjs').read_bytes())
     print(json.dumps(result))
 
 

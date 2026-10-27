@@ -853,6 +853,25 @@ retain the failed stdout records and verify that they remain rejected. SDK produ
 app, captures, file limits and original assertions are unchanged; corrected live
 file collection still requires its own fresh diagnostic pilot.
 
+The corrected transport pilot also passed the original 18 flows and mandatory
+video. It exposed a second diagnostic error: the normal driver teardown uninstalled
+the SDK runner before post-test collection, so its original data container was
+already absent. All 451 queued/saved metadata pairs were complete; no compared PNG
+files were collected. That job remains failed with zero credit.
+
+With the archive explicitly enabled, the existing live log callback now forwards
+its raw chunks to one owned host file exporter. Each saved record triggers a copy
+of only its two already-written PNG files, while the selected runner's container
+still exists. The exporter retains the exact source, PID, UDID, MCM container and
+file identities, hashes, PNG checks and bounds. It adds no device query, screenshot,
+encoding, input or test wait, and leaves the original SDK uninstall in place.
+Input buffering is bounded; overflow, early exit or missing files fail evidence.
+After the original test and log stream finish, stdin EOF stops the exporter.
+Post-test finalization and the independent gate compare its complete source rows,
+process receipt and every preserved byte against the original raw responses.
+Generated filesystem controls remove the source container after export and verify
+the surviving files; these controls are separate from actual CI runtime proof.
+
 Earlier premature-equality failures did not retain the two compared PNG bodies.
 The passing mount-observer pilot also returned differing PNG hashes after observed
 mount callbacks and a JavaScript transition-end receipt. Those API-return times

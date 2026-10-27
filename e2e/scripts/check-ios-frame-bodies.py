@@ -18,7 +18,7 @@ SCREEN = load('frame_body_original_screen', 'check-ios-screen-trace.py')
 COLLECT = load('frame_body_file_contract', 'collect-ios-frame-bodies.py')
 
 
-def check(text, artifact, manifest, read_file, names, device, *, body_text):
+def check(text, artifact, manifest, read_file, names, device, *, body_text, live_process=None):
     result = {'version': 2, 'helperSHA': BODY.sha(BODY.PATCH.HELPER.read_bytes()),
               'bodySource': BODY.transport_source(text, body_text),
               'collectorSourceSHA256': BODY.sha(Path(__file__).with_name('collect-ios-frame-bodies.py').read_bytes()),
@@ -36,6 +36,15 @@ def check(text, artifact, manifest, read_file, names, device, *, body_text):
             raise ValueError('Body collection log source/provenance differs')
         if manifest.get('collectorSourceSHA256') != result['collectorSourceSHA256']:
             raise ValueError('Body collector source identity differs')
+        if ('liveExport' in manifest) != (live_process is not None):
+            raise ValueError('Missing or unexpected live exporter process proof')
+        if live_process is not None:
+            live = load('independent_body_live_audit', 'ios-frame-body-live.py')
+            live.audit(manifest, body_text, live_process, device)
+            if manifest.get('liveProcess') != live_process:
+                raise ValueError('Live process receipt differs from archived collection')
+            result['liveExporterSourceSHA256'] = live.source_hash()
+            result['liveAdapterSourceSHA256'] = live.adapter_hash()
         if (manifest.get('deviceUDID') != device or manifest.get('deviceAPICalls') != 0 or
                 manifest.get('errors') != [] or manifest.get('final_stability_credit') is not False):
             raise ValueError('Collection device/scope/error receipt differs')
@@ -72,6 +81,7 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--log', type=Path, required=True)
     parser.add_argument('--body-log', type=Path, required=True)
+    parser.add_argument('--live-process', type=Path)
     parser.add_argument('--artifact', type=Path, required=True)
     parser.add_argument('--archive', type=Path, required=True)
     parser.add_argument('--device', required=True)
@@ -87,7 +97,8 @@ def main():
 
     result = check(args.log.read_bytes().decode(), args.artifact,
                    json.loads((args.archive / 'manifest.json').read_text()), read_file, names, args.device,
-                   body_text=args.body_log.read_bytes().decode())
+                   body_text=args.body_log.read_bytes().decode(),
+                   live_process=json.loads(args.live_process.read_text()) if args.live_process else None)
     args.output.write_text(json.dumps(result, indent=2) + '\n')
     print(json.dumps({k: v for k, v in result.items() if k not in ('files', 'staticPairs')}))
     raise SystemExit(bool(result['errors']))

@@ -1,4 +1,4 @@
-"""Copy only the selected runner's existing PNG archive after the original test."""
+"""Finalize selected runner PNG evidence, including explicitly requested live preservation."""
 import argparse
 import importlib.util
 import json
@@ -90,7 +90,10 @@ def selected_root(raw_root, pid, device, devices_root):
                  'containerMetadataSHA256': BODY.sha(metadata_raw)}
 
 
-def collect(text, artifact, device, devices_root, output, *, body_text):
+def collect(text, artifact, device, devices_root, output, *, body_text, live_archive=None, live_process=None):
+    if live_archive is not None:
+        live = load('body_live_finalizer', 'ios-frame-body-live.py')
+        return live.finalize(text, artifact, device, output, body_text, live_archive, live_process)
     output = Path(output)
     if output.exists():
         raise ValueError('Refusing to replace a previous body archive')
@@ -145,9 +148,12 @@ def main():
     parser.add_argument('--device', required=True)
     parser.add_argument('--output', type=Path, required=True)
     parser.add_argument('--devices-root', type=Path, default=Path.home() / 'Library/Developer/CoreSimulator/Devices')
+    parser.add_argument('--live-archive', type=Path)
+    parser.add_argument('--live-process', type=Path)
     args = parser.parse_args()
     result = collect(args.log.read_bytes().decode(), args.artifact, args.device, args.devices_root, args.output,
-                     body_text=args.body_log.read_bytes().decode())
+                     body_text=args.body_log.read_bytes().decode(), live_archive=args.live_archive,
+                     live_process=json.loads(args.live_process.read_text()) if args.live_process else None)
     print(json.dumps({k: v for k, v in result.items() if k != 'files'}))
     raise SystemExit(bool(result['errors']))
 

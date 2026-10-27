@@ -46,6 +46,8 @@ const collectors = new Set();
 const ownerPid = process.ppid;
 let testPid;
 let indigoBridge;
+let liveFrameBodies;
+let liveLogCompletion;
 let processSamples = 0;
 let interrupted = false;
 const sampledSimctl = new Set();
@@ -120,7 +122,10 @@ function capture(file, [executable, parameters], timeout = 15000, observe) {
 
 function streamLogs(file, invocation, observe) {
   // A job timeout is the upper bound; cleanup stops these long-lived collectors.
-  return capture(file, invocation, 90 * 60 * 1000, observe);
+  const completion = capture(file, invocation, 90 * 60 * 1000, observe);
+  if (liveFrameBodies && file === "simulator.log")
+    liveLogCompletion = completion;
+  return completion;
 }
 
 const sdkClickTrace =
@@ -177,6 +182,7 @@ let terminationNumber = 0;
 let simulatorLogBuffer = "";
 const xctestProcesses = new Map();
 function observeIOSLog(chunk) {
+  liveFrameBodies?.feed(chunk);
   simulatorLogBuffer += chunk.toString();
   const lines = simulatorLogBuffer.split("\n");
   simulatorLogBuffer = lines.pop().slice(-65536);
@@ -574,6 +580,21 @@ if (platform === "ios") {
     ["hw.memsize", "hw.logicalcpu", "hw.model", "kern.osversion"],
   ]);
   await capture("devices.log", simctl("list", "--json"));
+  if (process.env.MAESTRO_IOS_ARCHIVE_FRAMES === "true") {
+    if (
+      process.env.MAESTRO_IOS_PROFILE !== "indigo-visual-touch-trace" ||
+      process.env.MAESTRO_IOS_INPUT_BACKEND !== "indigo"
+    )
+      throw new Error(
+        "Live PNG preservation requires the explicit visual profile",
+      );
+    const { startLiveFrameBodies } = await import("./ios-frame-body-live.mjs");
+    liveFrameBodies = startLiveFrameBodies({
+      enabled: true,
+      device,
+      directory,
+    });
+  }
   void streamLogs(
     "simulator.log",
     simctl(
@@ -697,6 +718,10 @@ await sdkIdentityCapture;
 if (indigoBridge) await indigoBridge.stop();
 if (!interrupted) await finalState();
 for (const child of collectors) signalGroup(child, "SIGKILL");
+if (liveFrameBodies) {
+  await liveLogCompletion;
+  await liveFrameBodies.stop();
+}
 if (stopCompletion) await stopCompletion;
 clearInterval(ownerInterval);
 timeline.end();
