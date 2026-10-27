@@ -7,11 +7,50 @@ import { promisify } from "node:util";
 import { fileURLToPath } from "node:url";
 import test from "node:test";
 import { setTimeout as delay } from "node:timers/promises";
+import { uniqueHostedCoreSimulatorService } from "./native-diagnostics-processes.mjs";
 
 const execute = promisify(execFile);
 const runner =
   process.env.TELEPORT_TEST_NATIVE_RUNNER ||
   fileURLToPath(new URL("native-diagnostics.mjs", import.meta.url));
+
+const serviceCommand =
+  "/Library/Developer/PrivateFrameworks/CoreSimulator.framework/Versions/A/XPCServices/com.apple.CoreSimulator.CoreSimulatorService.xpc/Contents/MacOS/com.apple.CoreSimulator.CoreSimulatorService";
+const serviceRow = (pid) => `${pid} 1 S 0.8 0.2 11344 ${serviceCommand}`;
+
+test("selects the unique actual hosted CoreSimulator service path", () => {
+  assert.deepEqual(uniqueHostedCoreSimulatorService(serviceRow(1463), true), {
+    pid: 1463,
+    command: serviceCommand,
+  });
+});
+
+test("does not select global services on developer or self-hosted machines", () => {
+  assert.equal(
+    uniqueHostedCoreSimulatorService(serviceRow(1463), false),
+    undefined,
+  );
+});
+
+test("does not guess between multiple CoreSimulator service processes", () => {
+  assert.equal(
+    uniqueHostedCoreSimulatorService(
+      `${serviceRow(1463)}\n${serviceRow(2001)}`,
+      true,
+    ),
+    undefined,
+  );
+});
+
+test("rejects similarly named processes outside the actual framework path", () => {
+  assert.equal(
+    uniqueHostedCoreSimulatorService(
+      "1463 1 S 0.8 0.2 11344 /tmp/com.apple.CoreSimulator.CoreSimulatorService",
+      true,
+    ),
+    undefined,
+  );
+});
 
 async function cleanupCollector(directory) {
   try {
@@ -57,7 +96,10 @@ const name = path.basename(process.argv[1]);
 const args = process.argv.slice(2);
 if (name === "test-command") {
   if (args[0] === "--version") console.log("test version");
-  else setTimeout(() => process.exit(Number(args[0])), Number(process.env.TEST_DURATION_MS || 0));
+  else {
+    fs.writeFileSync("test.pid", String(process.pid));
+    setTimeout(() => process.exit(Number(args[0])), Number(process.env.TEST_DURATION_MS || 0));
+  }
 } else if (name === "adb" && args.includes("logcat") && args.includes("-d")) {
   console.log("retained lifecycle events after adbd restart");
   console.log(name, args.join(" "));
@@ -84,6 +126,19 @@ if (name === "test-command") {
   }
   setInterval(() => {}, 1000);
 } else if (name === "ps") {
+  if (process.env.SERVICE_PROBE && fs.existsSync("test.pid")) {
+    const testPid = fs.readFileSync("test.pid", "utf8");
+    const service = ${JSON.stringify(serviceCommand)};
+    if (args.includes("-A")) {
+      console.log("1000001", testPid, "S 0.0 0.0 100 /mock/simctl");
+      console.log("1000002 1 S 0.0 0.0 100", service);
+    } else if (args.includes("1000001")) {
+      console.log("1000001", testPid, "/mock/simctl privacy test-device grant location-always teleport.example");
+    } else if (args.includes("1000002")) {
+      console.log("1000002", process.getuid(), service);
+    }
+    process.exit(0);
+  }
   console.error("diagnostic deliberately unavailable");
   process.exit(17);
 } else if (name === "sample") {
@@ -111,6 +166,10 @@ if (name === "test-command") {
     "adb",
     "sample",
     "sudo",
+    "lsappinfo",
+    "lsof",
+    "log",
+    "jcmd",
   ]) {
     await writeFile(path.join(bin, name), source, { mode: 0o755 });
   }
@@ -159,6 +218,12 @@ for (const platform of ["ios", "android"]) {
           await readFile(path.join(logs, "host-processes.log"), "utf8"),
           /exit=17/,
         );
+        if (platform === "ios") {
+          await assert.rejects(
+            readFile(path.join(logs, "device-processes.log"), "utf8"),
+            { code: "ENOENT" },
+          );
+        }
         assert.match(
           await readFile(
             path.join(
@@ -182,6 +247,91 @@ for (const platform of ["ios", "android"]) {
 
 test("requires an explicit native platform, device and command", async () => {
   await assert.rejects(execute(process.execPath, [runner, "ios"]), { code: 2 });
+});
+
+test("ios: hosted foreground observation adds no device RPC or activation", async () => {
+  const { directory, options } = await fixture();
+  try {
+    await execute(
+      process.execPath,
+      [runner, "ios", "test-device", "--", "test-command", "0"],
+      {
+        ...options,
+        env: {
+          ...options.env,
+          GITHUB_ACTIONS: "true",
+          RUNNER_ENVIRONMENT: "github-hosted",
+        },
+      },
+    );
+    const logs = path.join(directory, "e2e/reports/native-diagnostics");
+    const foreground = await readFile(
+      path.join(logs, "host-foreground.log"),
+      "utf8",
+    );
+    assert.match(foreground, /lsappinfo -names front/);
+    assert.doesNotMatch(foreground, /setfront|launch|activate/);
+    await assert.rejects(
+      readFile(path.join(logs, "device-processes.log"), "utf8"),
+      { code: "ENOENT" },
+    );
+    await assertExited(
+      Number(await readFile(path.join(directory, "collector.pid"), "utf8")),
+    );
+  } finally {
+    await rm(directory, { recursive: true, force: true });
+  }
+});
+
+test("ios: a long owned client captures the identified hosted service without device RPCs", async () => {
+  const { directory, options } = await fixture();
+  try {
+    const result = await execute(
+      process.execPath,
+      [runner, "ios", "test-device", "--", "test-command", "0"],
+      {
+        ...options,
+        timeout: 70000,
+        env: {
+          ...options.env,
+          // The first sighting is at the first 15s sample. Allow a third
+          // sample so small scheduling differences cannot hide the 15s age.
+          TEST_DURATION_MS: "51000",
+          SERVICE_PROBE: "true",
+          GITHUB_ACTIONS: "true",
+          RUNNER_ENVIRONMENT: "github-hosted",
+        },
+      },
+    );
+    assert.match(result.stdout, /Test finished: exit=0/);
+    assert.match(
+      result.stdout,
+      /Capturing hosted CoreSimulatorService 1000002/,
+    );
+    const logs = path.join(directory, "e2e/reports/native-diagnostics");
+    for (const prefix of ["simctl-1000001", "simctl-1000001-service-1000002"]) {
+      assert.match(
+        await readFile(path.join(logs, `${prefix}-stack.txt`), "utf8"),
+        /stack for selected pid 100000[12]/,
+      );
+    }
+    assert.match(
+      await readFile(
+        path.join(logs, "simctl-1000001-service-1000002-host.log"),
+        "utf8",
+      ),
+      /log show --last 3m --info --style compact --predicate processIdentifier == 1000002/,
+    );
+    await assert.rejects(readFile(path.join(logs, "device-processes.log")), {
+      code: "ENOENT",
+    });
+    await assertExited(
+      Number(await readFile(path.join(directory, "collector.pid"), "utf8")),
+    );
+  } finally {
+    await cleanupCollector(directory);
+    await rm(directory, { recursive: true, force: true });
+  }
 });
 
 test("android: CI emulator kernel capture does not restart adbd", async () => {

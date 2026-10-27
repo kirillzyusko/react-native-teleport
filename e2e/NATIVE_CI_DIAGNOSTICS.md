@@ -470,6 +470,26 @@ native stack and open descriptors. This is intended to identify the native
 wait behind the later five-minute command timeouts; no service or command is
 restarted by the collector.
 
+One such capture caught `simctl privacy` taking 80.036 seconds in the second
+flow, before Reels. Every sampled worker frame waits for
+`SimDevice.hostSupportPortWithError → lookup → SimServiceContext.sendRequest`
+through synchronous XPC. No stderr write is blocked in that capture. It does
+not establish why the service delayed its reply or prove that the earlier
+five-minute failure has the same server-side wait.
+
+For a uniquely identified CoreSimulatorService on a GitHub-hosted guest, the
+collector now captures the service's stack and recent PID-scoped host logs
+concurrently with the stalled client. It rechecks the service's path, PID and
+owner before sampling. Developer and self-hosted machines are excluded.
+Hosted samples also record the front application's name through the read-only
+`lsappinfo -names front` command. This can distinguish Simulator/Java focus
+state without changing activation. Existing JVM dumps show AppKit and Metal
+rendering threads, but whether that contributes to the native delay is unproven.
+Periodic iOS `simctl spawn … launchctl list` probes are removed so that process
+observation does not add repeated device RPCs. Android's process snapshots
+remain available for the adbd/zombie verification. This is a diagnostics
+change; the flows, permissions, app startup and timeouts are unchanged.
+
 - Stream native logs independently of Maestro.
 - Sample host processes/memory and device processes every 15 seconds.
 - Capture the Maestro JVM's thread dump every minute, including permission

@@ -8,6 +8,7 @@ import {
 } from "node:fs";
 import { homedir } from "node:os";
 import path from "node:path";
+import { uniqueHostedCoreSimulatorService } from "./native-diagnostics-processes.mjs";
 
 // Keep collecting outside Maestro: a dead XCTest/UiAutomation session cannot
 // reliably take its own final screenshot, hierarchy, or device logs.
@@ -35,6 +36,9 @@ let processSamples = 0;
 let interrupted = false;
 const simctlFirstSeen = new Map();
 const sampledSimctl = new Set();
+const hostedCI =
+  process.env.GITHUB_ACTIONS === "true" &&
+  process.env.RUNNER_ENVIRONMENT === "github-hosted";
 const adb = (...parameters) => ["adb", ["-s", device, ...parameters]];
 const simctl = (...parameters) => ["xcrun", ["simctl", ...parameters]];
 const timestamp = () => new Date().toISOString();
@@ -51,7 +55,9 @@ function signalGroup(child, signal) {
     process.kill(-child.pid, signal);
   } catch (error) {
     if (error.code !== "ESRCH")
-      log(`Unable to signal owned group: ${error.code}`);
+      log(
+        `Unable to signal owned group ${child.pid} (${child.spawnfile}): ${error.code}`,
+      );
   }
 }
 
@@ -185,15 +191,16 @@ async function sample() {
     },
   );
   if (platform === "ios") {
+    if (hostedCI) {
+      await capture("host-foreground.log", ["lsappinfo", ["-names", "front"]]);
+    }
     await capture("host-memory.log", ["vm_stat", []]);
     await capture("host-memory.log", [
       "sysctl",
       ["kern.memorystatus_vm_pressure_level", "vm.swapusage"],
     ]);
-    await capture(
-      "device-processes.log",
-      simctl("spawn", device, "launchctl", "list"),
-    );
+    // A real privacy stall waits inside CoreSimulator's lookup/host-support
+    // XPC route. Avoid adding periodic device RPCs just to observe processes.
     await sampleStalledSimctl(processTable);
   } else {
     await capture("host-memory.log", ["free", ["-m"]]);
@@ -250,20 +257,84 @@ async function sampleStalledSimctl(processTable) {
     log(
       `Owned simctl ${pid} exceeded 15s; capturing native stack and open descriptors`,
     );
-    await capture(`simctl-${pid}-sample.log`, [
-      "sample",
-      [
-        String(pid),
-        "3",
-        "-file",
-        path.join(directory, `simctl-${pid}-stack.txt`),
-      ],
-    ]);
-    await capture(`simctl-${pid}-descriptors.log`, [
-      "lsof",
-      ["-nP", "-p", String(pid)],
+    await Promise.all([
+      capture(`simctl-${pid}-sample.log`, [
+        "sample",
+        [
+          String(pid),
+          "3",
+          "10",
+          "-file",
+          path.join(directory, `simctl-${pid}-stack.txt`),
+        ],
+      ]),
+      capture(`simctl-${pid}-descriptors.log`, [
+        "lsof",
+        ["-nP", "-p", String(pid)],
+      ]),
+      sampleHostedCoreSimulator(processTable, pid),
     ]);
   }
+}
+
+async function sampleHostedCoreSimulator(processTable, clientPid) {
+  const service = uniqueHostedCoreSimulatorService(processTable, hostedCI);
+  if (!service) return;
+  let details = "";
+  const prefix = `simctl-${clientPid}-service-${service.pid}`;
+  await capture(
+    `${prefix}-identity.log`,
+    ["ps", ["-p", String(service.pid), "-o", "pid,uid,comm="]],
+    15000,
+    (chunk) => {
+      details += chunk.toString();
+    },
+  );
+  const live = details.split("\n").some((line) => {
+    const match = line.match(/^\s*(\d+)\s+(\d+)\s+(.+)$/);
+    return (
+      match &&
+      Number(match[1]) === service.pid &&
+      Number(match[2]) === process.getuid?.() &&
+      match[3] === service.command
+    );
+  });
+  if (!live) {
+    log(`CoreSimulatorService ${service.pid} identity/owner changed; skipping`);
+    return;
+  }
+  log(
+    `Capturing hosted CoreSimulatorService ${service.pid} while owned simctl ${clientPid} is stalled`,
+  );
+  await Promise.all([
+    capture(`${prefix}-sample.log`, [
+      "sample",
+      [
+        String(service.pid),
+        "3",
+        "10",
+        "-file",
+        path.join(directory, `${prefix}-stack.txt`),
+      ],
+    ]),
+    capture(`${prefix}-descriptors.log`, [
+      "lsof",
+      ["-nP", "-p", String(service.pid)],
+    ]),
+    capture(`${prefix}-host.log`, [
+      "log",
+      [
+        "show",
+        "--last",
+        "3m",
+        "--info",
+        "--style",
+        "compact",
+        "--predicate",
+        `processIdentifier == ${service.pid}`,
+      ],
+    ]),
+  ]);
 }
 
 async function finalState() {

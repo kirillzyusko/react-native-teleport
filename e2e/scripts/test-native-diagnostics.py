@@ -21,6 +21,8 @@ def running(pid):
 def fixture(folder, source, node):
     folder.mkdir(parents=True)
     (folder / "native-diagnostics.mjs").write_bytes(source.read_bytes())
+    dependency = Path(__file__).with_name("native-diagnostics-processes.mjs")
+    (folder / dependency.name).write_bytes(dependency.read_bytes())
     tool = folder / "mock-tool.mjs"
     tool.write_text("#!" + node + "\n" + r'''
 import fs from "node:fs";
