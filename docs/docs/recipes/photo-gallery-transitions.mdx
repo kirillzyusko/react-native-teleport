@@ -56,7 +56,7 @@ Here is the whole transition, taken apart into the layers that make it work. Hov
 
 Three layers take part in the transition:
 
-1. **Gallery screen.** A `FlatList` of low-res thumbnails. Each thumbnail is wrapped in a `<Portal>`.
+1. **Gallery screen.** A `FlatList` of low-res thumbnails. Each thumbnail is wrapped in a [`<Portal>`](../api/components/portal.md).
 2. **Detail screen.** Pushed as a transparent modal, without a native animation. It renders the full-res `<Image>`, hidden at first.
 3. **Root `PortalHost`.** Rendered by `<PortalProvider>` above the navigator, so anything teleported into it is drawn on top of every screen.
 
@@ -112,7 +112,7 @@ There are several ways to animate an item from a list to full screen. They diffe
 :::tip Light enough for low-end devices
 Teleport adds no heavy allocations to the transition:
 
-- **The thumbnail is moved, not copied.** `<Portal>` re-parents the existing native view, so nothing is re-mounted, re-downloaded or re-decoded.
+- **The thumbnail is moved, not copied.** [`<Portal>`](../api/components/portal.md) re-parents the existing native view, so nothing is re-mounted, re-downloaded or re-decoded.
 - **The full-res photo is decoded once**, on the detail screen, when the user opens it. It's a separate image, not a copy of the thumbnail, and it needs no prefetching or caching.
 - **The list holds only small thumbnails**, so it stays fast and light however long it gets.
 
@@ -649,7 +649,7 @@ export default useMeasure;
 
 ## Step 4: Teleport the thumbnail into the root host
 
-Here comes the core trick. When the user taps a thumbnail, we measure it, store its position and switch its `<Portal>` to the root host:
+Here comes the core trick. When the user taps a thumbnail, we measure it, store its position and switch its [`<Portal>`](../api/components/portal.md) to the root host:
 
 {/* prettier-ignore */}
 ```tsx title="PhotoPreview.tsx (updated)" {1,3,7-8,13-19,21-22,24-27,30,32-33,39-49,51-52}
@@ -765,7 +765,7 @@ Run it and tap a photo. The detail screen opens as before, but the thumbnail you
 It looks like a bug, but it's the foundation of the whole transition: the **root** host sits **above** every screen, so the thumbnail can now travel over the detail screen. The next step makes it travel.
 
 :::tip Moved, not copied
-The thumbnail isn't re-created in the root host. `<Portal>` re-parents the existing native view, so the image isn't re-downloaded or re-decoded, and a video or GIF in its place would keep playing. Its wrapper `View` stays behind and keeps the cell's size, so the list doesn't reflow.
+The thumbnail isn't re-created in the root host. [`<Portal>`](../api/components/portal.md) re-parents the existing native view, so the image isn't re-downloaded or re-decoded, and a video or GIF in its place would keep playing. Its wrapper `View` stays behind and keeps the cell's size, so the list doesn't reflow.
 :::
 
 ## Step 5: Animate it to full screen
@@ -1453,11 +1453,11 @@ Here are all the steps together: teleport, animation, handoff, return and the wa
 
 <PhotoTransitionExplainer />
 
-The complete code of this guide is part of the example app: [`example/src/screens/PhotoGallery`](https://github.com/kirillzyusko/react-native-teleport/tree/main/example/src/screens/PhotoGallery) and [`example/src/hooks/useMeasure.ts`](https://github.com/kirillzyusko/react-native-teleport/blob/main/example/src/hooks/useMeasure.ts). The only differences are the imports that wire the screens into the example's navigation.
+The complete code of this guide is part of the [example](https://github.com/kirillzyusko/react-native-teleport/tree/main/example/src/screens/PhotoGallery) app. The only differences are the imports that wire the screens into the example's navigation.
 
 ## Going further: videos, GIFs and other stateful content
 
-`<Portal>` doesn't render a copy of the thumbnail: it moves the existing native view between parents. Whatever runs inside that view keeps running during the transition:
+[`<Portal>`](../api/components/portal.md) doesn't render a copy of the thumbnail: it moves the existing native view between parents. Whatever runs inside that view keeps running during the transition:
 
 - a video keeps playing while it grows to full screen, with no restart and no black frame;
 - a GIF or Lottie animation continues from the same frame;
@@ -1485,7 +1485,7 @@ In every case the list keeps rendering lightweight thumbnails, and the expensive
 ## FAQ
 
 **Is the full-res photo downloaded or rendered twice?**
-No. Only the detail screen renders the full-res `<Image>`. The thumbnail that flies across the screen is the original grid view, moved by `<Portal>`.
+No. Only the detail screen renders the full-res `<Image>`. The thumbnail that flies across the screen is the original grid view, moved by [`<Portal>`](../api/components/portal.md).
 
 **What happens if the full-res photo loads after the animation ends?**
 The low-res thumbnail stays on screen in the final position until `onLoad` fires, then the same single-commit swap shows the photo.
@@ -1501,8 +1501,3 @@ Yes, as long as it reports when the image is ready (an `onLoad`-style callback) 
 
 **Which platforms are supported?**
 `react-native-teleport` supports iOS, Android and web. This transition was verified frame by frame on iOS and Android with the New Architecture.
-
-## Photo credits
-
-{/* cspell:disable-next-line */}
-The photos are from [Unsplash](https://unsplash.com), served by [Lorem Picsum](https://picsum.photos), by Paul Jarvis ([1](https://unsplash.com/photos/6J--NXulQCs), [2](https://unsplash.com/photos/NYDo21ssGao)), [Aleks Dorohovich](https://unsplash.com/photos/nJdwUHmaY8A), [Alejandro Escamilla](https://unsplash.com/photos/Iuq0EL4EINY), [Go Wild](https://unsplash.com/photos/V0yAek6BgGk), [Vadim Sherbakov](https://unsplash.com/photos/osSryggkso4), [Luke Chesser](https://unsplash.com/photos/KR2mdHJ5qMg), [Margaret Barley](https://unsplash.com/photos/Qo51KwK1dKg), [Nicholas Swanson](https://unsplash.com/photos/d19by2PLaPc), [Tony Naccarato](https://unsplash.com/photos/-kEr-QltARg), [Jassy Onyae](https://unsplash.com/photos/1gBUXhf0PtA) and [Alexander Shustov](https://unsplash.com/photos/OxzhYtL-00Y).
