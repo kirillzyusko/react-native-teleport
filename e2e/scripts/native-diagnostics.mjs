@@ -37,6 +37,7 @@ const timeline = createWriteStream(path.join(directory, "timeline.log"));
 const collectors = new Set();
 const ownerPid = process.ppid;
 let testPid;
+let indigoBridge;
 let processSamples = 0;
 let interrupted = false;
 const simctlFirstSeen = new Map();
@@ -495,6 +496,45 @@ const interval = setInterval(() => {
   }
 }, 15000);
 
+if (platform === "ios" && process.env.MAESTRO_IOS_INPUT_BACKEND === "indigo") {
+  const startupOwner = setInterval(() => {
+    if (process.ppid !== ownerPid) {
+      log(`Owner ${ownerPid} exited during HID startup; stopping owned groups`);
+      interrupted = true;
+      for (const child of collectors) signalGroup(child, "SIGKILL");
+    }
+  }, 1000);
+  try {
+    if (process.ppid !== ownerPid)
+      throw new Error("Owner exited before HID startup");
+    const { startIndigoBridge } = await import("./ios-hid-bridge.mjs");
+    indigoBridge = await startIndigoBridge({
+      manifestPath: process.env.MAESTRO_IOS_HID_MANIFEST,
+      device,
+      directory,
+      own(child) {
+        collectors.add(child);
+        child.once("close", () => collectors.delete(child));
+      },
+    });
+    if (interrupted || process.ppid !== ownerPid) {
+      await indigoBridge.stop();
+      throw new Error("Owner exited during HID startup");
+    }
+    log("Persistent Indigo bridge ready for the selected Simulator");
+  } catch (error) {
+    log(`HID startup failed: ${error.message}`);
+    interrupted = true;
+    clearInterval(interval);
+    for (const child of collectors) signalGroup(child, "SIGKILL");
+    await sampling;
+    timeline.end();
+    throw error;
+  } finally {
+    clearInterval(startupOwner);
+  }
+}
+
 const test = spawn(command, args, { stdio: "inherit", detached: true });
 testPid = test.pid;
 let stopCompletion;
@@ -506,6 +546,7 @@ function stop(signal, reason) {
   log(`${reason}; stopping test and diagnostic process groups`);
   signalGroup(test, signal);
   for (const child of collectors) signalGroup(child, "SIGKILL");
+  if (indigoBridge) void indigoBridge.stop();
   stopCompletion = new Promise((resolve) => {
     setTimeout(() => {
       signalGroup(test, "SIGKILL");
@@ -537,6 +578,7 @@ const exitCode = await new Promise((resolve) => {
 clearInterval(interval);
 clearTimeout(terminationTimer);
 await sampling;
+if (indigoBridge) await indigoBridge.stop();
 if (!interrupted) await finalState();
 for (const child of collectors) signalGroup(child, "SIGKILL");
 if (stopCompletion) await stopCompletion;

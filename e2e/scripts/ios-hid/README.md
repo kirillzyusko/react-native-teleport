@@ -28,3 +28,27 @@ The actual CI cancellation despite a 50 ms XCTest path offset is preserved in
 the local campaign's `paired-stock5-recap-cancellation/analysis.json`. A path
 offset is not a device-registration handshake. This probe is preparation for an
 alternative transport, not a verified fix for that cancellation.
+
+The experimental `indigo` manual profile keeps one host HID client for the
+selected UDID. The Simulator-only dependency patch forwards its existing
+orientation-adjusted touch points and swipe control points to an owned
+loopback bridge. The helper sends native 352-byte single-touch packets from
+the verified Xcode 16.4 builder, retaining its 160-byte payload stride. It
+does not use the older manually constructed 320-byte envelope. The original
+physical-device source is unchanged; installation still replaces only the
+two Simulator resources in the guarded SDK JAR.
+
+The helper queues the original UP before awaiting delivery acknowledgements,
+propagates errors, and has no gesture replay or backend fallback. Fake native
+delivery tests withhold DOWN acknowledgements until UP arrives. Bridge controls
+cover sequential use of one client, concurrent-request rejection, wrong-device
+rejection, native failure, and process cleanup. Runtime auditing matches every
+native delivery to its request coordinates/timeline and XCTest acknowledgement;
+the original full-suite, video and cancellation checks still run.
+
+This is an experimental backend, not established stability evidence. It accepts
+only the exact Xcode16.4/CoreSimulator1051.17.8 binaries captured by the CI probe.
+Local SDK builds use a compiler-only deployment override for Xcode27, whose
+minimum is iOS15; the bridge also passes a separate iOS14 availability check.
+CI retains its original deployment target. No local device verification is
+performed during these host-only checks.

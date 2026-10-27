@@ -2,6 +2,7 @@
 import argparse
 import concurrent.futures
 import hashlib
+import importlib.util
 import json
 import os
 from pathlib import Path, PurePosixPath
@@ -17,9 +18,12 @@ SOURCE_COMMIT = "14a408335e17a090df1e26bdbeaf80d8122a8fd8"
 SOURCE_TREE = "1f45dd3ba4e3769166e396ede82c5017de7b9716"
 EVENT_FILE = "maestro-driver-iosUITests/Routes/XCTest/EventRecord.swift"
 EVENT_BLOB = "b7437395ea05c771b2497112fb9816ebc287f6de"
+RUNNER_FILE = "maestro-driver-iosUITests/Routes/XCTest/RunnerDaemonProxy.swift"
+RUNNER_BLOB = "599d53cf33c3bdd136ea79623e2b883d47d3a17a"
 ORIGINAL_JAR = "1a4e4582e7b415167782711c04b914df878899d04757a2de82c3bf7a5b4c99f1"
 APP_NAMES = ("maestro-driver-iosUITests-Runner.app", "maestro-driver-ios.app")
 RESOURCE_PREFIX = "driver-iPhoneSimulator/Debug-iphonesimulator/"
+HID_SOURCE = Path(__file__).resolve().parent / "ios-hid"
 
 
 def sha256(data):
@@ -102,6 +106,70 @@ def patch_event_record(original, lead_in):
     return source.encode()
 
 
+def patch_indigo_source(original, runner):
+    if blob_hash(original) != EVENT_BLOB or blob_hash(runner) != RUNNER_BLOB:
+        raise RuntimeError("Unsupported pinned XCTest source for Indigo")
+    source = original.decode()
+    declaration = "    static let defaultTapDuration = 0.1\n"
+    source = source.replace(declaration, declaration + """#if targetEnvironment(simulator)
+    var teleportGesture: [String: Any]?
+#endif
+""", 1)
+    touch = "    func addPointerTouchEvent(at point: CGPoint, touchUpAfter: TimeInterval?) -> Self {\n"
+    swipe = "    func addSwipeEvent(start: CGPoint, end: CGPoint, duration: TimeInterval) -> Self {\n"
+    for signature in (touch, swipe):
+        if source.count(signature) != 1:
+            raise RuntimeError("Unexpected pinned gesture method")
+    source = source.replace(touch, touch + """#if targetEnvironment(simulator)
+        teleportGesture = ["kind": "touch", "point": ["x": point.x, "y": point.y],
+                           "duration": touchUpAfter ?? Self.defaultTapDuration]
+        return self
+#else
+""", 1)
+    source = source.replace("        return add(path)\n    }", "        return add(path)\n#endif\n    }", 1)
+    source = source.replace(swipe, swipe + """#if targetEnvironment(simulator)
+        teleportGesture = ["kind": "swipe", "start": ["x": start.x, "y": start.y],
+                           "end": ["x": end.x, "y": end.y], "duration": duration]
+        return self
+#else
+""", 1)
+    # Only the remaining swipe return has no conditional terminator yet.
+    source = source.replace("        return add(path)\n    }", "        return add(path)\n#endif\n    }", 1)
+    source += "\n" + (HID_SOURCE / "MaestroBridge.swift").read_text()
+    proxy = runner.decode()
+    method = "    func synthesize(eventRecord: EventRecord) async throws {\n"
+    if proxy.count(method) != 1:
+        raise RuntimeError("Unexpected pinned synthesis entry point")
+    proxy = proxy.replace(method, method + """#if targetEnvironment(simulator)
+        if let gesture = eventRecord.teleportGesture {
+            try await TeleportSimulatorHID.send(gesture)
+            return
+        }
+#endif
+""", 1)
+    return source.encode(), proxy.encode()
+
+
+def hid_host_manifest(artifact, metadata):
+    spec = importlib.util.spec_from_file_location("inspect_ios_hid", Path(__file__).with_name("inspect-ios-hid.py"))
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    developer = Path(subprocess.check_output(["xcode-select", "-p"], text=True).strip())
+    folder, _ = module.simulator_kit(developer)
+    core = Path("/Library/Developer/PrivateFrameworks/CoreSimulator.framework/CoreSimulator").resolve(strict=True)
+    kit = (folder / "SimulatorKit").resolve(strict=True)
+    if sha256(core.read_bytes()) != "35d5e6a1ecc3a619f4a9d352dd84f9d49a575d2168767a9b2eddfa67075c51ed" or sha256(kit.read_bytes()) != "3a6df493a904d5472dd17b9664864b10a569a040f3b7bea750bfcdcd200cd055":
+        raise RuntimeError("Indigo supports only the captured Xcode16.4/CoreSimulator1051.17.8 binaries")
+    helper = artifact / "IndigoHost"
+    if sha256(helper.read_bytes()) != metadata["hid_host"]["sha256"]:
+        raise RuntimeError("Indigo host helper digest mismatch")
+    helper.chmod(0o755)
+    manifest = {"developer": str(developer), "candidate_sha": metadata["candidate_sha"]}
+    for name, file in [("core", core), ("kit", kit), ("helper", helper)]:
+        manifest[name] = {"file": str(file), "sha256": sha256(file.read_bytes())}
+    (artifact / "indigo-host-manifest.json").write_text(json.dumps(manifest, indent=2) + "\n")
+
+
 def build(args):
     source = args.source.resolve()
     output = args.output.resolve()
@@ -110,6 +178,7 @@ def build(args):
     source.mkdir(parents=True, exist_ok=True)
     metadata = {"status": "preparing", "source_commit": SOURCE_COMMIT,
                 "source_tree": SOURCE_TREE, "lead_in_seconds": float(args.lead_in),
+                "backend": args.backend,
                 "candidate_sha": os.environ.get("GITHUB_SHA"), "resources": {}}
     manifest = output / "maestro-ios-input.json"
 
@@ -121,7 +190,20 @@ def build(args):
         files = prepare_source(source)
         (output / "source-manifest.json").write_text(json.dumps(files, indent=2) + "\n")
         original = (source / EVENT_FILE).read_bytes()
-        patched = patch_event_record(original, args.lead_in)
+        if args.backend == "indigo":
+            if args.lead_in != "0":
+                raise RuntimeError("Indigo does not use a Recap lead-in")
+            runner = (source / RUNNER_FILE).read_bytes()
+            patched, patched_runner = patch_indigo_source(original, runner)
+            (output / "RunnerDaemonProxy.original.swift").write_bytes(runner)
+            (output / "RunnerDaemonProxy.patched.swift").write_bytes(patched_runner)
+            (source / RUNNER_FILE).write_bytes(patched_runner)
+            metadata.update(runner_original_sha256=sha256(runner), runner_patched_sha256=sha256(patched_runner),
+                            hid_host_source_sha256=sha256((HID_SOURCE / "IndigoHost.m").read_bytes()),
+                            hid_bridge_source_sha256=sha256((HID_SOURCE / "MaestroBridge.swift").read_bytes()))
+            metadata["hid_node_source_sha256"] = sha256(Path(__file__).with_name("ios-hid-bridge.mjs").read_bytes())
+        else:
+            patched = patch_event_record(original, args.lead_in)
         (output / "EventRecord.original.swift").write_bytes(original)
         (output / "EventRecord.patched.swift").write_bytes(patched)
         (output / "MAESTRO-LICENSE").write_bytes((source / "MAESTRO-LICENSE").read_bytes())
@@ -136,6 +218,17 @@ def build(args):
             raise RuntimeError("The XCTest dependency must be built on macOS")
         metadata["xcode"] = subprocess.check_output(["xcodebuild", "-version"], text=True).strip()
         metadata["architecture"] = platform.machine()
+        if args.backend == "indigo":
+            helper = output / "IndigoHost"
+            compile_host = ["xcrun", "clang", "-fobjc-arc", "-fblocks", "-Wall", "-Wextra", "-Werror",
+                            "-framework", "Foundation", "-framework", "CoreGraphics",
+                            str(HID_SOURCE / "IndigoHost.m"), "-o", str(helper)]
+            with (output / "indigo-host-build.log").open("w") as log:
+                subprocess.run(compile_host, stdout=log, stderr=subprocess.STDOUT, check=True)
+            result = subprocess.check_output([str(helper), "--self-test"], timeout=10)
+            (output / "indigo-host-self-test.json").write_bytes(result)
+            (output / "IDB-LICENSE").write_bytes((HID_SOURCE / "IDB-LICENSE").read_bytes())
+            metadata["hid_host"] = {"file": helper.name, "sha256": sha256(helper.read_bytes())}
         command = ["xcodebuild", "build-for-testing", "-project", str(source / "maestro-driver-ios.xcodeproj"),
                    "-scheme", "maestro-driver-ios", "-configuration", "Debug",
                    "-destination", "generic/platform=iOS Simulator", "-derivedDataPath", str(derived),
@@ -182,6 +275,8 @@ def install(args):
         raise RuntimeError("Missing successful pinned XCTest dependency build")
     if metadata["lead_in_seconds"] != float(args.expected_lead_in):
         raise RuntimeError("The built input profile does not match this trial")
+    if metadata.get("backend", "recap") != args.expected_backend:
+        raise RuntimeError("The built input backend does not match this trial")
     if os.environ.get("GITHUB_SHA") and metadata["candidate_sha"] != os.environ["GITHUB_SHA"]:
         raise RuntimeError("The built driver belongs to a different candidate")
     expected_names = {RESOURCE_PREFIX + name.removesuffix(".app") + ".zip" for name in APP_NAMES}
@@ -201,6 +296,8 @@ def install(args):
             if archive.testzip() is not None:
                 raise RuntimeError(f"Corrupt native artifact: {name}")
         replacements[name] = data
+    if args.expected_backend == "indigo":
+        hid_host_manifest(artifact, metadata)
     with tempfile.NamedTemporaryFile(dir=jar.parent, suffix=".jar", delete=False) as temporary:
         temporary_path = Path(temporary.name)
     try:
@@ -230,10 +327,12 @@ def main():
     prepare.add_argument("--output", required=True, type=Path)
     prepare.add_argument("--lead-in", required=True, choices=("0", "0.05"))
     prepare.add_argument("--prepare-only", action="store_true")
+    prepare.add_argument("--backend", choices=("recap", "indigo"), default="recap")
     use = commands.add_parser("install")
     use.add_argument("--jar", required=True, type=Path)
     use.add_argument("--artifact", required=True, type=Path)
     use.add_argument("--expected-lead-in", required=True, choices=("0", "0.05"))
+    use.add_argument("--expected-backend", choices=("recap", "indigo"), default="recap")
     args = parser.parse_args()
     (build if args.command == "build" else install)(args)
 

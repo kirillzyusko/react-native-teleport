@@ -1,5 +1,6 @@
 import assert from "node:assert/strict";
 import { execFile } from "node:child_process";
+import { createHash, randomUUID } from "node:crypto";
 import { mkdtemp, mkdir, readFile, rm, writeFile } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
@@ -451,6 +452,102 @@ test("ios: a long owned client captures the identified hosted service without de
     );
   } finally {
     await cleanupCollector(directory);
+    await rm(directory, { recursive: true, force: true });
+  }
+});
+
+test("ios: owner exit during persistent HID startup stops only owned helper/collectors", async () => {
+  const { directory, options } = await fixture();
+  const selectedDevice = randomUUID();
+  try {
+    const helper = path.join(directory, "hid-startup-helper");
+    const source = `#!${process.execPath}\nrequire('node:fs').writeFileSync('hid-startup.pid',String(process.pid));setInterval(()=>{},1000);\n`;
+    await writeFile(helper, source, { mode: 0o755 });
+    const entry = {
+      file: helper,
+      sha256: createHash("sha256").update(source).digest("hex"),
+    };
+    const manifest = path.join(directory, "hid-manifest.json");
+    await writeFile(
+      manifest,
+      JSON.stringify({
+        helper: entry,
+        core: entry,
+        kit: entry,
+        developer: directory,
+      }),
+    );
+    const owner = path.join(directory, "hid-owner.mjs");
+    await writeFile(
+      owner,
+      `
+import fs from 'node:fs';
+import {spawn} from 'node:child_process';
+const out=fs.openSync('hid-owner.log','a');
+const child=spawn(process.execPath,${JSON.stringify([runner, "ios", selectedDevice, "--", "test-command", "0"])},{stdio:['ignore',out,out]});
+child.unref();fs.writeFileSync('hid-wrapper.pid',String(child.pid));
+const start=Date.now();setInterval(()=>{if(fs.existsSync('hid-startup.pid'))process.exit(0);if(Date.now()-start>10000)process.exit(22);},10);
+`,
+    );
+    await execute(process.execPath, [owner], {
+      ...options,
+      timeout: 15000,
+      env: {
+        ...options.env,
+        MAESTRO_IOS_INPUT_BACKEND: "indigo",
+        MAESTRO_IOS_HID_MANIFEST: manifest,
+      },
+    });
+    const ids = await Promise.all(
+      ["hid-startup.pid", "hid-wrapper.pid", "collector.pid"].map(
+        async (file) =>
+          Number(await readFile(path.join(directory, file), "utf8")),
+      ),
+    );
+    const deadline = Date.now() + 10000;
+    while (Date.now() < deadline) {
+      const live = ids.some((pid) => {
+        try {
+          process.kill(pid, 0);
+          return true;
+        } catch {
+          return false;
+        }
+      });
+      if (!live) break;
+      await delay(20);
+    }
+    for (const pid of ids) await assertExited(pid);
+    assert.match(
+      await readFile(path.join(directory, "hid-owner.log"), "utf8"),
+      /exited during HID startup/,
+    );
+    await assert.rejects(readFile(path.join(directory, "test.pid")), {
+      code: "ENOENT",
+    });
+  } finally {
+    for (const file of [
+      "hid-startup.pid",
+      "hid-wrapper.pid",
+      "collector.pid",
+    ]) {
+      try {
+        const pid = Number(await readFile(path.join(directory, file), "utf8"));
+        const { stdout } = await execute("/bin/ps", [
+          "-p",
+          String(pid),
+          "-o",
+          "command=",
+        ]);
+        if (
+          stdout.includes(directory) ||
+          (stdout.includes(selectedDevice) && stdout.includes(runner))
+        )
+          process.kill(pid, "SIGKILL");
+      } catch (error) {
+        if (!["ENOENT", "ESRCH", 1].includes(error.code)) throw error;
+      }
+    }
     await rm(directory, { recursive: true, force: true });
   }
 });

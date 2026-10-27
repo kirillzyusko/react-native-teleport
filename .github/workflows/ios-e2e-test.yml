@@ -14,6 +14,7 @@ on:
           - recap-source
           - native-driver
           - hid-contract
+          - indigo
       comparison:
         description: Screenshot region bounds algorithm (paired shares one app build)
         type: choice
@@ -184,17 +185,22 @@ jobs:
             build CODE_SIGNING_ALLOWED=NO | xcpretty
       - name: Build pinned Maestro input driver
         id: maestro-input
-        if: env.MAESTRO_IOS_PROFILE == 'native-driver' || env.MAESTRO_IOS_PROFILE == 'recap-source'
+        if: env.MAESTRO_IOS_PROFILE == 'native-driver' || env.MAESTRO_IOS_PROFILE == 'recap-source' || env.MAESTRO_IOS_PROFILE == 'indigo'
         working-directory: ${{ github.workspace }}
         env:
           GH_TOKEN: ${{ github.token }}
-          TOUCH_LEAD_IN: ${{ inputs.profile == 'recap-source' && '0' || '0.05' }}
+          TOUCH_LEAD_IN: ${{ (inputs.profile == 'recap-source' || inputs.profile == 'indigo') && '0' || '0.05' }}
+          INPUT_BACKEND: ${{ inputs.profile == 'indigo' && 'indigo' || 'recap' }}
         run: |
           python3 e2e/scripts/maestro-ios-input.py build \
             --source example/ios/build/maestro-input/source \
             --derived example/ios/build/maestro-input/DerivedData \
             --output example/ios/build/maestro-input/artifact \
-            --lead-in "$TOUCH_LEAD_IN"
+            --lead-in "$TOUCH_LEAD_IN" --backend "$INPUT_BACKEND"
+          if [ "$INPUT_BACKEND" = indigo ]; then
+            python3 -B e2e/scripts/test-maestro-ios-hid-source.py
+            node --test e2e/scripts/ios-hid-bridge.test.mjs e2e/scripts/check-ios-hid-delivery.test.mjs
+          fi
       - name: Upload Maestro input driver and build evidence
         if: always() && steps.maestro-input.outcome != 'skipped' && steps.maestro-input.outcome != ''
         uses: actions/upload-artifact@v4
@@ -292,24 +298,28 @@ jobs:
       - name: Log Maestro version
         run: maestro --version
       - name: Download Maestro input driver
-        if: env.MAESTRO_IOS_PROFILE == 'native-driver' || env.MAESTRO_IOS_PROFILE == 'recap-source'
+        if: env.MAESTRO_IOS_PROFILE == 'native-driver' || env.MAESTRO_IOS_PROFILE == 'recap-source' || env.MAESTRO_IOS_PROFILE == 'indigo'
         uses: actions/download-artifact@v4
         with:
           name: maestro-ios-input-driver
           path: e2e/reports/maestro-ios-input
       - name: Install simulator input driver resources
-        if: env.MAESTRO_IOS_PROFILE == 'native-driver' || env.MAESTRO_IOS_PROFILE == 'recap-source'
+        if: env.MAESTRO_IOS_PROFILE == 'native-driver' || env.MAESTRO_IOS_PROFILE == 'recap-source' || env.MAESTRO_IOS_PROFILE == 'indigo'
         env:
-          TOUCH_LEAD_IN: ${{ inputs.profile == 'recap-source' && '0' || '0.05' }}
+          TOUCH_LEAD_IN: ${{ (inputs.profile == 'recap-source' || inputs.profile == 'indigo') && '0' || '0.05' }}
+          INPUT_BACKEND: ${{ inputs.profile == 'indigo' && 'indigo' || 'recap' }}
         run: |
           python3 e2e/scripts/maestro-ios-input.py install \
             --jar "$HOME/.maestro/lib/maestro-ios-driver.jar" \
             --artifact e2e/reports/maestro-ios-input \
-            --expected-lead-in "$TOUCH_LEAD_IN"
+            --expected-lead-in "$TOUCH_LEAD_IN" --expected-backend "$INPUT_BACKEND"
           mkdir -p e2e/reports/native-diagnostics
           cp e2e/reports/maestro-ios-input/maestro-ios-input-install.json e2e/reports/native-diagnostics/
+          if [ "$INPUT_BACKEND" = indigo ]; then
+            cp e2e/reports/maestro-ios-input/indigo-host-manifest.json e2e/reports/native-diagnostics/
+          fi
       - name: Use simulator-native app termination
-        if: env.MAESTRO_IOS_PROFILE == 'simctl-stop' || env.MAESTRO_IOS_PROFILE == 'native-driver' || env.MAESTRO_IOS_PROFILE == 'recap-source'
+        if: env.MAESTRO_IOS_PROFILE == 'simctl-stop' || env.MAESTRO_IOS_PROFILE == 'native-driver' || env.MAESTRO_IOS_PROFILE == 'recap-source' || env.MAESTRO_IOS_PROFILE == 'indigo'
         run: |
           set -euo pipefail
           python3 e2e/scripts/patch-maestro-ios-stop.py \
@@ -349,6 +359,9 @@ jobs:
       - name: Run E2E tests
         id: e2e
         timeout-minutes: 30
+        env:
+          MAESTRO_IOS_INPUT_BACKEND: ${{ inputs.profile == 'indigo' && 'indigo' || 'recap' }}
+          MAESTRO_IOS_HID_MANIFEST: ${{ github.workspace }}/e2e/reports/maestro-ios-input/indigo-host-manifest.json
         run: |
           set -euo pipefail
           mkdir -p e2e/reports
@@ -375,6 +388,11 @@ jobs:
         run: |
           grep -F "[teleport-maestro-input] touchLeadInSeconds=$EXPECTED_LEAD_IN" \
             e2e/reports/native-diagnostics/simulator.log
+      - name: Verify persistent Simulator HID delivery
+        if: always() && env.MAESTRO_IOS_PROFILE == 'indigo' && steps.e2e.outcome != 'skipped' && steps.e2e.outcome != ''
+        run: |
+          node e2e/scripts/check-ios-hid-delivery.mjs \
+            e2e/reports/native-diagnostics e2e/reports/native-diagnostics/ios-hid-delivery.json
       - name: Upload native diagnostics
         if: always()
         uses: actions/upload-artifact@v4
