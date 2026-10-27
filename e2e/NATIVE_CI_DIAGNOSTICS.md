@@ -342,6 +342,35 @@ runner size does not imply the same automation lifecycle or failure behavior.
 
 ## Diagnostics
 
+### Android menu tap after the foreground-instrumentation patch
+
+The unchanged `2bdf4eb` candidate failed trial 14 before entering the stable
+host remount fixture. The other 17 original flows passed. `adbd` retained PID
+458 without zombie children, and the expected foreground patch was installed.
+Maestro aimed at `(540, 1512)` inside the enabled `stable_host_remount` bounds
+`[21,1445][1059,1580]` and reported the tap complete. The failure screenshot
+and accessibility tree still show the Fixtures list, so the following
+`repro_run` lookup failed. The fixture itself was not entered.
+
+Those logs do not show whether the injected events reached the application,
+whether React granted or cancelled the responder, or whether `onPress` ran.
+They do not establish a cause for this separate failure.
+
+The manual Android `input-trace` mode runs the same complete suite and required
+video checks, with no retries or flow edits. Only this profile builds with
+`-PteleportInputTrace=true`. Its example app records DOWN/UP/CANCEL delivery,
+queue age, current scroll offsets and the result of the original activity
+dispatch call. Buffered JavaScript logs record the matching menu item's
+Pressability state, region and `onPress` callback. The original dispatch and
+callback execute once with unchanged arguments; the recorder does not consume
+events or add waits. The ordinary build leaves this tracing disabled.
+
+The trace gate requires both native and JavaScript installation markers and
+native input delivery, and rejects recording errors or buffer overflow.
+These diagnostic runs are excluded from final stability counts. The hosted
+API 31 guest ended with its job, and no Android device was running locally
+when checked through Argent, so this new failure is being investigated on CI.
+
 Both native workflows run the existing suite through `scripts/native-diagnostics.mjs`:
 
 - Stream native logs independently of Maestro.

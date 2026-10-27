@@ -13,11 +13,12 @@ on:
           - "20"
           - "60"
       mode:
-        description: Original suite or focused Maestro driver lifetime probe
+        description: Original suite, input tracing, or driver lifetime probe
         type: choice
         default: suite
         options:
           - suite
+          - input-trace
           - stock-driver
           - foreground-driver
   pull_request:
@@ -54,7 +55,7 @@ jobs:
     steps:
       - id: trials
         env:
-          TRIAL_COUNT: ${{ inputs.mode && inputs.mode != 'suite' && '1' || inputs.trials || '1' }}
+          TRIAL_COUNT: ${{ inputs.mode && inputs.mode != 'suite' && inputs.mode != 'input-trace' && '1' || inputs.trials || '1' }}
         run: |
           node <<'NODE'
           const fs = require("node:fs");
@@ -98,7 +99,9 @@ jobs:
       - name: Set app active arch
         run: sed -i.bak 's/reactNativeArchitectures=.*/reactNativeArchitectures=x86_64/' example/android/gradle.properties
       - name: Run Gradle Build for example/android/
-        run: cd example/android && ./gradlew assembleRelease --build-cache && cd ../..
+        env:
+          TELEPORT_INPUT_TRACE: ${{ inputs.mode == 'input-trace' && 'true' || 'false' }}
+        run: cd example/android && ./gradlew assembleRelease --build-cache -PteleportInputTrace="$TELEPORT_INPUT_TRACE" && cd ../..
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
@@ -152,7 +155,7 @@ jobs:
       - name: Log Maestro version
         run: maestro --version
       - name: Ensure FFmpeg is available
-        if: ${{ !inputs.mode || inputs.mode == 'suite' }}
+        if: ${{ !inputs.mode || inputs.mode == 'suite' || inputs.mode == 'input-trace' }}
         run: command -v ffmpeg >/dev/null || (sudo apt-get update && sudo apt-get install -y ffmpeg)
       - name: Enable KVM group perms
         run: |
@@ -168,11 +171,11 @@ jobs:
             ~/.android/adb*
           key: avd-${{ matrix.devices.api }}-${{ matrix.devices.target }}
       - name: Prepare snapshot engine
-        if: ${{ !inputs.mode || inputs.mode == 'suite' }}
+        if: ${{ !inputs.mode || inputs.mode == 'suite' || inputs.mode == 'input-trace' }}
         run: cd e2e && npm install
 
       - name: Start snapshot engine (background)
-        if: ${{ !inputs.mode || inputs.mode == 'suite' }}
+        if: ${{ !inputs.mode || inputs.mode == 'suite' || inputs.mode == 'input-trace' }}
         shell: bash
         run: |
           mkdir -p e2e/reports
@@ -198,12 +201,20 @@ jobs:
             adb install -r -d -t example/android/app/build/outputs/apk/release/app-release.apk
             bash e2e/scripts/run-android-ci.sh "$NATIVE_MODE" emulator-5554
       - name: Show snapshot engine logs
-        if: ${{ always() && (!inputs.mode || inputs.mode == 'suite') }}
+        if: ${{ always() && (!inputs.mode || inputs.mode == 'suite' || inputs.mode == 'input-trace') }}
         run: |
           cat e2e/reports/snapshot-engine.log || true
       - name: Check glitches/flickering
-        if: ${{ !inputs.mode || inputs.mode == 'suite' }}
+        if: ${{ !inputs.mode || inputs.mode == 'suite' || inputs.mode == 'input-trace' }}
         run: node e2e/scripts/check-glitches.mjs e2e/reports/debug
+      - name: Verify Android input tracing
+        if: ${{ always() && inputs.mode == 'input-trace' }}
+        run: |
+          grep -q 'TeleportInputTrace.*"phase":"installed"' e2e/reports/native-diagnostics/logcat.log
+          grep -q 'TeleportInputTrace.*"phase":"received"' e2e/reports/native-diagnostics/logcat.log
+          grep -q '\[teleport-input\].*"phase":"installed"' e2e/reports/native-diagnostics/logcat.log
+          if grep -q '\[teleport-input\].*"phase":"overflow"' e2e/reports/native-diagnostics/logcat.log; then exit 1; fi
+          if grep -q 'TeleportInputTrace.*trace.error' e2e/reports/native-diagnostics/logcat.log; then exit 1; fi
       - name: Kill snapshot engine
         if: always()
         shell: bash

@@ -1,5 +1,7 @@
 package teleport.example
 
+import android.os.Bundle
+import android.view.MotionEvent
 import com.facebook.react.ReactActivity
 import com.facebook.react.ReactActivityDelegate
 import com.facebook.react.defaults.DefaultNewArchitectureEntryPoint.fabricEnabled
@@ -18,5 +20,18 @@ class MainActivity : ReactActivity() {
    * which allows you to enable New Architecture with a single boolean flags [fabricEnabled]
    */
   override fun createReactActivityDelegate(): ReactActivityDelegate =
-      DefaultReactActivityDelegate(this, mainComponentName, fabricEnabled)
+      object : DefaultReactActivityDelegate(this, mainComponentName, fabricEnabled) {
+        override fun getLaunchOptions(): Bundle = Bundle().apply {
+          putBoolean("teleportInputTrace", BuildConfig.TELEPORT_INPUT_TRACE)
+          if (BuildConfig.TELEPORT_INPUT_TRACE) InputTrace.installed()
+        }
+      }
+
+  override fun dispatchTouchEvent(event: MotionEvent): Boolean {
+    if (!BuildConfig.TELEPORT_INPUT_TRACE) return super.dispatchTouchEvent(event)
+    InputTrace.event("received", event, window.decorView)
+    val handled = super.dispatchTouchEvent(event)
+    InputTrace.event("returned", event, window.decorView, handled)
+    return handled
+  }
 }

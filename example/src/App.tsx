@@ -9,8 +9,14 @@ import { NavigationContainer } from "@react-navigation/native";
 import RootStack from "./navigation";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import PreloadedEditor from "./screens/RichTextEditor/PreloadedEditor";
+import { configureInputTrace } from "./diagnostics/inputTrace";
 
-export default function App() {
+export default function App({
+  teleportInputTrace = false,
+}: {
+  teleportInputTrace?: boolean;
+}) {
+  configureInputTrace(teleportInputTrace);
   return (
     <SafeAreaProvider initialMetrics={initialWindowMetrics}>
       <GestureHandlerRootView style={styles.container}>

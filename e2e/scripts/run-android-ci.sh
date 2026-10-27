@@ -7,7 +7,7 @@ maestro_home="${TELEPORT_MAESTRO_DIR:-$HOME/.maestro}"
 probe_dir="${TELEPORT_PROBE_DIR:-$RUNNER_TEMP/teleport-maestro-driver-probe}"
 
 case "$mode" in
-  suite)
+  suite|input-trace)
     python3 e2e/scripts/patch-maestro-instrumentation.py \
       "$maestro_home/lib/maestro-client.jar" "$probe_dir" --install
     mkdir -p e2e/reports/native-diagnostics
