@@ -383,6 +383,30 @@ installing the optimized class. The local controls establish equivalence and
 reduced CPU time, but do not establish the cause of subsequent native
 `simctl` or recording delays.
 
+`image-comparison-fixture/ScreenshotWaitRepro.java` is a standalone runnable
+reproduction: an instant mock Driver supplies generated 1206×2622 images with
+2550 separate changed regions to the actual pinned `ScreenshotUtils`.
+No app, device or saved media is required. On the measured host the requested
+2000 ms wait returned `false` after 11.8 seconds with the original collector
+and after 2.24 seconds with the one-pass collector. The existing timer still
+checks between iterations; the change reduces the expensive iteration's work.
+This does not guarantee a strict deadline for arbitrary inputs or slow drivers.
+
+With JDK 17 or later, point `TELEPORT_MAESTRO_LIB` at the pinned Maestro 2.10.0
+distribution's `lib` directory and `TELEPORT_PROBE_DIR` at a scratch output
+directory, then run:
+
+```sh
+python3 e2e/scripts/test-maestro-image-comparison.py \
+  "$TELEPORT_MAESTRO_LIB/image-comparison-4.4.0.jar" "$TELEPORT_PROBE_DIR" \
+  --reproduce-wait
+```
+
+The command first checks the same 125 exact comparison contracts and then
+records both screenshot-wait timings. Timing is diagnostic output; it is not
+an assertion about the host's speed. The installed distribution is preserved.
+The optional workload is not added to the normal paired-CI contract step.
+
 ### Android menu tap after the foreground-instrumentation patch
 
 The unchanged `2bdf4eb` candidate failed trial 14 before entering the stable
