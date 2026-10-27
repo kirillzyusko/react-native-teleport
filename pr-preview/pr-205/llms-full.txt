@@ -1843,6 +1843,8 @@ This is what we're building, recorded on an iPhone simulator from the code in th
 
 ## Why build a custom transition?[​](#why-build-a-custom-transition "Direct link to Why build a custom transition?")
 
+### Ready-made viewers[​](#ready-made-viewers "Direct link to Ready-made viewers")
+
 Ready-made image viewers such as [Galeria](https://github.com/nandorojo/galeria) give you a polished native viewer with one component: pinch to zoom, swipe to dismiss and paging between images work out of the box, and it supports images and videos. If that's all your app needs, it's a great choice.
 
 The trade-off is control over the viewer UI. Galeria's full-screen viewer is a native view controller, and its README documents only a few appearance options (theme, blur overlay and page indicators). Rendering your own React Native views inside the viewer isn't supported: the maintainer [noted](https://github.com/nandorojo/galeria/issues/9) that it would need a fork and a way to render React Native views in a native view controller, which isn't trivial. Requests for a [custom header](https://github.com/nandorojo/galeria/issues/99), a [custom close button](https://github.com/nandorojo/galeria/issues/49) and [share or save actions](https://github.com/nandorojo/galeria/issues/113) are still open.
@@ -1858,9 +1860,33 @@ With `react-native-teleport`, the full-screen viewer is a regular React Native s
 | Zoom, paging, swipe away | Built in                                             | Add them with `react-native-gesture-handler` and Reanimated                       |
 | Setup                    | One component                                        | The nine files in this guide                                                      |
 
+### Native transitions move views too[​](#native-transitions-move-views-too "Direct link to Native transitions move views too")
+
+Moving a view into a layer above every screen isn't a trick invented for React Native. Native transition APIs do the same thing and hide it behind a higher-level API:
+
+* **Android.** Activity shared element transitions draw the shared views in an overlay instead of the normal view hierarchy, and that's the default ([`Window.setSharedElementsUseOverlay`](https://developer.android.com/reference/android/view/Window#setSharedElementsUseOverlay%28boolean%29)). In Jetpack Compose, a shared element is [elevated into an overlay](https://developer.android.com/develop/ui/compose/animation/shared-elements/customize#clip-overlays) when the transition starts and dropped back into its own `DrawScope` when it ends.
+* **iOS.** A custom view controller transition runs in the transition context's [`containerView`](https://developer.apple.com/documentation/uikit/uiviewcontrollercontexttransitioning/containerview), which acts as the superview of every view involved in the animation. Since iOS 18, the [zoom transition](https://developer.apple.com/documentation/uikit/uiviewcontroller/transition/zoom%28options:sourceviewprovider:%29) wraps this into a single API: you return the source view, and UIKit animates the rest.
+
+These APIs work well when you need exactly the transition they provide. As soon as you need something they don't expose, such as your own header over the photo, a mid-flight swap from a low-res to a full-res image or the same behavior on both platforms, you're back to the low-level building blocks, written twice, in Kotlin and in Swift.
+
+`react-native-teleport` takes the same route as [`react-native-gesture-handler`](https://github.com/software-mansion/react-native-gesture-handler), [`react-native-reanimated`](https://github.com/software-mansion/react-native-reanimated) and [`react-native-screens`](https://github.com/software-mansion/react-native-screens). Each of them exposes a low-level native capability to JavaScript (native gesture recognizers, animations on the UI thread, native navigation containers), and you build the high-level behavior on top of it once, for every platform. Here, that capability is moving a native view to another parent.
+
+### Comparing approaches[​](#comparing-approaches "Direct link to Comparing approaches")
+
+There are several ways to animate an item from a list to full screen. They differ in what happens to the item's content while it moves:
+
+| Approach              | How it works                                                 | Heavy content during the animation      | Videos, GIFs and Lottie                                                                  | Above headers and tab bars                                     |
+| --------------------- | ------------------------------------------------------------ | --------------------------------------- | ---------------------------------------------------------------------------------------- | -------------------------------------------------------------- |
+| Animate in place      | Scale the cell with `transform` and `zIndex` inside the list | Rendered once                           | Keep playing                                                                             | No: clipped by the list and drawn under the header and tab bar |
+| Render a copy         | Mount a second instance in an overlay or on the next screen  | Rendered twice: two instances in memory | The copy starts from scratch: a video restarts or shows a black frame, a GIF starts over | Yes                                                            |
+| Animate a snapshot    | Capture a bitmap of the view and animate the bitmap          | Rendered once, plus a bitmap of it      | Frozen for the whole animation                                                           | Yes                                                            |
+| Teleport (this guide) | Move the native view into the root `PortalHost`              | Rendered once                           | Keep playing: it's the same native view                                                  | Yes                                                            |
+
+The full-res photo on the detail screen isn't a copy of the thumbnail: it's a separate, larger image, rendered only there, and the thumbnail hands over to it as soon as it loads.
+
 ## How it works[​](#how-it-works "Direct link to How it works")
 
-The animation below breaks the transition into the layers that make it work. Press play, or drag the timeline to inspect any moment.
+The animation below breaks the transition into the layers that make it work. Press play, drag the timeline to inspect any moment, and hover over (or tap) any layer or image to see what it does.
 
 Animation transcript:
 
@@ -1868,7 +1894,7 @@ Animation transcript:
 2. Tap teleports the thumbnail into the root PortalHost. \<Portal hostName="root"> re-parents the same native view, in one frame.
 3. The detail screen mounts the full-res photo, invisible. Its \<Image> sits at opacity 0 on the thumbnail’s path while it loads.
 4. Both ride the same spring, but you only see the low-res one. One progress value drives translate, scale and height on both layers.
-5. When onLoad fires mid-flight, one commit swaps them. set({ visibility: { source: 0, target: 1 } }) lands in the same native frame.
+5. When onLoad fires mid-flight, one commit swaps them. set({ visibility: { source: 0, target: 1 } }) hands the image over to the detail screen in the same native frame.
 6. The full-res photo finishes the animation. The hidden thumbnail keeps pace until it ends.
 7. When the animation ends, the thumbnail teleports back to its cell. It stays hidden while the photo is open, and Close fades in.
 8. What users see: one continuous image, sharp as soon as it’s ready. No flicker, no blank frames, no second decode of the full-res photo.
