@@ -212,6 +212,22 @@ def build(args):
     try:
         files = prepare_source(source)
         (output / "source-manifest.json").write_text(json.dumps(files, indent=2) + "\n")
+        if args.trace_frames:
+            if args.backend != "indigo":
+                raise RuntimeError("Frame observation is restricted to the opt-in Indigo diagnostic")
+            spec = importlib.util.spec_from_file_location("screen_trace", Path(__file__).with_name("maestro-ios-screen-trace.py"))
+            trace = importlib.util.module_from_spec(spec)
+            spec.loader.exec_module(trace)
+            observation = {"version": 1, "helper_sha256": sha256(trace.HELPER.read_bytes())}
+            for name, label in [(trace.SCREEN, "ScreenDiffHandler"), (trace.SHOT, "ScreenshotHandler")]:
+                raw = (source / name).read_bytes()
+                changed = trace.patch(name, raw)
+                (output / f"{label}.original.swift").write_bytes(raw)
+                (output / f"{label}.patched.swift").write_bytes(changed)
+                (source / name).write_bytes(changed)
+                observation[label] = {"original_sha256": sha256(raw), "patched_sha256": sha256(changed)}
+            (output / "ScreenTrace.swift").write_bytes(trace.HELPER.read_bytes())
+            metadata["frame_trace"] = observation
         original = (source / EVENT_FILE).read_bytes()
         if args.backend == "indigo":
             if args.lead_in != "0":
@@ -307,6 +323,8 @@ def install(args):
         raise RuntimeError("The built input profile does not match this trial")
     if metadata.get("backend", "recap") != args.expected_backend:
         raise RuntimeError("The built input backend does not match this trial")
+    if bool(metadata.get("frame_trace")) != args.expected_frame_trace:
+        raise RuntimeError("The built frame-observation profile does not match this trial")
     if os.environ.get("GITHUB_SHA") and metadata["candidate_sha"] != os.environ["GITHUB_SHA"]:
         raise RuntimeError("The built driver belongs to a different candidate")
     expected_names = {RESOURCE_PREFIX + name.removesuffix(".app") + ".zip" for name in APP_NAMES}
@@ -357,12 +375,14 @@ def main():
     prepare.add_argument("--output", required=True, type=Path)
     prepare.add_argument("--lead-in", required=True, choices=("0", "0.05"))
     prepare.add_argument("--prepare-only", action="store_true")
+    prepare.add_argument("--trace-frames", action="store_true")
     prepare.add_argument("--backend", choices=("recap", "indigo"), default="recap")
     use = commands.add_parser("install")
     use.add_argument("--jar", required=True, type=Path)
     use.add_argument("--artifact", required=True, type=Path)
     use.add_argument("--expected-lead-in", required=True, choices=("0", "0.05"))
     use.add_argument("--expected-backend", choices=("recap", "indigo"), default="recap")
+    use.add_argument("--expected-frame-trace", action="store_true")
     args = parser.parse_args()
     (build if args.command == "build" else install)(args)
 

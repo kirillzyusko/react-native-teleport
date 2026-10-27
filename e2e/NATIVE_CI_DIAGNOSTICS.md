@@ -654,3 +654,26 @@ against the native JSON sequence. Missing records, rejected input, enabled app
 hooks or mismatched APKs fail the diagnostic gate. These runs always have zero
 final stability credit. Runtime delivery is unverified until an actual CI pilot
 has passed these checks; the offline assembly alone does not diagnose a missed tap.
+
+## Native iOS screen-response observation
+
+The opt-in `indigo-touch-trace` profile keeps the corrected persistent input
+transport and original 18 flows/video checks. Its name excludes the run from
+final stability counts. It instruments only the Simulator SDK handlers;
+application sources and physical-device handler sources remain unchanged.
+
+`ScreenDiffHandler` records the actual `isScreenStatic` Boolean, the two existing
+PNG hashes and monotonic capture/response preparation times. `ScreenshotHandler`
+records the hash and size of exactly the PNG/JPEG bytes it returns. These are
+content identities, not display transaction IDs or JavaScript commit timestamps.
+The diagnostic performs no additional screenshot, accessibility query, wait or
+RPC. The original equality test, capture count, encodings and response bodies
+remain intact. The ordinary profiles do not include this instrumentation.
+
+Successful diagnostic jobs must match every native HTTP static/screenshot route
+to an ordered trace record, verify the original equality against its hashes,
+and match every saved `takeScreenshot` PNG to an uncompressed native response.
+The artifact includes these PNGs and the pinned original/patched handler sources.
+All original input, termination, image-comparison, video and Node gates remain.
+A passing diagnostic establishes observation coverage; it does not prove that
+an animation finished or fix premature settling.
