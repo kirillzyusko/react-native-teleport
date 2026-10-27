@@ -1,8 +1,14 @@
 import { readFileSync, writeFileSync } from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+import { activeTouchCancellations } from "./check-ios-touch-cancellations.mjs";
 
-export function checkHIDDelivery(records, simulatorLog, minimum = 100) {
+export function checkHIDDelivery(
+  records,
+  simulatorLog,
+  minimum = 100,
+  xctestLog = "",
+) {
   const errors = [];
   const native = records
     .filter((r) => r.type === "native")
@@ -11,6 +17,39 @@ export function checkHIDDelivery(records, simulatorLog, minimum = 100) {
   const bridge = records.filter((r) => r.type === "bridge-ready");
   const requests = records.filter((r) => r.type === "request");
   const delivered = native.filter((r) => r.type === "delivered");
+  const routed = [
+    ...xctestLog.matchAll(
+      /\[FlyingFox\].*request: POST \/(touch|swipe)(?:V2)?\s*$/gm,
+    ),
+  ].map((m) => m[1]);
+  const routeCounts = Object.fromEntries(
+    ["touch", "swipe"].map((kind) => [
+      kind,
+      routed.filter((v) => v === kind).length,
+    ]),
+  );
+  const gestureCounts = Object.fromEntries(
+    ["touch", "swipe"].map((kind) => [
+      kind,
+      requests.filter((r) => r.gesture.kind === kind).length,
+    ]),
+  );
+  if (!gestureCounts.touch || !gestureCounts.swipe)
+    errors.push(
+      "Both touch and swipe delivery are required for the original full suite",
+    );
+  if (
+    routed.length !== requests.length ||
+    routed.some((kind, i) => requests[i]?.gesture.kind !== kind)
+  )
+    errors.push(
+      "XCTest touch/swipe routes do not correspond to native requests",
+    );
+  const cancelled = activeTouchCancellations(simulatorLog);
+  if (cancelled.length)
+    errors.push(
+      "Active contact cancellation recorded, including non-Recap senders",
+    );
   const identity = ready[0];
   const geometry =
     identity &&
@@ -123,6 +162,9 @@ export function checkHIDDelivery(records, simulatorLog, minimum = 100) {
   return {
     clientInstances: ready.length,
     requests: requests.length,
+    routeCounts,
+    gestureCounts,
+    activeCancellations: cancelled.map((r) => r.senderId),
     acknowledgedActions: delivered.length,
     xctestMarkers: markers.length,
     bridgeSourceSHA: bridge[0]?.sourceSHA,
@@ -131,22 +173,32 @@ export function checkHIDDelivery(records, simulatorLog, minimum = 100) {
   };
 }
 
+export function checkHIDFiles(directory, xctestLog) {
+  const records = readFileSync(
+    path.join(directory, "indigo-transport.jsonl"),
+    "utf8",
+  )
+    .trim()
+    .split("\n")
+    .map(JSON.parse);
+  return checkHIDDelivery(
+    records,
+    readFileSync(path.join(directory, "simulator.log"), "utf8"),
+    100,
+    readFileSync(xctestLog, "utf8"),
+  );
+}
+
 if (
   process.argv[1] &&
   path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)
 ) {
-  const [directory, output] = process.argv.slice(2);
-  if (!directory || !output)
-    throw new Error("Expected native diagnostics directory and output JSON");
-  const raw = readFileSync(
-    path.join(directory, "indigo-transport.jsonl"),
-    "utf8",
-  );
-  const records = raw.trim().split("\n").map(JSON.parse);
-  const result = checkHIDDelivery(
-    records,
-    readFileSync(path.join(directory, "simulator.log"), "utf8"),
-  );
+  const [directory, output, xctestLog] = process.argv.slice(2);
+  if (!directory || !output || !xctestLog || process.argv.length !== 5)
+    throw new Error(
+      "Expected native diagnostics directory, output JSON and actual XCTest log",
+    );
+  const result = checkHIDFiles(directory, xctestLog);
   writeFileSync(output, JSON.stringify(result, null, 2) + "\n");
   console.log(JSON.stringify(result));
   if (result.errors.length) process.exitCode = 1;

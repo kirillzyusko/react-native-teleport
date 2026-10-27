@@ -378,9 +378,15 @@ jobs:
       - name: Validate iOS touch delivery
         if: always() && steps.e2e.outcome != 'skipped' && steps.e2e.outcome != ''
         run: |
+          args=()
+          if [[ "$MAESTRO_IOS_PROFILE" == "indigo" ]]; then
+            xctest_logs=(e2e/reports/debug/xctest_runner*.log)
+            [[ ${#xctest_logs[@]} == 1 && -f "${xctest_logs[0]}" ]]
+            args=(--indigo "${xctest_logs[0]}")
+          fi
           node e2e/scripts/check-ios-touch-cancellations.mjs \
             e2e/reports/native-diagnostics/simulator.log \
-            e2e/reports/native-diagnostics/ios-touch-cancellations.json
+            e2e/reports/native-diagnostics/ios-touch-cancellations.json "${args[@]}"
       - name: Verify rebuilt input driver was used
         if: always() && (env.MAESTRO_IOS_PROFILE == 'native-driver' || env.MAESTRO_IOS_PROFILE == 'recap-source') && steps.e2e.outcome != 'skipped' && steps.e2e.outcome != ''
         env:
@@ -391,8 +397,10 @@ jobs:
       - name: Verify persistent Simulator HID delivery
         if: always() && env.MAESTRO_IOS_PROFILE == 'indigo' && steps.e2e.outcome != 'skipped' && steps.e2e.outcome != ''
         run: |
+          xctest_logs=(e2e/reports/debug/xctest_runner*.log)
+          [[ ${#xctest_logs[@]} == 1 && -f "${xctest_logs[0]}" ]]
           node e2e/scripts/check-ios-hid-delivery.mjs \
-            e2e/reports/native-diagnostics e2e/reports/native-diagnostics/ios-hid-delivery.json
+            e2e/reports/native-diagnostics e2e/reports/native-diagnostics/ios-hid-delivery.json "${xctest_logs[0]}"
       - name: Upload native diagnostics
         if: always()
         uses: actions/upload-artifact@v4

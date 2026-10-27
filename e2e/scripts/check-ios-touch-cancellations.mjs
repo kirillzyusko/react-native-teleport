@@ -5,7 +5,7 @@ import { pathToFileURL } from "node:url";
 // A Recap service disappearing with no contacts is normal. An unknown sender
 // alone is also insufficient: its registration can catch up before release.
 // Keep sender-matched active-contact cancellations distinct from both cases.
-export function analyzeTouchCancellations(text) {
+function touchDevices(text) {
   const devices = new Map();
   const device = (id) => {
     const senderId = `0x${id.replace(/^0x/i, "").toLowerCase()}`;
@@ -48,7 +48,15 @@ export function analyzeTouchCancellations(text) {
     }
   }
 
-  const recap = [...devices.values()].filter((entry) => entry.recap);
+  return [...devices.values()];
+}
+
+export function activeTouchCancellations(text) {
+  return touchDevices(text).filter((entry) => entry.incomplete.length);
+}
+
+export function analyzeTouchCancellations(text) {
+  const recap = touchDevices(text).filter((entry) => entry.recap);
   return {
     recapDeviceCount: recap.length,
     unknownSenderCount: recap.filter((entry) => entry.unknown.length).length,
@@ -61,16 +69,27 @@ export function analyzeTouchCancellations(text) {
   };
 }
 
-function main() {
-  const [input, output] = process.argv.slice(2);
-  if (!input || process.argv.length > 4) {
+async function main() {
+  const [input, output, backend, xctestLog] = process.argv.slice(2);
+  if (
+    !input ||
+    (backend && backend !== "--indigo") ||
+    (backend && !xctestLog) ||
+    process.argv.length > 6
+  ) {
     throw new Error(
-      "Usage: check-ios-touch-cancellations.mjs <simulator.log> [report.json]",
+      "Usage: check-ios-touch-cancellations.mjs <simulator.log> [report.json] [--indigo <xctest.log>]",
     );
   }
   const report = analyzeTouchCancellations(readFileSync(input, "utf8"));
   if (output) writeFileSync(output, `${JSON.stringify(report, null, 2)}\n`);
-  if (!report.recapDeviceCount) {
+  if (backend === "--indigo") {
+    // Zero Recap is valid only with independent raw positive proof of every
+    // touch AND swipe reaching the persistent transport. No report-only bypass.
+    const { checkHIDFiles } = await import("./check-ios-hid-delivery.mjs");
+    const hid = checkHIDFiles(path.dirname(input), xctestLog);
+    if (hid.errors.length) throw new Error(hid.errors.join("; "));
+  } else if (!report.recapDeviceCount) {
     throw new Error(
       "No Recap service records found; input evidence is missing",
     );
@@ -101,10 +120,8 @@ if (
   process.argv[1] &&
   import.meta.url === pathToFileURL(path.resolve(process.argv[1])).href
 ) {
-  try {
-    main();
-  } catch (error) {
+  main().catch((error) => {
     console.error(`FAIL: ${error.message}`);
     process.exitCode = 1;
-  }
+  });
 }

@@ -20,6 +20,8 @@ EVENT_FILE = "maestro-driver-iosUITests/Routes/XCTest/EventRecord.swift"
 EVENT_BLOB = "b7437395ea05c771b2497112fb9816ebc287f6de"
 RUNNER_FILE = "maestro-driver-iosUITests/Routes/XCTest/RunnerDaemonProxy.swift"
 RUNNER_BLOB = "599d53cf33c3bdd136ea79623e2b883d47d3a17a"
+SWIPE_V2_FILE = "maestro-driver-iosUITests/Routes/Handlers/SwipeRouteHandlerV2.swift"
+SWIPE_V2_BLOB = "57a32b8d7b7f8c39a943efe91cb0dd35c231db3e"
 ORIGINAL_JAR = "1a4e4582e7b415167782711c04b914df878899d04757a2de82c3bf7a5b4c99f1"
 APP_NAMES = ("maestro-driver-iosUITests-Runner.app", "maestro-driver-ios.app")
 RESOURCE_PREFIX = "driver-iPhoneSimulator/Debug-iphonesimulator/"
@@ -150,6 +152,27 @@ def patch_indigo_source(original, runner):
     return source.encode(), proxy.encode()
 
 
+def patch_indigo_swipe_v2(original):
+    if blob_hash(original) != SWIPE_V2_BLOB:
+        raise RuntimeError("Unsupported pinned Swipe v2 source for Indigo")
+    # v2 dispatches through EventTarget, which unwraps .eventRecord directly
+    # and bypasses RunnerDaemonProxy. Forward this route explicitly; otherwise
+    # it synthesizes the empty native record and loses teleportGesture.
+    source = original.decode()
+    start = "        let eventTarget = EventTarget()\n"
+    end = "        }\n    }\n}"
+    if source.count(start) != 1 or source.count(end) != 1:
+        raise RuntimeError("Unexpected pinned Swipe v2 dispatch")
+    source = source.replace(start, """#if targetEnvironment(simulator)
+        let eventRecord = EventRecord(orientation: ScreenSizeHelper.currentInterfaceOrientation())
+            .addSwipeEvent(start: startPoint, end: endPoint, duration: request.duration)
+        try await RunnerDaemonProxy().synthesize(eventRecord: eventRecord)
+#else
+""" + start, 1)
+    source = source.replace(end, "        }\n#endif\n    }\n}", 1)
+    return source.encode()
+
+
 def hid_host_manifest(artifact, metadata):
     spec = importlib.util.spec_from_file_location("inspect_ios_hid", Path(__file__).with_name("inspect-ios-hid.py"))
     module = importlib.util.module_from_spec(spec)
@@ -198,6 +221,13 @@ def build(args):
             (output / "RunnerDaemonProxy.original.swift").write_bytes(runner)
             (output / "RunnerDaemonProxy.patched.swift").write_bytes(patched_runner)
             (source / RUNNER_FILE).write_bytes(patched_runner)
+            swipe_v2 = (source / SWIPE_V2_FILE).read_bytes()
+            patched_swipe_v2 = patch_indigo_swipe_v2(swipe_v2)
+            (output / "SwipeRouteHandlerV2.original.swift").write_bytes(swipe_v2)
+            (output / "SwipeRouteHandlerV2.patched.swift").write_bytes(patched_swipe_v2)
+            (source / SWIPE_V2_FILE).write_bytes(patched_swipe_v2)
+            metadata.update(swipe_v2_original_sha256=sha256(swipe_v2),
+                            swipe_v2_patched_sha256=sha256(patched_swipe_v2))
             metadata.update(runner_original_sha256=sha256(runner), runner_patched_sha256=sha256(patched_runner),
                             hid_host_source_sha256=sha256((HID_SOURCE / "IndigoHost.m").read_bytes()),
                             hid_bridge_source_sha256=sha256((HID_SOURCE / "MaestroBridge.swift").read_bytes()))

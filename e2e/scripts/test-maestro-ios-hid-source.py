@@ -33,6 +33,9 @@ class SourceTest(unittest.TestCase):
     def setUpClass(cls):
         cls.event = (artifact / "EventRecord.original.swift").read_bytes()
         cls.runner = (artifact / "RunnerDaemonProxy.original.swift").read_bytes()
+        cls.swipe_v2 = (Path("example/ios/build/maestro-input/source") / builder.SWIPE_V2_FILE).read_bytes()
+        if builder.blob_hash(cls.swipe_v2) != builder.SWIPE_V2_BLOB:
+            cls.swipe_v2 = (artifact / "SwipeRouteHandlerV2.original.swift").read_bytes()
 
     def test_pinned_hashes_and_unchanged_physical_source(self):
         event, runner = builder.patch_indigo_source(self.event, self.runner)
@@ -45,6 +48,16 @@ class SourceTest(unittest.TestCase):
         for event, runner in [(self.event + b"\n", self.runner), (self.event, self.runner + b"\n")]:
             with self.assertRaisesRegex(RuntimeError, "Unsupported pinned"):
                 builder.patch_indigo_source(event, runner)
+
+    def test_v2_swipe_reaches_forwarder_and_preserves_physical_dispatch(self):
+        patched = builder.patch_indigo_swipe_v2(self.swipe_v2)
+        self.assertEqual(physical(patched), self.swipe_v2.decode().rstrip())
+        simulator = patched.decode().split("#if targetEnvironment(simulator)")[1].split("#else")[0]
+        self.assertIn(".addSwipeEvent(start: startPoint, end: endPoint, duration: request.duration)", simulator)
+        self.assertIn("RunnerDaemonProxy().synthesize(eventRecord: eventRecord)", simulator)
+        self.assertNotIn("EventTarget()", simulator)
+        with self.assertRaisesRegex(RuntimeError, "Unsupported pinned"):
+            builder.patch_indigo_swipe_v2(self.swipe_v2 + b"\n")
 
     def test_original_recap_patch_unchanged(self):
         self.assertEqual(builder.sha256(builder.patch_event_record(self.event, "0.05")),

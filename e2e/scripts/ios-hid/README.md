@@ -46,6 +46,14 @@ rejection, native failure, and process cleanup. Runtime auditing matches every
 native delivery to its request coordinates/timeline and XCTest acknowledgement;
 the original full-suite, video and cancellation checks still run.
 
+Swipe v2 has a separate `EventTarget` dispatch path which unwraps the native
+record directly. The Simulator patch routes it through the same host forwarder
+as touches and v1 swipes. Auditing matches every original XCTest HTTP touch and
+swipe request, in order, to a native request of the same kind and its ACKs.
+It requires both gesture kinds. Zero Recap records are accepted only with this
+complete raw HID proof; active-contact cancellations from non-Recap digitizers
+also fail the alternative transport. The default Recap gate is unchanged.
+
 This is an experimental backend, not established stability evidence. It accepts
 only the exact Xcode16.4/CoreSimulator1051.17.8 binaries captured by the CI probe.
 Local SDK builds use a compiler-only deployment override for Xcode27, whose
