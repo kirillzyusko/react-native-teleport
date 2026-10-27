@@ -709,6 +709,25 @@ four pairs can remain outstanding; the observer introduces no reply wait, timer,
 gesture replay or fallback. Physical sources and all existing suite/input/video
 gates remain intact. Fixture sources/results are archived with the driver.
 
+The first real CI probe completed all 18 flows and 224 typed nil-error callbacks
+for 112 gestures. This validates the API observer, not a settling fix. In its
+`go_next` transition, both callbacks had completed at uptime 800.293936, while
+two later original static checks still captured different PNG contents at
+800.519119–800.628473 and 800.790175–800.886719. Post-input idle notifications
+alone therefore do not certify subsequent visual stability.
+
+The separate `indigo-static-idle-touch-trace` profile observes a later boundary.
+It wraps the original static handler and registers fresh notifications after
+that handler has constructed its response. It returns the same opaque response,
+without reading its body, awaiting a reply, taking another screenshot or changing
+the existing PNG comparison. Static requests before the first original input
+are explicitly marked and do not cause a new app lookup. All subsequent static
+responses and all original gestures require ordered native registration/reply
+proof. A separate audit correlates later screenshot capture-return times with
+outstanding fresh notifications. This remains diagnostic evidence: nil replies
+are not display transaction IDs or JavaScript commit timestamps, and registration
+RPCs can perturb timing. No synchronization barrier is enabled.
+
 The report correlates unchanged native static responses with notification reply
 times. A nil reply alone is not proof of a presented frame. This is an explicit
 diagnostic with zero final stability credit; actual runtime callback behavior

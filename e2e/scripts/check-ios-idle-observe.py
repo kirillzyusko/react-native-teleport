@@ -51,7 +51,7 @@ def parse(text):
             for line in text.splitlines() if '[teleport-idle-observe] ' in line]
 
 
-def check(records, xctest_log, device_udid, screen_records, minimum_inputs=100):
+def check(records, xctest_log, device_udid, screen_records, minimum_inputs=100, observe_static=False, minimum_static=100):
     errors = []
 
     def expect(condition, message):
@@ -59,6 +59,17 @@ def check(records, xctest_log, device_udid, screen_records, minimum_inputs=100):
             errors.append(message)
 
     routes = re.findall(r'\[FlyingFox\].*request: POST /(touch|swipe|swipeV2)\s*$', xctest_log, re.M)
+    if observe_static:
+        routes = []
+        started = False
+        for method, route in re.findall(r'\[FlyingFox\].*request: (GET|POST) /(touch|swipe|swipeV2|isScreenStatic)\s*$', xctest_log, re.M):
+            if method == 'POST' and route in ['touch', 'swipe', 'swipeV2']:
+                started = True
+                routes.append(route)
+            elif method == 'GET' and route == 'isScreenStatic' and started:
+                routes.append(route)
+        expect(routes.count('isScreenStatic') >= minimum_static, 'Insufficient post-static idle response coverage')
+        expect(sum(r != 'isScreenStatic' for r in routes) >= minimum_inputs, 'Insufficient actual gesture coverage')
     inputs = [r for r in records if r.get('event') == 'input_complete']
     expect([r.get('route') for r in inputs] == routes, 'Every actual input route must have one ordered idle observation')
     expect(len(inputs) >= minimum_inputs, 'Insufficient native idle input coverage')
