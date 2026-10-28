@@ -35,7 +35,7 @@ import PhotoTransitionExplainer from "@site/src/components/PhotoTransitionExplai
 import Video from "@site/src/components/Video";
 import useBaseUrl from "@docusaurus/useBaseUrl";
 
-In this guide we'll build the image transition from the Photos app in React Native, one step at a time: a thumbnail grows out of the grid to full screen, and closing shrinks it back into its cell. The thumbnail expands instantly, without waiting for the network, and the sharp photo replaces it **the moment it finishes loading**: in the middle of the animation if the network is fast, right after it if the network is slow. Either way there are **no flickers, no blank frames and no jumps**.
+In this guide we'll build the image transition from the Photos app in React Native, step by step: a thumbnail grows out of the grid to full screen, and the full-res photo replaces it **the moment it loads**, even mid-animation, with **no flickers, no blank frames and no jumps**.
 
 This is what we're building:
 
@@ -44,9 +44,6 @@ This is what we're building:
   style={{ height: "60vh" }}
   aria-label="A React Native photo gallery: tapping a thumbnail expands it to a full-screen photo that becomes sharp as soon as the full-resolution image loads, and closing shrinks it back into the grid."
 />
-<br />
-
-The same pattern fits [chat attachments, social feeds and product galleries](#where-to-use-this-pattern), and it works for [videos, GIFs and Lottie animations](#going-further-videos-gifs-and-other-stateful-content) too: they keep playing while they move.
 
 ## How it works
 
@@ -61,74 +58,6 @@ Three layers take part in the transition:
 3. **Root `PortalHost`.** Rendered by `<PortalProvider>` above the navigator, so anything teleported into it is drawn on top of every screen.
 
 The thumbnail starts the animation, because it's already on screen. The full-res photo finishes it, because it's the one worth looking at. The trick is to hand over from one to the other without the user noticing.
-
-## Why build a custom transition?
-
-### Ready-made viewers
-
-Ready-made image viewers such as [Galeria](https://github.com/nandorojo/galeria) give you a polished native viewer with one component: pinch to zoom, swipe to dismiss and paging between images work out of the box, and it supports images and videos. If that's all your app needs, it's a great choice.
-
-The trade-off is control over the viewer UI. Galeria's full-screen viewer is a native view controller, and its README documents only a few appearance options (theme, blur overlay and page indicators). Rendering your own React Native views inside the viewer isn't supported: the maintainer [noted](https://github.com/nandorojo/galeria/issues/9) that it would need a fork and a way to render React Native views in a native view controller, which isn't trivial. Requests for a [custom header](https://github.com/nandorojo/galeria/issues/99), a [custom close button](https://github.com/nandorojo/galeria/issues/49) and [share or save actions](https://github.com/nandorojo/galeria/issues/113) are still open.
-
-With `react-native-teleport`, the full-screen viewer is a regular React Native screen, so it can contain anything your design needs: a custom header, captions, comments, action buttons or a tab bar.
-
-|                          | Ready-made viewer (Galeria)                          | Custom transition (this guide)                                                    |
-| ------------------------ | ---------------------------------------------------- | --------------------------------------------------------------------------------- |
-| Viewer UI                | Native, with a few appearance options                | Any React Native UI: header, captions, actions, tab bar                           |
-| Transition               | Built in                                             | Yours to shape: path, spring and timing are written with Reanimated               |
-| Full-res photo           | A separate image for the expanded state is supported | Low-res thumbnail first, full-res swapped in as soon as it loads, even mid-flight |
-| Content in the viewer    | Images and videos                                    | Any React Native view: images, videos, GIFs, Lottie, keeping their state          |
-| Zoom, paging, swipe away | Built in                                             | Add them with `react-native-gesture-handler` and Reanimated                       |
-| Setup                    | One component                                        | The nine files in this guide                                                      |
-
-### Native transitions move views too
-
-Moving a view into a layer above every screen isn't a trick invented for React Native. Native transition APIs do the same thing and hide it behind a higher-level API:
-
-- **Android.** Activity shared element transitions draw the shared views in an overlay instead of the normal view hierarchy, and that's the default ([`Window.setSharedElementsUseOverlay`](https://developer.android.com/reference/android/view/Window#setSharedElementsUseOverlay%28boolean%29)). In Jetpack Compose, a shared element is [elevated into an overlay](https://developer.android.com/develop/ui/compose/animation/shared-elements/customize#clip-overlays) when the transition starts and dropped back into its own `DrawScope` when it ends.
-- **iOS.** A custom view controller transition runs in the transition context's [`containerView`](https://developer.apple.com/documentation/uikit/uiviewcontrollercontexttransitioning/containerview), which acts as the superview of every view involved in the animation. Since iOS 18, the [zoom transition](https://developer.apple.com/documentation/uikit/uiviewcontroller/transition/zoom%28options:sourceviewprovider:%29) wraps this into a single API: you return the source view, and UIKit animates the rest.
-
-These APIs work well when you need exactly the transition they provide. As soon as you need something they don't expose, such as your own header over the photo, a mid-flight swap from a low-res to a full-res image or the same behavior on both platforms, you're back to the low-level building blocks, written twice, in Kotlin and in Swift.
-
-`react-native-teleport` takes the same route as [`react-native-gesture-handler`](https://github.com/software-mansion/react-native-gesture-handler), [`react-native-reanimated`](https://github.com/software-mansion/react-native-reanimated) and [`react-native-screens`](https://github.com/software-mansion/react-native-screens). Each of them exposes a low-level native capability to JavaScript (native gesture recognizers, animations on the UI thread, native navigation containers), and you build the high-level behavior on top of it once, for every platform. Here, that capability is moving a native view to another parent.
-
-### Comparing approaches
-
-There are several ways to animate an item from a list to full screen. They differ in what happens to the item's content while it moves:
-
-|                                      | Animate in place                                             | Render a copy                                               | Animate a snapshot                                  | Teleport (this guide)                           |
-| ------------------------------------ | ------------------------------------------------------------ | ----------------------------------------------------------- | --------------------------------------------------- | ----------------------------------------------- |
-| How it works                         | Scale the cell with `transform` and `zIndex` inside the list | Mount a second instance in an overlay or on the next screen | Capture a bitmap of the view and animate the bitmap | Move the native view into the root `PortalHost` |
-| Heavy content rendered once          | ✅                                                           | ❌ Twice, two instances in memory                           | 🟠 Once, plus a bitmap of it<sup>1</sup>            | ✅                                              |
-| Videos, GIFs and Lottie keep playing | ✅                                                           | ❌ The copy starts over                                     | ❌ Frozen for the whole animation                   | ✅ It's the same native view                    |
-| Not clipped by the list              | ❌                                                           | ✅                                                          | ✅                                                  | ✅                                              |
-| Drawn above headers and tab bars     | ❌                                                           | ✅                                                          | ✅                                                  | ✅                                              |
-| Works in React Native                | ✅                                                           | ✅                                                          | ✅                                                  | ✅ On iOS, Android and web                      |
-
-> <sup>1</sup> The snapshot is a bitmap of the view's pixels. It stays in memory
-> next to the view itself until the animation ends, so the content is rendered
-> once but held twice.
-
-:::tip Light enough for low-end devices
-Teleport adds no heavy allocations to the transition:
-
-- **The thumbnail is moved, not copied.** [`<Portal>`](../api/components/portal.md) re-parents the existing native view, so nothing is re-mounted, re-downloaded or re-decoded.
-- **The full-res photo is decoded once**, on the detail screen, when the user opens it. It's a separate image, not a copy of the thumbnail, and it needs no prefetching or caching.
-- **The list holds only small thumbnails**, so it stays fast and light however long it gets.
-
-A copy of a full-res photo is the most expensive thing a transition can add: a 48 MP iPhone photo takes about 195 MB of memory once decoded (8064 × 6048 × 4 bytes), and its ProRAW file alone is [about 75 MB](https://support.apple.com/en-us/119916).
-:::
-
-## Compared with the Instagram-like transitions
-
-If you've read the [Instagram-like transitions](./instagram-shared-transitions.mdx) recipe, most of the building blocks will look familiar: a root `PortalHost`, a Zustand store with a shared `progress` value, `measureInWindow` and a transparent modal. Two ideas are new here:
-
-- **The thumbnail goes back.** In the Instagram recipe, the video travels from the feed into the Reels screen and stays there until you go back. Here the thumbnail only carries the animation: once the full-res photo has taken over, the thumbnail returns to its cell, and the detail screen owns the photo.
-- **Two sources in one transition.** The Instagram recipe moves one video from start to finish. Here a cheap **low-res thumbnail** starts the animation instantly, and the **full-res photo** replaces it the moment it loads, even mid-flight.
-
-:::tip Beyond resolution
-The handoff works between any two views that cover the same rectangle, so the detail screen could, for example, swap in an HDR version of the photo while the list keeps lightweight SDR thumbnails.
-:::
 
 ## Prerequisites
 
@@ -1455,7 +1384,75 @@ Here are all the steps together: teleport, animation, handoff, return and the wa
 
 The complete code of this guide is part of the [example](https://github.com/kirillzyusko/react-native-teleport/tree/main/example/src/screens/PhotoGallery) app. The only differences are the imports that wire the screens into the example's navigation.
 
-## Going further: videos, GIFs and other stateful content
+## Why build a custom transition?
+
+### Ready-made viewers
+
+Ready-made image viewers such as [Galeria](https://github.com/nandorojo/galeria) give you a polished native viewer with one component: pinch to zoom, swipe to dismiss and paging between images work out of the box, and it supports images and videos. If that's all your app needs, it's a great choice.
+
+The trade-off is control over the viewer UI: it's a native view controller with a few appearance options, and your own React Native views [can't be rendered inside it](https://github.com/nandorojo/galeria/issues/9).
+
+With `react-native-teleport`, the full-screen viewer is a regular React Native screen, so it can contain anything your design needs: a custom header, captions, comments, action buttons or a tab bar.
+
+|                          | Ready-made viewer (Galeria)                          | Custom transition (this guide)                                                    |
+| ------------------------ | ---------------------------------------------------- | --------------------------------------------------------------------------------- |
+| Viewer UI                | Native, with a few appearance options                | Any React Native UI: header, captions, actions, tab bar                           |
+| Transition               | Built in                                             | Yours to shape: path, spring and timing are written with Reanimated               |
+| Full-res photo           | A separate image for the expanded state is supported | Low-res thumbnail first, full-res swapped in as soon as it loads, even mid-flight |
+| Content in the viewer    | Images and videos                                    | Any React Native view: images, videos, GIFs, Lottie, keeping their state          |
+| Zoom, paging, swipe away | Built in                                             | Add them with `react-native-gesture-handler` and Reanimated                       |
+| Setup                    | One component                                        | The nine files in this guide                                                      |
+
+### Native transitions move views too
+
+Moving a view into a layer above every screen isn't a trick invented for React Native. Native transition APIs do the same thing and hide it behind a higher-level API:
+
+- **Android.** Activity shared element transitions draw the shared views in an overlay instead of the normal view hierarchy, and that's the default ([`Window.setSharedElementsUseOverlay`](https://developer.android.com/reference/android/view/Window#setSharedElementsUseOverlay%28boolean%29)). In Jetpack Compose, a shared element is [elevated into an overlay](https://developer.android.com/develop/ui/compose/animation/shared-elements/customize#clip-overlays) when the transition starts and dropped back into its own `DrawScope` when it ends.
+- **iOS.** A custom view controller transition runs in the transition context's [`containerView`](https://developer.apple.com/documentation/uikit/uiviewcontrollercontexttransitioning/containerview), which acts as the superview of every view involved in the animation. Since iOS 18, the [zoom transition](https://developer.apple.com/documentation/uikit/uiviewcontroller/transition/zoom%28options:sourceviewprovider:%29) wraps this into a single API: you return the source view, and UIKit animates the rest.
+
+These APIs work well when you need exactly the transition they provide. As soon as you need something they don't expose, such as your own header over the photo, a mid-flight swap from a low-res to a full-res image or the same behavior on both platforms, you're back to the low-level building blocks, written twice, in Kotlin and in Swift.
+
+`react-native-teleport` takes the same route as [`react-native-gesture-handler`](https://github.com/software-mansion/react-native-gesture-handler), [`react-native-reanimated`](https://github.com/software-mansion/react-native-reanimated) and [`react-native-screens`](https://github.com/software-mansion/react-native-screens). Each of them exposes a low-level native capability to JavaScript (native gesture recognizers, animations on the UI thread, native navigation containers), and you build the high-level behavior on top of it once, for every platform. Here, that capability is moving a native view to another parent.
+
+### Comparing approaches
+
+There are several ways to animate an item from a list to full screen. They differ in what happens to the item's content while it moves:
+
+|                                      | Animate in place                                             | Render a copy                                               | Animate a snapshot                                  | Teleport (this guide)                           |
+| ------------------------------------ | ------------------------------------------------------------ | ----------------------------------------------------------- | --------------------------------------------------- | ----------------------------------------------- |
+| How it works                         | Scale the cell with `transform` and `zIndex` inside the list | Mount a second instance in an overlay or on the next screen | Capture a bitmap of the view and animate the bitmap | Move the native view into the root `PortalHost` |
+| Heavy content rendered once          | ✅                                                           | ❌ Twice, two instances in memory                           | 🟠 Once, plus a bitmap of it<sup>1</sup>            | ✅                                              |
+| Videos, GIFs and Lottie keep playing | ✅                                                           | ❌ The copy starts over                                     | ❌ Frozen for the whole animation                   | ✅ It's the same native view                    |
+| Not clipped by the list              | ❌                                                           | ✅                                                          | ✅                                                  | ✅                                              |
+| Drawn above headers and tab bars     | ❌                                                           | ✅                                                          | ✅                                                  | ✅                                              |
+| Works in React Native                | ✅                                                           | ✅                                                          | ✅                                                  | ✅ On iOS, Android and web                      |
+
+> <sup>1</sup> The snapshot is a bitmap of the view's pixels. It stays in memory
+> next to the view itself until the animation ends, so the content is rendered
+> once but held twice.
+
+:::tip Light enough for low-end devices
+Teleport adds no heavy allocations to the transition:
+
+- **The thumbnail is moved, not copied.** [`<Portal>`](../api/components/portal.md) re-parents the existing native view, so nothing is re-mounted, re-downloaded or re-decoded.
+- **The full-res photo is decoded once**, on the detail screen, when the user opens it. It's a separate image, not a copy of the thumbnail, and it needs no prefetching or caching.
+- **The list holds only small thumbnails**, so it stays fast and light however long it gets.
+
+A copy of a full-res photo is the most expensive thing a transition can add: a 48 MP iPhone photo takes about 195 MB of memory once decoded (8064 × 6048 × 4 bytes), and its ProRAW file alone is [about 75 MB](https://support.apple.com/en-us/119916).
+:::
+
+## Compared with the Instagram-like transitions
+
+If you've read the [Instagram-like transitions](./instagram-shared-transitions.mdx) recipe, most of these building blocks were already familiar: a root `PortalHost`, a Zustand store with a shared `progress` value, `measureInWindow` and a transparent modal. Two ideas are new here:
+
+- **The thumbnail goes back.** In the Instagram recipe, the video travels from the feed into the Reels screen and stays there until you go back. Here the thumbnail only carries the animation: once the full-res photo has taken over, the thumbnail returns to its cell, and the detail screen owns the photo.
+- **Two sources in one transition.** The Instagram recipe moves one video from start to finish. Here a cheap **low-res thumbnail** starts the animation instantly, and the **full-res photo** replaces it the moment it loads, even mid-flight.
+
+:::tip Beyond resolution
+The handoff works between any two views that cover the same rectangle, so the detail screen could, for example, swap in an HDR version of the photo while the list keeps lightweight SDR thumbnails.
+:::
+
+## Extend it further
 
 [`<Portal>`](../api/components/portal.md) doesn't render a copy of the thumbnail: it moves the existing native view between parents. Whatever runs inside that view keeps running during the transition:
 
@@ -1473,31 +1470,34 @@ For media that loads progressively, apply the same handoff as in this guide: sho
 
 In every case the list keeps rendering lightweight thumbnails, and the expensive media is loaded only for the item the user opens.
 
-## Common pitfalls
+## Things to keep in mind
 
-- **Content jumps at the swap.** The thumbnail and the full-res image must have the same aspect ratio and the same `resizeMode`, otherwise they crop different parts of the photo.
-- **Blank frame on Android when the animation starts.** Keep animated styles attached for the component's whole lifetime instead of adding them when the animation begins.
-- **The photo fades in instead of swapping.** Set `fadeDuration={0}` on the full-res `<Image>` on Android.
-- **Taps don't reach the detail screen.** A hidden view in the root host still receives touches. Return the thumbnail to its cell once the full-res photo is shown.
-- **The thumbnail flashes in the grid behind the viewer.** Keep it hidden while the viewer is open: in this guide `ownerId` keeps `visibility.source` applied to the thumbnail after it has been teleported back.
-- **Wrong start position on Android.** With edge-to-edge enabled, `measureInWindow` can be offset by the status bar height. `useMeasure` compensates for it.
+### 📸 Loading the full-res photo {#loading-the-full-res-photo}
 
-## FAQ
+The full-res photo is downloaded and rendered **once**, by the detail screen. The thumbnail that flies across the screen is the original grid view, moved by [`<Portal>`](../api/components/portal.md), so the transition needs no custom cache or prefetching. When the swap happens depends on the network:
 
-**Is the full-res photo downloaded or rendered twice?**
-No. Only the detail screen renders the full-res `<Image>`. The thumbnail that flies across the screen is the original grid view, moved by [`<Portal>`](../api/components/portal.md).
+- **Cached photo.** `onLoad` fires almost immediately, and the swap happens at the very start of the animation.
+- **Slow network.** The low-res thumbnail stays in its final position until `onLoad` fires, then the same single-commit swap shows the photo.
 
-**What happens if the full-res photo loads after the animation ends?**
-The low-res thumbnail stays on screen in the final position until `onLoad` fires, then the same single-commit swap shows the photo.
+Any image component works the same way, as long as it reports when the image is ready (an `onLoad`-style callback) and supports `cover` cropping.
 
-**What if the photo is already cached?**
-`onLoad` fires almost immediately, and the swap happens at the very beginning of the animation.
+:::warning Keep the swap invisible
+The thumbnail and the full-res image must have the same aspect ratio and the same `resizeMode`, otherwise they crop different parts of the photo and the content jumps at the swap. On Android, also set `fadeDuration={0}` on the full-res `<Image>`, so it swaps instead of fading in.
+:::
 
-**Does this require a custom image cache or prefetching?**
-No. The guide uses the standard React Native `<Image>`. You can add caching on top, but the transition doesn't depend on it.
+### 🎬 Starting the animation on Android {#starting-the-animation-on-android}
 
-**Can I use another image component?**
-Yes, as long as it reports when the image is ready (an `onLoad`-style callback) and supports `cover` cropping, the handoff works the same way.
+- **Blank frame when the animation starts.** Keep animated styles attached for the component's whole lifetime instead of adding them when the animation begins.
+- **Wrong start position.** With edge-to-edge enabled, `measureInWindow` can be offset by the status bar height. `useMeasure` compensates for it.
 
-**Which platforms are supported?**
+### 🔁 After the handoff {#after-the-handoff}
+
+:::warning Return the thumbnail to its cell
+A hidden view in the root host still receives touches. Left there, the thumbnail swallows taps meant for the detail screen, so return it to its cell once the full-res photo is shown.
+:::
+
+While the viewer is open, keep the returned thumbnail hidden, or it flashes in the grid behind the viewer. In this guide `ownerId` keeps `visibility.source` applied to the thumbnail after it has been teleported back.
+
+### 📱 Supported platforms {#supported-platforms}
+
 `react-native-teleport` supports iOS, Android and web. This transition was verified frame by frame on iOS and Android with the New Architecture.
