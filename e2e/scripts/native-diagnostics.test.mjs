@@ -380,6 +380,9 @@ if (name === "test-command") {
       cwd: directory,
       env: {
         ...process.env,
+        // Each mocked case opts in explicitly, independently of its CI job.
+        MAESTRO_IOS_ARCHIVE_FRAMES: "false",
+        TELEPORT_IOS_LAUNCHER_OBSERVE: "0",
         PATH: bin,
         TELEPORT_DIAGNOSTIC_REPORTS_DIR: path.join(directory, "crash-reports"),
         FORK_COLLECTOR: String(forkCollector),
