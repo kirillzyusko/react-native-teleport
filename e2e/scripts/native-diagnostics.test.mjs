@@ -300,7 +300,18 @@ if (name === "test-command") {
   if (process.env.LAUNCHER_PROBE && fs.existsSync("test.pid")) {
     const testPid = fs.readFileSync("test.pid", "utf8");
     const xcodebuild = "/Applications/Xcode_16.4.app/Contents/Developer/usr/bin/xcodebuild";
-    if (args.includes("-A")) {
+    const executableHeader = "TELEPORT_EXECUTABLE".padEnd(256, "_");
+    if (args.includes("pid=,ppid=,uid=,etime=,comm=" + executableHeader + ",args=")) {
+      fs.appendFileSync("launcher-identity-queries.log", JSON.stringify(args) + "\\n");
+      console.log(executableHeader);
+      const row = (pid, parent, executable, argv) => console.log(pid, parent, process.getuid(), "00:20", executable.padEnd(256), argv);
+      row(process.ppid, 1, "/mock/node", "node wrapper.mjs");
+      row(testPid, process.ppid, "/mock/java", "/mock/java -cp fixture");
+      row("1000101", testPid, "/bin/bash", "/bin/bash /usr/bin/xcrun simctl terminate test-device teleport.example");
+      row("1000102", "1000101", xcodebuild, xcodebuild + " -find simctl");
+      row("1000103", "1", "/bin/bash", "/bin/bash foreign");
+      row("1000104", "1000103", xcodebuild, xcodebuild + " foreign");
+    } else if (args.includes("-A")) {
       console.log(testPid, process.ppid, "S 0.0 0.0 100 /mock/java");
       console.log("1000101", testPid, "S 0.0 0.0 100 /bin/bash");
       console.log("1000102 1000101 R 0.0 0.0 100", xcodebuild);
@@ -772,8 +783,15 @@ test("ios: opt-in launcher observation captures only the current JVM-owned branc
       .split("\n")
       .map(JSON.parse);
     assert.equal(queries.length, 1);
-    assert.match(queries[0][1], /,1000101,1000102$/);
-    assert.doesNotMatch(queries[0][1], /100010[34]/);
+    assert.deepEqual(queries[0], [
+      "-A",
+      "-o",
+      `pid=,ppid=,uid=,etime=,comm=${"TELEPORT_EXECUTABLE".padEnd(256, "_")},args=`,
+    ]);
+    const { verifyLauncherReport } = await import(
+      "./ios-native-launcher-observe.mjs"
+    );
+    assert.equal(verifyLauncherReport(logs).version, 2);
     await assertExited(
       Number(await readFile(path.join(directory, "collector.pid"), "utf8")),
     );

@@ -923,22 +923,45 @@ existing observer selects direct Maestro-owned `simctl` processes and therefore
 missed that branch. This does not prove that the branch performed the pending
 stop or that Maestro's command helper wraps commands in a shell.
 
+The first identity-capture run passed all eighteen flows and the video check,
+but correctly failed its diagnostic check. One process table showed a bash →
+xcodebuild branch; a later query showed the same parent PID running native
+simctl and omitted the xcodebuild PID. The old collector selected from one
+output and required that shape to remain unchanged in another. Its failed
+record and original checks remain preserved.
+
 `TELEPORT_IOS_LAUNCHER_OBSERVE=1` enables passive identity capture only in the
 hosted iOS visual diagnostic profile. Other scopes reject the opt-in; the default
 path does not import the observer or create its files. On the existing host
-sampling cadence, a unique current Maestro JVM → `/bin/bash` → selected Xcode
-`xcodebuild` shape causes one combined `ps` query for those three PIDs. Fresh
-PID, parent, UID, elapsed age and complete executable/argument rows must agree.
+sampling cadence, one additional `ps` output records PID, parent, UID, elapsed
+age, executable and arguments. Darwin truncates a non-final executable column
+even with `-ww`; an explicit 256-character header sets its width, while arguments
+remain the unlimited final column. Truncated owned identities fail. Both selection and validation of a unique current
+wrapper → Maestro JVM → `/bin/bash` → selected Xcode `xcodebuild` branch use
+that same captured output. The original process-table consumers keep their
+existing data. No later PID query is used to validate an earlier shape.
+This does not claim that the OS provides an atomic process snapshot; malformed
+matching rows still fail.
 The observer makes no device call, changes no input, adds no sampling timer and
 does not signal the observed native processes. It captures identities rather
 than adding native stack profilers.
 
-Each branch is queried once, with at most 64 observations and 128 KiB of identity
-data per observation. The existing collector retains raw command output even
-when identity validation or the size bound fails. A separate mandatory diagnostic
-check validates source snapshots, exact raw bytes, command completion and every
-parent/owner edge; missing or changed evidence fails that check. An empty set of
-observed branches is recorded without claiming that no host wait occurred.
+Each unique branch is recorded once, with at most 64 observations and 128 KiB of
+selected identity data per observation. The snapshot bounds are 512 outputs,
+8 MiB per output and 32 MiB total. The existing collector retains raw command
+output even when identity validation or a size bound fails. A separate mandatory
+diagnostic check reparses the same raw outputs and validates source snapshots,
+exact bytes, command completion, every parent/owner edge and file coverage.
+Missing or changed evidence fails that check. An empty set of observed branches
+is recorded without claiming that no host wait occurred. There is no retry or
+fallback for an inconsistent snapshot.
+
+Six complete identities from the first run contained
+`xcodebuild -runFirstLaunch`, beneath bash commands for selected-device simctl
+launch, termination and log streaming. The actual shim file and its execution
+internals were not captured, and that run had no termination longer than eight
+seconds. This is a host-path observation, without establishing the cause of the
+earlier 52-second wait or justifying a readiness workaround.
 
 This closes an argument-capture gap. It provides no app synchronization fix,
 changes no original assertion or deadline, and grants no final stability credit.

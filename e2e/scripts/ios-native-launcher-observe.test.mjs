@@ -4,12 +4,16 @@ import { mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 import test from "node:test";
-import {
+const {
   createLauncherObserver,
   ownedLauncherBranch,
   ownedLauncherIdentity,
+  ownedLauncherSnapshot,
   verifyLauncherReport,
-} from "./ios-native-launcher-observe.mjs";
+} = await import(
+  process.env.TELEPORT_TEST_LAUNCHER_MODULE ||
+    "./ios-native-launcher-observe.mjs"
+);
 
 const xcodebuild =
   "/Applications/Xcode_16.4.app/Contents/Developer/usr/bin/xcodebuild";
@@ -69,7 +73,25 @@ test("revalidates all three exact PIDs, parent edges, owner and full executable 
   assert.equal(ownedLauncherIdentity(details, branch, 502), undefined);
 });
 
-async function fixture(stdout = details) {
+const executableHeader = "TELEPORT_EXECUTABLE".padEnd(256, "_");
+const snapshotFormat = `pid=,ppid=,uid=,etime=,comm=${executableHeader},args=`;
+const row = (pid, parent, executable, command, age = "00:20") =>
+  `${pid} ${parent} 501 ${age} ${executable.padEnd(256)} ${command}\n`;
+const snapshot = (java = "/mock/java") =>
+  executableHeader +
+  "\n" +
+  row(10628, 1, "/mock/node", "node wrapper.mjs", "00:30") +
+  row(11307, 10628, java, `${java} -cp fixture`, "00:24") +
+  row(
+    30770,
+    11307,
+    "/bin/bash",
+    "/bin/bash /usr/bin/xcrun simctl terminate selected-device teleport.example",
+  ) +
+  row(30815, 30770, xcodebuild, `${xcodebuild} -runFirstLaunch`);
+const snapshotDetails = snapshot();
+
+async function fixture(stdout = snapshotDetails) {
   const directory = await mkdtemp(
     path.join(os.tmpdir(), "teleport-launcher-identity-"),
   );
@@ -82,9 +104,9 @@ async function fixture(stdout = details) {
     log() {},
     async capture(file, command, timeout, observe) {
       calls.push({ file, command, timeout });
-      const output = typeof stdout === "function" ? stdout(command) : stdout;
+      const output =
+        typeof stdout === "function" ? stdout(calls.length) : stdout;
       const raw = Buffer.from(output);
-      // Split an arbitrary boundary to exercise the original chunk stream.
       observe(raw.subarray(0, 17));
       observe(raw.subarray(17));
       await writeFile(
@@ -96,22 +118,19 @@ async function fixture(stdout = details) {
   return { directory, calls, observer };
 }
 
-test("captures one bounded combined host identity per observed branch and checks exact raw provenance", async () => {
+test("captures selection and identity from each same-output snapshot without a PID re-query", async () => {
   const { directory, calls, observer } = await fixture();
   try {
     await observer.observe(table, 11307);
     await observer.observe(table, 11307);
     assert.deepEqual(
       calls.map((call) => call.command),
-      [
-        [
-          "ps",
-          ["-p", "11307,30770,30815", "-o", "pid=,ppid=,uid=,etime=,args="],
-        ],
-      ],
+      Array(2).fill(["ps", ["-A", "-o", snapshotFormat]]),
     );
-    assert.equal(calls[0].timeout, 15000);
+    assert(calls.every((call) => call.timeout === 15000));
     const checked = verifyLauncherReport(directory);
+    assert.equal(checked.version, 2);
+    assert.equal(checked.snapshots, 2);
     assert.equal(checked.observations, 1);
     assert.equal(checked.deviceAPICalls, 0);
     assert.equal(checked.final_stability_credit, false);
@@ -126,101 +145,150 @@ test("captures one bounded combined host identity per observed branch and checks
   }
 });
 
-test("no complete owned branch performs no extra host query and makes no absence-of-wait claim", async () => {
-  const { directory, calls, observer } = await fixture();
+test("retains a snapshot without an owned branch without claiming absence of a wait", async () => {
+  const { directory, calls, observer } = await fixture(
+    snapshotDetails.split("\n").slice(0, 3).join("\n") + "\n",
+  );
   try {
-    await observer.observe(table.replace("/bin/bash", "/tmp/bash"), 11307);
-    assert.equal(calls.length, 0);
+    await observer.observe(table, 11307);
+    assert.equal(calls.length, 1);
     assert.equal(verifyLauncherReport(directory).observations, 0);
-    const report = JSON.parse(
-      await readFile(
-        path.join(directory, "native-launcher-observation.json"),
-        "utf8",
-      ),
-    );
-    assert.match(report.scope, /unclassified/);
   } finally {
     await rm(directory, { recursive: true, force: true });
   }
 });
 
-test("missing, malformed or oversized host identities fail the separate diagnostic gate", async () => {
-  for (const stdout of [
-    details.split("\n").slice(1).join("\n"),
-    details + "foreign row\n",
-    "x".repeat(131073),
+test("missing, malformed or oversized captured identities fail the separate diagnostic gate", async () => {
+  for (const output of [
+    details, // A v1 two-query identity file is not a complete v2 snapshot.
+    snapshotDetails.replace("11307 10628 501", "11307 10629 501"),
+    snapshotDetails.replace("30815 30770 501", "30815 30770 502"),
+    snapshotDetails.replace(
+      `${xcodebuild.padEnd(256)} ${xcodebuild}`,
+      `${xcodebuild.padEnd(256)} /tmp/foreign`,
+    ),
+    snapshotDetails + "x".repeat(8 * 1024 * 1024 + 1),
+    snapshotDetails.replace("-runFirstLaunch", "x".repeat(131073)),
   ]) {
-    const { directory, observer } = await fixture(stdout);
+    const { directory, observer } = await fixture(output);
     try {
       await observer.observe(table, 11307);
-      const report = JSON.parse(
-        await readFile(
-          path.join(directory, "native-launcher-observation.json"),
-          "utf8",
-        ),
+      assert.throws(
+        () => verifyLauncherReport(directory),
+        /Invalid launcher observation report/,
       );
-      assert.equal(report.errors.length, 1);
-      assert.equal(report.observations[0].verifiedOwnership, false);
-      assert.throws(() => verifyLauncherReport(directory), /Invalid launcher/);
     } finally {
       await rm(directory, { recursive: true, force: true });
     }
   }
 });
 
-test("changed provenance, parent identity or extra raw bytes cannot qualify", async () => {
-  const { directory, observer, calls } = await fixture();
+test("changed provenance, parent identity or extra raw files cannot qualify", async () => {
+  for (const mode of ["source", "parent", "bytes", "extra-file"]) {
+    const { directory, observer } = await fixture();
+    try {
+      await observer.observe(table, 11307);
+      const file = path.join(directory, "native-launcher-observation.json");
+      const report = JSON.parse(await readFile(file, "utf8"));
+      if (mode === "source")
+        report.sourceHashes["native-diagnostics.mjs"] = "a".repeat(64);
+      if (mode === "parent") report.observations[0].child.parent++;
+      if (mode === "bytes") report.snapshots[0].bytes++;
+      if (mode === "extra-file")
+        await writeFile(
+          path.join(directory, "native-launcher-snapshot-extra.log"),
+          "extra",
+        );
+      await writeFile(file, JSON.stringify(report));
+      assert.throws(() => verifyLauncherReport(directory));
+    } finally {
+      await rm(directory, { recursive: true, force: true });
+    }
+  }
+});
+
+test("the observation bound stops further host queries and keeps a failed diagnostic gate", async () => {
+  const { directory, calls, observer } = await fixture((index) =>
+    snapshotDetails
+      .replaceAll("30770", String(40000 + index * 2))
+      .replaceAll("30815", String(40001 + index * 2)),
+  );
   try {
-    await observer.observe(table, 11307);
-    const reportFile = path.join(directory, "native-launcher-observation.json");
-    const original = await readFile(reportFile, "utf8");
-    const report = JSON.parse(original);
-    report.observations[0].launcher.parent++;
-    await writeFile(reportFile, JSON.stringify(report));
-    assert.throws(() => verifyLauncherReport(directory), /identity chain/);
-    await writeFile(reportFile, original);
-    const raw = await readFile(path.join(directory, calls[0].file), "utf8");
-    await writeFile(
-      path.join(directory, calls[0].file),
-      raw + "unclassified extra bytes\n",
+    for (let i = 0; i < 67; i++) await observer.observe(table, 11307);
+    assert.equal(calls.length, 65);
+    const report = JSON.parse(
+      await readFile(path.join(directory, "native-launcher-observation.json")),
     );
-    assert.throws(() => verifyLauncherReport(directory), /raw command/);
-    await writeFile(path.join(directory, calls[0].file), raw);
-    await writeFile(
-      path.join(directory, "native-launcher-source", "native-diagnostics.mjs"),
-      "changed",
-    );
-    assert.throws(() => verifyLauncherReport(directory), /source provenance/);
+    assert.equal(report.observations.length, 64);
+    assert.deepEqual(report.errors, ["Launcher observation limit exceeded"]);
+    assert.throws(() => verifyLauncherReport(directory));
   } finally {
     await rm(directory, { recursive: true, force: true });
   }
 });
 
-test("the observation bound stops further host queries and keeps a failed diagnostic gate", async () => {
-  const { directory, observer, calls } = await fixture((command) => {
-    const [, root, child] = command[1][1].split(",");
-    return details.replaceAll("30770", root).replaceAll("30815", child);
-  });
+test("selects current identities from the captured output even when the legacy table is stale", async () => {
+  const { directory, calls, observer } = await fixture();
   try {
-    for (let i = 0; i < 65; i++) {
-      await observer.observe(
-        table
-          .replaceAll("30770", String(40000 + i))
-          .replaceAll("30815", String(50000 + i)),
-        11307,
-      );
-    }
+    await observer.observe("", 11307);
     const report = JSON.parse(
-      await readFile(
-        path.join(directory, "native-launcher-observation.json"),
-        "utf8",
-      ),
+      await readFile(path.join(directory, "native-launcher-observation.json")),
     );
-    assert.equal(calls.length, 64);
-    assert.equal(report.observations.length, 64);
-    assert.deepEqual(report.errors, ["Launcher observation limit exceeded"]);
-    assert.throws(() => verifyLauncherReport(directory), /Invalid launcher/);
+    assert.equal(report.observations.length, 1);
+    assert.equal(report.observations[0].launcher.pid, 30770);
+    assert.equal(report.observations[0].child.pid, 30815);
+    assert.equal(calls.length, 1);
+    assert.equal(calls[0].command[1][0], "-A");
+    assert.equal(verifyLauncherReport(directory).observations, 1);
   } finally {
     await rm(directory, { recursive: true, force: true });
   }
+});
+
+test("same-output parser keeps exact executable paths with spaces and rejects conflicts", () => {
+  const spaced = snapshot("/mock/Java SDK/bin/java");
+  assert.equal(
+    ownedLauncherSnapshot(
+      snapshotDetails.replace(
+        row(11307, 10628, "/mock/java", "/mock/java -cp fixture", "00:24"),
+        row(11307, 10628, "/bin/bash", "/bin/bash maestro-script"),
+      ),
+      11307,
+      10628,
+      501,
+    ),
+    undefined,
+  );
+  const identity = ownedLauncherSnapshot(spaced, 11307, 10628, 501);
+  assert.equal(identity.test.executable, "/mock/Java SDK/bin/java");
+  assert.equal(identity.child.command, `${xcodebuild} -runFirstLaunch`);
+  assert.throws(
+    () =>
+      ownedLauncherSnapshot(
+        spaced + spaced.split("\n")[1] + "\n",
+        11307,
+        10628,
+        501,
+      ),
+    /Duplicate/,
+  );
+  assert.throws(
+    () =>
+      ownedLauncherSnapshot(
+        spaced.replace("10628 1 501", "10628 1 502"),
+        11307,
+        10628,
+        501,
+      ),
+    /wrapper identity/,
+  );
+  assert.equal(
+    ownedLauncherSnapshot(
+      spaced + row(30816, 30770, xcodebuild, `${xcodebuild} -runFirstLaunch`),
+      11307,
+      10628,
+      501,
+    ),
+    undefined,
+  );
 });

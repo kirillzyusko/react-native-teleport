@@ -1,6 +1,12 @@
 import { Buffer } from "node:buffer";
 import { createHash } from "node:crypto";
-import { mkdirSync, readFileSync, statSync, writeFileSync } from "node:fs";
+import {
+  mkdirSync,
+  readFileSync,
+  readdirSync,
+  statSync,
+  writeFileSync,
+} from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -130,6 +136,120 @@ export function ownedLauncherIdentity(details, branch, uid) {
   return result;
 }
 
+// Darwin truncates a non-final comm column to its header width, even with -ww.
+// Its explicit header fixes that width; args remains the unlimited final column.
+const executableWidth = 256;
+const executableHeader = "TELEPORT_EXECUTABLE".padEnd(executableWidth, "_");
+const snapshotFormat = `pid=,ppid=,uid=,etime=,comm=${executableHeader},args=`;
+const limits = {
+  snapshotBytes: 8 * 1024 * 1024,
+  totalSnapshotBytes: 32 * 1024 * 1024,
+  snapshots: 512,
+  observations: maximumObservations,
+  identityBytes: maximumIdentityBytes,
+};
+
+// Selection and identity come from this one captured output. ps does not
+// promise an atomic OS snapshot, so inconsistent matching rows still fail.
+export function ownedLauncherSnapshot(text, testPID, ownerPID, uid) {
+  if (!validPID(testPID) || !validPID(ownerPID) || !Number.isInteger(uid))
+    throw new Error("Invalid launcher snapshot owner");
+  const lines = text.split("\n").filter((line) => line.trim());
+  if (lines.shift()?.trim() !== executableHeader)
+    throw new Error("Launcher executable column header differs");
+  const rows = lines.map((raw) => {
+    const match = raw.match(/^\s*(\d+)\s+(\d+)\s+(\d+)\s+(\S+)\s+(.+)$/);
+    if (!match) throw new Error("Malformed launcher snapshot row");
+    const tail = match[5];
+    if (tail.length <= executableWidth || tail[executableWidth] !== " ")
+      throw new Error("Malformed launcher executable column");
+    const executable = tail.slice(0, executableWidth).trimEnd();
+    return {
+      pid: Number(match[1]),
+      parent: Number(match[2]),
+      uid: Number(match[3]),
+      elapsedSeconds: elapsedSeconds(match[4]),
+      executable,
+      command: tail.slice(executableWidth + 1),
+      raw,
+    };
+  });
+  if (new Set(rows.map((row) => row.pid)).size !== rows.length)
+    throw new Error("Duplicate launcher snapshot PID");
+  const owner = rows.find((row) => row.pid === ownerPID);
+  if (
+    !owner ||
+    owner.uid !== uid ||
+    path.basename(owner.executable || "") !== "node"
+  )
+    throw new Error("Launcher snapshot wrapper identity differs");
+  const test = rows.find((row) => row.pid === testPID);
+  if (!test) return undefined; // The original test may already have exited.
+  if (
+    test.parent !== ownerPID ||
+    test.uid !== uid ||
+    test.executable.length >= executableWidth
+  )
+    throw new Error("Launcher snapshot JVM identity differs");
+  // The original child can still be its launch script before execing Java.
+  if (path.basename(test.executable) !== "java") return undefined;
+  const branches = [];
+  for (const launcher of rows.filter(
+    (row) => row.parent === testPID && row.executable === "/bin/bash",
+  )) {
+    const descendants = rows.filter((row) => row.parent === launcher.pid);
+    const children = descendants.filter((row) =>
+      xcodebuild(row.executable || ""),
+    );
+    if (children.length > 1) return undefined;
+    if (children.length === 1)
+      branches.push({ test, launcher, child: children[0] });
+  }
+  if (branches.length !== 1) return undefined;
+  const branch = branches[0];
+  if (
+    new Set([ownerPID, ...Object.values(branch).map((row) => row.pid)]).size !==
+    4
+  )
+    throw new Error("Cyclic launcher snapshot identity");
+  const result = {};
+  for (const role of ["test", "launcher", "child"]) {
+    const row = branch[role];
+    if (
+      !validPID(row.pid) ||
+      row.uid !== uid ||
+      row.elapsedSeconds === undefined ||
+      row.executable.length >= executableWidth ||
+      !(
+        row.command === row.executable ||
+        row.command.startsWith(row.executable + " ") ||
+        (role === "test" &&
+          (row.command === "java" || row.command.startsWith("java ")))
+      )
+    )
+      throw new Error("Incomplete owned launcher snapshot identity");
+    result[role] = {
+      pid: row.pid,
+      parent: row.parent,
+      uid: row.uid,
+      elapsedSeconds: row.elapsedSeconds,
+      command: row.command,
+      executable: row.executable,
+    };
+  }
+  const selected =
+    rows
+      .filter((row) =>
+        Object.values(branch).some((item) => item.pid === row.pid),
+      )
+      .map((row) => row.raw)
+      .join("\n") + "\n";
+  const bytes = Buffer.from(selected);
+  if (bytes.length > limits.identityBytes)
+    throw new Error("Launcher selected identity exceeds bounds");
+  return { ...result, identityBytes: bytes.length, identitySHA256: sha(bytes) };
+}
+
 export function createLauncherObserver({
   directory,
   device,
@@ -139,16 +259,19 @@ export function createLauncherObserver({
   uid = process.getuid(),
 }) {
   const report = {
-    version: 1,
+    version: 2,
     enabled: true,
     ownerPID,
     uid,
     device,
     nodeVersion: process.version,
     scope:
-      "Passive host launcher identities only; operation association and blocking cause are unclassified.",
+      "Selection and identity from one captured host PS output; no atomic OS snapshot or wait cause claimed.",
     sourceHashes: {},
+    limits,
     snapshotsObserved: 0,
+    snapshotBytes: 0,
+    snapshots: [],
     observations: [],
     errors: [],
     deviceAPICalls: 0,
@@ -157,8 +280,8 @@ export function createLauncherObserver({
   const sources = path.join(directory, "native-launcher-source");
   mkdirSync(sources);
   for (const file of [source, wrapper]) {
-    const bytes = readFileSync(file);
-    const name = path.basename(file);
+    const bytes = readFileSync(file),
+      name = path.basename(file);
     report.sourceHashes[name] = sha(bytes);
     writeFileSync(path.join(sources, name), bytes, { flag: "wx" });
   }
@@ -168,63 +291,76 @@ export function createLauncherObserver({
   const seen = new Set();
   write();
   return {
-    async observe(table, testPID) {
+    async observe(legacyProcessTable, testPID) {
+      if (report.errors.length) return;
+      if (typeof legacyProcessTable !== "string" || !validPID(testPID)) {
+        report.errors.push("Invalid launcher snapshot request");
+        write();
+        return;
+      }
+      // The legacy table remains for its original consumers. It is deliberately
+      // not used to select a branch for a later, different identity query.
       report.snapshotsObserved++;
-      const branch = ownedLauncherBranch(table, testPID, ownerPID);
-      if (!branch) {
+      if (report.snapshotsObserved > limits.snapshots) {
+        report.errors.push("Launcher snapshot count exceeded");
         write();
         return;
       }
-      const key = `${branch.launcher.pid}-${branch.child.pid}`;
-      if (seen.has(key)) {
-        write();
-        return;
-      }
-      if (seen.size >= maximumObservations) {
-        if (!report.errors.includes("Launcher observation limit exceeded"))
-          report.errors.push("Launcher observation limit exceeded");
-        write();
-        return;
-      }
-      seen.add(key);
-      const identityFile = `native-launcher-${key}-identity.log`;
-      const command = [
-        "ps",
-        [
-          "-p",
-          [testPID, branch.launcher.pid, branch.child.pid].join(","),
-          "-o",
-          "pid=,ppid=,uid=,etime=,args=",
-        ],
-      ];
+      const name = `native-launcher-snapshot-${String(report.snapshotsObserved).padStart(6, "0")}.log`;
       const chunks = [];
       let bytes = 0;
-      await capture(identityFile, command, 15000, (chunk) => {
-        bytes += chunk.length;
-        if (bytes <= maximumIdentityBytes) chunks.push(chunk);
-      });
-      const details = Buffer.concat(chunks);
-      const identity =
-        bytes <= maximumIdentityBytes
-          ? ownedLauncherIdentity(details.toString(), branch, uid)
-          : undefined;
-      const observation = {
-        at: new Date().toISOString(),
+      await capture(
+        name,
+        ["ps", ["-A", "-o", snapshotFormat]],
+        15000,
+        (chunk) => {
+          bytes += chunk.length;
+          if (bytes <= limits.snapshotBytes) chunks.push(chunk);
+        },
+      );
+      report.snapshotBytes += bytes;
+      const raw = Buffer.concat(chunks);
+      const snapshot = {
+        index: report.snapshotsObserved,
+        file: name,
         testPID,
-        identityFile,
-        identityBytes: bytes,
-        identitySHA256: bytes <= maximumIdentityBytes ? sha(details) : null,
-        verifiedOwnership: Boolean(identity),
-        ...(identity || { observedBranch: branch }),
-        operationAssociation:
-          "Unclassified; exact argv retained for offline review. No App state or host wait cause inferred.",
+        bytes,
+        SHA256: bytes <= limits.snapshotBytes ? sha(raw) : null,
       };
-      report.observations.push(observation);
-      if (!identity)
-        report.errors.push(`Incomplete or changed launcher identity: ${key}`);
+      report.snapshots.push(snapshot);
+      try {
+        if (
+          bytes > limits.snapshotBytes ||
+          report.snapshotBytes > limits.totalSnapshotBytes
+        )
+          throw new Error("Launcher snapshot byte bound exceeded");
+        const identity = ownedLauncherSnapshot(
+          raw.toString(),
+          testPID,
+          ownerPID,
+          uid,
+        );
+        if (identity) {
+          const key = `${identity.launcher.pid}-${identity.child.pid}`;
+          if (!seen.has(key)) {
+            if (seen.size >= limits.observations)
+              throw new Error("Launcher observation limit exceeded");
+            seen.add(key);
+            report.observations.push({
+              snapshotIndex: snapshot.index,
+              verifiedOwnership: true,
+              ...identity,
+              operationAssociation:
+                "Exact current argv retained; App state and wait cause unclassified.",
+            });
+          }
+        }
+      } catch (error) {
+        report.errors.push(error.message);
+      }
       write();
       log(
-        `Passive launcher identity ${key}: ${identity ? "verified" : "incomplete"}`,
+        `Passive launcher snapshot ${snapshot.index}: ${report.errors.length ? "invalid" : "preserved"}`,
       );
     },
   };
@@ -241,7 +377,7 @@ export function verifyLauncherReport(directory) {
     throw new Error(message);
   };
   if (
-    report.version !== 1 ||
+    report.version !== 2 ||
     report.enabled !== true ||
     !validPID(report.ownerPID) ||
     !Number.isInteger(report.uid) ||
@@ -249,90 +385,104 @@ export function verifyLauncherReport(directory) {
     report.nodeVersion !== "v20.19.4" ||
     !Number.isSafeInteger(report.snapshotsObserved) ||
     report.snapshotsObserved < 1 ||
+    report.snapshotsObserved > limits.snapshots ||
     report.deviceAPICalls !== 0 ||
     report.final_stability_credit !== false ||
+    JSON.stringify(report.limits) !== JSON.stringify(limits) ||
     !Array.isArray(report.errors) ||
     report.errors.length ||
+    !Array.isArray(report.snapshots) ||
+    report.snapshots.length !== report.snapshotsObserved ||
     !Array.isArray(report.observations) ||
-    report.observations.length > maximumObservations ||
-    report.observations.length > report.snapshotsObserved ||
+    report.observations.length > limits.observations ||
     !report.sourceHashes ||
     Object.keys(report.sourceHashes).length !== 2
   )
     fail("Invalid launcher observation report");
   for (const file of [source, wrapper]) {
-    const name = path.basename(file);
-    const saved = readFileSync(
-      path.join(directory, "native-launcher-source", name),
-    );
+    const name = path.basename(file),
+      saved = readFileSync(
+        path.join(directory, "native-launcher-source", name),
+      );
     if (
       sha(saved) !== report.sourceHashes[name] ||
       sha(readFileSync(file)) !== report.sourceHashes[name]
     )
       fail("Launcher source provenance differs");
   }
-  const seen = new Set();
-  for (const observation of report.observations) {
-    const { test, launcher, child } = observation;
+  const seen = new Set(),
+    expected = [],
+    files = new Set();
+  let total = 0;
+  for (let i = 0; i < report.snapshots.length; i++) {
+    const snapshot = report.snapshots[i];
+    const name = `native-launcher-snapshot-${String(i + 1).padStart(6, "0")}.log`;
     if (
-      !observation.verifiedOwnership ||
-      !test ||
-      !launcher ||
-      !child ||
-      test.pid !== observation.testPID ||
-      test.parent !== report.ownerPID ||
-      launcher.parent !== test.pid ||
-      child.parent !== launcher.pid ||
-      [test, launcher, child].some((row) => !validPID(row.pid)) ||
-      new Set([report.ownerPID, test.pid, launcher.pid, child.pid]).size !==
-        4 ||
-      path.basename(test.executable) !== "java" ||
-      launcher.executable !== "/bin/bash" ||
-      !xcodebuild(child.executable) ||
-      !Number.isInteger(observation.identityBytes) ||
-      observation.identityBytes < 1 ||
-      observation.identityBytes > maximumIdentityBytes ||
-      observation.identityFile !==
-        `native-launcher-${launcher.pid}-${child.pid}-identity.log`
+      snapshot.index !== i + 1 ||
+      snapshot.file !== name ||
+      !validPID(snapshot.testPID) ||
+      !Number.isSafeInteger(snapshot.bytes) ||
+      snapshot.bytes < 1 ||
+      snapshot.bytes > limits.snapshotBytes
     )
-      fail("Launcher identity chain differs");
-    if (seen.has(observation.identityFile)) fail("Duplicate launcher identity");
-    seen.add(observation.identityFile);
-    const identityFile = path.join(directory, observation.identityFile);
-    if (statSync(identityFile).size > maximumIdentityBytes + 4096)
-      fail("Launcher raw identity exceeds bounds");
-    const raw = readFileSync(identityFile, "utf8");
-    const command = `ps -p ${test.pid},${launcher.pid},${child.pid} -o pid=,ppid=,uid=,etime=,args=`;
-    const escaped = command.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-    const time = "\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}\\.\\d{3}Z";
+      fail("Launcher snapshot identity/bounds differ");
+    files.add(name);
+    const file = path.join(directory, name);
+    if (statSync(file).size > limits.snapshotBytes + 4096)
+      fail("Launcher raw snapshot exceeds bounds");
+    const raw = readFileSync(file, "utf8"),
+      time = "\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}\\.\\d{3}Z";
+    const command = `ps -A -o ${snapshotFormat}`;
     const match = raw.match(
       new RegExp(
-        `^\\n${time} ${escaped}\\n([\\s\\S]*)\\n${time} exit=0 signal=null\\n$`,
+        `^\\n${time} ${command.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}\\n([\\s\\S]*)\\n${time} exit=0 signal=null\\n$`,
       ),
     );
     if (
       !match ||
-      Buffer.byteLength(match[1]) !== observation.identityBytes ||
-      sha(match[1]) !== observation.identitySHA256
+      Buffer.byteLength(match[1]) !== snapshot.bytes ||
+      sha(match[1]) !== snapshot.SHA256
     )
-      fail("Launcher raw command/exit/identity bytes differ");
-    const identityRows = match[1];
-    const branch = Object.fromEntries(
-      ["test", "launcher", "child"].map((role) => [role, observation[role]]),
+      fail("Launcher raw command/exit/snapshot bytes differ");
+    total += snapshot.bytes;
+    const identity = ownedLauncherSnapshot(
+      match[1],
+      snapshot.testPID,
+      report.ownerPID,
+      report.uid,
     );
-    const checked = ownedLauncherIdentity(identityRows, branch, report.uid);
-    if (
-      !checked ||
-      ["test", "launcher", "child"].some(
-        (role) =>
-          JSON.stringify(checked[role]) !== JSON.stringify(observation[role]),
-      )
-    )
-      fail("Raw launcher identity differs");
+    if (identity) {
+      const key = `${identity.launcher.pid}-${identity.child.pid}`;
+      if (!seen.has(key)) {
+        seen.add(key);
+        expected.push({
+          snapshotIndex: snapshot.index,
+          verifiedOwnership: true,
+          ...identity,
+          operationAssociation:
+            "Exact current argv retained; App state and wait cause unclassified.",
+        });
+      }
+    }
   }
+  const actualFiles = readdirSync(directory).filter((name) =>
+    /^native-launcher-snapshot-.*\.log$/.test(name),
+  );
+  if (
+    actualFiles.length !== files.size ||
+    actualFiles.some((name) => !files.has(name))
+  )
+    fail("Unexpected launcher snapshot file");
+  if (
+    total !== report.snapshotBytes ||
+    total > limits.totalSnapshotBytes ||
+    JSON.stringify(expected) !== JSON.stringify(report.observations)
+  )
+    fail("Launcher same-snapshot observations differ");
   return {
-    version: 1,
-    observations: report.observations.length,
+    version: 2,
+    snapshots: report.snapshots.length,
+    observations: expected.length,
     sourceHashes: report.sourceHashes,
     errors: [],
     deviceAPICalls: 0,
