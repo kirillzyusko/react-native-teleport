@@ -983,3 +983,26 @@ earlier 52-second wait or justifying a readiness workaround.
 
 This closes an argument-capture gap. It provides no app synchronization fix,
 changes no original assertion or deadline, and grants no final stability credit.
+
+### Preserve the observed launcher script
+
+The visual diagnostic also runs `ios-observed-launcher-script.mjs` after the
+original test and diagnostic log drain. It first validates the existing launcher
+report and its raw process tables. When an owned bash command names the selected
+Xcode directory's `simctl` script and its child is `xcodebuild -runFirstLaunch`,
+the collector reads that one observed script. It makes no additional process
+query or device call and never executes the captured file.
+
+The archive records the path, source hashes, descriptor identity, read interval
+and complete bytes. The file must be regular, have no links, remain unchanged
+during the read, and contain at most 128 KiB of valid UTF-8 shell source. Missing,
+changed, malformed or oversized evidence fails a separate mandatory check. The
+check verifies the archived bytes without rereading or repairing the original
+script. No matching branch produces an explicit empty observation, which does
+not establish that a host wait was absent.
+
+These are bytes at the observed path after the test. They do not establish which
+inode was executed earlier, which script branch ran, how long it took, or why a
+native service waited. This collection changes no Xcode readiness, permission,
+service, input, screenshot or synchronization behavior and earns no final
+stability credit.
