@@ -9,20 +9,25 @@ SPEC.loader.exec_module(FRAME)
 HELPER = Path(__file__).with_name('ios-hid') / 'FrameBodyArchive.swift'
 LIMITS = {'pairs': 1024, 'pngBytes': 16 * 1024 * 1024,
           'totalBytes': 256 * 1024 * 1024, 'pendingPairs': 8}
+COMPLETIONS = {'version': 1, 'recordBytes': 4096, 'totalBytes': 4 * 1024 * 1024}
 
 
-def metadata(intermediate, changed):
-    return {'version': 1, 'helper_sha256': hashlib.sha256(HELPER.read_bytes()).hexdigest(),
+def metadata(intermediate, changed, *, completions=False):
+    result = {'version': 1, 'helper_sha256': hashlib.sha256(HELPER.read_bytes()).hexdigest(),
             'intermediate_sha256': hashlib.sha256(intermediate).hexdigest(),
             'compiled_source_sha256': hashlib.sha256(changed).hexdigest(), 'limits': LIMITS}
+    if completions:
+        result['completion_files'] = COMPLETIONS
+    return result
 
 
-def helper_bytes():
+def helper_bytes(*, completions=False):
     raw = HELPER.read_bytes()
-    return raw.replace(b'__TELEPORT_FRAME_BODY_SHA__', hashlib.sha256(raw).hexdigest().encode())
+    return raw.replace(b'__TELEPORT_FRAME_BODY_SHA__', hashlib.sha256(raw).hexdigest().encode()).replace(
+        b'__TELEPORT_COMPLETION_FILES__', b'true' if completions else b'false')
 
 
-def patch(original, framed):
+def patch(original, framed, *, completions=False):
     expected = FRAME.patch(FRAME.SCREEN, original)
     if framed != expected:
         raise ValueError('Body archive requires the exact pinned original frame observer intermediate')
@@ -49,7 +54,7 @@ def patch(original, framed):
             )
 #endif
 ''' + anchor)
-    return (source + helper_bytes().decode()).encode()
+    return (source + helper_bytes(completions=completions).decode()).encode()
 
 
 def target_source(raw, simulator):

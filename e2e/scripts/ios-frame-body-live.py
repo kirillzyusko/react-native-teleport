@@ -270,7 +270,13 @@ if __name__ == '__main__':
     parser.add_argument('--devices-root', type=Path, default=Path.home() / 'Library/Developer/CoreSimulator/Devices')
     args = parser.parse_args()
     emit = lambda row: print(json.dumps(row), flush=True)
-    result = stream(args.artifact, args.device, args.devices_root, args.output, sys.stdin.buffer, emit)
+    supplementary = None
+    if os.environ.get('MAESTRO_IOS_DURABLE_COMPLETIONS') == 'true':
+        completions = load('additional_frame_completions', 'ios-frame-completions.py')
+        result, supplementary = completions.run_original(
+            stream, args.artifact, args.device, args.devices_root, args.output, sys.stdin.buffer, emit)
+    else:
+        result = stream(args.artifact, args.device, args.devices_root, args.output, sys.stdin.buffer, emit)
     emit({'phase': 'finished', 'workerPID': os.getpid(), 'errors': result['errors'],
           'PNGs': len(result['files']), 'deviceAPICalls': 0})
-    raise SystemExit(bool(result['errors']))
+    raise SystemExit(bool(result['errors']) or bool(supplementary and supplementary['errors']))

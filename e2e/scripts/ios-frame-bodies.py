@@ -29,9 +29,10 @@ def source_audit(artifact):
     original = (artifact / 'ScreenDiffHandler.original.swift').read_bytes()
     intermediate = (artifact / 'ScreenDiffHandler.patched.swift').read_bytes()
     compiled = (artifact / 'frame-body-ScreenDiffHandler.patched.swift').read_bytes()
-    expected = PATCH.patch(original, intermediate)
+    completions = 'completion_files' in built.get('frame_body_archive', {})
+    expected = PATCH.patch(original, intermediate, completions=completions)
     if (compiled != expected or json.dumps(built.get('frame_body_archive'), sort_keys=True) !=
-            json.dumps(PATCH.metadata(intermediate, expected), sort_keys=True)):
+            json.dumps(PATCH.metadata(intermediate, expected, completions=completions), sort_keys=True)):
         raise ValueError('Actual composed frame-body source/metadata differs')
     if (artifact / 'FrameBodyArchive.swift').read_bytes() != PATCH.HELPER.read_bytes():
         raise ValueError('Archived body helper differs')

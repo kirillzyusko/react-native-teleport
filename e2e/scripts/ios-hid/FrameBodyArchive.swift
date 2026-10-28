@@ -6,6 +6,7 @@ import CryptoKit
 // comparison; this helper never captures, encodes or waits for a screenshot.
 enum TeleportFrameBodyArchive {
     private static let helperSHA = "__TELEPORT_FRAME_BODY_SHA__"
+    private static let completionFilesEnabled = "__TELEPORT_COMPLETION_FILES__" == "true"
     private static let shared = Store(
         root: FileManager.default.temporaryDirectory.appendingPathComponent(
             "teleport-frame-bodies-\(ProcessInfo.processInfo.processIdentifier)-\(UUID().uuidString)"
@@ -43,6 +44,7 @@ enum TeleportFrameBodyArchive {
     final class Store {
         private let root: URL
         private let limits: Limits
+        private let completionFiles: Bool
         private let queue = DispatchQueue(label: "teleport.frame-bodies.output", qos: .utility)
         private let lock = NSLock()
         private var attempted = 0
@@ -52,11 +54,13 @@ enum TeleportFrameBodyArchive {
         // Only the serial writer accesses this field.
         private var initialized = false
 
-        init(root: URL, limits: Limits = .production) {
+        init(root: URL, limits: Limits = .production,
+             completionFiles: Bool = TeleportFrameBodyArchive.completionFilesEnabled) {
             precondition(limits.pairs > 0 && limits.pngBytes > 0 &&
                          limits.totalBytes > 0 && limits.pendingPairs > 0)
             self.root = root
             self.limits = limits
+            self.completionFiles = completionFiles
         }
 
         func submit(
@@ -131,6 +135,15 @@ enum TeleportFrameBodyArchive {
                     }
                     try first.write(to: firstURL, options: .atomic)
                     try second.write(to: secondURL, options: .atomic)
+                    if completionFiles {
+                        preserveCompletion([
+                            "ordinal": ordinal, "firstFile": firstName, "secondFile": secondName,
+                            "firstHash": firstHash, "secondHash": secondHash,
+                            "firstBytes": first.count, "secondBytes": second.count,
+                            "firstReturned": firstReturned, "secondReturned": secondReturned,
+                            "isScreenStatic": isScreenStatic
+                        ])
+                    }
                     Self.emit("saved", [
                         "ordinal": ordinal, "firstFile": firstName, "secondFile": secondName,
                         "firstHash": firstHash, "secondHash": secondHash,
@@ -144,6 +157,51 @@ enum TeleportFrameBodyArchive {
                         "errorDomain": error.domain, "errorCode": error.code
                     ])
                 }
+            }
+        }
+
+        // Only the existing serial utility writer calls this optional evidence
+        // path, after both original PNG writes. It never changes the saved log.
+        private func preserveCompletion(_ details: [String: Any]) {
+            do {
+                var fields = details
+                fields.merge([
+                    "version": 1, "phase": "durable-completion",
+                    "helperSHA": TeleportFrameBodyArchive.helperSHA,
+                    "pid": ProcessInfo.processInfo.processIdentifier,
+                    "simulatorUDID": ProcessInfo.processInfo.environment["SIMULATOR_UDID"] ?? "",
+                    "uptime": ProcessInfo.processInfo.systemUptime,
+                    "wallTime": Date().timeIntervalSince1970
+                ]) { _, new in new }
+                guard let firstReturned = fields["firstReturned"] as? Double,
+                      let secondReturned = fields["secondReturned"] as? Double,
+                      firstReturned.isFinite, secondReturned.isFinite,
+                      firstReturned > 0, secondReturned >= firstReturned else {
+                    throw NSError(domain: "TeleportFrameCompletion", code: 3)
+                }
+                let data = try JSONSerialization.data(withJSONObject: fields, options: .sortedKeys)
+                guard data.count <= 4096, let ordinal = details["ordinal"] as? Int else {
+                    throw NSError(domain: "TeleportFrameCompletion", code: 1)
+                }
+                let name = String(format: "pair-%06ld-completion.json", ordinal)
+                let url = root.appendingPathComponent(name)
+                guard !FileManager.default.fileExists(atPath: url.path) else {
+                    throw NSError(domain: "TeleportFrameCompletion", code: 2)
+                }
+                try data.write(to: url, options: .atomic)
+            } catch {
+                let error = error as NSError
+                // Separate from the original body channel: a failed additional
+                // record must not erase the original saved record or PNGs.
+                NSLog("[teleport-frame-completions] %@", String(
+                    data: (try? JSONSerialization.data(withJSONObject: [
+                        "version": 1, "phase": "write.error",
+                        "helperSHA": TeleportFrameBodyArchive.helperSHA,
+                        "pid": ProcessInfo.processInfo.processIdentifier,
+                        "ordinal": details["ordinal"] ?? -1,
+                        "errorDomain": error.domain, "errorCode": error.code
+                    ], options: .sortedKeys)) ?? Data(), encoding: .utf8
+                ) ?? "invalid_error_record")
             }
         }
 

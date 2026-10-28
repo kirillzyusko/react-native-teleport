@@ -194,6 +194,8 @@ def hid_host_manifest(artifact, metadata):
 
 
 def build(args):
+    if getattr(args, "archive_frame_completions", False) and not getattr(args, "archive_frame_bodies", False):
+        raise RuntimeError("Completion evidence requires the explicit original frame body archive")
     if getattr(args, "archive_frame_bodies", False) and (
         args.backend != "indigo" or not args.trace_frames or
         getattr(args, "observe_idle", False) or getattr(args, "observe_static_idle", False)
@@ -239,11 +241,12 @@ def build(args):
             spec.loader.exec_module(bodies)
             original_screen = (output / "ScreenDiffHandler.original.swift").read_bytes()
             intermediate = (source / bodies.FRAME.SCREEN).read_bytes()
-            changed = bodies.patch(original_screen, intermediate)
+            completions = getattr(args, "archive_frame_completions", False)
+            changed = bodies.patch(original_screen, intermediate, completions=completions)
             (source / bodies.FRAME.SCREEN).write_bytes(changed)
             (output / "frame-body-ScreenDiffHandler.patched.swift").write_bytes(changed)
             (output / "FrameBodyArchive.swift").write_bytes(bodies.HELPER.read_bytes())
-            metadata["frame_body_archive"] = bodies.metadata(intermediate, changed)
+            metadata["frame_body_archive"] = bodies.metadata(intermediate, changed, completions=completions)
         if getattr(args, "observe_idle", False):
             if args.backend != "indigo" or not args.trace_frames:
                 raise RuntimeError("Idle notification observation requires the explicit Indigo frame diagnostic")
@@ -385,6 +388,8 @@ def install(args):
         raise RuntimeError("The built post-static idle-observation profile does not match this trial")
     if bool(metadata.get("frame_body_archive")) != getattr(args, "expected_frame_bodies", False):
         raise RuntimeError("The built frame-body archive profile does not match this trial")
+    if bool(metadata.get("frame_body_archive", {}).get("completion_files")) != getattr(args, "expected_frame_completions", False):
+        raise RuntimeError("The built completion evidence profile does not match this trial")
     if os.environ.get("GITHUB_SHA") and metadata["candidate_sha"] != os.environ["GITHUB_SHA"]:
         raise RuntimeError("The built driver belongs to a different candidate")
     expected_names = {RESOURCE_PREFIX + name.removesuffix(".app") + ".zip" for name in APP_NAMES}
@@ -437,6 +442,7 @@ def main():
     prepare.add_argument("--prepare-only", action="store_true")
     prepare.add_argument("--trace-frames", action="store_true")
     prepare.add_argument("--archive-frame-bodies", action="store_true")
+    prepare.add_argument("--archive-frame-completions", action="store_true")
     prepare.add_argument("--observe-idle", action="store_true")
     prepare.add_argument("--observe-static-idle", action="store_true")
     prepare.add_argument("--backend", choices=("recap", "indigo"), default="recap")
@@ -447,6 +453,7 @@ def main():
     use.add_argument("--expected-backend", choices=("recap", "indigo"), default="recap")
     use.add_argument("--expected-frame-trace", action="store_true")
     use.add_argument("--expected-frame-bodies", action="store_true")
+    use.add_argument("--expected-frame-completions", action="store_true")
     use.add_argument("--expected-idle-observation", action="store_true")
     use.add_argument("--expected-static-idle-observation", action="store_true")
     args = parser.parse_args()

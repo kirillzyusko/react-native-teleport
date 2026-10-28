@@ -898,6 +898,30 @@ their visual contents. Archiving the existing bytes closes that evidence gap; it
 does not establish screenshot caching, native transition completion or physical
 display timing.
 
+### Additional PNG completion evidence
+
+The separate `archive_completions` input defaults to false and requires
+`archive_frames`, which retains its single visual trial and one-pass restrictions.
+After writing both original PNGs, the existing utility writer atomically publishes
+one completion JSON file. Its source, runner, device, ordinal, hashes, sizes and
+original screenshot return clocks bind those bytes to the original queued record.
+The original queued/saved log messages remain in place. Records are limited to
+4 KiB each and 4 MiB total; the original PNG and pending-pair limits are unchanged.
+
+The existing live worker observes completion files on its original input-read
+cadence, with one final EOF reconciliation. It adds no polling timer, sleep, device
+call, screenshot, encoding or input. Newly committed files and their original PNGs
+are copied into `live-frame-bodies-completions`, separately from the original
+archive. Stable regular-file descriptors, no links, container identity, hashes,
+PNG CRCs, raw queued records and copy clocks are checked independently.
+
+This additional archive preserves bytes when a saved log message is lost. It never
+reconstructs that message or makes the original gate pass: missing original saved
+coverage and any original worker failure remain failed. Missing completion data,
+write errors and provenance mismatches fail the additional gate. Completion files
+do not prove physical capture time, display freshness or application readiness;
+this remains diagnostic evidence with zero final stability credit.
+
 ### Indigo host helper teardown
 
 A later independent archive trial failed before running the app suite. The host

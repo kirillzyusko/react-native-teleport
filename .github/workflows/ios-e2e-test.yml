@@ -31,6 +31,10 @@ on:
         description: Archive existing static PNG bodies (one visual diagnostic trial only)
         type: boolean
         default: false
+      archive_completions:
+        description: Preserve additional PNG completion records (same single diagnostic)
+        type: boolean
+        default: false
       trials:
         description: Independent fresh-runner trials
         type: choice
@@ -73,6 +77,7 @@ env:
   XCODE_VERSION: "16.4"
   MAESTRO_IOS_PROFILE: ${{ inputs.profile || 'native-driver' }}
   MAESTRO_IOS_ARCHIVE_FRAMES: ${{ inputs.archive_frames && 'true' || 'false' }}
+  MAESTRO_IOS_DURABLE_COMPLETIONS: ${{ inputs.archive_completions && 'true' || 'false' }}
 
 jobs:
   plan-trials:
@@ -85,12 +90,16 @@ jobs:
         env:
           TRIAL_COUNT: ${{ inputs.trials || '1' }}
           ARCHIVE_FRAMES: ${{ inputs.archive_frames && 'true' || 'false' }}
+          ARCHIVE_COMPLETIONS: ${{ inputs.archive_completions && 'true' || 'false' }}
           TRACE_PROFILE: ${{ inputs.profile }}
           COMPARISON: ${{ inputs.comparison }}
         run: |
           node <<'NODE'
           const fs = require("node:fs");
           const count = Number(process.env.TRIAL_COUNT);
+          if (process.env.ARCHIVE_COMPLETIONS === "true" && process.env.ARCHIVE_FRAMES !== "true") {
+            throw new Error("Completion evidence requires the explicit original frame archive");
+          }
           if (process.env.ARCHIVE_FRAMES === "true" &&
               (process.env.TRACE_PROFILE !== "indigo-visual-touch-trace" || count !== 1 || process.env.COMPARISON !== "one-pass")) {
             throw new Error("Frame bodies require one explicit visual diagnostic using one-pass comparison");
@@ -262,6 +271,7 @@ jobs:
           if [[ "$MAESTRO_IOS_PROFILE" = indigo-idle-touch-trace || "$MAESTRO_IOS_PROFILE" = indigo-static-idle-touch-trace ]]; then args+=(--observe-idle); fi
           if [ "$MAESTRO_IOS_PROFILE" = indigo-static-idle-touch-trace ]; then args+=(--observe-static-idle); fi
           if [ "$MAESTRO_IOS_ARCHIVE_FRAMES" = true ]; then args+=(--archive-frame-bodies); fi
+          if [ "$MAESTRO_IOS_DURABLE_COMPLETIONS" = true ]; then args+=(--archive-frame-completions); fi
           python3 e2e/scripts/maestro-ios-input.py build \
             --source example/ios/build/maestro-input/source \
             --derived example/ios/build/maestro-input/DerivedData \
@@ -282,9 +292,14 @@ jobs:
           fi
           if [ "$MAESTRO_IOS_ARCHIVE_FRAMES" = true ]; then
             artifact=example/ios/build/maestro-input/artifact
+            method_args=()
+            if [ "$MAESTRO_IOS_DURABLE_COMPLETIONS" = true ]; then method_args=(--completion-files); fi
             python3 -B e2e/scripts/test-ios-frame-bodies.py --output "$artifact/frame-body-controls/host"
-            python3 -B e2e/scripts/test-ios-frame-body-methods.py --artifact "$artifact" --output "$artifact/frame-body-controls/methods"
-            python3 -B e2e/scripts/test-ios-frame-body-contracts.py --artifact "$artifact" --output "$artifact/frame-body-controls/contracts.json"
+            python3 -B e2e/scripts/test-ios-frame-body-methods.py --artifact "$artifact" --output "$artifact/frame-body-controls/methods" "${method_args[@]}"
+            MAESTRO_IOS_DURABLE_COMPLETIONS=false python3 -B e2e/scripts/test-ios-frame-body-contracts.py --artifact "$artifact" --output "$artifact/frame-body-controls/contracts.json"
+            if [ "$MAESTRO_IOS_DURABLE_COMPLETIONS" = true ]; then
+              python3 -B e2e/scripts/test-ios-frame-completions.py --artifact "$artifact" --output "$artifact/frame-completion-controls"
+            fi
           fi
           if [[ "$MAESTRO_IOS_PROFILE" = indigo-idle-touch-trace || "$MAESTRO_IOS_PROFILE" = indigo-static-idle-touch-trace ]]; then
             export MAESTRO_IDLE_FIXTURE_OUTPUT=example/ios/build/maestro-input/artifact/idle-fixture
@@ -412,6 +427,7 @@ jobs:
           if [[ "$MAESTRO_IOS_PROFILE" = indigo-idle-touch-trace || "$MAESTRO_IOS_PROFILE" = indigo-static-idle-touch-trace ]]; then args+=(--expected-idle-observation); fi
           if [ "$MAESTRO_IOS_PROFILE" = indigo-static-idle-touch-trace ]; then args+=(--expected-static-idle-observation); fi
           if [ "$MAESTRO_IOS_ARCHIVE_FRAMES" = true ]; then args+=(--expected-frame-bodies); fi
+          if [ "$MAESTRO_IOS_DURABLE_COMPLETIONS" = true ]; then args+=(--expected-frame-completions); fi
           python3 e2e/scripts/maestro-ios-input.py install \
             --jar "$HOME/.maestro/lib/maestro-ios-driver.jar" \
             --artifact e2e/reports/maestro-ios-input \
@@ -581,6 +597,18 @@ jobs:
             --device "${{ steps.simulator.outputs.udid }}" \
             --archive e2e/reports/native-diagnostics/frame-bodies \
             --output e2e/reports/native-diagnostics/ios-frame-bodies.json
+      - name: Verify additional original PNG completion evidence
+        if: always() && inputs.archive_completions && steps.e2e.outcome != 'skipped' && steps.e2e.outcome != ''
+        run: |
+          cp e2e/scripts/ios-frame-completions.py e2e/scripts/check-ios-frame-completions.py e2e/reports/native-diagnostics/
+          python3 -B e2e/scripts/check-ios-frame-completions.py \
+            --artifact e2e/reports/maestro-ios-input \
+            --body-log e2e/reports/native-diagnostics/simulator.log \
+            --archive e2e/reports/native-diagnostics/live-frame-bodies-completions \
+            --live-process e2e/reports/native-diagnostics/live-frame-body-process.json \
+            --candidate "${{ github.sha }}" --run "${{ github.run_id }}" --attempt "${{ github.run_attempt }}" \
+            --device "${{ steps.simulator.outputs.udid }}" \
+            --output e2e/reports/native-diagnostics/ios-frame-completions.json
       - name: Upload native diagnostics
         if: always()
         uses: actions/upload-artifact@v4

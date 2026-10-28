@@ -86,11 +86,13 @@ extension TeleportFrameBodyArchive {
 '''
 
 
-def run(artifact, output):
+def run(artifact, output, *, completions=False):
     output.mkdir(parents=True, exist_ok=True)
     original = (artifact / 'ScreenDiffHandler.original.swift').read_bytes()
     intermediate = (artifact / 'ScreenDiffHandler.patched.swift').read_bytes()
-    composed = PATCH.patch(original, intermediate)
+    composed = PATCH.patch(original, intermediate, completions=completions)
+    if completions:
+        assert composed == (artifact / 'frame-body-ScreenDiffHandler.patched.swift').read_bytes()
     assert PATCH.physical_source(composed) == original
     shot = PATCH.FRAME.patch(PATCH.FRAME.SHOT, (artifact / 'ScreenshotHandler.original.swift').read_bytes())
 
@@ -145,10 +147,22 @@ def run(artifact, output):
     root = Path(initialized[0]['root'])
     assert root.name.startswith('teleport-frame-bodies-' + str(initialized[0]['pid']) + '-')
     assert not root.is_symlink() and root.resolve().is_relative_to(Path(tempfile.gettempdir()).resolve())
-    assert {f.name for f in root.iterdir()} == {r[k] for r in saved for k in ['firstFile', 'secondFile']}
+    if completions:
+        assert {f.name for f in root.iterdir()} == (
+            {r[k] for r in saved for k in ['firstFile', 'secondFile']} |
+            {f"pair-{r['ordinal']:06d}-completion.json" for r in queued})
+    else:
+        assert {f.name for f in root.iterdir()} == {r[k] for r in saved for k in ['firstFile', 'secondFile']}
     preserved = output / 'archive-files'
     preserved.mkdir()
     for pair, row, trace in zip(queued, saved, traces[:2]):
+        if completions:
+            spec = importlib.util.spec_from_file_location('actual_method_completion_contract', Path(__file__).with_name('ios-frame-completions.py'))
+            contract = importlib.util.module_from_spec(spec)
+            spec.loader.exec_module(contract)
+            file = root / f"pair-{pair['ordinal']:06d}-completion.json"
+            contract.validate_completion(contract.strict_json(file.read_bytes()), pair)
+            (preserved / file.name).write_bytes(file.read_bytes())
         assert pair['firstReturned'] == trace['firstCaptured'] and pair['secondReturned'] == trace['secondCaptured']
         assert pair['firstHash'] == trace['firstHash'] and pair['secondHash'] == trace['secondHash']
         assert pair['isScreenStatic'] is trace['isScreenStatic']
@@ -173,5 +187,6 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--artifact', type=Path, required=True)
     parser.add_argument('--output', type=Path, required=True)
+    parser.add_argument('--completion-files', action='store_true')
     args = parser.parse_args()
-    run(args.artifact, args.output)
+    run(args.artifact, args.output, completions=args.completion_files)
