@@ -907,3 +907,38 @@ deliberately hung owned helper's two independently validated fallback signals.
 The original fatal-delivery, no-replay, coordinate, timing and acknowledgement
 controls remain required. This corrects host cleanup and provides no application
 synchronization or final stability credit.
+
+### Native launcher identities
+
+One original eighteen-flow archive suite passed its assertions and video check,
+but its first simulator-native stop took 52.77 seconds and reported "found nothing
+to terminate." The guest termination request appeared 52.635 seconds after the
+host command began. No PID-matched app exit/notification chain was available, so
+the original termination evidence gate remains failed. These timestamps do not
+identify the cause of the host wait.
+
+A saved host process table contained a Maestro-owned `bash` child with an
+`xcodebuild` child during that interval. Their arguments were not captured. The
+existing observer selects direct Maestro-owned `simctl` processes and therefore
+missed that branch. This does not prove that the branch performed the pending
+stop or that Maestro's command helper wraps commands in a shell.
+
+`TELEPORT_IOS_LAUNCHER_OBSERVE=1` enables passive identity capture only in the
+hosted iOS visual diagnostic profile. Other scopes reject the opt-in; the default
+path does not import the observer or create its files. On the existing host
+sampling cadence, a unique current Maestro JVM → `/bin/bash` → selected Xcode
+`xcodebuild` shape causes one combined `ps` query for those three PIDs. Fresh
+PID, parent, UID, elapsed age and complete executable/argument rows must agree.
+The observer makes no device call, changes no input, adds no sampling timer and
+does not signal the observed native processes. It captures identities rather
+than adding native stack profilers.
+
+Each branch is queried once, with at most 64 observations and 128 KiB of identity
+data per observation. The existing collector retains raw command output even
+when identity validation or the size bound fails. A separate mandatory diagnostic
+check validates source snapshots, exact raw bytes, command completion and every
+parent/owner edge; missing or changed evidence fails that check. An empty set of
+observed branches is recorded without claiming that no host wait occurred.
+
+This closes an argument-capture gap. It provides no app synchronization fix,
+changes no original assertion or deadline, and grants no final stability credit.

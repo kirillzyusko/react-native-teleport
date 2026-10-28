@@ -54,6 +54,25 @@ const sampledSimctl = new Set();
 const hostedCI =
   process.env.GITHUB_ACTIONS === "true" &&
   process.env.RUNNER_ENVIRONMENT === "github-hosted";
+const observeLaunchers = process.env.TELEPORT_IOS_LAUNCHER_OBSERVE === "1";
+if (
+  observeLaunchers &&
+  (platform !== "ios" ||
+    !hostedCI ||
+    process.env.MAESTRO_IOS_PROFILE !== "indigo-visual-touch-trace")
+) {
+  throw new Error(
+    "Launcher observation requires the hosted iOS visual diagnostic profile",
+  );
+}
+const launcherObserver = observeLaunchers
+  ? (await import("./ios-native-launcher-observe.mjs")).createLauncherObserver({
+      directory,
+      device,
+      capture,
+      log,
+    })
+  : undefined;
 const adb = (...parameters) => ["adb", ["-s", device, ...parameters]];
 const simctl = (...parameters) => ["xcrun", ["simctl", ...parameters]];
 const timestamp = () => new Date().toISOString();
@@ -258,6 +277,9 @@ async function sample() {
       processTable += chunk.toString();
     },
   );
+  if (launcherObserver && testPid) {
+    await launcherObserver.observe(processTable, testPid);
+  }
   if (platform === "ios") {
     if (hostedCI) {
       await capture("host-foreground.log", ["lsappinfo", ["-names", "front"]]);

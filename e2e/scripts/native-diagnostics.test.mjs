@@ -297,6 +297,23 @@ if (name === "test-command") {
   fs.appendFileSync("sdk-identity-queries.log", JSON.stringify(args) + "\\n");
   console.log("a".repeat(64) + "  /data/app/~~fixture/dev.mobile.maestro.test-fixture/base.apk");
 } else if (name === "ps") {
+  if (process.env.LAUNCHER_PROBE && fs.existsSync("test.pid")) {
+    const testPid = fs.readFileSync("test.pid", "utf8");
+    const xcodebuild = "/Applications/Xcode_16.4.app/Contents/Developer/usr/bin/xcodebuild";
+    if (args.includes("-A")) {
+      console.log(testPid, process.ppid, "S 0.0 0.0 100 /mock/java");
+      console.log("1000101", testPid, "S 0.0 0.0 100 /bin/bash");
+      console.log("1000102 1000101 R 0.0 0.0 100", xcodebuild);
+      console.log("1000103 1 S 0.0 0.0 100 /bin/bash");
+      console.log("1000104 1000103 R 0.0 0.0 100", xcodebuild);
+    } else if (args.some((arg) => arg.includes("1000101"))) {
+      fs.appendFileSync("launcher-identity-queries.log", JSON.stringify(args) + "\\n");
+      console.log(testPid, process.ppid, process.getuid(), "00:24 /mock/java -cp fixture");
+      console.log("1000101", testPid, process.getuid(), "00:20 /bin/bash /usr/bin/xcrun simctl terminate test-device teleport.example");
+      console.log("1000102 1000101", process.getuid(), "00:20", xcodebuild, "-find simctl");
+    }
+    process.exit(0);
+  }
   if (process.env.SERVICE_PROBE && fs.existsSync("test.pid")) {
     const testPid = fs.readFileSync("test.pid", "utf8");
     const service = ${JSON.stringify(serviceCommand)};
@@ -698,6 +715,153 @@ test("stops collector descendants that ignore closed stdout after their parent e
     await rm(directory, { recursive: true, force: true });
   }
 });
+
+test("ios: opt-in launcher observation captures only the current JVM-owned branch", async () => {
+  const { directory, options } = await fixture();
+  try {
+    await execute(
+      process.execPath,
+      [runner, "ios", "test-device", "--", "test-command", "0"],
+      {
+        ...options,
+        env: {
+          ...options.env,
+          GITHUB_ACTIONS: "true",
+          RUNNER_ENVIRONMENT: "github-hosted",
+          MAESTRO_IOS_PROFILE: "indigo-visual-touch-trace",
+          TELEPORT_IOS_LAUNCHER_OBSERVE: "1",
+          LAUNCHER_PROBE: "true",
+          // Keep this mock command alive through the existing 15s host
+          // sample. No application/device interaction or deadline changes.
+          TEST_DURATION_MS: "18000",
+        },
+        timeout: 30000,
+      },
+    );
+    const logs = path.join(directory, "e2e/reports/native-diagnostics");
+    const report = JSON.parse(
+      await readFile(
+        path.join(logs, "native-launcher-observation.json"),
+        "utf8",
+      ),
+    );
+    assert.equal(report.enabled, true);
+    assert.deepEqual(report.errors, []);
+    assert.equal(report.observations.length, 1);
+    const observation = report.observations[0];
+    assert.equal(observation.verifiedOwnership, true);
+    assert.equal(observation.launcher.pid, 1000101);
+    assert.equal(observation.child.pid, 1000102);
+    assert.match(
+      observation.launcher.command,
+      /xcrun simctl terminate test-device/,
+    );
+    assert.match(observation.child.command, /xcodebuild -find simctl$/);
+    assert.equal(report.deviceAPICalls, 0);
+    assert.equal(report.final_stability_credit, false);
+    const queries = (
+      await readFile(
+        path.join(directory, "launcher-identity-queries.log"),
+        "utf8",
+      )
+    )
+      .trim()
+      .split("\n")
+      .map(JSON.parse);
+    assert.equal(queries.length, 1);
+    assert.match(queries[0][1], /,1000101,1000102$/);
+    assert.doesNotMatch(queries[0][1], /100010[34]/);
+    await assertExited(
+      Number(await readFile(path.join(directory, "collector.pid"), "utf8")),
+    );
+  } finally {
+    await cleanupCollector(directory);
+    await rm(directory, { recursive: true, force: true });
+  }
+});
+
+test("ios: launcher observation stays off by default with the same visible branch", async () => {
+  const { directory, options } = await fixture();
+  try {
+    await execute(
+      process.execPath,
+      [runner, "ios", "test-device", "--", "test-command", "0"],
+      {
+        ...options,
+        env: {
+          ...options.env,
+          GITHUB_ACTIONS: "true",
+          RUNNER_ENVIRONMENT: "github-hosted",
+          MAESTRO_IOS_PROFILE: "indigo-visual-touch-trace",
+          LAUNCHER_PROBE: "true",
+        },
+      },
+    );
+    for (const file of [
+      "e2e/reports/native-diagnostics/native-launcher-observation.json",
+      "launcher-identity-queries.log",
+    ]) {
+      await assert.rejects(readFile(path.join(directory, file)), {
+        code: "ENOENT",
+      });
+    }
+    await assertExited(
+      Number(await readFile(path.join(directory, "collector.pid"), "utf8")),
+    );
+  } finally {
+    await cleanupCollector(directory);
+    await rm(directory, { recursive: true, force: true });
+  }
+});
+
+for (const scope of [
+  {
+    platform: "android",
+    hosted: "github-hosted",
+    profile: "indigo-visual-touch-trace",
+  },
+  {
+    platform: "ios",
+    hosted: "self-hosted",
+    profile: "indigo-visual-touch-trace",
+  },
+  { platform: "ios", hosted: "github-hosted", profile: "native-driver" },
+]) {
+  test(`launcher opt-in rejects unsupported scope ${scope.platform}/${scope.hosted}/${scope.profile}`, async () => {
+    const { directory, options } = await fixture();
+    try {
+      await assert.rejects(
+        execute(
+          process.execPath,
+          [runner, scope.platform, "test-device", "--", "test-command", "0"],
+          {
+            ...options,
+            env: {
+              ...options.env,
+              GITHUB_ACTIONS: "true",
+              RUNNER_ENVIRONMENT: scope.hosted,
+              MAESTRO_IOS_PROFILE: scope.profile,
+              TELEPORT_IOS_LAUNCHER_OBSERVE: "1",
+            },
+          },
+        ),
+        (error) =>
+          error.code === 1 &&
+          /requires the hosted iOS visual diagnostic profile/.test(
+            error.stderr,
+          ),
+      );
+      await assert.rejects(readFile(path.join(directory, "test.pid")), {
+        code: "ENOENT",
+      });
+      await assert.rejects(readFile(path.join(directory, "collector.pid")), {
+        code: "ENOENT",
+      });
+    } finally {
+      await rm(directory, { recursive: true, force: true });
+    }
+  });
+}
 
 for (const state of ["stalled", "completed"]) {
   test(`ios: ${state} termination ${state === "stalled" ? "captures" : "does not capture"} selected simulator stacks`, async () => {

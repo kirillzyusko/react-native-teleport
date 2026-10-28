@@ -260,6 +260,9 @@ jobs:
             python3 -B e2e/scripts/test-maestro-ios-hid-source.py
             node --test e2e/scripts/ios-hid-bridge.test.mjs e2e/scripts/check-ios-hid-delivery.test.mjs
           fi
+          if [ "$MAESTRO_IOS_PROFILE" = indigo-visual-touch-trace ]; then
+            node --test e2e/scripts/ios-native-launcher-observe.test.mjs e2e/scripts/native-diagnostics.test.mjs
+          fi
           if [[ "$MAESTRO_IOS_PROFILE" = indigo-touch-trace || "$MAESTRO_IOS_PROFILE" = indigo-visual-touch-trace || "$MAESTRO_IOS_PROFILE" = indigo-idle-touch-trace || "$MAESTRO_IOS_PROFILE" = indigo-static-idle-touch-trace ]]; then
             python3 -B e2e/scripts/test-maestro-ios-screen-source.py
             python3 -B e2e/scripts/test-maestro-ios-screen-runtime.py \
@@ -451,6 +454,7 @@ jobs:
         env:
           MAESTRO_IOS_INPUT_BACKEND: ${{ ((inputs.profile == 'indigo' || inputs.profile == 'indigo-visual-touch-trace') || (inputs.profile == 'indigo-touch-trace' || inputs.profile == 'indigo-visual-touch-trace') || (inputs.profile == 'indigo-idle-touch-trace' || inputs.profile == 'indigo-static-idle-touch-trace')) && 'indigo' || 'recap' }}
           MAESTRO_IOS_HID_MANIFEST: ${{ github.workspace }}/e2e/reports/maestro-ios-input/indigo-host-manifest.json
+          TELEPORT_IOS_LAUNCHER_OBSERVE: ${{ inputs.profile == 'indigo-visual-touch-trace' && '1' || '0' }}
         run: |
           set -euo pipefail
           mkdir -p e2e/reports
@@ -464,6 +468,12 @@ jobs:
             --debug-output ./e2e/reports/debug --flatten-debug-output
       - name: Check glitches/flickering
         run: node e2e/scripts/check-glitches.mjs e2e/reports/debug
+      - name: Verify passive native launcher observation
+        if: always() && env.MAESTRO_IOS_PROFILE == 'indigo-visual-touch-trace' && steps.e2e.outcome != 'skipped' && steps.e2e.outcome != ''
+        run: |
+          set -euo pipefail
+          node e2e/scripts/ios-native-launcher-observe.mjs check e2e/reports/native-diagnostics \
+            | tee e2e/reports/native-diagnostics/native-launcher-verification.json
       - name: Validate iOS touch delivery
         if: always() && steps.e2e.outcome != 'skipped' && steps.e2e.outcome != ''
         run: |
