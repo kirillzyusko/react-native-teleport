@@ -84,7 +84,12 @@
     "pblack",
     "teleporting",
     "lockfiles",
-    "worktree"
+    "worktree",
+    "Galeria",
+    "Jetpack",
+    "superview",
+    "WWDC",
+    "ARGB"
   ],
   "ignorePaths": [
     "node_modules",

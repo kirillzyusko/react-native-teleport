@@ -1,0 +1,516 @@
+/* scene colors follow the docs theme; the stage itself is transparent */
+.root {
+  --viz-ink: #1b2033;
+  --viz-sub: #5d6788;
+  --viz-line: rgba(40, 48, 80, 0.45);
+  --viz-guide: rgba(30, 36, 60, 0.55);
+  --viz-shadow: rgba(16, 20, 40, 0.3);
+  --viz-gallery-rgb: 61, 111, 240;
+  --viz-detail-rgb: 133, 86, 238;
+  --viz-host-rgb: 0, 158, 136;
+  --viz-hot-rgb: 196, 128, 0;
+  --viz-glow: 0.7;
+
+  position: relative;
+  margin: 1.5rem 0 2rem;
+}
+
+:global(html[data-theme="dark"]) .root {
+  --viz-ink: #eef1ff;
+  --viz-sub: #9aa3c7;
+  --viz-line: rgba(220, 226, 255, 0.5);
+  --viz-guide: rgba(255, 255, 255, 0.6);
+  --viz-shadow: rgba(0, 0, 0, 0.6);
+  --viz-gallery-rgb: 91, 140, 255;
+  --viz-detail-rgb: 167, 123, 255;
+  --viz-host-rgb: 47, 224, 196;
+  --viz-hot-rgb: 255, 209, 102;
+  --viz-glow: 1;
+}
+
+/* 16:9 stage; the 1920×1080 scene inside is scaled to the container width */
+.stageWrap {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  overflow: hidden;
+  touch-action: pan-y;
+}
+
+.canvas {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 1920px;
+  height: 1080px;
+  transform-origin: 0 0;
+  transform: scale(0.4);
+  font-family:
+    -apple-system, "SF Pro Display", "Helvetica Neue", Arial, sans-serif;
+  color: var(--viz-ink);
+  -webkit-font-smoothing: antialiased;
+}
+
+.viewport {
+  position: absolute;
+  inset: 0;
+  perspective: 2300px;
+  perspective-origin: 960px 380px;
+}
+
+.stage {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 390px;
+  height: 844px;
+  transform-style: preserve-3d;
+  transform-origin: 195px 422px;
+}
+
+.layer {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 390px;
+  height: 844px;
+  border-radius: 46px;
+  overflow: hidden;
+}
+
+.gallery {
+  background: #000;
+}
+
+.bezel {
+  position: absolute;
+  left: -13px;
+  top: -13px;
+  width: 416px;
+  height: 870px;
+  border-radius: 58px;
+  transform: translateZ(-6px);
+  background: linear-gradient(145deg, #2a2f45, #0d0f18 60%);
+  box-shadow:
+    0 0 0 1.5px #3a4060,
+    0 40px 120px var(--viz-shadow);
+  pointer-events: none;
+}
+
+.cell {
+  position: absolute;
+  width: 130px;
+  height: 130px;
+  background-size: cover;
+  background-position: center;
+}
+
+.slot {
+  position: absolute;
+  left: 0;
+  top: 104px;
+  width: 130px;
+  height: 130px;
+  box-sizing: border-box;
+  border: 2px dashed transparent;
+}
+
+.header {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 390px;
+  height: 104px;
+  background: #fff;
+  color: #111;
+}
+
+.time {
+  position: absolute;
+  left: 44px;
+  top: 17px;
+  font-weight: 600;
+  font-size: 16px;
+}
+
+.island {
+  position: absolute;
+  left: 134px;
+  top: 11px;
+  width: 122px;
+  height: 34px;
+  border-radius: 18px;
+  background: #000;
+}
+
+.title {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 66px;
+  text-align: center;
+  font-weight: 600;
+  font-size: 17px;
+}
+
+.backdrop {
+  position: absolute;
+  inset: 0;
+  background: #000;
+  pointer-events: none;
+}
+
+.svgLayer {
+  position: absolute;
+  left: 0;
+  top: 0;
+  overflow: visible;
+  pointer-events: none;
+}
+
+/* hover targets inside the SVG geometry */
+.hit {
+  pointer-events: all;
+}
+
+.closeBtn {
+  position: absolute;
+  left: 16px;
+  top: 69px;
+  padding: 8px 14px;
+  border-radius: 20px;
+  background: rgba(255, 255, 255, 0.2);
+  color: #fff;
+  font-weight: 600;
+  font-size: 16px;
+}
+
+.glass {
+  position: absolute;
+  inset: 0;
+  border: 2px solid transparent;
+  border-radius: 46px;
+  box-sizing: border-box;
+  pointer-events: none;
+}
+
+.dashed {
+  border-style: dashed;
+}
+
+.flyer {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 390px;
+  height: 844px;
+  pointer-events: none;
+}
+
+.anchor {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  pointer-events: none;
+}
+
+/* layer corners, used to project hover outlines */
+.closeAnchor {
+  left: 52px;
+  top: 87px;
+}
+
+.corner0 {
+  left: 0;
+  top: 0;
+}
+
+.corner1 {
+  left: 389px;
+  top: 0;
+}
+
+.corner2 {
+  left: 389px;
+  top: 843px;
+}
+
+.corner3 {
+  left: 0;
+  top: 843px;
+}
+
+/* overlay in scene coordinates; text is sized for a ~40% scaled stage */
+.hud {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.hudSvg {
+  position: absolute;
+  inset: 0;
+  overflow: visible;
+}
+
+.labLine {
+  stroke: var(--viz-line);
+}
+
+.guide {
+  stroke: var(--viz-guide);
+}
+
+.label,
+.chip {
+  position: absolute;
+  left: 0;
+  top: 0;
+  white-space: nowrap;
+  opacity: 0;
+  pointer-events: auto;
+}
+
+.label {
+  transform-origin: 0 50%;
+}
+
+.labelName {
+  font-size: 44px;
+  font-weight: 650;
+  letter-spacing: -0.3px;
+}
+
+.labelSub {
+  margin-top: 4px;
+  font-size: 28px;
+  color: var(--viz-sub);
+  font-family: "SF Mono", Menlo, monospace;
+}
+
+.chip {
+  padding: 8px 16px;
+  border-radius: 12px;
+  font:
+    600 26px "SF Mono",
+    Menlo,
+    monospace;
+  background: rgba(10, 12, 24, 0.85);
+  border: 1.5px solid rgba(255, 255, 255, 0.2);
+}
+
+/* caption and controls use the docs theme */
+.caption {
+  margin-top: 1rem;
+  min-height: 3.6rem;
+}
+
+.capTitle {
+  font-weight: 700;
+  font-size: 1.05rem;
+}
+
+.capText {
+  margin-top: 0.15rem;
+  color: var(--ifm-color-emphasis-700);
+  font-size: 0.95rem;
+}
+
+.controls {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 0.6rem 0.9rem;
+  align-items: center;
+  margin-top: 0.75rem;
+}
+
+.play {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.25rem;
+  height: 2.25rem;
+  border-radius: 50%;
+  border: 1px solid var(--ifm-color-emphasis-300);
+  background: var(--ifm-background-surface-color);
+  color: var(--ifm-font-color-base);
+  cursor: pointer;
+}
+
+.play:hover {
+  border-color: var(--ifm-color-primary);
+  color: var(--ifm-color-primary);
+}
+
+.scrubber {
+  width: 100%;
+  accent-color: var(--ifm-color-primary);
+}
+
+.state {
+  grid-column: 1 / -1;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem 1.4rem;
+  margin: 0;
+  font-family: var(--ifm-font-family-monospace);
+  font-size: 0.8rem;
+}
+
+.state > div {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+.state dt {
+  color: var(--ifm-color-emphasis-600);
+  font-weight: 400;
+}
+
+.state dd {
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-weight: 700;
+}
+
+.bar {
+  display: inline-block;
+  width: 5rem;
+  height: 0.4rem;
+  border-radius: 0.2rem;
+  background: var(--ifm-color-emphasis-200);
+  overflow: hidden;
+}
+
+.bar > span {
+  display: block;
+  height: 100%;
+  width: 0;
+  background: linear-gradient(90deg, #2fe0c4, #a77bff);
+}
+
+.srOnly {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.labelAnchor {
+  left: 390px;
+  top: 300px;
+}
+
+.cGallery {
+  color: rgb(var(--viz-gallery-rgb));
+}
+
+.cDetail {
+  color: rgb(var(--viz-detail-rgb));
+}
+
+.cHost {
+  color: rgb(var(--viz-host-rgb));
+}
+
+/* chips keep a dark background in both themes */
+.chipLow {
+  color: #cfd6f5;
+}
+
+.chipDetail {
+  color: #a77bff;
+}
+
+.chipHost {
+  color: #2fe0c4;
+}
+
+.chipHot {
+  color: #ffd166;
+}
+
+/* tooltip for the hovered (or tapped) part of the scene */
+.tip {
+  --tip-rgb: var(--viz-host-rgb);
+
+  position: absolute;
+  left: 0;
+  top: 0;
+  z-index: 2;
+  width: max-content;
+  max-width: min(16.5rem, 100%);
+  padding: 0.5rem 0.65rem 0.55rem;
+  border: 1px solid rgba(var(--tip-rgb), 0.55);
+  border-radius: 0.75rem;
+  background: color-mix(
+    in srgb,
+    var(--ifm-background-surface-color) 84%,
+    transparent
+  );
+  box-shadow:
+    0 12px 32px rgba(0, 0, 0, 0.22),
+    0 0 26px rgba(var(--tip-rgb), 0.35);
+  backdrop-filter: blur(10px) saturate(1.4);
+  pointer-events: none;
+  opacity: 0;
+  transform: translateY(6px) scale(0.96);
+  transform-origin: 0 0;
+  transition:
+    opacity 0.18s ease,
+    transform 0.25s cubic-bezier(0.2, 0.9, 0.3, 1.25);
+}
+
+.tipOn {
+  opacity: 1;
+  transform: none;
+}
+
+.toneGallery {
+  --tip-rgb: var(--viz-gallery-rgb);
+}
+
+.toneDetail {
+  --tip-rgb: var(--viz-detail-rgb);
+}
+
+.toneHost {
+  --tip-rgb: var(--viz-host-rgb);
+}
+
+.toneHot {
+  --tip-rgb: var(--viz-hot-rgb);
+}
+
+.tipTitle {
+  font-weight: 700;
+  font-size: 0.85rem;
+  color: rgb(var(--tip-rgb));
+}
+
+.tipBody {
+  margin-top: 0.15rem;
+  font-size: 0.78rem;
+  line-height: 1.38;
+}
+
+.tipCode {
+  display: inline-block;
+  margin-top: 0.4rem;
+  font-size: 0.7rem;
+  border-color: rgba(var(--tip-rgb), 0.3);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .tip {
+    transition: opacity 0.18s ease;
+  }
+}

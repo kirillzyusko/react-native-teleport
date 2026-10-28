@@ -8,6 +8,44 @@ if (process.env.PREVIEW_PATH) {
   baseUrl += process.env.PREVIEW_PATH;
 }
 
+type HastNode = {
+  type: string;
+  tagName?: string;
+  value?: string;
+  properties?: { className?: unknown };
+  children?: HastNode[];
+};
+
+// code block titles are file names, like "PhotoPreview.tsx (updated)": keep the name as inline code in the generated Markdown,
+// otherwise it becomes plain text with escaped dots ("PhotoPreview\.tsx")
+const rehypeCodeBlockTitles = () => (tree: HastNode) => {
+  const visit = (node: HastNode) => {
+    const className = node.properties?.className;
+    if (
+      Array.isArray(className) &&
+      className.some((c) => String(c).startsWith("codeBlockTitle"))
+    ) {
+      const [file = "", ...rest] = (node.children ?? [])
+        .map((child) => child.value ?? "")
+        .join("")
+        .split(" ");
+      node.tagName = "p";
+      node.children = [
+        {
+          type: "element",
+          tagName: "code",
+          properties: {},
+          children: [{ type: "text", value: file }],
+        },
+        ...(rest.length ? [{ type: "text", value: ` ${rest.join(" ")}` }] : []),
+      ];
+      return;
+    }
+    node.children?.forEach(visit);
+  };
+  visit(tree);
+};
+
 const config: Config = {
   title: "Teleport",
   tagline: "Missing native portal implementation for react-native",
@@ -85,6 +123,7 @@ const config: Config = {
           excludeRoutes: ["**/docs/1.*/**", "**/docs/next/**"],
           enableMarkdownFiles: true,
           enableLlmsFullTxt: true,
+          beforeDefaultRehypePlugins: [rehypeCodeBlockTitles],
         },
       },
     ],
@@ -181,6 +220,18 @@ const config: Config = {
       theme: prismThemes.github,
       darkTheme: prismThemes.dracula,
       additionalLanguages: ["java", "kotlin", "swift", "json", "diff", "bash"],
+      magicComments: [
+        // the first entry also styles line ranges after the code block language, e.g. {2,5-7}
+        {
+          className: "code-block-add-line",
+          line: "add-new-code",
+        },
+        {
+          className: "theme-code-block-highlighted-line",
+          line: "highlight-next-line",
+          block: { start: "highlight-start", end: "highlight-end" },
+        },
+      ],
     },
     metadata: [
       {

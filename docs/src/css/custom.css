@@ -23,6 +23,24 @@
   word-break: break-word;
 }
 
+.code-block-add-line {
+  display: block;
+  margin: 0 calc(-1 * var(--ifm-pre-padding));
+  /* the border takes its width from the padding, so the code stays aligned with other lines */
+  padding: 0 var(--ifm-pre-padding) 0 calc(var(--ifm-pre-padding) - 3px);
+  border-left: 3px solid;
+}
+
+[data-theme="light"] .code-block-add-line {
+  background-color: #00ff0020;
+  border-left-color: #00ff0080;
+}
+
+[data-theme="dark"] .code-block-add-line {
+  background-color: #ffff0020;
+  border-left-color: #ffff0080;
+}
+
 /* For readability concerns, you should choose a lighter palette in dark mode. */
 [data-theme="dark"] {
   --ifm-color-primary: #00b2e7;
