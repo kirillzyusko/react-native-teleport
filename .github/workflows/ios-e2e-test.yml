@@ -230,6 +230,13 @@ jobs:
           python3 -B e2e/scripts/test-ios-visual-trace.py > example/ios/build/visual-event-trace/artifact/raw-controls.log 2>&1
           python3 -B e2e/scripts/test-ios-visual-native.py \
             --output example/ios/build/visual-event-trace/artifact/native-fixture
+          python3 -B e2e/scripts/test-ios-native-navigation.py \
+            > example/ios/build/visual-event-trace/artifact/navigation-raw-controls.log 2>&1
+          python3 -B e2e/scripts/test-ios-navigation-native.py \
+            --output example/ios/build/visual-event-trace/artifact/navigation-native-fixture
+          cp e2e/scripts/check-ios-native-navigation.py \
+            e2e/scripts/test-ios-native-navigation.py e2e/scripts/test-ios-navigation-native.py \
+            example/ios/build/visual-event-trace/artifact/
       - name: Preserve passive application trace sources and compiler controls
         if: always() && env.MAESTRO_IOS_PROFILE == 'indigo-visual-touch-trace' && steps.visual-app.outcome != 'skipped' && steps.visual-app.outcome != ''
         uses: actions/upload-artifact@v4
@@ -523,6 +530,16 @@ jobs:
             --artifact example/ios/build/visual-event-trace/artifact \
             --candidate "${{ github.sha }}" --device "${{ steps.simulator.outputs.udid }}" \
             --output e2e/reports/native-diagnostics/ios-visual-trace.json
+      - name: Verify passive native navigation observation
+        if: always() && env.MAESTRO_IOS_PROFILE == 'indigo-visual-touch-trace' && steps.e2e.outcome != 'skipped' && steps.e2e.outcome != ''
+        working-directory: ${{ github.workspace }}
+        run: |
+          cp e2e/scripts/check-ios-native-navigation.py e2e/reports/native-diagnostics/
+          python3 -B e2e/scripts/check-ios-native-navigation.py \
+            --log e2e/reports/native-diagnostics/simulator.log \
+            --artifact example/ios/build/visual-event-trace/artifact \
+            --candidate "${{ github.sha }}" --device "${{ steps.simulator.outputs.udid }}" \
+            --output e2e/reports/native-diagnostics/ios-native-navigation.json
       - name: Preserve original static PNG bodies
         if: always() && inputs.archive_frames && steps.e2e.outcome != 'skipped' && steps.e2e.outcome != ''
         run: |

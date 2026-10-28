@@ -28,6 +28,8 @@ final class VisualEventTrace: NSObject, RCTSurfacePresenterObserver {
   private var sampleRole = ""
   private var sampleGesture = 0
   private var sampleCount = 0
+  private weak var sampledNavigation: UINavigationController?
+  private var navigationSelectionError = "No selected native navigation context"
 
   private struct WeakView {
     weak var view: UIView?
@@ -167,6 +169,7 @@ final class VisualEventTrace: NSObject, RCTSurfacePresenterObserver {
       sampleRole = role
       sampleGesture = gesture
       sampleCount = 0
+      if role == "go_next" { selectNavigation(from: touch.view) }
       sampleUntil = ProcessInfo.processInfo.systemUptime + 3
       emit("presentation.begin", ["gesture": gesture, "role": role])
       let link = CADisplayLink(target: self, selector: #selector(samplePresentation(_:)))
@@ -187,11 +190,13 @@ final class VisualEventTrace: NSObject, RCTSurfacePresenterObserver {
       return ["index": index, "class": entry.name, "frame": values,
               "opacity": layer.opacity, "presentationLayer": presentation != nil]
     }
-    emit("presentation.sample", [
+    var details: [String: Any] = [
       "gesture": sampleGesture, "role": sampleRole, "sample": sampleCount,
       "displayLinkTimestamp": link.timestamp, "targetTimestamp": link.targetTimestamp,
       "layers": layers
-    ])
+    ]
+    if sampleRole == "go_next" { details["nativeNavigation"] = navigationObservation() }
+    emit("presentation.sample", details)
     if ProcessInfo.processInfo.systemUptime >= sampleUntil || sampleCount >= 512 {
       finishSamples(sampleCount >= 512 ? "sample.bound" : "window.end")
     }
@@ -204,6 +209,70 @@ final class VisualEventTrace: NSObject, RCTSurfacePresenterObserver {
       "gesture": sampleGesture, "role": sampleRole, "samples": sampleCount, "reason": reason
     ])
     sampledViews = []
+    sampledNavigation = nil
+  }
+
+  // Read public UIKit state on the existing display-link pulse. No delegate,
+  // completion handler, view loading, animation control or synchronization.
+  private func selectNavigation(from view: UIView?) {
+    sampledNavigation = nil
+    navigationSelectionError = "Selected responder chain has no navigation controller"
+    var cursor: UIResponder? = view
+    var seen = Set<ObjectIdentifier>()
+    while let responder = cursor {
+      guard seen.count < 64, seen.insert(ObjectIdentifier(responder)).inserted else {
+        navigationSelectionError = "Selected responder chain exceeded its bound or repeated"
+        return
+      }
+      if let controller = responder as? UIViewController,
+        let navigation = (controller as? UINavigationController) ?? controller.navigationController {
+        sampledNavigation = navigation
+        navigationSelectionError = "Selected native navigation controller was released"
+        return
+      }
+      cursor = responder.next
+    }
+  }
+
+  private func navigationObservation() -> [String: Any] {
+    let begin = ProcessInfo.processInfo.systemUptime
+    guard let navigation = sampledNavigation else {
+      return ["version": 1, "error": navigationSelectionError, "observedBegin": begin,
+              "observedEnd": ProcessInfo.processInfo.systemUptime]
+    }
+    func identity(_ object: AnyObject?) -> Any {
+      guard let object else { return NSNull() }
+      return ["id": String(UInt(bitPattern: ObjectIdentifier(object)), radix: 16),
+              "class": String(describing: type(of: object))]
+    }
+    let stack = navigation.viewControllers
+    guard stack.count <= 16 else {
+      return ["version": 1, "error": "Selected native navigation stack exceeded its bound",
+              "observedBegin": begin, "observedEnd": ProcessInfo.processInfo.systemUptime]
+    }
+    var coordinatorState: Any = NSNull()
+    if let coordinator = navigation.transitionCoordinator {
+      let duration = coordinator.transitionDuration
+      let progress = coordinator.percentComplete
+      guard duration.isFinite, duration >= 0, progress.isFinite, progress >= 0, progress <= 1 else {
+        return ["version": 1, "error": "Native transition coordinator returned invalid duration or progress",
+                "observedBegin": begin, "observedEnd": ProcessInfo.processInfo.systemUptime]
+      }
+      coordinatorState = [
+        "identity": identity(coordinator), "animated": coordinator.isAnimated,
+        "interactive": coordinator.isInteractive, "initiallyInteractive": coordinator.initiallyInteractive,
+        "cancelled": coordinator.isCancelled, "duration": duration,
+        "percentComplete": progress,
+        "from": identity(coordinator.viewController(forKey: .from)),
+        "to": identity(coordinator.viewController(forKey: .to))
+      ]
+    }
+    return [
+      "version": 1, "navigation": identity(navigation), "stack": stack.map { identity($0) },
+      "top": identity(navigation.topViewController), "visible": identity(navigation.visibleViewController),
+      "coordinator": coordinatorState, "observedBegin": begin,
+      "observedEnd": ProcessInfo.processInfo.systemUptime
+    ]
   }
 
   private func emit(_ phase: String, _ details: [String: Any] = [:]) {

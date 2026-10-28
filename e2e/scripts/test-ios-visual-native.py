@@ -81,9 +81,37 @@ final class CALayer {
   var opacity: Float = 1
   func presentation() -> CALayer? { nil }
 }
-final class UIView: NSObject {
+class UIResponder: NSObject {
+  var next: UIResponder? { nil }
+}
+class UIViewController: UIResponder {
+  weak var navigationController: UINavigationController?
+  var transitionCoordinator: UIViewControllerTransitionCoordinator?
+}
+class UINavigationController: UIViewController {
+  var viewControllers: [UIViewController] = []
+  var topViewController: UIViewController? { viewControllers.last }
+  var visibleViewController: UIViewController? { viewControllers.last }
+}
+struct UITransitionContextViewControllerKey: Hashable {
+  let name: String
+  static let from = Self(name: "from")
+  static let to = Self(name: "to")
+}
+protocol UIViewControllerTransitionCoordinator: AnyObject {
+  var isAnimated: Bool { get }
+  var isInteractive: Bool { get }
+  var initiallyInteractive: Bool { get }
+  var isCancelled: Bool { get }
+  var transitionDuration: TimeInterval { get }
+  var percentComplete: CGFloat { get }
+  func viewController(forKey: UITransitionContextViewControllerKey) -> UIViewController?
+}
+final class UIView: UIResponder {
   var accessibilityIdentifier: String?
   var superview: UIView?
+  var fixtureNext: UIResponder?
+  override var next: UIResponder? { fixtureNext ?? superview }
   let layer = CALayer()
 }
 final class UITouch: NSObject {
@@ -133,6 +161,11 @@ extension VisualEventTrace {
     let app = UIApplication()
     let touch = UITouch()
     let view = UIView()
+    let navigation = UINavigationController()
+    let controller = UIViewController()
+    controller.navigationController = navigation
+    navigation.viewControllers = [controller]
+    view.fixtureNext = controller
     touch.view = view
     let event = UIEvent()
     event.allTouches = [touch]

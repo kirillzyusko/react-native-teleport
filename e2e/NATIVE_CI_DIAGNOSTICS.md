@@ -761,6 +761,24 @@ observer. A bounded three-second display-link observation records the target's
 ancestor presentation-layer frames. It adds no UI input, screenshot, accessibility
 query, app prelaunch, synchronization wait or native idle RPC.
 
+For `go_next`, that same display-link pulse also reads the selected native
+navigation controller's public UIKit state. The original touch view's responder
+chain selects a weak controller reference once, with a 64-responder bound. Each
+existing sample records the controller stack (at most 16), top/visible identities
+and any current transition coordinator's identity, flags, duration, progress and
+from/to controllers. It registers no transition callback, changes no delegate,
+loads no view and starts no additional timer. A released/missing context, exceeded
+bound or invalid numeric value produces an explicit error; the separate native
+navigation gate rejects that evidence. The ordinary disabled build is unchanged.
+
+This observation follows a failure where two equal original PNGs showed the first
+screen, then the original assertion screenshot showed an unfinished navigation.
+The separate native state can distinguish a coordinator observed during those
+samples from delayed JavaScript event receipts. A nil coordinator alone proves
+neither visual idleness nor absence of pending work. Getter intervals are not
+atomic snapshots, physical capture times or display transaction identities; this
+diagnostic adds no synchronization fix and earns no final stability credit.
+
 The first runtime trace reached the original navigation handler and second-screen
 React layout effect, but screenshot equality returned true before an unfinished
 navigation screenshot failed the original assertion. Its mount logger also failed:
