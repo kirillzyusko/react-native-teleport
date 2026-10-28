@@ -191,11 +191,11 @@ def run(artifact, output):
                     'inputBufferBytes':8*1024*1024,
                     'workerFinished':not failed,'copiedPNGsObserved':len(original['files']),
                     'nodeVersion':'v20.19.4','workerSourceSHA256':LIVE.source_hash(),'adapterSourceSHA256':LIVE.adapter_hash()}
-        def checked(folder,rows,report,process):
+        def checked(folder,rows,report,process,body_text=None):
             archive=folder/'supplementary'
             names=[str(f.relative_to(archive)) for f in archive.rglob('*') if f.is_file()]
             dirs=[str(f.relative_to(archive)) for f in archive.rglob('*') if f.is_dir()]
-            return CHECK.check(artifact,encoded(rows),scope,report,process,lambda n:(archive/n).read_bytes(),names,directories=dirs)
+            return CHECK.check(artifact,body_text if body_text is not None else encoded(rows),scope,report,process,lambda n:(archive/n).read_bytes(),names,directories=dirs)
         for name,drop in [('CLI_enabled_complete',False),('CLI_enabled_lost_saved_original_exit1',True)]:
             folder,root,rows=fixture()
             if drop:rows=[r for r in rows if not (r['phase']=='saved' and r['ordinal']==1)]
@@ -291,6 +291,18 @@ def run(artifact, output):
         original,report=capture(folder,rows,raw_input=raw)
         assert report['errors'] and not original['errors']
         cases.append('duplicate_raw_key_rejected_by_additional_gate')
+        folder,root,rows=fixture()
+        raw=encoded(rows).encode()+(b'x'*(1024*1024-1)+b'\n')*17
+        original,report=capture(folder,rows,raw_input=raw)
+        assert not original['errors'] and not report['errors']
+        assert checked(folder,rows,report,proc(report,original),raw.decode())['PNGs']==4
+        cases.append('large_unrelated_unified_log_does_not_consume_body_metadata_budget')
+        folder,root,rows=fixture();extra=[]
+        for n in range(3,23):
+            q=copy.deepcopy(rows[3]);q.update(ordinal=n,padding='x'*950000);extra.append(q)
+        original,report=capture(folder,rows,raw_input=encoded(rows+extra).encode())
+        assert original['errors'] and any('body metadata bound' in e for e in report['errors'])
+        cases.append('original_body_metadata_channel_budget_still_rejected')
         folder,root,rows=fixture();original,report=capture(folder,rows);process=proc(report,original)
         for name,mutation in [
             ('manifest_scope',lambda d:d['scope'].update(run=9)),

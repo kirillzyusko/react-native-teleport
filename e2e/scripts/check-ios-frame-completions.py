@@ -62,6 +62,7 @@ def check(artifact, body_text, scope, manifest, process, read_file, members, *, 
                 'producerHelperSHA256': metadata['helper_sha256'],
                 'clock': 'host_python_monotonic_ns',
                 'bounds': {'recordBytes': MAX_RECORD, 'totalMetadataBytes': MAX_METADATA,
+                           'bodyLogBytes': 16 * 1024 * 1024,
                            'originalPNG': BODY.PATCH.LIMITS},
                 'errors': [], 'inputEnded': True, 'deviceAPICalls': 0, 'final_stability_credit': False,
                 'producerErrorLines': []}
@@ -98,13 +99,14 @@ def check(artifact, body_text, scope, manifest, process, read_file, members, *, 
     # exit1 is preserved as a failure of the original worker, never promoted to
     # normal completion. Supplementary byte integrity remains independently useful.
     original_worker_success = process['exit'] == 0 and process.get('errors') == []
-    if len(body_text.encode()) > 16 * 1024 * 1024:
+    body_lines = [line for line in body_text.splitlines(keepends=True) if BODY.MARKER in line]
+    if (sum(len(line.encode()) for line in body_lines) > 16 * 1024 * 1024 or
+            any(not line.endswith('\n') or len(line.encode()) > 1024 * 1024 for line in body_lines)):
         raise ValueError('Independent completion original body log bound exceeded')
     rows = BODY.parse_unified(body_text)
-    for line in body_text.splitlines():
-        if BODY.MARKER in line:
-            decoded(line.split(BODY.MARKER, 1)[1].replace('\\134', '\\').encode())
-    line_hashes = [BODY.sha(line.encode()) for line in body_text.splitlines() if BODY.MARKER in line]
+    for line in body_lines:
+        decoded(line.split(BODY.MARKER, 1)[1].replace('\\134', '\\').encode())
+    line_hashes = [BODY.sha(line.rstrip('\n').encode()) for line in body_lines]
     if (rows != manifest.get('bodyRecords') or line_hashes != manifest.get('bodyLineSHA256') or
             not rows or len(rows) > 2 * BODY.PATCH.LIMITS['pairs'] + 1):
         raise ValueError('Independent completion original raw rows/digests differ')

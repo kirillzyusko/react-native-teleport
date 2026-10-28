@@ -22,6 +22,7 @@ BODY = COLLECT.BODY
 ERROR_MARKER = '[teleport-frame-completions] '
 MAX_RECORD = 4096
 MAX_METADATA = 4 * 1024 * 1024
+MAX_BODY_LOG = 16 * 1024 * 1024
 SCOPE_KEYS = {'candidate', 'run', 'attempt', 'profile', 'device'}
 RECORD_KEYS = {'version', 'phase', 'helperSHA', 'pid', 'simulatorUDID', 'ordinal',
                'firstFile', 'secondFile', 'firstHash', 'secondHash', 'firstBytes', 'secondBytes',
@@ -137,11 +138,13 @@ class Capture:
         self.output.mkdir(mode=0o700)
         self.queued, self.roots, self.completed = {}, {}, {}
         self.inodes, self.total_metadata, self.total_png = set(), 0, 0
+        self.body_log_bytes = 0
         self.result = {'version': 1, 'scope': scope, 'collectorSourceSHA256': source_hash(),
                        'producerHelperSHA256': self.metadata['helper_sha256'],
                        'workerPID': os.getpid(), 'parentPID': os.getppid(),
                        'clock': 'host_python_monotonic_ns', 'startedNs': time.monotonic_ns(),
                        'bounds': {'recordBytes': MAX_RECORD, 'totalMetadataBytes': MAX_METADATA,
+                                  'bodyLogBytes': MAX_BODY_LOG,
                                   'originalPNG': BODY.PATCH.LIMITS},
                        'bodyRecords': [], 'bodyLineSHA256': [], 'producerErrorLines': [],
                        'roots': [], 'members': [], 'completions': [], 'inputEnded': False,
@@ -161,6 +164,9 @@ class Capture:
                 raise ValueError('Producer reported an additional completion write failure')
             if BODY.MARKER.encode() not in raw:
                 return
+            self.body_log_bytes += len(raw)
+            if self.body_log_bytes > MAX_BODY_LOG:
+                raise ValueError('Completion original body metadata bound exceeded')
             if not raw.endswith(b'\n') or len(self.result['bodyRecords']) >= 2 * BODY.PATCH.LIMITS['pairs'] + 1:
                 raise ValueError('Completion original raw input is incomplete/oversized')
             row, = BODY.parse_unified(raw.decode())
