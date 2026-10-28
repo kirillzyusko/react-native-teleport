@@ -879,3 +879,31 @@ do not identify capture transactions, and the missing bodies prevent interpretin
 their visual contents. Archiving the existing bytes closes that evidence gap; it
 does not establish screenshot caching, native transition completion or physical
 display timing.
+
+### Indigo host helper teardown
+
+A later independent archive trial failed before running the app suite. The host
+bridge's mocked fatal-delivery test reached `process.kill(-child.pid, "SIGKILL")`
+and failed with `EPERM` during cleanup. The log identifies that call; it does not
+capture the helper's process-group or permission state at the instant of failure.
+The SDK artifact contains the compiled driver but lacks the later required
+controls, and no App artifact or UI runtime evidence was published. The run stays
+failed with zero credit.
+
+The helper already exits when its stdin reader reaches EOF. Bridge teardown now
+ends stdin and awaits the existing child-close event, including when a fatal
+protocol response arrives before Node reports process exit. It does not restart
+the helper, replay input or alter gesture acknowledgements. Normal completion
+requires no signal. Only a helper that remains alive during teardown receives
+SIGTERM after five seconds and SIGKILL after seven; each signal requires a fresh
+exact PID, parent, UID and full-command check and targets that PID alone. Failure
+to establish ownership or close within nine seconds fails teardown. These are
+post-test host cleanup bounds, not UI settling waits or assertion deadlines.
+
+A device-free regression injects the observed EPERM at the old process-group
+signal call, fails against the old code and passes through EOF with the correction.
+Separate controls verify normal EOF, rejected foreign process identities and a
+deliberately hung owned helper's two independently validated fallback signals.
+The original fatal-delivery, no-replay, coordinate, timing and acknowledgement
+controls remain required. This corrects host cleanup and provides no application
+synchronization or final stability credit.

@@ -1,12 +1,27 @@
-import { spawn } from "node:child_process";
+import { execFile, spawn } from "node:child_process";
 import { createHash } from "node:crypto";
 import { createWriteStream, readFileSync } from "node:fs";
 import http from "node:http";
 import path from "node:path";
 import readline from "node:readline";
 import { fileURLToPath } from "node:url";
+import { promisify } from "node:util";
 
 export const INDIGO_PORT = 47655;
+const processDetails = promisify(execFile);
+
+export function ownedIndigoHelper(details, pid, parentPID, uid, command) {
+  const match = details.trim().match(/^(\d+)\s+(\d+)\s+(\d+)\s+([^\n]+)$/);
+  return Boolean(
+    Number.isInteger(pid) &&
+      pid > 1 &&
+      match &&
+      Number(match[1]) === pid &&
+      Number(match[2]) === parentPID &&
+      Number(match[3]) === uid &&
+      match[4] === command,
+  );
+}
 
 export function gestureFrames(gesture) {
   const finite = (value) => typeof value === "number" && Number.isFinite(value);
@@ -175,14 +190,77 @@ export async function startIndigoBridge({
       fail(new Error("Indigo bridge stopped"));
       server.closeAllConnections();
       await new Promise((resolve) => server.close(resolve));
-      if (child.pid && child.exitCode === null && child.signalCode === null) {
-        try {
-          process.kill(-child.pid, "SIGKILL");
-        } catch (error) {
-          if (error.code !== "ESRCH") throw error;
-        }
+      const running = () =>
+        child.pid && child.exitCode === null && child.signalCode === null;
+      const signalOwned = async (signal) => {
+        if (!running()) return;
+        const { stdout } = await processDetails(
+          "ps",
+          ["-ww", "-p", String(child.pid), "-o", "pid=,ppid=,uid=,command="],
+          { timeout: 2000 },
+        );
+        if (!running()) return;
+        // Native helpers execute directly. Device-free script fixtures retain
+        // their exact shebang interpreter in ps's full command.
+        const firstLine = readFileSync(manifest.helper.file)
+          .subarray(0, 512)
+          .toString()
+          .split("\n", 1)[0];
+        const command =
+          (firstLine.startsWith("#!") ? firstLine.slice(2) + " " : "") +
+          child.spawnargs.join(" ");
+        if (
+          !ownedIndigoHelper(
+            stdout,
+            child.pid,
+            process.pid,
+            process.getuid(),
+            command,
+          )
+        )
+          throw new Error("Indigo teardown ownership could not be revalidated");
+        record("bridge-stop-signal", {
+          pid: child.pid,
+          command: stdout.trim(),
+          signal,
+        });
+        child.kill(signal);
+      };
+      record("bridge-stop", { phase: "stdin-eof", pid: child.pid });
+      if (!child.stdin.destroyed && !child.stdin.writableEnded)
+        child.stdin.end();
+      let rejectStop;
+      const stopError = new Promise((_, reject) => {
+        rejectStop = reject;
+      });
+      // These bounds apply only to host-helper teardown after the original
+      // test. Normal EOF/close has no timer delay or input synchronization.
+      const termTimer = setTimeout(
+        () => signalOwned("SIGTERM").catch(rejectStop),
+        5000,
+      );
+      const forceTimer = setTimeout(
+        () => signalOwned("SIGKILL").catch(rejectStop),
+        7000,
+      );
+      const deadline = setTimeout(
+        () =>
+          rejectStop(new Error("Indigo helper did not close after teardown")),
+        9000,
+      );
+      try {
+        await Promise.race([closed, stopError]);
+      } finally {
+        clearTimeout(termTimer);
+        clearTimeout(forceTimer);
+        clearTimeout(deadline);
       }
-      await closed;
+      record("bridge-stop", {
+        phase: "closed",
+        pid: child.pid,
+        code: child.exitCode,
+        signal: child.signalCode,
+      });
       lines.close();
       log.end();
       stderr.end();
