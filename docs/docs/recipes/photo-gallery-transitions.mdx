@@ -1394,14 +1394,14 @@ The trade-off is control over the viewer UI: it's a native view controller with 
 
 With `react-native-teleport`, the full-screen viewer is a regular React Native screen, so it can contain anything your design needs: a custom header, captions, comments, action buttons or a tab bar.
 
-|                          | Ready-made viewer (Galeria)                          | Custom transition (this guide)                                                    |
-| ------------------------ | ---------------------------------------------------- | --------------------------------------------------------------------------------- |
-| Viewer UI                | Native, with a few appearance options                | Any React Native UI: header, captions, actions, tab bar                           |
-| Transition               | Built in                                             | Yours to shape: path, spring and timing are written with Reanimated               |
-| Full-res photo           | A separate image for the expanded state is supported | Low-res thumbnail first, full-res swapped in as soon as it loads, even mid-flight |
-| Content in the viewer    | Images and videos                                    | Any React Native view: images, videos, GIFs, Lottie, keeping their state          |
-| Zoom, paging, swipe away | Built in                                             | Add them with `react-native-gesture-handler` and Reanimated                       |
-| Setup                    | One component                                        | The nine files in this guide                                                      |
+|                          | Ready-made viewer (Galeria)                                       | Custom transition (this guide)                                                                                             |
+| ------------------------ | ----------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------- |
+| Viewer UI                | 🟠 Native, with a few appearance options                          | ✅ Any React Native UI: header, captions, actions, tab bar                                                                 |
+| Transition               | ✅ Built in                                                       | ✅ Yours to shape: path, spring and timing are written with Reanimated                                                     |
+| Progressive loading      | 🟠 Two stages: the thumbnail and one image for the expanded state | ✅ As many stages as you need, such as low → medium → high-res → HDR, each swapped in as soon as it loads, even mid-flight |
+| Content in the viewer    | 🟠 Images and videos                                              | ✅ Any React Native view: images, videos, GIFs, Lottie, keeping their state                                                |
+| Zoom, paging, swipe away | ✅ Built in                                                       | 🟠 Add them with `react-native-gesture-handler` and Reanimated                                                             |
+| Setup                    | ✅ One component                                                  | 🟠 The nine files in this guide                                                                                            |
 
 ### Native transitions move views too
 
