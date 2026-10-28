@@ -37,7 +37,7 @@ We'll build a WebView-based editor using [Quill](https://quilljs.com) that pre-l
 
 Create an HTML string that loads Quill from a CDN and signals readiness via `postMessage`:
 
-editorHtml.ts
+`editorHtml.ts`
 
 ```
 export const EDITOR_HTML = `<!DOCTYPE html>
@@ -79,7 +79,7 @@ export const EDITOR_HTML = `<!DOCTYPE html>
 
 This component renders at the app root. It contains a `Portal` wrapping the WebView:
 
-PreloadedEditor.tsx
+`PreloadedEditor.tsx`
 
 ```
 import { View, StyleSheet, Dimensions } from "react-native";
@@ -125,7 +125,7 @@ const styles = StyleSheet.create({
 
 Add `<PreloadedEditor />` inside your `PortalProvider` so it starts loading immediately:
 
-App.tsx
+`App.tsx`
 
 ```
 import { StyleSheet } from "react-native";
@@ -148,7 +148,7 @@ export default function App() {
 
 The screen provides a `<PortalHost>` as the teleport destination. No coordination is needed - simply mounting the host with the matching name pulls the preloaded WebView in:
 
-EditorScreen.tsx
+`EditorScreen.tsx`
 
 ```
 import { View, StyleSheet } from "react-native";

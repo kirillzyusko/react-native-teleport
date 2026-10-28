@@ -67,7 +67,7 @@ When you have multiple modals or screens with their own `PortalHost`, use unique
 
 To avoid repetition, create a reusable component that includes the `PortalHost`:
 
-components/ModalContainer.tsx
+`components/ModalContainer.tsx`
 
 ```
 import { StyleSheet, View, ViewProps } from "react-native";
