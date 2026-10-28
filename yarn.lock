@@ -19019,8 +19019,6 @@ __metadata:
   peerDependenciesMeta:
     react-dom:
       optional: true
-    react-native:
-      optional: true
   languageName: unknown
   linkType: soft
 

@@ -6,11 +6,6 @@
   "types": "./lib/typescript/src/index.d.ts",
   "exports": {
     ".": {
-      "react-native": {
-        "source": "./src/index.native.ts",
-        "types": "./lib/typescript/src/index.native.d.ts",
-        "default": "./lib/module/index.native.js"
-      },
       "source": "./src/index.ts",
       "types": "./lib/typescript/src/index.d.ts",
       "default": "./lib/module/index.js"
@@ -114,9 +109,6 @@
   },
   "peerDependenciesMeta": {
     "react-dom": {
-      "optional": true
-    },
-    "react-native": {
       "optional": true
     }
   },
