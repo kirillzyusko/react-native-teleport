@@ -108,6 +108,11 @@
     "react-dom": "*",
     "react-native": "*"
   },
+  "peerDependenciesMeta": {
+    "react-dom": {
+      "optional": true
+    }
+  },
   "workspaces": [
     "example",
     "docs"
