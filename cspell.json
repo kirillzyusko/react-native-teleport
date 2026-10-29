@@ -89,7 +89,11 @@
     "Jetpack",
     "superview",
     "WWDC",
-    "ARGB"
+    "ARGB",
+    "Tamagui",
+    "Kyoo",
+    "Xyne",
+    "Tlon"
   ],
   "ignorePaths": [
     "node_modules",
