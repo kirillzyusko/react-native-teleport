@@ -103,7 +103,7 @@ function analyzeRecording(recording) {
   }
 
   const frameMetadata = [
-    ...stderr.matchAll(/pblack:([\d.]+).*?t:([\d.]+)/g),
+    ...stderr.matchAll(/pblack:([\d.]+).*?t:(-?[\d.]+)/g),
   ].map(([, blackPercent, timeSeconds]) => ({
     blackPercent: Number(blackPercent),
     timeSeconds: Number(timeSeconds),
