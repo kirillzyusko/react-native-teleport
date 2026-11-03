@@ -20,6 +20,8 @@
     "ios",
     "cpp",
     "common",
+    "Package.swift",
+    "spm-headers",
     "*.podspec",
     "react-native.config.js",
     "jest",
@@ -192,5 +194,8 @@
   },
   "resolutions": {
     "react-native-video@6.17.0": "patch:react-native-video@npm%3A6.17.0#./.yarn/patches/react-native-video-npm-6.17.0-5bb920fb41.patch"
+  },
+  "swiftpmConfig": {
+    "name": "Teleport"
   }
 }
