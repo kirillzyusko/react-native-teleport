@@ -81,6 +81,8 @@ jobs:
 
       - name: Create a sample app without installing Pods
         run: |
+          # Let the CLI detect the checkout and preserve its Yarn version.
+          mkdir -p "$SPM_APP_DIR"
           yarn dlx @react-native-community/cli@20.2.0 init TeleportSPM \
             --version "$REACT_NATIVE_VERSION" \
             --directory "$SPM_APP_DIR" \
