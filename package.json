@@ -21,7 +21,6 @@
     "cpp",
     "common",
     "Package.swift",
-    "spm-headers",
     "*.podspec",
     "react-native.config.js",
     "jest",

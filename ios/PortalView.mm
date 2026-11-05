@@ -15,7 +15,7 @@
 #import <react/renderer/components/TeleportViewSpec/RNTPortalViewComponentDescriptor.h>
 #import <react/renderer/components/TeleportViewSpec/RNTPortalViewShadowNode.h>
 
-#import "RCTFabricComponentsPlugins.h"
+#import <React/RCTFabricComponentsPlugins.h>
 
 #import <React/RCTSurfaceTouchHandler.h>
 

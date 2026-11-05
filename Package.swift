@@ -3,7 +3,7 @@
 import Foundation
 import PackageDescription
 
-let usedRootEntries: Set<String> = ["ios", "common", "spm-headers", "Package.swift"]
+let usedRootEntries: Set<String> = ["ios", "common", "Package.swift"]
 let unusedRootEntries = try! FileManager.default.contentsOfDirectory(atPath: Context.packageDirectory)
     .filter { !usedRootEntries.contains($0) }
     .sorted()
@@ -35,12 +35,10 @@ let package = Package(
             cSettings: [
                 .define("RCT_NEW_ARCH_ENABLED", to: "1"),
                 .headerSearchPath("common/cpp"),
-                .headerSearchPath("spm-headers"),
             ],
             cxxSettings: [
                 .define("RCT_NEW_ARCH_ENABLED", to: "1"),
                 .headerSearchPath("common/cpp"),
-                .headerSearchPath("spm-headers"),
                 .define("DEBUG", .when(configuration: .debug)),
                 .define("NDEBUG", .when(configuration: .release)),
             ],

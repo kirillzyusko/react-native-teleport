@@ -13,7 +13,7 @@
 #import <react/renderer/components/TeleportViewSpec/RCTComponentViewHelpers.h>
 #import <react/renderer/components/TeleportViewSpec/RNTPortalHostViewComponentDescriptor.h>
 
-#import "RCTFabricComponentsPlugins.h"
+#import <React/RCTFabricComponentsPlugins.h>
 
 using namespace facebook::react;
 
