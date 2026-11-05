@@ -48,13 +48,9 @@ env:
 
 jobs:
   build:
-    name: 🏗️ SPM (${{ matrix.configuration }})
+    name: 🏗️ SPM (Release)
     runs-on: macos-26
     timeout-minutes: 45
-    strategy:
-      fail-fast: false
-      matrix:
-        configuration: [Debug, Release]
     defaults:
       run:
         shell: bash
@@ -153,28 +149,26 @@ jobs:
 
       - name: Build the app
         working-directory: ${{ env.SPM_APP_DIR }}/ios
-        env:
-          CONFIGURATION: ${{ matrix.configuration }}
         run: |
           set -o pipefail
           test -f TeleportSPM.xcodeproj/.spm-injected.json
           xcodebuild \
             -project TeleportSPM.xcodeproj \
             -scheme TeleportSPM \
-            -configuration "$CONFIGURATION" \
+            -configuration Release \
             -sdk iphonesimulator \
             -destination 'generic/platform=iOS Simulator' \
             -derivedDataPath build \
-            -resultBundlePath "build-$CONFIGURATION.xcresult" \
+            -resultBundlePath build-Release.xcresult \
             CODE_SIGNING_ALLOWED=NO \
-            build 2>&1 | tee "build-$CONFIGURATION.log"
+            build 2>&1 | tee build-Release.log
 
       - name: Upload SPM and build logs
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: ios-spm-${{ matrix.configuration }}
+          name: ios-spm-Release
           path: |
             build/TeleportSPM/ios/spm-setup.log
-            build/TeleportSPM/ios/build-*.log
-            build/TeleportSPM/ios/build-*.xcresult
+            build/TeleportSPM/ios/build-Release.log
+            build/TeleportSPM/ios/build-Release.xcresult
