@@ -1,0 +1,178 @@
+name: 📦 Build iOS with SPM
+# cspell:ignore nvmrc yarnrc lobanov pipefail deintegrate iphonesimulator xcresult
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - ".github/workflows/build-ios-spm.yml"
+      - ".github/actions/setup/**"
+      - ".nvmrc"
+      - ".yarnrc.yml"
+      - "Package.swift"
+      - "Teleport.podspec"
+      - "package.json"
+      - "yarn.lock"
+      - "react-native.config.js"
+      - "ios/**"
+      - "common/**"
+      - "src/**"
+  pull_request:
+    paths:
+      - ".github/workflows/build-ios-spm.yml"
+      - ".github/actions/setup/**"
+      - ".nvmrc"
+      - ".yarnrc.yml"
+      - "Package.swift"
+      - "Teleport.podspec"
+      - "package.json"
+      - "yarn.lock"
+      - "react-native.config.js"
+      - "ios/**"
+      - "common/**"
+      - "src/**"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ios-spm-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  REACT_NATIVE_VERSION: "0.88.1"
+  XCODE_VERSION: "26.6"
+  SPM_APP_DIR: ${{ github.workspace }}/build/TeleportSPM
+
+jobs:
+  build:
+    name: 🏗️ SPM (${{ matrix.configuration }})
+    runs-on: macos-26
+    timeout-minutes: 45
+    strategy:
+      fail-fast: false
+      matrix:
+        configuration: [Debug, Release]
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: maxim-lobanov/setup-xcode@v1
+        with:
+          xcode-version: ${{ env.XCODE_VERSION }}
+
+      - name: Setup library dependencies
+        uses: ./.github/actions/setup
+
+      - name: Build and pack the library
+        run: |
+          yarn prepare
+          yarn pack --out "$RUNNER_TEMP/react-native-teleport.tgz"
+
+      # RN 0.88 requires a newer Node version than the library's .nvmrc.
+      - name: Setup Node.js for the SPM app
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22.22.1"
+
+      - name: Create a sample app without installing Pods
+        run: |
+          yarn dlx @react-native-community/cli@20.2.0 init TeleportSPM \
+            --version "$REACT_NATIVE_VERSION" \
+            --directory "$SPM_APP_DIR" \
+            --pm yarn \
+            --skip-install \
+            --install-pods false \
+            --skip-git-init
+
+      - name: Configure the app to use the packed library
+        run: |
+          node <<'NODE'
+          const fs = require('node:fs');
+          const path = require('node:path');
+          const appDirectory = process.env.SPM_APP_DIR;
+          const packagePath = path.join(appDirectory, 'package.json');
+          const app = JSON.parse(fs.readFileSync(packagePath, 'utf8'));
+          delete app.dependencies['@react-native/new-app-screen'];
+          delete app.dependencies['react-native-safe-area-context'];
+          app.dependencies['react-native-teleport'] =
+            `file:${process.env.RUNNER_TEMP}/react-native-teleport.tgz`;
+          app.packageManager = 'yarn@3.6.1';
+          fs.writeFileSync(packagePath, JSON.stringify(app, null, 2) + '\n');
+          // Give the generated app its own Yarn project inside this checkout.
+          fs.writeFileSync(path.join(appDirectory, 'yarn.lock'), '');
+          fs.writeFileSync(
+            path.join(appDirectory, '.yarnrc.yml'),
+            'nodeLinker: node-modules\nyarnPath: ../../.yarn/releases/yarn-3.6.1.cjs\n',
+          );
+          NODE
+          cat > "$SPM_APP_DIR/App.tsx" <<'APP'
+          import React from 'react';
+          import {Text, View} from 'react-native';
+          import {Portal, PortalHost, PortalProvider} from 'react-native-teleport';
+
+          export default function App() {
+            return (
+              <PortalProvider>
+                <View style={{flex: 1}}>
+                  <PortalHost name="overlay" />
+                  <Portal hostName="overlay">
+                    <Text>Teleport SPM build</Text>
+                  </Portal>
+                </View>
+              </PortalProvider>
+            );
+          }
+          APP
+
+      - name: Install app dependencies
+        working-directory: ${{ env.SPM_APP_DIR }}
+        env:
+          YARN_ENABLE_IMMUTABLE_INSTALLS: "false"
+        run: |
+          test "$(yarn --version)" = "3.6.1"
+          yarn install
+
+      - name: Cache React Native SPM artifacts
+        uses: actions/cache@v4
+        with:
+          path: ~/Library/Caches/ReactNative
+          key: ${{ runner.os }}-spm-rn-${{ env.REACT_NATIVE_VERSION }}-xcode-${{ env.XCODE_VERSION }}
+
+      - name: Configure Swift Package Manager
+        working-directory: ${{ env.SPM_APP_DIR }}/ios
+        run: |
+          set -o pipefail
+          yarn react-native spm add --deintegrate --yes 2>&1 | tee spm-setup.log
+
+      - name: Build the app
+        working-directory: ${{ env.SPM_APP_DIR }}/ios
+        env:
+          CONFIGURATION: ${{ matrix.configuration }}
+        run: |
+          set -o pipefail
+          test -f TeleportSPM.xcodeproj/.spm-injected.json
+          xcodebuild \
+            -project TeleportSPM.xcodeproj \
+            -scheme TeleportSPM \
+            -configuration "$CONFIGURATION" \
+            -sdk iphonesimulator \
+            -destination 'generic/platform=iOS Simulator' \
+            -derivedDataPath build \
+            -resultBundlePath "build-$CONFIGURATION.xcresult" \
+            CODE_SIGNING_ALLOWED=NO \
+            build 2>&1 | tee "build-$CONFIGURATION.log"
+
+      - name: Upload SPM and build logs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ios-spm-${{ matrix.configuration }}
+          path: |
+            build/TeleportSPM/ios/spm-setup.log
+            build/TeleportSPM/ios/build-*.log
+            build/TeleportSPM/ios/build-*.xcresult
