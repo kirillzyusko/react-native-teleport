@@ -89,7 +89,10 @@
     "Jetpack",
     "superview",
     "WWDC",
-    "ARGB"
+    "ARGB",
+    "swiftpm",
+    "xcframeworks",
+    "NDEBUG"
   ],
   "ignorePaths": [
     "node_modules",
