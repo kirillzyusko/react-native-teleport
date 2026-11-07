@@ -1,7 +1,7 @@
 import { View, Text, StyleSheet, TouchableOpacity } from "react-native";
 import Video from "react-native-video";
 import { Portal, PortalHost } from "react-native-teleport";
-import { FontAwesome6 } from "@react-native-vector-icons/fontawesome6";
+import { FontAwesome6 } from "@react-native-vector-icons/fontawesome6/static";
 import {
   FLOATING_ELEMENTS_DESTINATION,
   SCREEN_HEIGHT,

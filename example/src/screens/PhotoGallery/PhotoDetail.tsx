@@ -121,7 +121,7 @@ function PhotoDetail({ route }: PhotoDetailProps) {
 
 const styles = StyleSheet.create({
   backdrop: {
-    ...StyleSheet.absoluteFillObject,
+    ...StyleSheet.absoluteFill,
     backgroundColor: "#000",
   },
   container: {

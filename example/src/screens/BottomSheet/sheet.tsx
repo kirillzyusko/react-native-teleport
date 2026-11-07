@@ -82,7 +82,7 @@ const styles = StyleSheet.create({
     zIndex: 2,
   },
   scrim: {
-    ...StyleSheet.absoluteFillObject,
+    ...StyleSheet.absoluteFill,
     zIndex: 1,
   },
 });

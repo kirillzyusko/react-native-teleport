@@ -1,5 +1,5 @@
 module.exports = {
-  preset: "react-native",
+  preset: "@react-native/jest-preset",
   setupFiles: ["./jestSetup.js"],
   moduleNameMapper: {
     "^react-native-teleport$": "<rootDir>/../src/index.ts",
