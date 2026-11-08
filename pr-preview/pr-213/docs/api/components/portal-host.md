@@ -16,8 +16,6 @@ The name of the portal host. It's used to identify the host by `<Portal />` comp
 
 The style of the portal host. Accepts [ViewStyle](https://reactnative.dev/docs/view#style) props.
 
-`StyleSheet.absoluteFill` can be passed directly to `style` on React Native 0.81. When spreading it into a style object, use `...StyleSheet.flatten(StyleSheet.absoluteFill)` for compatibility with the older TypeScript declarations. [React Native 0.82 corrected its type](https://github.com/react/react-native/pull/53530) from a registered style ID to an object, so a direct spread is supported there and in later versions.
-
 ## Example[​](#example "Direct link to Example")
 
 ```

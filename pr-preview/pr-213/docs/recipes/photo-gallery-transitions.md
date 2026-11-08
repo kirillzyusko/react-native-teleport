@@ -343,7 +343,7 @@ function PhotoDetail({ route }: PhotoDetailProps) {
 
 const styles = StyleSheet.create({
   backdrop: {
-    ...StyleSheet.flatten(StyleSheet.absoluteFill),
+    ...StyleSheet.absoluteFill,
     backgroundColor: "#000",
   },
   container: {
