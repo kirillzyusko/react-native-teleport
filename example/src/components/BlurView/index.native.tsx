@@ -26,12 +26,12 @@ const AnimatedBlurView = ({ visible }: BlurViewProps) => {
 
   return (
     <Animated.View
-      style={[StyleSheet.absoluteFillObject, { opacity: opacity }]}
+      style={[StyleSheet.absoluteFill, { opacity: opacity }]}
       pointerEvents="none"
     >
       {blurred && (
         <BlurView
-          style={StyleSheet.absoluteFillObject}
+          style={StyleSheet.absoluteFill}
           overlayColor={"#00000000"}
           blurType="light"
           blurAmount={16}

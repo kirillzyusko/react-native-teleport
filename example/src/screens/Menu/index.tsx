@@ -124,7 +124,7 @@ export default function Menu() {
       </Text>
 
       <View pointerEvents="box-none" style={styles.hostContainer}>
-        <PortalHost name={HOST_NAME} style={StyleSheet.absoluteFillObject} />
+        <PortalHost name={HOST_NAME} style={StyleSheet.absoluteFill} />
       </View>
     </View>
   );
@@ -132,7 +132,7 @@ export default function Menu() {
 
 const styles = StyleSheet.create({
   backdrop: {
-    ...StyleSheet.absoluteFillObject,
+    ...StyleSheet.absoluteFill,
     backgroundColor: "rgba(0, 0, 0, 0.12)",
   },
   chevron: {
@@ -152,7 +152,7 @@ const styles = StyleSheet.create({
     fontWeight: "600",
   },
   hostContainer: {
-    ...StyleSheet.absoluteFillObject,
+    ...StyleSheet.absoluteFill,
     pointerEvents: "box-none",
     zIndex: 1,
   },
@@ -189,12 +189,12 @@ const styles = StyleSheet.create({
     fontSize: 16,
   },
   portal: {
-    ...StyleSheet.absoluteFillObject,
+    ...StyleSheet.absoluteFill,
     pointerEvents: "box-none",
     zIndex: 1100,
   },
   portalContent: {
-    ...StyleSheet.absoluteFillObject,
+    ...StyleSheet.absoluteFill,
     pointerEvents: "box-none",
     zIndex: 1100,
   },

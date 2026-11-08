@@ -92,7 +92,8 @@
     "ARGB",
     "swiftpm",
     "xcframeworks",
-    "NDEBUG"
+    "NDEBUG",
+    "IPHONEOS"
   ],
   "ignorePaths": [
     "node_modules",

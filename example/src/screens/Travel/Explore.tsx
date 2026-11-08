@@ -11,7 +11,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import Subheader from "./components/subheader/subheader";
 import CategoryCard from "./components/category-card/category-card";
 import PlaceCard from "./components/place-card/place-card";
-import { FontAwesome6 } from "@react-native-vector-icons/fontawesome6";
+import { FontAwesome6 } from "@react-native-vector-icons/fontawesome6/static";
 import avatar from "./images/avatar.png";
 import beach from "./images/beach.png";
 import mountain from "./images/mountain.png";

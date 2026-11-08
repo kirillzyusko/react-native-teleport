@@ -3,7 +3,7 @@ import { TextInput } from "react-native-gesture-handler";
 import {
   GestureHandlerRootView,
   GestureDetector,
-  Gesture,
+  usePanGesture,
 } from "react-native-gesture-handler";
 import Animated, {
   useSharedValue,
@@ -21,18 +21,20 @@ const Slider = () => {
   const boxWidth = useSharedValue(INITIAL_BOX_SIZE);
   const MAX_VALUE = SLIDER_WIDTH - INITIAL_BOX_SIZE;
 
-  const pan = Gesture.Pan().onChange((event) => {
-    offset.value =
-      Math.abs(offset.value) <= MAX_VALUE
-        ? offset.value + event.changeX <= 0
-          ? 0
-          : offset.value + event.changeX >= MAX_VALUE
-            ? MAX_VALUE
-            : offset.value + event.changeX
-        : offset.value;
+  const pan = usePanGesture({
+    onUpdate: (event) => {
+      offset.value =
+        Math.abs(offset.value) <= MAX_VALUE
+          ? offset.value + event.changeX <= 0
+            ? 0
+            : offset.value + event.changeX >= MAX_VALUE
+              ? MAX_VALUE
+              : offset.value + event.changeX
+          : offset.value;
 
-    const newWidth = INITIAL_BOX_SIZE + offset.value;
-    boxWidth.value = newWidth;
+      const newWidth = INITIAL_BOX_SIZE + offset.value;
+      boxWidth.value = newWidth;
+    },
   });
 
   const boxStyle = useAnimatedStyle(() => {
