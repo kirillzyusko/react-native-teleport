@@ -43,7 +43,7 @@ With `react-native-teleport`, we take a different approach:
 
 Because the video is **re-parented** (moved in the native view hierarchy) rather than unmounted/remounted, playback is never interrupted, animations stay alive, and the transition feels seamless.
 
-```
+```text
 Feed (in-place) ──tap──▶ Overlay (animating) ──done──▶ Reels (in-place)
                                                               │
                          Overlay (animating) ◀──back──────────┘
@@ -388,7 +388,9 @@ const Post = ({ post, active }) => {
     <View style={{ height: CARD_HEIGHT }}>
       <TouchableWithoutFeedback onPress={onPress}>
         <View style={styles.container}>
-          {/* old code that displays the video/image content */}
+          <View pointerEvents="none" style={{ flex: 1 }}>
+            {/* old code that displays the video/image content */}
+          </View>
         </View>
       </TouchableWithoutFeedback>
       <SocialSection post={post} />
@@ -396,6 +398,10 @@ const Post = ({ post, active }) => {
   );
 };
 ```
+
+:::tip Let the parent handle taps
+Use `TouchableWithoutFeedback` from `react-native` on iOS, Android, and web. Keep its direct child `View` interactive, and set `pointerEvents="none"` on the inner video/image wrapper. Native video can consume taps even with `controls={false}`; the inner wrapper lets the parent touchable handle navigation.
+:::
 
 <Video
   src="/video/instagram-no-shared-transition.mp4"
@@ -558,10 +564,14 @@ Now we connect everything. This is where `<Portal>` and `<PortalHost>` bring the
 The `Post` component is the heart of the transition. It wraps the video in a `<Portal>` whose destination changes based on the transition state:
 
 ```tsx title="Post.tsx (final)"
-import { View, StyleSheet, Image } from "react-native";
+import {
+  View,
+  StyleSheet,
+  Image,
+  TouchableWithoutFeedback,
+} from "react-native";
 import Video, { ViewType } from "react-native-video";
 import { Portal } from "react-native-teleport";
-import { TouchableWithoutFeedback } from "react-native-gesture-handler";
 import Reanimated, {
   interpolate,
   useAnimatedStyle,
@@ -619,7 +629,10 @@ const Post = ({ post, active }) => {
       <TouchableWithoutFeedback onPress={onPress}>
         <View ref={videoRef} style={styles.container}>
           <Portal hostName={shouldMove ? destination : undefined}>
-            <Reanimated.View style={[{ width: "100%" }, frame]}>
+            <Reanimated.View
+              pointerEvents="none"
+              style={[{ width: "100%" }, frame]}
+            >
               {post.video && (
                 <Video
                   source={{ uri: post.video }}
