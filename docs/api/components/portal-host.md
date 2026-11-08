@@ -32,7 +32,7 @@ export default function App() {
     <SafeAreaProvider initialMetrics={initialWindowMetrics}>
       <PortalProvider>
         <RootStack />
-        <PortalHost style={StyleSheet.absoluteFillObject} name="overlay" />
+        <PortalHost style={StyleSheet.absoluteFill} name="overlay" />
       </PortalProvider>
     </SafeAreaProvider>
   );

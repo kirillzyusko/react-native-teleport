@@ -1,1 +1,0 @@
-"use strict";(self.webpackChunkreact_native_teleport_docs=self.webpackChunkreact_native_teleport_docs||[]).push([[8871],{6874:e=>{e.exports=JSON.parse('{"metadata":{"permalink":"/react-native-teleport/pr-preview/pr-213/blog","page":1,"postsPerPage":10,"totalPages":1,"totalCount":3,"blogDescription":"Blog","blogTitle":"Blog"}}')}}]);

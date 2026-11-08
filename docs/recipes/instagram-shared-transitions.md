@@ -504,7 +504,7 @@ export default function App() {
           <RootStack />
         </NavigationContainer>
         {/* This host renders ABOVE all screens — perfect for the transition */}
-        <PortalHost name="overlay" style={StyleSheet.absoluteFillObject} />
+        <PortalHost name="overlay" style={StyleSheet.absoluteFill} />
       </PortalProvider>
     </GestureHandlerRootView>
   );

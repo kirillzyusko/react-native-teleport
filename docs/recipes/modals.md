@@ -37,7 +37,7 @@ function ModalScreen() {
       <YourModalContent />
 
       {/* Add a PortalHost for this modal's window */}
-      <PortalHost style={StyleSheet.absoluteFillObject} name="modal-overlay" />
+      <PortalHost style={StyleSheet.absoluteFill} name="modal-overlay" />
     </View>
   );
 }
@@ -87,7 +87,7 @@ export function ModalContainer({
   return (
     <View style={[styles.container, style]} {...props}>
       {children}
-      <PortalHost style={StyleSheet.absoluteFillObject} name={portalHostName} />
+      <PortalHost style={StyleSheet.absoluteFill} name={portalHostName} />
     </View>
   );
 }
