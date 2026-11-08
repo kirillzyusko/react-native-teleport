@@ -26,7 +26,6 @@ target 'TeleportExample' do
   )
 
   post_install do |installer|
-    # https://github.com/facebook/react-native/blob/main/packages/react-native/scripts/react_native_pods.rb#L197-L202
     react_native_post_install(
       installer,
       config[:reactNativePath],
@@ -34,14 +33,15 @@ target 'TeleportExample' do
       # :ccache_enabled => true
     )
 
-    # Fix fmt compilation error with Xcode 26.4 (const eval broken in Apple Clang 17+)
     installer.pods_project.targets.each do |target|
-      target.build_configurations.each do |config|
-        deployment_target = config.build_settings['IPHONEOS_DEPLOYMENT_TARGET']
-        if deployment_target && Gem::Version.new(deployment_target) < Gem::Version.new(min_ios_version_supported)
+      # RN updates pod targets, but Lottie's privacy bundle still targets iOS 13.
+      if target.name == 'lottie-ios-LottiePrivacyInfo'
+        target.build_configurations.each do |config|
           config.build_settings['IPHONEOS_DEPLOYMENT_TARGET'] = min_ios_version_supported
         end
       end
+
+      # Fix fmt compilation error with Xcode 26.4 (const eval broken in Apple Clang 17+)
       if target.name == 'fmt'
         target.build_configurations.each do |config|
           config.build_settings['CLANG_CXX_LANGUAGE_STANDARD'] = 'c++17'
