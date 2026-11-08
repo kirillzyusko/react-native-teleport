@@ -5,7 +5,7 @@ import {
   StyleSheet,
   BackHandler,
 } from "react-native";
-import { FontAwesome6 } from "@react-native-vector-icons/fontawesome6";
+import { FontAwesome6 } from "@react-native-vector-icons/fontawesome6/static";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useNavigation } from "@react-navigation/native";
 import Reanimated, {

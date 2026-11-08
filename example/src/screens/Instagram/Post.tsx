@@ -1,4 +1,9 @@
-import { View, StyleSheet, Image } from "react-native";
+import {
+  View,
+  StyleSheet,
+  Image,
+  TouchableWithoutFeedback,
+} from "react-native";
 import type { PostType } from "./posts";
 import Video, { ViewType } from "react-native-video";
 import type { ExamplesStackNavigation } from "../../navigation/ExamplesStack";
@@ -14,7 +19,6 @@ import {
 } from "./constants";
 import { Portal } from "react-native-teleport";
 import SocialSection from "./components/SocialSection";
-import { TouchableWithoutFeedback } from "react-native-gesture-handler";
 import { useTransition } from "./hooks/useTransition";
 import Reanimated, {
   interpolate,
@@ -79,7 +83,11 @@ const Post = ({ post, active }: PostProps) => {
           style={styles.container}
         >
           <Portal hostName={shouldMove ? destination : undefined}>
-            <Reanimated.View style={[{ width: "100%" }, frame]}>
+            {/* The parent touchable owns presses; native video views must not consume them. */}
+            <Reanimated.View
+              pointerEvents="none"
+              style={[{ width: "100%" }, frame]}
+            >
               {post.video && (
                 <Video
                   source={{ uri: post.video }}

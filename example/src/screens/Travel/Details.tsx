@@ -1,7 +1,7 @@
 import { Image, StyleSheet, Text, View, type ImageProps } from "react-native";
 import Button from "../Travel/components/button/button";
 import LinearGradient from "react-native-linear-gradient";
-import { FontAwesome6 } from "@react-native-vector-icons/fontawesome6";
+import { FontAwesome6 } from "@react-native-vector-icons/fontawesome6/static";
 import type { NativeStackScreenProps } from "@react-navigation/native-stack";
 import type { ExamplesStackParamList } from "../../navigation/ExamplesStack";
 import type { ScreenNames } from "../../constants/screenNames";

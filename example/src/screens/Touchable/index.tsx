@@ -29,7 +29,7 @@ export default function GestureHandlerTouchableExample() {
           onPress={() => setPressed(false)}
         />
       </View>
-      <PortalHost name="local" style={StyleSheet.absoluteFillObject} />
+      <PortalHost name="local" style={StyleSheet.absoluteFill} />
     </>
   );
 }

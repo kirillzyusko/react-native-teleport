@@ -6,7 +6,7 @@ import {
   type ImageProps,
   TouchableOpacity,
 } from "react-native";
-import { FontAwesome6 } from "@react-native-vector-icons/fontawesome6";
+import { FontAwesome6 } from "@react-native-vector-icons/fontawesome6/static";
 import LinearGradient from "react-native-linear-gradient";
 import { useState } from "react";
 import { useNavigation } from "@react-navigation/native";

@@ -19,7 +19,7 @@ export default function App() {
             <NavigationContainer>
               <RootStack />
             </NavigationContainer>
-            <PortalHost name="overlay" style={StyleSheet.absoluteFillObject} />
+            <PortalHost name="overlay" style={StyleSheet.absoluteFill} />
             <PreloadedEditor />
           </PortalProvider>
         </GorhomPortalProvider>

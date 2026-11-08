@@ -203,7 +203,7 @@ const styles = StyleSheet.create({
     backgroundColor: "#ffffff",
   },
   loading: {
-    ...StyleSheet.absoluteFillObject,
+    ...StyleSheet.absoluteFill,
     justifyContent: "center",
     alignItems: "center",
     backgroundColor: "#ffffff",
