@@ -7,6 +7,7 @@ on:
       - ".github/workflows/ios-e2e-test.yml"
       - "package.json"
       - "yarn.lock"
+      - ".yarn/patches/**"
       - "Teleport.podspec"
       - "ios/**"
       - "example/**"
@@ -14,12 +15,11 @@ on:
       - "src/**"
       - "common/**"
   pull_request:
-    branches:
-      - main
     paths:
       - ".github/workflows/ios-e2e-test.yml"
       - "package.json"
       - "yarn.lock"
+      - ".yarn/patches/**"
       - "Teleport.podspec"
       - "ios/**"
       - "example/**"
