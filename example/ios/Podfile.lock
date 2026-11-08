@@ -2210,7 +2210,7 @@ PODS:
     - Yoga
   - SocketRocket (0.7.1):
     - ReactNativeDependencies
-  - Teleport (1.2.3):
+  - Teleport (1.2.4):
     - hermes-engine
     - RCTRequired
     - RCTTypeSafety
@@ -2232,9 +2232,9 @@ PODS:
     - ReactCodegen
     - ReactCommon/turbomodule/core
     - ReactNativeDependencies
-    - Teleport/common (= 1.2.3)
+    - Teleport/common (= 1.2.4)
     - Yoga
-  - Teleport/common (1.2.3):
+  - Teleport/common (1.2.4):
     - hermes-engine
     - RCTRequired
     - RCTTypeSafety
@@ -2662,7 +2662,7 @@ SPEC CHECKSUMS:
   RNScreens: 67fd45f1f30aa2849ab847156c133bd592a26533
   RNWorklets: 23dd840ca444b9e0e5ae5f6964b16ef39253ccb2
   SocketRocket: d57b1af80c029e12a75cd9b218287c67381e4593
-  Teleport: bce77d093143001f5af7d4ca098926aafa492f98
+  Teleport: d02e0aac63953e603fd8eafe6d352641fae23483
   Yoga: 58b502c52b14ad3c4468805d461fc37d275c2a42
 
 PODFILE CHECKSUM: d2326f6999a03e57f84ca261dc248bea16ab7ffa
