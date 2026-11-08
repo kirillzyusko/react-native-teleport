@@ -1,4 +1,10 @@
-import { View, StyleSheet, Image } from "react-native";
+import {
+  View,
+  StyleSheet,
+  Image,
+  Platform,
+  TouchableWithoutFeedback as CoreTouchableWithoutFeedback,
+} from "react-native";
 import type { PostType } from "./posts";
 import Video, { ViewType } from "react-native-video";
 import type { ExamplesStackNavigation } from "../../navigation/ExamplesStack";
@@ -26,6 +32,12 @@ type PostProps = {
   post: PostType;
   active: boolean;
 };
+
+// The legacy RNGH web button stops pointer events at React portal boundaries.
+const PostTouchable =
+  Platform.OS === "web"
+    ? CoreTouchableWithoutFeedback
+    : TouchableWithoutFeedback;
 
 const Post = ({ post, active }: PostProps) => {
   const videoRef = useRef<View>(null);
@@ -72,7 +84,7 @@ const Post = ({ post, active }: PostProps) => {
 
   return (
     <View style={{ height: CARD_HEIGHT }}>
-      <TouchableWithoutFeedback onPress={onPress}>
+      <PostTouchable onPress={onPress}>
         <View
           // @ts-expect-error I don't know what's wrong with types here
           ref={videoRef}
@@ -105,7 +117,7 @@ const Post = ({ post, active }: PostProps) => {
             </Reanimated.View>
           </Portal>
         </View>
-      </TouchableWithoutFeedback>
+      </PostTouchable>
       <SocialSection post={post} />
     </View>
   );
