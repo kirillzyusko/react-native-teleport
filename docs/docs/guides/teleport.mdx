@@ -46,7 +46,7 @@ export default function App() {
       <GestureHandlerRootView style={styles.container}>
         <PortalProvider>
           <>{/* Deeply nested <Teleport /> component goes here */}</>
-          <PortalHost style={StyleSheet.absoluteFillObject} name="overlay" />
+          <PortalHost style={StyleSheet.absoluteFill} name="overlay" />
         </PortalProvider>
       </GestureHandlerRootView>
     </SafeAreaProvider>
@@ -159,11 +159,11 @@ export default function Messenger() {
         </View>
       </ScrollView>
       <Animated.View
-        style={[StyleSheet.absoluteFillObject, { opacity: opacity }]}
+        style={[StyleSheet.absoluteFill, { opacity: opacity }]}
         pointerEvents="none"
       >
         <BlurView
-          style={StyleSheet.absoluteFillObject}
+          style={StyleSheet.absoluteFill}
           pointerEvents="none"
           blurType="light"
           blurAmount={16}
