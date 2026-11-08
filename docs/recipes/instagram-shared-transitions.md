@@ -379,7 +379,9 @@ const Post = ({ post, active }) => {
     <View style={{ height: CARD_HEIGHT }}>
       <TouchableWithoutFeedback onPress={onPress}>
         <View style={styles.container}>
-          {/* old code that displays the video/image content */}
+          <View pointerEvents="none" style={{ flex: 1 }}>
+            {/* old code that displays the video/image content */}
+          </View>
         </View>
       </TouchableWithoutFeedback>
       <SocialSection post={post} />
@@ -551,10 +553,14 @@ The `Post` component is the heart of the transition. It wraps the video in a `<P
 `Post.tsx` (final)
 
 ```
-import { View, StyleSheet, Image } from "react-native";
+import {
+  View,
+  StyleSheet,
+  Image,
+  TouchableWithoutFeedback,
+} from "react-native";
 import Video, { ViewType } from "react-native-video";
 import { Portal } from "react-native-teleport";
-import { TouchableWithoutFeedback } from "react-native-gesture-handler";
 import Reanimated, {
   interpolate,
   useAnimatedStyle,
@@ -612,7 +618,10 @@ const Post = ({ post, active }) => {
       <TouchableWithoutFeedback onPress={onPress}>
         <View ref={videoRef} style={styles.container}>
           <Portal hostName={shouldMove ? destination : undefined}>
-            <Reanimated.View style={[{ width: "100%" }, frame]}>
+            <Reanimated.View
+              pointerEvents="none"
+              style={[{ width: "100%" }, frame]}
+            >
               {post.video && (
                 <Video
                   source={{ uri: post.video }}
