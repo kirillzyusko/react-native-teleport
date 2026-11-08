@@ -1,4 +1,6 @@
 const path = require("path");
+const crypto = require("crypto");
+const fs = require("fs");
 const webpack = require("webpack");
 const HtmlWebpackPlugin = require("html-webpack-plugin");
 const appDirectory = path.resolve(__dirname);
@@ -15,6 +17,10 @@ const compileNodeModules = [
 ].map((moduleName) => path.resolve(appDirectory, `node_modules/${moduleName}`));
 
 const teleportSrc = path.resolve(__dirname, "..", "src");
+const babelCacheIdentifier = crypto
+  .createHash("sha256")
+  .update(fs.readFileSync(path.resolve(__dirname, "..", "yarn.lock")))
+  .digest("hex");
 const babelLoaderConfiguration = {
   test: /\.(js|jsx|ts|tsx)$/, // Updated to include .jsx
   // Add every directory that needs to be compiled by Babel during the build.
@@ -30,6 +36,7 @@ const babelLoaderConfiguration = {
     loader: "babel-loader",
     options: {
       cacheDirectory: true,
+      cacheIdentifier: babelCacheIdentifier,
       presets,
       plugins,
     },
