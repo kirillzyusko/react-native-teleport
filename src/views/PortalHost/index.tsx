@@ -1,4 +1,4 @@
-import { memo, useEffect } from "react";
+import { memo, useEffect, type CSSProperties } from "react";
 import { usePortalRegistryContext } from "../../contexts/PortalRegistry";
 import type { PortalHostProps } from "../../types";
 
@@ -13,7 +13,7 @@ function PortalHost({ name, children, style }: PortalHostProps) {
 
   return (
     <div
-      style={{ ...style, pointerEvents: "none" } as React.CSSProperties}
+      style={{ ...style, pointerEvents: "none" } as CSSProperties}
       ref={(ref) => registerHost(name, ref)}
     >
       {children}
