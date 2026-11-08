@@ -390,10 +390,6 @@ const Post = ({ post, active }) => {
 };
 ```
 
-Let the parent handle taps
-
-Use `TouchableWithoutFeedback` from `react-native` on iOS, Android, and web. Keep its direct child `View` interactive, and set `pointerEvents="none"` on the inner video/image wrapper. Native video can consume taps even with `controls={false}`; the inner wrapper lets the parent touchable handle navigation.
-
 [](/react-native-teleport/pr-preview/pr-217/video/instagram-no-shared-transition.mp4)
 
 At this point you have a working app — tapping a video opens the `Reels` screen, and calling `navigation.goBack()` returns to `Feed`. But there are two problems:
