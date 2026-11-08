@@ -2,8 +2,7 @@ import {
   View,
   StyleSheet,
   Image,
-  Platform,
-  TouchableWithoutFeedback as CoreTouchableWithoutFeedback,
+  TouchableWithoutFeedback,
 } from "react-native";
 import type { PostType } from "./posts";
 import Video, { ViewType } from "react-native-video";
@@ -20,7 +19,6 @@ import {
 } from "./constants";
 import { Portal } from "react-native-teleport";
 import SocialSection from "./components/SocialSection";
-import { TouchableWithoutFeedback } from "react-native-gesture-handler";
 import { useTransition } from "./hooks/useTransition";
 import Reanimated, {
   interpolate,
@@ -32,12 +30,6 @@ type PostProps = {
   post: PostType;
   active: boolean;
 };
-
-// The legacy RNGH web button stops pointer events at React portal boundaries.
-const PostTouchable =
-  Platform.OS === "web"
-    ? CoreTouchableWithoutFeedback
-    : TouchableWithoutFeedback;
 
 const Post = ({ post, active }: PostProps) => {
   const videoRef = useRef<View>(null);
@@ -84,14 +76,18 @@ const Post = ({ post, active }: PostProps) => {
 
   return (
     <View style={{ height: CARD_HEIGHT }}>
-      <PostTouchable onPress={onPress}>
+      <TouchableWithoutFeedback onPress={onPress}>
         <View
           // @ts-expect-error I don't know what's wrong with types here
           ref={videoRef}
           style={styles.container}
         >
           <Portal hostName={shouldMove ? destination : undefined}>
-            <Reanimated.View style={[{ width: "100%" }, frame]}>
+            {/* The parent touchable owns presses; native video views must not consume them. */}
+            <Reanimated.View
+              pointerEvents="none"
+              style={[{ width: "100%" }, frame]}
+            >
               {post.video && (
                 <Video
                   source={{ uri: post.video }}
@@ -117,7 +113,7 @@ const Post = ({ post, active }: PostProps) => {
             </Reanimated.View>
           </Portal>
         </View>
-      </PostTouchable>
+      </TouchableWithoutFeedback>
       <SocialSection post={post} />
     </View>
   );
