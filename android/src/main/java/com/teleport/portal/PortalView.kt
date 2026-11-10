@@ -4,6 +4,7 @@ import android.content.Context
 import android.view.View
 import android.view.ViewGroup
 import android.view.accessibility.AccessibilityEvent
+import com.facebook.react.uimanager.PointerEvents
 import com.facebook.react.uimanager.StateWrapper
 import com.teleport.common.ReparentableReactViewGroup
 import com.teleport.extensions.canReparentAttached
@@ -12,6 +13,42 @@ import com.teleport.extensions.findNextSiblingHostIndex
 import com.teleport.global.PortalRegistry
 import com.teleport.host.PortalHostView
 import java.util.ArrayList
+
+internal class PortalStackContainer(
+  context: Context,
+) : ReparentableReactViewGroup(context) {
+  var stackOrder = 0
+  var mountOrder = 0
+
+  init {
+    pointerEvents = PointerEvents.BOX_NONE
+    clipChildren = false
+  }
+
+  override fun addView(
+    child: View,
+    index: Int,
+  ) {
+    if (child.parent == null && child.isAttachedToWindow) {
+      attachDetachedView(child, index)
+    } else {
+      super.addView(child, index)
+    }
+  }
+
+  override fun addView(
+    child: View,
+    index: Int,
+    params: LayoutParams,
+  ) {
+    if (child.parent == null && child.isAttachedToWindow) {
+      child.layoutParams = params
+      attachDetachedView(child, index)
+    } else {
+      super.addView(child, index, params)
+    }
+  }
+}
 
 class PortalView(
   context: Context,
@@ -22,6 +59,35 @@ class PortalView(
   private var currentHost: PortalHostView? = null
   private val layoutStateController = PortalLayoutStateController(this)
   private val ownChildren: MutableList<View> = ArrayList()
+
+  private var stackContainer: PortalStackContainer? = null
+  private var stackOrder = Int.MIN_VALUE
+  private var mountOrder = 0
+  private val portalTarget: ViewGroup
+    get() = stackContainer ?: currentHost?.portalContainer ?: this
+
+  fun setStackOrder(order: Int) {
+    stackOrder = order
+    updateStackLayout()
+  }
+
+  fun setMountOrder(order: Int) {
+    mountOrder = order
+    updateStackLayout()
+  }
+
+  private fun updateStackLayout() {
+    val group = stackContainer ?: return
+    val host = currentHost?.portalContainer ?: return
+    group.stackOrder = if (stackOrder == Int.MIN_VALUE) 0 else stackOrder
+    group.mountOrder = mountOrder
+    currentHost?.sortPortals()
+    group.measure(
+      MeasureSpec.makeMeasureSpec(host.width, MeasureSpec.EXACTLY),
+      MeasureSpec.makeMeasureSpec(host.height, MeasureSpec.EXACTLY),
+    )
+    group.layout(0, 0, host.width, host.height)
+  }
 
   internal val isTeleported: Boolean
     get() = currentHost != null
@@ -47,6 +113,8 @@ class PortalView(
   override fun cleanup() {
     hostName?.let { PortalRegistry.unregisterPendingPortal(it, this) }
     detachOwnChildren()
+    (stackContainer?.parent as? ViewGroup)?.removeView(stackContainer)
+    stackContainer = null
     hostName = null
     currentHost = null
     layoutStateController.resetIfNeeded()
@@ -62,6 +130,7 @@ class PortalView(
   }
 
   internal fun onHostLayoutChanged() {
+    updateStackLayout()
     layoutStateController.updateIfNeeded(hostName, currentHost)
   }
   // endregion
@@ -137,14 +206,20 @@ class PortalView(
   private fun moveChildrenTo(host: PortalHostView?) {
     if (host === currentHost) return
 
-    val target: ViewGroup = host ?: this
+    val previousGroup = stackContainer
+    val nextGroup = if (host != null) PortalStackContainer(context) else null
+    if (nextGroup != null && host != null) {
+      host.portalContainer.addView(nextGroup, host.nextInsertionIndexForChildAt(0))
+    }
+    val target: ViewGroup = nextGroup ?: this
     val children = extractChildren(target)
     currentHost = host
+    stackContainer = nextGroup
+    (previousGroup?.parent as? ViewGroup)?.removeView(previousGroup)
 
     if (host != null) {
       for (i in children.indices) {
-        val idx = host.nextInsertionIndexForChildAt(i)
-        host.addView(children[i], idx)
+        target.addView(children[i], i)
       }
       ownChildren.addAll(children)
     } else {
@@ -155,6 +230,7 @@ class PortalView(
       }
     }
 
+    updateStackLayout()
     onTeleportationChanged(this)
   }
 
@@ -183,16 +259,16 @@ class PortalView(
     child: View,
     index: Int,
   ) {
-    if (child.parent == null && child.isAttachedToWindow) {
+    if (!isTeleported && child.parent == null && child.isAttachedToWindow) {
       attachDetachedView(child, index)
     } else if (isTeleported) {
       ownChildren.add(index, child)
-      currentHost?.let { host ->
-        val hostIndex = ownChildren.findNextSiblingHostIndex(host, index)
+      currentHost?.let {
+        val hostIndex = ownChildren.findNextSiblingHostIndex(portalTarget, index)
         if (hostIndex >= 0) {
-          host.addView(child, hostIndex)
+          portalTarget.addView(child, hostIndex)
         } else {
-          host.addView(child)
+          portalTarget.addView(child)
         }
       }
     } else {
@@ -207,12 +283,12 @@ class PortalView(
   ) {
     if (isTeleported) {
       ownChildren.add(index, child)
-      currentHost?.let { host ->
-        val hostIndex = ownChildren.findNextSiblingHostIndex(host, index)
+      currentHost?.let {
+        val hostIndex = ownChildren.findNextSiblingHostIndex(portalTarget, index)
         if (hostIndex >= 0) {
-          host.addView(child, hostIndex)
+          portalTarget.addView(child, hostIndex)
         } else {
-          host.addView(child, params)
+          portalTarget.addView(child, params)
         }
       }
     } else {
@@ -223,7 +299,7 @@ class PortalView(
   override fun removeView(view: View?) {
     if (view == null) return
     if (isTeleported) {
-      currentHost?.removeView(view)
+      portalTarget.removeView(view)
       ownChildren.remove(view)
     } else {
       super.removeView(view)
@@ -234,7 +310,7 @@ class PortalView(
     if (isTeleported) {
       val view = ownChildren.getOrNull(index)
       if (view != null) {
-        currentHost?.removeView(view)
+        portalTarget.removeView(view)
         ownChildren.removeAt(index)
       }
     } else {

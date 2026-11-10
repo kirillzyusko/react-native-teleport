@@ -1,0 +1,28 @@
+appId: teleport.example
+---
+- launchApp
+- waitForAnimationToEnd
+- runFlow:
+    file: ../subflows/open-example.yml
+    env:
+      EXAMPLE_CATEGORY: "fixture"
+      EXAMPLE_ID: "full_screen_host"
+- tapOn: "Open first dialog"
+- tapOn: "First dialog count: 0"
+- assertVisible: "First dialog count: 1"
+- tapOn: "Open second dialog"
+- assertVisible: "Second dialog"
+- tapOn: "Second dialog count: 0"
+- assertVisible: "Second dialog count: 1"
+- tapOn: "Bring first to front"
+- assertVisible: "First dialog count: 1"
+- tapOn: "Bring second to front"
+- assertVisible: "Second dialog count: 1"
+- tapOn: "Show native Modal above dialogs"
+- assertVisible: "Native Modal"
+- tapOn: "Close native Modal"
+- assertVisible: "Second dialog count: 1"
+- tapOn: "Close second dialog"
+- assertVisible: "First dialog count: 1"
+- tapOn: "Close first dialog"
+- assertVisible: "Open first dialog"

@@ -3,6 +3,7 @@ import { usePortalManagerContext } from "../contexts/PortalManager";
 import ScrollViewContext from "../contexts/ScrollViewContext";
 import PortalView from "../views/Portal";
 import useId from "../hooks/useId";
+import useMountOrder from "../hooks/useMountOrder";
 import type { PortalProps } from "../types";
 
 /**
@@ -49,10 +50,17 @@ import type { PortalProps } from "../types";
  * });
  * ```
  */
-const PortalComponent = ({ hostName, name, style, children }: PortalProps) => {
+const PortalComponent = ({
+  hostName,
+  name,
+  style,
+  stackOrder,
+  children,
+}: PortalProps) => {
   const sourceScrollViewContext = useContext(ScrollViewContext);
   const { state, dispatch } = usePortalManagerContext();
   const instanceId = useId();
+  const mountOrder = useMountOrder();
 
   const scrollViewContext =
     hostName && state.hosts[hostName]
@@ -81,7 +89,13 @@ const PortalComponent = ({ hostName, name, style, children }: PortalProps) => {
 
   return (
     <ScrollViewContext.Provider value={scrollViewContext}>
-      <PortalView hostName={hostName} name={name} style={style}>
+      <PortalView
+        hostName={hostName}
+        name={name}
+        style={style}
+        stackOrder={stackOrder}
+        mountOrder={mountOrder}
+      >
         {isRemoved ? null : children}
       </PortalView>
     </ScrollViewContext.Provider>

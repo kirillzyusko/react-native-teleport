@@ -15,6 +15,10 @@ NS_ASSUME_NONNULL_BEGIN
 
 @interface PortalHostView : RCTViewComponentView
 
+/// Physical destination. Full-screen hosts keep their Fabric anchor in place.
+@property (nonatomic, readonly) UIView *portalContainer;
+@property (nonatomic, readonly) BOOL fullScreen;
+
 /// Returns the index at which a portal child should be inserted.
 ///
 /// Within a single Fabric commit all mutations run synchronously on the main
@@ -23,6 +27,7 @@ NS_ASSUME_NONNULL_BEGIN
 /// bottom-to-top Fabric ordering is compensated by `insertSubview:atIndex:`.
 /// A `dispatch_async` resets the flag after the commit finishes.
 - (NSInteger)nextInsertionIndexForChildAt:(NSInteger)childIndex;
+- (void)sortPortals;
 
 @end
 

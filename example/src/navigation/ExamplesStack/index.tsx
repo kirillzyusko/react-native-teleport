@@ -35,8 +35,10 @@ import TransitionReparent from "../../screens/TransitionReparent";
 import StableHostRemount from "../../screens/StableHostRemount";
 import NestedStackPop from "../../screens/NestedStackPop";
 import Menu from "../../screens/Menu";
+import FullScreenHost from "../../screens/FullScreenHost";
 
 export type ExamplesStackParamList = {
+  [ScreenNames.FULL_SCREEN_HOST]: undefined;
   [ScreenNames.GESTURE_HANDLER_TOUCHABLE]: undefined;
   [ScreenNames.REACT_NATIVE_TOUCHABLE]: undefined;
   [ScreenNames.MENU]: undefined;
@@ -77,6 +79,7 @@ export type ExamplesStackParamList = {
 const Stack = createNativeStackNavigator<ExamplesStackParamList>();
 
 const options = {
+  [ScreenNames.FULL_SCREEN_HOST]: { title: "Full-screen stacked dialogs" },
   [ScreenNames.GESTURE_HANDLER_TOUCHABLE]: {
     title: "GestureHandler Touchable",
   },
@@ -157,6 +160,11 @@ const options = {
 
 const ExamplesStack = () => (
   <Stack.Navigator>
+    <Stack.Screen
+      component={FullScreenHost}
+      name={ScreenNames.FULL_SCREEN_HOST}
+      options={options[ScreenNames.FULL_SCREEN_HOST]}
+    />
     <Stack.Screen
       component={GestureHandlerTouchableExample}
       name={ScreenNames.GESTURE_HANDLER_TOUCHABLE}

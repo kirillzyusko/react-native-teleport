@@ -25,7 +25,12 @@ import PortalHost from "../views/PortalHost";
  * }
  * ```
  */
-const PortalHostComponent = ({ name, children, style }: PortalHostProps) => {
+const PortalHostComponent = ({
+  name,
+  children,
+  style,
+  fullScreen,
+}: PortalHostProps) => {
   const { dispatch } = usePortalManagerContext();
   const scrollViewContext = useContext(ScrollViewContext);
 
@@ -46,7 +51,7 @@ const PortalHostComponent = ({ name, children, style }: PortalHostProps) => {
   }, [name, dispatch, scrollViewContext]);
 
   return (
-    <PortalHost name={name} style={style}>
+    <PortalHost name={name} style={style} fullScreen={fullScreen}>
       {children}
     </PortalHost>
   );

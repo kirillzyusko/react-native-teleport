@@ -55,6 +55,12 @@ export const demos: Example[] = [
 
 export const fixtures: Example[] = [
   {
+    title: "Full-screen stacked dialogs",
+    testID: "full_screen_host",
+    info: ScreenNames.FULL_SCREEN_HOST,
+    icons: "🪟",
+  },
+  {
     title: "GestureHandler Touchable",
     testID: "gesture_handler_touchable",
     info: ScreenNames.GESTURE_HANDLER_TOUCHABLE,
