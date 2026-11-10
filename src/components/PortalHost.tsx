@@ -11,6 +11,7 @@ import PortalHost from "../views/PortalHost";
  *
  * @category components
  * @param name - The name of the portal host. It's used by `<Portal />` component to identify the host.
+ * @param fullScreen - Move the physical destination above navigation within this React surface. Native modals remain above it; no new window or modal presentation is created.
  *
  * @example
  * ```tsx
@@ -25,7 +26,12 @@ import PortalHost from "../views/PortalHost";
  * }
  * ```
  */
-const PortalHostComponent = ({ name, children, style }: PortalHostProps) => {
+const PortalHostComponent = ({
+  name,
+  children,
+  style,
+  fullScreen,
+}: PortalHostProps) => {
   const { dispatch } = usePortalManagerContext();
   const scrollViewContext = useContext(ScrollViewContext);
 
@@ -46,7 +52,7 @@ const PortalHostComponent = ({ name, children, style }: PortalHostProps) => {
   }, [name, dispatch, scrollViewContext]);
 
   return (
-    <PortalHost name={name} style={style}>
+    <PortalHost name={name} style={style} fullScreen={fullScreen}>
       {children}
     </PortalHost>
   );

@@ -3,6 +3,8 @@ import { usePortalManagerContext } from "../contexts/PortalManager";
 import ScrollViewContext from "../contexts/ScrollViewContext";
 import PortalView from "../views/Portal";
 import useId from "../hooks/useId";
+import useMountOrder from "../hooks/useMountOrder";
+import { assertStackOrder } from "../utils/stackOrder";
 import type { PortalProps } from "../types";
 
 /**
@@ -12,6 +14,7 @@ import type { PortalProps } from "../types";
  * @category components
  * @param hostName - The `name` of the `PortalHost`. It's used to identify the host where the content should be rendered.
  * @param name - The name of the portal. It's used to identify the portal.
+ * @param stackOrder - Integer priority within the host (default 0). At equal priority, later-opened Portals appear above earlier ones. Changing priority preserves mounted content.
  * @param children - The content that should be rendered in the portal.
  * @example
  * ```tsx
@@ -49,10 +52,20 @@ import type { PortalProps } from "../types";
  * });
  * ```
  */
-const PortalComponent = ({ hostName, name, style, children }: PortalProps) => {
+const PortalComponent = ({
+  hostName,
+  name,
+  style,
+  stackOrder,
+  children,
+}: PortalProps) => {
+  assertStackOrder(stackOrder);
   const sourceScrollViewContext = useContext(ScrollViewContext);
   const { state, dispatch } = usePortalManagerContext();
   const instanceId = useId();
+  // Priority is public policy; opening order is an internal tie-breaker. Keep
+  // them separate so a rerender or manual priority change never reopens a Portal.
+  const mountOrder = useMountOrder();
 
   const scrollViewContext =
     hostName && state.hosts[hostName]
@@ -81,7 +94,13 @@ const PortalComponent = ({ hostName, name, style, children }: PortalProps) => {
 
   return (
     <ScrollViewContext.Provider value={scrollViewContext}>
-      <PortalView hostName={hostName} name={name} style={style}>
+      <PortalView
+        hostName={hostName}
+        name={name}
+        style={style}
+        stackOrder={stackOrder}
+        mountOrder={mountOrder}
+      >
         {isRemoved ? null : children}
       </PortalView>
     </ScrollViewContext.Provider>

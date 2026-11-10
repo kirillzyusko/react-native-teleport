@@ -8,6 +8,7 @@
 #import "PortalView.h"
 #import "PortalHostView.h"
 #import "PortalRegistry.h"
+#import "PortalStackContainer.h"
 
 #import <react/renderer/components/TeleportViewSpec/EventEmitters.h>
 #import <react/renderer/components/TeleportViewSpec/Props.h>
@@ -21,10 +22,29 @@
 
 using namespace facebook::react;
 
+@implementation RNTPortalStackContainer
+- (UIView *)hitTest:(CGPoint)point withEvent:(UIEvent *)event
+{
+  // A group has host-sized geometry solely for layout. It is never a touch
+  // target itself, and overflowing child content remains eligible for hit testing.
+  if (!self.userInteractionEnabled || self.hidden || self.alpha < 0.01)
+    return nil;
+  for (UIView *child in [self.subviews reverseObjectEnumerator]) {
+    UIView *hit = [child hitTest:[child convertPoint:point fromView:self] withEvent:event];
+    if (hit)
+      return hit;
+  }
+  return nil;
+}
+@end
+
 @interface PortalView () <RCTPortalViewViewProtocol>
 
 @property (nonatomic, strong) NSString *hostName;
 @property (nonatomic, strong) UIView *targetView;
+@property (nonatomic, assign) NSInteger stackOrder;
+@property (nonatomic, assign) NSInteger mountOrder;
+@property (nonatomic, strong) RNTPortalStackContainer *stackContainer;
 
 @end
 
@@ -87,7 +107,7 @@ using namespace facebook::react;
     return;
   }
 
-  if (!self.hostName || ![self.targetView isKindOfClass:[PortalHostView class]]) {
+  if (!self.hostName || ![[PortalRegistry sharedInstance] getHostWithName:self.hostName]) {
     [self resetPortalLayoutStateIfNeeded];
     return;
   }
@@ -99,7 +119,7 @@ using namespace facebook::react;
     return;
   }
 
-  // Children are physically mounted under the host, but measured through this
+  // Children are physically mounted under a group in the host, but measured through this
   // PortalView shadow node. Store the host's native layout so Fabric
   // measurement follows the destination after it re-layouts.
   CGSize hostSize = self.targetView.bounds.size;
@@ -129,22 +149,49 @@ using namespace facebook::react;
     [child removeFromSuperview];
   }
 
-  if ([target isKindOfClass:[PortalHostView class]]) {
-    PortalHostView *host = (PortalHostView *)target;
-    for (NSInteger i = 0; i < (NSInteger)children.count; i++) {
-      NSInteger idx = [host nextInsertionIndexForChildAt:i];
-      [target insertSubview:children[i] atIndex:idx];
-    }
-  } else {
-    for (UIView *child in children) {
-      [target addSubview:child];
-    }
+  for (UIView *child in children) {
+    [target addSubview:child];
   }
+}
+
+- (UIView *)targetForHost:(PortalHostView *)host
+{
+  if (!host) {
+    [self.stackContainer removeFromSuperview];
+    return self.contentView;
+  }
+  if (!self.stackContainer) {
+    // This wrapper has no ShadowNode: source Yoga layout still owns the content.
+    // Reuse it across host/priority changes to preserve the native child subtree.
+    self.stackContainer = [[RNTPortalStackContainer alloc] init];
+    self.stackContainer.autoresizingMask =
+        UIViewAutoresizingFlexibleWidth | UIViewAutoresizingFlexibleHeight;
+  }
+  UIView *container = host.portalContainer;
+  self.stackContainer.frame = container.bounds;
+  // MIN_VALUE is Codegen's omitted-prop sentinel; the user-facing default is 0.
+  // Layer priority controls drawing, while sortPortals also aligns UIKit hit order.
+  self.stackContainer.stackOrder = self.stackOrder == INT32_MIN ? 0 : self.stackOrder;
+  self.stackContainer.mountOrder = self.mountOrder;
+  self.stackContainer.layer.zPosition = self.stackContainer.stackOrder;
+  if (self.stackContainer.superview != container) {
+    [self.stackContainer removeFromSuperview];
+    NSInteger index = [host nextInsertionIndexForChildAt:0];
+    [container insertSubview:self.stackContainer atIndex:index];
+  }
+  [host sortPortals];
+  return self.stackContainer;
 }
 
 - (void)updateProps:(Props::Shared const &)props oldProps:(Props::Shared const &)oldProps
 {
   const auto &newViewProps = *std::static_pointer_cast<PortalViewProps const>(props);
+
+  self.stackOrder = newViewProps.stackOrder;
+  self.mountOrder = newViewProps.mountOrder;
+  PortalHostView *currentHost = [[PortalRegistry sharedInstance] getHostWithName:self.hostName];
+  if (currentHost)
+    [self targetForHost:currentHost];
 
   std::string newHostStr = newViewProps.hostName;
   NSString *newHostName =
@@ -164,7 +211,7 @@ using namespace facebook::react;
       hostView = [[PortalRegistry sharedInstance] getHostWithName:self.hostName];
     }
 
-    UIView *newTarget = hostView ? (UIView *)hostView : self.contentView;
+    UIView *newTarget = [self targetForHost:hostView];
 
     if (newTarget != self.targetView) {
       self.targetView = newTarget;
@@ -224,7 +271,7 @@ using namespace facebook::react;
 - (void)onHostChanged
 {
   PortalHostView *hostView = [[PortalRegistry sharedInstance] getHostWithName:self.hostName];
-  UIView *newTarget = hostView ? (UIView *)hostView : self.contentView;
+  UIView *newTarget = [self targetForHost:hostView];
 
   if (newTarget != self.targetView) {
     self.targetView = newTarget;
@@ -233,11 +280,21 @@ using namespace facebook::react;
 
   if (!hostView) {
     [self resetPortalLayoutStateIfNeeded];
+  } else {
+    [self updatePortalLayoutStateIfNeeded];
   }
+}
+
+- (void)dealloc
+{
+  [self.stackContainer removeFromSuperview];
 }
 
 - (void)onHostLayoutChanged
 {
+  PortalHostView *host = [[PortalRegistry sharedInstance] getHostWithName:self.hostName];
+  if (host)
+    [self targetForHost:host];
   [self updatePortalLayoutStateIfNeeded];
 }
 
@@ -267,6 +324,8 @@ using namespace facebook::react;
   // causing mountChildComponentView to add children to the wrong host and
   // moveOwnChildrenToTarget to operate on a stale source.
   self.hostName = nil;
+  [self.stackContainer removeFromSuperview];
+  self.stackContainer = nil;
   self.targetView = self.contentView;
   [_ownChildren removeAllObjects];
   _state.reset();
@@ -291,7 +350,16 @@ using namespace facebook::react;
     // the strict containment policy (i.e., UIKit guarantees that every ancestor
     // of the hit view will return YES from -pointInside:withEvent:). See:
     //  - https://developer.apple.com/library/ios/qa/qa2013/qa1812.html
-    for (UIView *subview in [_targetView.subviews reverseObjectEnumerator]) {
+    NSArray<UIView *> *orderedSubviews =
+        [_targetView.subviews sortedArrayWithOptions:NSSortStable
+                                     usingComparator:^NSComparisonResult(UIView *a, UIView *b) {
+                                       if (a.layer.zPosition < b.layer.zPosition)
+                                         return NSOrderedAscending;
+                                       if (a.layer.zPosition > b.layer.zPosition)
+                                         return NSOrderedDescending;
+                                       return NSOrderedSame;
+                                     }];
+    for (UIView *subview in [orderedSubviews reverseObjectEnumerator]) {
       // Prevent circular hit-testing by checking if we're in the subview's hierarchy
       if ([self isDescendantOfView:subview]) {
         // Skip views that contain us to prevent cycles

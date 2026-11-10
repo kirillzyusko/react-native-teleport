@@ -54,6 +54,22 @@ class PortalViewManager :
     // implement later if needed
   }
 
+  @ReactProp(name = "stackOrder", defaultInt = Int.MIN_VALUE)
+  override fun setStackOrder(
+    view: ReactViewGroup?,
+    stackOrder: Int,
+  ) {
+    (view as? PortalView)?.setStackOrder(stackOrder)
+  }
+
+  @ReactProp(name = "mountOrder", defaultInt = 0)
+  override fun setMountOrder(
+    view: ReactViewGroup?,
+    mountOrder: Int,
+  ) {
+    (view as? PortalView)?.setMountOrder(mountOrder)
+  }
+
   @ReactProp(name = "hostName")
   override fun setHostName(
     view: ReactViewGroup?,

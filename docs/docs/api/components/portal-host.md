@@ -28,6 +28,34 @@ The name of the portal host. It's used to identify the host by `<Portal />` comp
 
 The style of the portal host. Accepts [ViewStyle](https://reactnative.dev/docs/view#style) props.
 
+### `fullScreen`
+
+Optional boolean, defaults to `false`. Places the host's content above navigation
+in the current React surface and sizes it to that surface, including the native
+navigation header. Mount one persistent host near the app root, outside the
+navigator. Its Fabric anchor stays at its original location; only the physical
+destination moves. An empty host lets touches through.
+
+This uses an ordinary native view, not a new window, dialog, or modal
+presentation. Native modals and system UI remain above it. It does not change
+status-bar appearance, cover the keyboard, or request Android overlay permissions.
+On web the destination is a fixed-position element in `document.body`.
+
+Native gesture-handler ancestry changes when content moves to the surface root.
+If your dialog uses `react-native-gesture-handler`, provide a
+`GestureHandlerRootView` inside the portaled content as needed, especially on
+Android.
+
+```tsx
+<PortalProvider>
+  <NavigationContainer>{/* navigation */}</NavigationContainer>
+  <PortalHost name="dialogs" fullScreen />
+</PortalProvider>
+```
+
+Several Portals can target this host. See [Portal stacking](./portal#stacking)
+for default ordering and manual priority.
+
 ## Example
 
 ```tsx

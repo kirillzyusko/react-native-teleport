@@ -20,6 +20,8 @@ NS_ASSUME_NONNULL_BEGIN
 - (void)registerHost:(PortalHostView *)host withName:(NSString *)name;
 - (void)unregisterHostWithName:(NSString *)name viewTag:(NSInteger)viewTag;
 - (nullable PortalHostView *)getHostWithName:(NSString *)name;
+/// Move pending Portals after a host changes its physical container.
+- (void)notifySubscribersForName:(NSString *)name;
 - (void)notifyHostLayoutChangedWithName:(NSString *)name;
 
 - (void)registerPendingPortal:(PortalView *)portal withHostName:(NSString *)hostName;

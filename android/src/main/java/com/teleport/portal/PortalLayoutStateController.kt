@@ -64,11 +64,17 @@ internal class PortalLayoutStateController(
 
   private fun createLayoutState(host: PortalHostView): PortalLayoutState {
     val sourceLocation = sourceView.screenLocation()
-    val hostLocation = host.screenLocation()
+    val hostLocation = host.portalContainer.screenLocation()
 
     return PortalLayoutState(
-      hostWidth = host.width.toFloat().dp,
-      hostHeight = host.height.toFloat().dp,
+      hostWidth =
+        host.portalContainer.width
+          .toFloat()
+          .dp,
+      hostHeight =
+        host.portalContainer.height
+          .toFloat()
+          .dp,
       offsetX = (hostLocation[0] - sourceLocation[0]).toFloat().dp,
       offsetY = (hostLocation[1] - sourceLocation[1]).toFloat().dp,
     )
