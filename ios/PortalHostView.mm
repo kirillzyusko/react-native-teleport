@@ -225,7 +225,7 @@ static UIView *RNTHitTestPortalChildren(UIView *container, CGPoint point, UIEven
     };
     self.fullScreenContainer = container;
     [surface addSubview:container];
-    // Retarget portals before moving any declarative host children.
+    // Move portals before moving any declarative host children.
     if (self.registeredName) {
       [[PortalRegistry sharedInstance] notifySubscribersForName:self.registeredName];
     }
