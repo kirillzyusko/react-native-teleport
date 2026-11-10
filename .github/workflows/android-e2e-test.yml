@@ -1,5 +1,6 @@
 name: 🤖 Test Android
 on:
+  workflow_dispatch:
   pull_request:
     paths:
       - ".github/workflows/android-e2e-test.yml"
