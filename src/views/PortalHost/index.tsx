@@ -23,6 +23,9 @@ function PortalHost({ name, children, style, fullScreen }: PortalHostProps) {
     <div
       style={
         {
+          // Portals use absolute host-sized groups. Establish the host's own
+          // containing block so they cannot anchor to an outer screen instead.
+          position: "relative",
           ...StyleSheet.flatten(style),
           ...(fullScreen
             ? {
