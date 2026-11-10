@@ -1,11 +1,12 @@
 import { fireEvent, render, screen } from "@testing-library/react-native";
-import { useState } from "react";
+import { StrictMode, Suspense, useState } from "react";
 import { Pressable, Text } from "react-native";
 import Portal from "../components/Portal";
 import PortalHost from "../components/PortalHost";
 import PortalProvider from "../PortalProvider";
 import NativePortal from "../specs/PortalViewNativeComponent";
 import NativeHost from "../specs/PortalHostViewNativeComponent";
+import useMountOrder from "../hooks/useMountOrder";
 
 function Counter() {
   const [count, setCount] = useState(0);
@@ -111,3 +112,76 @@ it("gives a reopened Portal a new position above the still-open Portal", () => {
   expect(first?.props.mountOrder).toBeGreaterThan(oldOrder);
   expect(first?.props.mountOrder).toBeGreaterThan(second?.props.mountOrder);
 });
+
+it("keeps committed opening order stable when Strict Mode replays effects", () => {
+  const { rerender } = render(
+    <StrictMode>
+      <Example order={1} />
+    </StrictMode>,
+  );
+  const orders = screen
+    .UNSAFE_getAllByType(NativePortal)
+    .map((portal) => portal.props.mountOrder);
+  expect(orders.every((order) => order > 0)).toBe(true);
+  expect(new Set(orders).size).toBe(orders.length);
+  rerender(
+    <StrictMode>
+      <Example order={3} />
+    </StrictMode>,
+  );
+  expect(
+    screen
+      .UNSAFE_getAllByType(NativePortal)
+      .map((portal) => portal.props.mountOrder),
+  ).toEqual(orders);
+});
+
+const neverResolves = new Promise<void>(() => {});
+
+function OrderMarker({
+  name,
+  ready = true,
+}: {
+  name: string;
+  ready?: boolean;
+}) {
+  const order = useMountOrder();
+  if (!ready) throw neverResolves;
+  return <Text testID={name}>{order}</Text>;
+}
+
+it("places a previously suspended opening above content that committed earlier", () => {
+  const content = (ready: boolean) => (
+    <>
+      <Suspense fallback={<Text>Waiting</Text>}>
+        <OrderMarker name="delayed" ready={ready} />
+      </Suspense>
+      <OrderMarker name="immediate" />
+    </>
+  );
+  const { rerender } = render(content(false));
+  const immediateOrder = screen.getByTestId("immediate").props.children;
+  expect(screen.queryByTestId("delayed")).toBeNull();
+  rerender(content(true));
+  expect(screen.getByTestId("delayed").props.children).toBeGreaterThan(
+    immediateOrder,
+  );
+  expect(screen.getByTestId("immediate").props.children).toBe(immediateOrder);
+});
+
+it.each([NaN, Infinity, -Infinity, 1.5, -2147483648, 2147483648])(
+  "rejects stackOrder %s instead of passing inconsistent priority to native and web",
+  (order) => {
+    expect(() => render(<Example order={order} />)).toThrow(RangeError);
+  },
+);
+
+it.each([-2147483647, 2147483647])(
+  "accepts the supported priority boundary %s",
+  (order) => {
+    render(<Example order={order} />);
+    expect(screen.UNSAFE_getAllByType(NativePortal)[0].props.stackOrder).toBe(
+      order,
+    );
+  },
+);

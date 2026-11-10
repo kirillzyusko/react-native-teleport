@@ -25,6 +25,8 @@ using namespace facebook::react;
 @implementation RNTPortalStackContainer
 - (UIView *)hitTest:(CGPoint)point withEvent:(UIEvent *)event
 {
+  // A group has host-sized geometry solely for layout. It is never a touch
+  // target itself, and overflowing child content remains eligible for hit testing.
   if (!self.userInteractionEnabled || self.hidden || self.alpha < 0.01)
     return nil;
   for (UIView *child in [self.subviews reverseObjectEnumerator]) {
@@ -159,12 +161,16 @@ using namespace facebook::react;
     return self.contentView;
   }
   if (!self.stackContainer) {
+    // This wrapper has no ShadowNode: source Yoga layout still owns the content.
+    // Reuse it across host/priority changes to preserve the native child subtree.
     self.stackContainer = [[RNTPortalStackContainer alloc] init];
     self.stackContainer.autoresizingMask =
         UIViewAutoresizingFlexibleWidth | UIViewAutoresizingFlexibleHeight;
   }
   UIView *container = host.portalContainer;
   self.stackContainer.frame = container.bounds;
+  // MIN_VALUE is Codegen's omitted-prop sentinel; the user-facing default is 0.
+  // Layer priority controls drawing, while sortPortals also aligns UIKit hit order.
   self.stackContainer.stackOrder = self.stackOrder == INT32_MIN ? 0 : self.stackOrder;
   self.stackContainer.mountOrder = self.mountOrder;
   self.stackContainer.layer.zPosition = self.stackContainer.stackOrder;

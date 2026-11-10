@@ -1,4 +1,4 @@
-import { memo, useEffect, type CSSProperties } from "react";
+import { memo, useCallback, useEffect, type CSSProperties } from "react";
 import { createPortal } from "react-dom";
 import { StyleSheet } from "react-native";
 import { usePortalRegistryContext } from "../../contexts/PortalRegistry";
@@ -6,6 +6,12 @@ import type { PortalHostProps } from "../../types";
 
 function PortalHost({ name, children, style, fullScreen }: PortalHostProps) {
   const { registerHost } = usePortalRegistryContext();
+  // A fresh callback ref would unregister/register the same host on every
+  // render, temporarily sending all its Portals back to their source trees.
+  const hostRef = useCallback(
+    (node: HTMLDivElement | null) => registerHost(name, node),
+    [name, registerHost],
+  );
 
   useEffect(() => {
     return () => {
@@ -30,11 +36,13 @@ function PortalHost({ name, children, style, fullScreen }: PortalHostProps) {
           pointerEvents: "none",
         } as CSSProperties
       }
-      ref={(ref) => registerHost(name, ref)}
+      ref={hostRef}
     >
       {children}
     </div>
   );
+  // Escape ancestor clipping/transforms while preserving React context. This
+  // ordinary document layer deliberately stays below react-native-web's Modal.
   return fullScreen ? createPortal(host, document.body) : host;
 }
 

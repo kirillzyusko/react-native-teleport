@@ -35,8 +35,10 @@ The content that should be rendered in the portal.
 
 ### `stackOrder`
 
-Optional integer priority within the destination host, defaults to `0`. A higher
-priority appears above a lower one. At equal priority, the Portal mounted later
+Optional integer priority within the destination host, defaults to `0`. Values
+must be between `-2147483647` and `2147483647`; invalid values throw a `RangeError`
+consistently on web and native platforms. A higher priority appears above a lower
+one. At equal priority, the Portal mounted later
 appears above the one mounted earlier, regardless of their source-tree positions.
 Re-rendering or changing priority preserves the content's mounted state.
 

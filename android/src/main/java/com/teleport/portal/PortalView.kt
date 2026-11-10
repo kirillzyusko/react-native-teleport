@@ -14,6 +14,7 @@ import com.teleport.global.PortalRegistry
 import com.teleport.host.PortalHostView
 import java.util.ArrayList
 
+/** One physical stacking unit per Portal; preserves the children's local order. */
 internal class PortalStackContainer(
   context: Context,
 ) : ReparentableReactViewGroup(context) {
@@ -21,6 +22,7 @@ internal class PortalStackContainer(
   var mountOrder = 0
 
   init {
+    // Full-host geometry must not make an empty group a full-screen touch target.
     pointerEvents = PointerEvents.BOX_NONE
     clipChildren = false
   }
@@ -60,7 +62,12 @@ class PortalView(
   private val layoutStateController = PortalLayoutStateController(this)
   private val ownChildren: MutableList<View> = ArrayList()
 
+  // Fabric still addresses children through this PortalView. ownChildren tracks
+  // that logical list while stackContainer owns the actual native descendants.
   private var stackContainer: PortalStackContainer? = null
+
+  // Codegen uses MIN_VALUE for an omitted optional Int32. Default priority is 0;
+  // the separate mountOrder breaks ties without reassigning priority on rerender.
   private var stackOrder = Int.MIN_VALUE
   private var mountOrder = 0
   private val portalTarget: ViewGroup
@@ -82,6 +89,8 @@ class PortalView(
     group.stackOrder = if (stackOrder == Int.MIN_VALUE) 0 else stackOrder
     group.mountOrder = mountOrder
     currentHost?.sortPortals()
+    // This native-only wrapper has no Yoga node; its children are still measured
+    // through the source Portal shadow node using the destination's dimensions.
     group.measure(
       MeasureSpec.makeMeasureSpec(host.width, MeasureSpec.EXACTLY),
       MeasureSpec.makeMeasureSpec(host.height, MeasureSpec.EXACTLY),
@@ -208,11 +217,15 @@ class PortalView(
 
     val previousGroup = stackContainer
     val nextGroup = if (host != null) PortalStackContainer(context) else null
+    // Attach the destination before extracting children. The fast reparent path
+    // requires both parents to be attached to the same window to preserve media.
     if (nextGroup != null && host != null) {
       host.portalContainer.addView(nextGroup, host.nextInsertionIndexForChildAt(0))
     }
     val target: ViewGroup = nextGroup ?: this
     val children = extractChildren(target)
+    // Only switch logical ownership after extraction: getChildAt/getChildCount
+    // depend on currentHost and would otherwise read the wrong child list.
     currentHost = host
     stackContainer = nextGroup
     (previousGroup?.parent as? ViewGroup)?.removeView(previousGroup)

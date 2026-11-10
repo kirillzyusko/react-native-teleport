@@ -14,6 +14,10 @@ function moveElementTo(
   child: Element,
   before: Element | null = null,
 ) {
+  // Re-inserting an already-positioned node can blur focused inputs or restart
+  // media in browsers without moveBefore(). Leave unchanged positions alone.
+  if (child.parentNode === parent && child.nextSibling === before) return;
+
   if (supportsMoveBefore && child.parentNode) {
     parent.moveBefore(child, before);
     return;
@@ -38,6 +42,8 @@ export default function Portal({
   const elRef = useRef<HTMLDivElement | null>(null);
   if (!elRef.current) {
     elRef.current = document.createElement("div");
+    // The group fills its host for layout, but only its actual content should
+    // intercept input. The box-none View below re-enables events for children.
     elRef.current.style.pointerEvents = "none";
   }
 
@@ -55,7 +61,8 @@ export default function Portal({
 
     const hostNode = hostName ? getHost(hostName) : null;
     if (hostNode) {
-      // teleport view to the host
+      // Match the native stack container's host-sized layout. Each Portal is a
+      // separate CSS stacking context, keeping its backdrop and content together.
       Object.assign(el.style, {
         position: "absolute",
         display: "flex",
@@ -65,7 +72,7 @@ export default function Portal({
       });
       el.dataset.teleportOrder = String(mountOrder);
       el.dataset.teleportPriority = String(stackOrder ?? 0);
-      moveElementTo(hostNode, el);
+      if (el.parentNode !== hostNode) moveElementTo(hostNode, el);
       const portals = Array.from(hostNode.children).filter(
         (child): child is HTMLElement =>
           child instanceof HTMLElement &&
@@ -77,9 +84,16 @@ export default function Portal({
             Number(b.dataset.teleportPriority) ||
           Number(a.dataset.teleportOrder) - Number(b.dataset.teleportOrder),
       );
-      for (const portal of portals) moveElementTo(hostNode, portal);
+      // Reconcile the ordered suffix backwards. Stable groups are never moved,
+      // and non-Portal children keep their relative order below that suffix.
+      let next: Element | null = null;
+      for (const portal of portals.reverse()) {
+        moveElementTo(hostNode, portal, next);
+        next = portal;
+      }
     } else if (sentinelRef.current && sentinelRef.current.parentElement) {
-      // keep view locally
+      // Drop host-only geometry on fallback; otherwise a detached/missing host
+      // can leave the local content positioned against the wrong ancestor.
       const parent = sentinelRef.current.parentElement;
       Object.assign(
         el.style,

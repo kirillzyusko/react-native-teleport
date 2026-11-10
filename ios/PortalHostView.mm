@@ -45,6 +45,7 @@ static UIView *RNTHitTestPortalChildren(UIView *container, CGPoint point, UIEven
 }
 
 @interface RNTFullScreenContainer : RCTViewComponentView
+// Weakly captures the anchor so a surface-owned destination cannot retain it.
 @property (nonatomic, copy) void (^onLayout)(void);
 @end
 
@@ -139,6 +140,8 @@ static UIView *RNTHitTestPortalChildren(UIView *container, CGPoint point, UIEven
 
 - (UIView *)portalContainer
 {
+  // The Fabric anchor can have screen-local bounds. Portals must insert and
+  // measure against the physical destination, which may fill the entire surface.
   return self.fullScreenContainer ?: self;
 }
 
@@ -159,6 +162,19 @@ static UIView *RNTHitTestPortalChildren(UIView *container, CGPoint point, UIEven
                      return a.mountOrder < b.mountOrder ? NSOrderedAscending : NSOrderedDescending;
                    return NSOrderedSame;
                  }];
+  // A layout pass should not reorder an already-correct hierarchy. Apart from
+  // unnecessary work, hierarchy mutations complicate native transition handling.
+  NSArray<UIView *> *currentSubviews = self.portalContainer.subviews;
+  NSUInteger start = currentSubviews.count - groups.count;
+  BOOL alreadyOrdered = YES;
+  for (NSUInteger index = 0; index < groups.count; index++) {
+    if (currentSubviews[start + index] != groups[index]) {
+      alreadyOrdered = NO;
+      break;
+    }
+  }
+  if (alreadyOrdered)
+    return;
   for (UIView *group in groups)
     [self.portalContainer bringSubviewToFront:group];
 }
@@ -183,6 +199,8 @@ static UIView *RNTHitTestPortalChildren(UIView *container, CGPoint point, UIEven
 
   // Stay in the current React surface: native presentations remain above us.
   // Its touch handler also dispatches events for the relocated content.
+  // Do not attach to UIWindow or the top presented controller: that would change
+  // modal ordering and require a separate touch-dispatch lifecycle.
   UIView *surface = nil;
   for (UIView *ancestor = self.superview; ancestor; ancestor = ancestor.superview) {
     for (UIGestureRecognizer *recognizer in ancestor.gestureRecognizers) {
@@ -228,6 +246,8 @@ static UIView *RNTHitTestPortalChildren(UIView *container, CGPoint point, UIEven
     return;
   }
   self.fullScreenContainer = nil;
+  // Clear the destination first: subscriber callbacks must resolve back to the
+  // anchor rather than reattaching their groups to the container being removed.
   if (self.registeredName) {
     [[PortalRegistry sharedInstance] notifySubscribersForName:self.registeredName];
   }

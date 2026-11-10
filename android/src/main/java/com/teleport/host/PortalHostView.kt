@@ -18,6 +18,8 @@ private class FullScreenPortalContainer(
     child: View,
     index: Int,
   ) {
+    // The fast reparent path leaves the child attached to the same window.
+    // addView() would dispatch attachment again; pair detach with attach instead.
     if (child.parent == null && child.isAttachedToWindow) {
       attachDetachedView(child, index)
     } else {
@@ -26,6 +28,10 @@ private class FullScreenPortalContainer(
   }
 }
 
+/**
+ * Keeps Fabric ownership at the declared anchor while optionally hosting the
+ * physical children at the React surface root. Never creates an Android Window.
+ */
 class PortalHostView(
   context: Context?,
 ) : ReparentableReactViewGroup(context) {
@@ -45,6 +51,8 @@ class PortalHostView(
   private var isDetaching = false
   private val rootLayoutListener = View.OnLayoutChangeListener { _, _, _, _, _, _, _, _, _ -> layoutOverlay() }
 
+  // All insertion, ordering and measurement must use this destination. The
+  // anchor's own bounds can be zero or restricted to a navigation screen.
   internal val portalContainer: ViewGroup
     get() = overlay ?: this
 
@@ -80,6 +88,8 @@ class PortalHostView(
     val container = FullScreenPortalContainer(context)
     container.pointerEvents = PointerEvents.BOX_NONE
     container.clipChildren = false
+    // Snapshot before mutation: ViewGroup child indices change during removal.
+    // Move existing groups as units so toggling fullScreen keeps their contents.
     val children = (0 until super.getChildCount()).mapNotNull { super.getChildAt(it) }
     for (child in children) super.removeView(child)
     overlay = container
@@ -97,6 +107,8 @@ class PortalHostView(
   private fun layoutOverlay() {
     val root = overlayRoot ?: return
     val container = overlay ?: return
+    // The container is outside Fabric's physical layout tree. Measure it here,
+    // then publish the destination bounds through each Portal's layout state.
     container.measure(
       MeasureSpec.makeMeasureSpec(root.width, MeasureSpec.EXACTLY),
       MeasureSpec.makeMeasureSpec(root.height, MeasureSpec.EXACTLY),
@@ -111,6 +123,8 @@ class PortalHostView(
       container.visibility = View.GONE
       // Root attachment traversals must finish before removing a sibling.
       post {
+        // The host can be recycled or reattached before this callback runs.
+        // Never remove a replacement container, or flash one kept on the same root.
         if (overlay === container) {
           if (isAttachedToWindow && fullScreen && overlayRoot === findReactSurface()) {
             container.visibility = View.VISIBLE
@@ -123,6 +137,8 @@ class PortalHostView(
       return
     }
     val children = (0 until container.childCount).mapNotNull { container.getChildAt(it) }
+    // Restore children to the anchor before removing the external destination,
+    // so subsequent Fabric unmount operations still have an owning container.
     overlay = null
     for (child in children) {
       container.removeView(child)
@@ -140,6 +156,12 @@ class PortalHostView(
       (0 until container.childCount)
         .mapNotNull { container.getChildAt(it) as? PortalStackContainer }
         .sortedWith(compareBy<PortalStackContainer> { it.stackOrder }.thenBy { it.mountOrder })
+    // Layout notifications do not necessarily change order. Repeatedly cycling
+    // every child to the front would churn the hierarchy and request more layouts.
+    val start = container.childCount - groups.size
+    if (groups.indices.all { container.getChildAt(start + it) === groups[it] }) return
+    // Reorder existing groups without detach/attach callbacks. Keep each dialog's
+    // backdrop and content together, with physical hit order matching draw order.
     for (group in groups) container.bringChildToFront(group)
   }
 
