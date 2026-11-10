@@ -13,6 +13,8 @@ on:
 jobs:
   deploy:
     name: Deploy to GitHub Pages
+    # Fork main is used for CI validation; publish only from the upstream repo.
+    if: github.repository == 'kirillzyusko/react-native-teleport'
     runs-on: ubuntu-latest
     defaults:
       run:
