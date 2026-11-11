@@ -3,6 +3,7 @@ package com.teleport.portal
 import android.content.Context
 import android.view.View
 import android.view.ViewGroup
+import android.view.ViewTreeObserver
 import android.view.accessibility.AccessibilityEvent
 import com.facebook.react.uimanager.StateWrapper
 import com.teleport.common.ReparentableReactViewGroup
@@ -22,6 +23,17 @@ class PortalView(
   private var currentHost: PortalHostView? = null
   private val layoutStateController = PortalLayoutStateController(this)
   private val ownChildren: MutableList<View> = ArrayList()
+  private var layoutObserver: ViewTreeObserver? = null
+  private val layoutListener =
+    ViewTreeObserver.OnPreDrawListener {
+      // Ancestor scrolling and translation move the source without invoking
+      // onLayout here. Keep Fabric measurements aligned with the native host
+      // so Pressability does not cancel touches inside teleported controls.
+      if (isTeleported && ownChildren.isNotEmpty()) {
+        layoutStateController.updateIfNeeded(hostName, currentHost)
+      }
+      true
+    }
 
   internal val isTeleported: Boolean
     get() = currentHost != null
@@ -45,6 +57,7 @@ class PortalView(
   }
 
   override fun cleanup() {
+    stopObservingLayout()
     hostName?.let { PortalRegistry.unregisterPendingPortal(it, this) }
     detachOwnChildren()
     hostName = null
@@ -246,12 +259,19 @@ class PortalView(
   // region Lifecycle
   override fun onAttachedToWindow() {
     super.onAttachedToWindow()
+    layoutObserver = viewTreeObserver.also { it.addOnPreDrawListener(layoutListener) }
     layoutStateController.updateIfNeeded(hostName, currentHost)
   }
 
   override fun onDetachedFromWindow() {
+    stopObservingLayout()
     layoutStateController.resetIfNeeded()
     super.onDetachedFromWindow()
+  }
+
+  private fun stopObservingLayout() {
+    layoutObserver?.takeIf { it.isAlive }?.removeOnPreDrawListener(layoutListener)
+    layoutObserver = null
   }
 
   override fun onLayout(

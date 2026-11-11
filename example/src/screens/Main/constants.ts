@@ -55,6 +55,12 @@ export const demos: Example[] = [
 
 export const fixtures: Example[] = [
   {
+    title: "Scrolling portal source",
+    testID: "scrolling_source",
+    info: ScreenNames.SCROLLING_SOURCE,
+    icons: "📜",
+  },
+  {
     title: "GestureHandler Touchable",
     testID: "gesture_handler_touchable",
     info: ScreenNames.GESTURE_HANDLER_TOUCHABLE,
