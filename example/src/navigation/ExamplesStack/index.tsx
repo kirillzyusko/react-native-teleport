@@ -35,6 +35,7 @@ import TransitionReparent from "../../screens/TransitionReparent";
 import StableHostRemount from "../../screens/StableHostRemount";
 import NestedStackPop from "../../screens/NestedStackPop";
 import Menu from "../../screens/Menu";
+import ScrollingSource from "../../screens/ScrollingSource";
 
 export type ExamplesStackParamList = {
   [ScreenNames.SCROLLING_SOURCE]: undefined;
@@ -74,8 +75,6 @@ export type ExamplesStackParamList = {
   [ScreenNames.STABLE_HOST_REMOUNT]: undefined;
   [ScreenNames.NESTED_STACK_POP]: undefined;
 };
-
-import ScrollingSource from "../../screens/ScrollingSource";
 
 const Stack = createNativeStackNavigator<ExamplesStackParamList>();
 
