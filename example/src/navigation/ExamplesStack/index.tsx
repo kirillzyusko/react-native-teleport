@@ -37,6 +37,7 @@ import NestedStackPop from "../../screens/NestedStackPop";
 import Menu from "../../screens/Menu";
 
 export type ExamplesStackParamList = {
+  [ScreenNames.SCROLLING_SOURCE]: undefined;
   [ScreenNames.GESTURE_HANDLER_TOUCHABLE]: undefined;
   [ScreenNames.REACT_NATIVE_TOUCHABLE]: undefined;
   [ScreenNames.MENU]: undefined;
@@ -73,6 +74,8 @@ export type ExamplesStackParamList = {
   [ScreenNames.STABLE_HOST_REMOUNT]: undefined;
   [ScreenNames.NESTED_STACK_POP]: undefined;
 };
+
+import ScrollingSource from "../../screens/ScrollingSource";
 
 const Stack = createNativeStackNavigator<ExamplesStackParamList>();
 
@@ -157,6 +160,11 @@ const options = {
 
 const ExamplesStack = () => (
   <Stack.Navigator>
+    <Stack.Screen
+      component={ScrollingSource}
+      name={ScreenNames.SCROLLING_SOURCE}
+      options={{ title: "Scrolling portal source" }}
+    />
     <Stack.Screen
       component={GestureHandlerTouchableExample}
       name={ScreenNames.GESTURE_HANDLER_TOUCHABLE}
