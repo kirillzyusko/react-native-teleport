@@ -1,0 +1,22 @@
+appId: teleport.example
+---
+- launchApp
+- waitForAnimationToEnd
+- runFlow:
+    file: ../subflows/open-example.yml
+    env:
+      EXAMPLE_CATEGORY: "fixture"
+      EXAMPLE_ID: "scrolling_source"
+- assertVisible: "Presses: 0"
+- runFlow: ../subflows/press-scrolling-source.yml
+- assertVisible: "Presses: 1"
+- tapOn:
+    id: "scroll-source"
+- waitForAnimationToEnd
+- runFlow: ../subflows/press-scrolling-source.yml
+- assertVisible: "Presses: 2"
+- tapOn:
+    id: "reset-source"
+- waitForAnimationToEnd
+- runFlow: ../subflows/press-scrolling-source.yml
+- assertVisible: "Presses: 3"

@@ -26,6 +26,7 @@ import RecycleRepro from "../../screens/RecycleRepro";
 import RichTextEditor from "../../screens/RichTextEditor";
 import RNTouchableExample from "../../screens/RNTouchable";
 import ScaledHost from "../../screens/ScaledHost";
+import ScrollingSource from "../../screens/ScrollingSource";
 import StableHostRemount from "../../screens/StableHostRemount";
 import TeleportationOrder from "../../screens/TeleportationOrder";
 import GestureHandlerTouchableExample from "../../screens/Touchable";
@@ -75,8 +76,6 @@ export type ExamplesStackParamList = {
   [ScreenNames.STABLE_HOST_REMOUNT]: undefined;
   [ScreenNames.NESTED_STACK_POP]: undefined;
 };
-
-import ScrollingSource from "../../screens/ScrollingSource";
 
 const Stack = createNativeStackNavigator<ExamplesStackParamList>();
 

@@ -1,0 +1,20 @@
+appId: teleport.example
+---
+# A zero-movement tap can pass with stale measurements. Exercise Pressability's
+# move-time bounds check as in the existing bottom-sheet regression flow.
+- runFlow:
+    when:
+      platform: Web
+    commands:
+      - tapOn:
+          id: "increment-portal"
+- runFlow:
+    when:
+      true: ${maestro.platform == 'ios' || maestro.platform == 'android'}
+    commands:
+      - swipe:
+          label: "Press, move, hold, and release Increment"
+          from:
+            id: "increment-portal"
+          direction: RIGHT
+          duration: 3000
