@@ -1,5 +1,8 @@
 import { useContext, useEffect } from "react";
-import { usePortalManagerContext } from "../contexts/PortalManager";
+import {
+  useHostSnapshot,
+  usePortalManagerContext,
+} from "../contexts/PortalManager";
 import ScrollViewContext from "../contexts/ScrollViewContext";
 import PortalView from "../views/Portal";
 import useId from "../hooks/useId";
@@ -51,33 +54,24 @@ import type { PortalProps } from "../types";
  */
 const PortalComponent = ({ hostName, name, style, children }: PortalProps) => {
   const sourceScrollViewContext = useContext(ScrollViewContext);
-  const { state, dispatch } = usePortalManagerContext();
+  const store = usePortalManagerContext();
   const instanceId = useId();
-
-  const scrollViewContext =
-    hostName && state.hosts[hostName]
-      ? (state.hostScrollViewContexts[hostName] ?? null)
-      : sourceScrollViewContext;
-
-  const isRemoved =
-    hostName && name ? state.removed[hostName]?.[name]?.[instanceId] : false;
+  const target = hostName || undefined;
+  const scrollViewContext = useHostSnapshot(store, target, (host) =>
+    host?.mounts ? host.scrollContext : sourceScrollViewContext,
+  );
+  const isRemoved = useHostSnapshot(
+    store,
+    name ? target : undefined,
+    (host) => !!(name && host?.portals.get(name)?.get(instanceId)),
+  );
 
   useEffect(() => {
-    if (!hostName || !name) {
-      return;
+    if (hostName && name) {
+      return store.registerPortal(hostName, name, instanceId);
     }
-
-    dispatch({ type: "REGISTER_PORTAL", hostName, name, instanceId });
-
-    return () => {
-      dispatch({
-        type: "CLEAR_REMOVED_ON_UNMOUNT",
-        hostName,
-        name,
-        instanceId,
-      });
-    };
-  }, [dispatch, hostName, name, instanceId]);
+    return undefined;
+  }, [store, hostName, name, instanceId]);
 
   return (
     <ScrollViewContext.Provider value={scrollViewContext}>

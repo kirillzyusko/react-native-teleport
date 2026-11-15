@@ -26,24 +26,14 @@ import PortalHost from "../views/PortalHost";
  * ```
  */
 const PortalHostComponent = ({ name, children, style }: PortalHostProps) => {
-  const { dispatch } = usePortalManagerContext();
+  const store = usePortalManagerContext();
   const scrollViewContext = useContext(ScrollViewContext);
 
-  useEffect(() => {
-    dispatch({ type: "REGISTER_HOST", hostName: name });
-
-    return () => {
-      dispatch({ type: "UNREGISTER_HOST", hostName: name });
-    };
-  }, [name, dispatch]);
+  useEffect(() => store.registerHost(name), [store, name]);
 
   useEffect(() => {
-    dispatch({
-      type: "SET_HOST_SCROLL_VIEW_CONTEXT",
-      hostName: name,
-      value: scrollViewContext,
-    });
-  }, [name, dispatch, scrollViewContext]);
+    store.setScrollContext(name, scrollViewContext);
+  }, [store, name, scrollViewContext]);
 
   return (
     <PortalHost name={name} style={style}>

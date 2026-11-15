@@ -219,3 +219,38 @@ describe("`usePortal` isHostAvailable", () => {
     expect(screen.getByTestId("available")).toBeOnTheScreen();
   });
 });
+
+it("keeps a removed portal hidden when its host arrives and restores it on retarget", () => {
+  function Fixture({
+    destination,
+    mountHost,
+  }: {
+    destination: string;
+    mountHost?: boolean;
+  }) {
+    const { removePortal } = usePortal("first");
+    return (
+      <>
+        <Button title="Remove" onPress={() => removePortal("item")} />
+        {mountHost && <PortalHost name="first" />}
+        <Portal name="item" hostName={destination}>
+          <View testID="content" />
+        </Portal>
+      </>
+    );
+  }
+  const view = (destination: string, mountHost = false) => (
+    <PortalProvider>
+      <Fixture destination={destination} mountHost={mountHost} />
+    </PortalProvider>
+  );
+  const { rerender } = render(view("first"));
+  fireEvent.press(screen.getByText("Remove"));
+  expect(screen.queryByTestId("content")).toBeNull();
+  rerender(view("first", true));
+  expect(screen.queryByTestId("content")).toBeNull();
+  rerender(view("second", true));
+  expect(screen.getByTestId("content")).toBeOnTheScreen();
+  rerender(view("first", true));
+  expect(screen.getByTestId("content")).toBeOnTheScreen();
+});

@@ -1,4 +1,7 @@
-import { usePortalManagerContext } from "../contexts/PortalManager";
+import {
+  useHostSnapshot,
+  usePortalManagerContext,
+} from "../contexts/PortalManager";
 
 /**
  * The `usePortal` hook allows you to manage portals in imperative way.
@@ -21,13 +24,18 @@ import { usePortalManagerContext } from "../contexts/PortalManager";
  * ```
  */
 export default function usePortal(hostName: string = "root") {
-  const { state, dispatch } = usePortalManagerContext();
+  const store = usePortalManagerContext();
+  const isHostAvailable = useHostSnapshot(
+    store,
+    hostName,
+    (host) => !!host?.mounts,
+  );
 
   return {
     /**
      * Whether a `<PortalHost />` with the given `hostName` is currently mounted.
      */
-    isHostAvailable: (state.hosts[hostName] ?? 0) > 0,
+    isHostAvailable,
     /**
      * Remove portal from host container. Subsequent re-renders will not restore portal,
      * but if you mount a new portal with the same name it will be shown (i. e. hook doesn't
@@ -35,7 +43,6 @@ export default function usePortal(hostName: string = "root") {
      *
      * @param name - `name` of `<Portal />` component.
      */
-    removePortal: (name: string) =>
-      dispatch({ type: "REMOVE_PORTAL", hostName, name }),
+    removePortal: (name: string) => store.removePortal(hostName, name),
   };
 }

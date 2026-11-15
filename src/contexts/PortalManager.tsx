@@ -1,31 +1,23 @@
 import {
   createContext,
+  useCallback,
   useContext,
-  useReducer,
-  useMemo,
+  useState,
   type ReactNode,
 } from "react";
-import {
-  initialState,
-  reducer,
-  type Action,
-  type PortalState,
-} from "../state/reducer";
+import { useSyncExternalStore } from "use-sync-external-store/shim";
+import { createPortalStore, type PortalStore } from "../state/portalStore";
 
-const PortalManagerContext = createContext<
-  { state: PortalState; dispatch: React.Dispatch<Action> } | undefined
->(undefined);
+const PortalManagerContext = createContext<PortalStore | undefined>(undefined);
 
 export const PortalManagerProvider = ({
   children,
 }: {
   children: ReactNode;
 }) => {
-  const [state, dispatch] = useReducer(reducer, initialState);
-  const context = useMemo(() => ({ state, dispatch }), [state, dispatch]);
-
+  const [store] = useState(createPortalStore);
   return (
-    <PortalManagerContext.Provider value={context}>
+    <PortalManagerContext.Provider value={store}>
       {children}
     </PortalManagerContext.Provider>
   );
@@ -33,10 +25,21 @@ export const PortalManagerProvider = ({
 
 export const usePortalManagerContext = () => {
   const context = useContext(PortalManagerContext);
-
   if (!context) {
     throw new Error("usePortalContext must be used within PortalProvider");
   }
-
   return context;
 };
+
+export function useHostSnapshot<T>(
+  store: PortalStore,
+  hostName: string | undefined,
+  select: (host: ReturnType<PortalStore["getHost"]>) => T,
+) {
+  const subscribe = useCallback(
+    (listener: () => void) => store.subscribe(hostName, listener),
+    [store, hostName],
+  );
+  const getSnapshot = () => select(store.getHost(hostName));
+  return useSyncExternalStore(subscribe, getSnapshot, getSnapshot);
+}
