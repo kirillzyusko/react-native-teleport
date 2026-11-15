@@ -26,11 +26,27 @@ using namespace facebook::react;
 @property (nonatomic, strong) NSString *hostName;
 @property (nonatomic, strong) UIView *targetView;
 
+- (void)onGeometryLinkTick;
+
+@end
+
+// CADisplayLink retains its target. A weak proxy keeps the link from extending
+// the PortalView lifetime (the link is also invalidated on recycle/dealloc).
+@interface PortalGeometryLinkProxy : NSObject
+@property (nonatomic, weak) PortalView *portal;
+@end
+
+@implementation PortalGeometryLinkProxy
+- (void)tick:(CADisplayLink *)link
+{
+  [self.portal onGeometryLinkTick];
+}
 @end
 
 @implementation PortalView {
   NSMutableArray<UIView *> *_ownChildren;
   PortalViewShadowNode::ConcreteState::Shared _state;
+  CADisplayLink *_geometryLink;
 }
 
 + (ComponentDescriptorProvider)componentDescriptorProvider
@@ -179,6 +195,7 @@ using namespace facebook::react;
 
   [super updateProps:props oldProps:oldProps];
   [self updatePortalLayoutStateIfNeeded];
+  [self updateGeometryTracking];
 }
 
 /// Finds the host index of the first next sibling (in _ownChildren) that is
@@ -193,6 +210,56 @@ using namespace facebook::react;
     }
   }
   return -1;
+}
+
+// MARK: geometry tracking
+// Ancestor scrolling (or any ancestor transform/translation) moves the source
+// in screen coordinates without calling layoutSubviews here, so the source->host
+// offset in Fabric state goes stale and Pressability measures the wrong
+// responder region (touches with slight movement get cancelled). While children
+// are teleported, re-check the geometry once per frame; state is only updated
+// when the offset actually changes. Mirrors the Android pre-draw fix (#221).
+- (BOOL)shouldTrackGeometry
+{
+  return self.window != nil && self.hostName != nil &&
+      [self.targetView isKindOfClass:[PortalHostView class]] && _ownChildren.count > 0;
+}
+
+- (void)updateGeometryTracking
+{
+  if ([self shouldTrackGeometry]) {
+    if (_geometryLink == nil) {
+      PortalGeometryLinkProxy *proxy = [PortalGeometryLinkProxy new];
+      proxy.portal = self;
+      _geometryLink = [CADisplayLink displayLinkWithTarget:proxy selector:@selector(tick:)];
+      // Common modes so it keeps ticking while a UIScrollView is tracking.
+      [_geometryLink addToRunLoop:[NSRunLoop mainRunLoop] forMode:NSRunLoopCommonModes];
+    }
+  } else {
+    [self stopGeometryTracking];
+  }
+}
+
+- (void)stopGeometryTracking
+{
+  [_geometryLink invalidate];
+  _geometryLink = nil;
+}
+
+- (void)onGeometryLinkTick
+{
+  [self updatePortalLayoutStateIfNeeded];
+}
+
+- (void)didMoveToWindow
+{
+  [super didMoveToWindow];
+  [self updateGeometryTracking];
+}
+
+- (void)dealloc
+{
+  [_geometryLink invalidate];
 }
 
 - (void)mountChildComponentView:(UIView<RCTComponentViewProtocol> *)childComponentView
@@ -212,6 +279,8 @@ using namespace facebook::react;
       [self.targetView addSubview:childComponentView];
     }
   }
+
+  [self updateGeometryTracking];
 }
 
 - (void)unmountChildComponentView:(UIView<RCTComponentViewProtocol> *)childComponentView
@@ -219,6 +288,7 @@ using namespace facebook::react;
 {
   [_ownChildren removeObject:childComponentView];
   [childComponentView removeFromSuperview];
+  [self updateGeometryTracking];
 }
 
 - (void)onHostChanged
@@ -234,6 +304,8 @@ using namespace facebook::react;
   if (!hostView) {
     [self resetPortalLayoutStateIfNeeded];
   }
+
+  [self updateGeometryTracking];
 }
 
 - (void)onHostLayoutChanged
@@ -257,6 +329,7 @@ using namespace facebook::react;
 - (void)prepareForRecycle
 {
   [super prepareForRecycle];
+  [self stopGeometryTracking];
 
   if (self.hostName) {
     [[PortalRegistry sharedInstance] unregisterPendingPortal:self withHostName:self.hostName];
