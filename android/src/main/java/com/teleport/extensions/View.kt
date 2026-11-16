@@ -4,13 +4,6 @@ import android.view.View
 import android.view.ViewGroup
 import java.util.ArrayList
 
-internal fun View.screenLocation(): IntArray =
-  IntArray(2).also {
-    getLocationOnScreen(it)
-  }
-
-internal fun View.isDetached(): Boolean = !isAttachedToWindow
-
 internal fun View.canReparentAttached(
   source: ViewGroup,
   target: ViewGroup,

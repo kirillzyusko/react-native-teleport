@@ -14,30 +14,28 @@ namespace facebook::react {
     PortalViewState(
         Float hostWidth_,
         Float hostHeight_,
-        Float offsetX_,
-        Float offsetY_)
+        int hostTag_)
         : hostWidth(hostWidth_),
           hostHeight(hostHeight_),
-          offsetX(offsetX_),
-          offsetY(offsetY_) {}
+          hostTag(hostTag_) {}
 
 #ifdef ANDROID
     PortalViewState(PortalViewState const &previousState, folly::dynamic data)
         : hostWidth((Float)data["hostWidth"].getDouble()),
           hostHeight((Float)data["hostHeight"].getDouble()),
-          offsetX((Float)data["offsetX"].getDouble()),
-          offsetY((Float)data["offsetY"].getDouble()) {}
+          hostTag(static_cast<int>(data["hostTag"].asInt())) {}
 
     folly::dynamic getDynamic() const {
       return folly::dynamic::object("hostWidth", hostWidth)(
-          "hostHeight", hostHeight)("offsetX", offsetX)("offsetY", offsetY);
+          "hostHeight", hostHeight)("hostTag", hostTag);
     }
 #endif
 
     Float hostWidth{0};
     Float hostHeight{0};
-    Float offsetX{0};
-    Float offsetY{0};
+    // React tag of the `PortalHostView` the children are mounted into.
+    // `0` means that the children are rendered in place.
+    int hostTag{0};
   };
 
 } // namespace facebook::react

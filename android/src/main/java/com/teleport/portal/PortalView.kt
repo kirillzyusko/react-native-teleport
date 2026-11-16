@@ -3,7 +3,6 @@ package com.teleport.portal
 import android.content.Context
 import android.view.View
 import android.view.ViewGroup
-import android.view.ViewTreeObserver
 import android.view.accessibility.AccessibilityEvent
 import com.facebook.react.uimanager.StateWrapper
 import com.teleport.common.ReparentableReactViewGroup
@@ -21,19 +20,8 @@ class PortalView(
   PortalViewLifecycle {
   private var hostName: String? = null
   private var currentHost: PortalHostView? = null
-  private val layoutStateController = PortalLayoutStateController(this)
+  private val layoutStateController = PortalLayoutStateController()
   private val ownChildren: MutableList<View> = ArrayList()
-  private var layoutObserver: ViewTreeObserver? = null
-  private val layoutListener =
-    ViewTreeObserver.OnPreDrawListener {
-      // Ancestor scrolling and translation move the source without invoking
-      // onLayout here. Keep Fabric measurements aligned with the native host
-      // so Pressability does not cancel touches inside teleported controls.
-      if (isTeleported && ownChildren.isNotEmpty()) {
-        layoutStateController.updateIfNeeded(hostName, currentHost)
-      }
-      true
-    }
 
   internal val isTeleported: Boolean
     get() = currentHost != null
@@ -41,7 +29,7 @@ class PortalView(
   // region ViewManager methods
   override fun setStateWrapper(wrapper: StateWrapper?) {
     layoutStateController.setStateWrapper(wrapper)
-    layoutStateController.updateIfNeeded(hostName, currentHost)
+    layoutStateController.updateIfNeeded(currentHost)
   }
 
   override fun setHostName(name: String?) {
@@ -53,11 +41,10 @@ class PortalView(
     name?.let { PortalRegistry.registerPendingPortal(it, this) }
 
     moveChildrenTo(PortalRegistry.getHost(name))
-    layoutStateController.updateIfNeeded(hostName, currentHost)
+    layoutStateController.updateIfNeeded(currentHost)
   }
 
   override fun cleanup() {
-    stopObservingLayout()
     hostName?.let { PortalRegistry.unregisterPendingPortal(it, this) }
     detachOwnChildren()
     hostName = null
@@ -71,11 +58,11 @@ class PortalView(
   // region Host lifecycle callbacks
   internal fun onHostChanged() {
     moveChildrenTo(PortalRegistry.getHost(hostName))
-    layoutStateController.updateIfNeeded(hostName, currentHost)
+    layoutStateController.updateIfNeeded(currentHost)
   }
 
   internal fun onHostLayoutChanged() {
-    layoutStateController.updateIfNeeded(hostName, currentHost)
+    layoutStateController.updateIfNeeded(currentHost)
   }
   // endregion
 
@@ -253,36 +240,6 @@ class PortalView(
     } else {
       super.removeViewAt(index)
     }
-  }
-  // endregion
-
-  // region Lifecycle
-  override fun onAttachedToWindow() {
-    super.onAttachedToWindow()
-    layoutObserver = viewTreeObserver.also { it.addOnPreDrawListener(layoutListener) }
-    layoutStateController.updateIfNeeded(hostName, currentHost)
-  }
-
-  override fun onDetachedFromWindow() {
-    stopObservingLayout()
-    layoutStateController.resetIfNeeded()
-    super.onDetachedFromWindow()
-  }
-
-  private fun stopObservingLayout() {
-    layoutObserver?.takeIf { it.isAlive }?.removeOnPreDrawListener(layoutListener)
-    layoutObserver = null
-  }
-
-  override fun onLayout(
-    changed: Boolean,
-    left: Int,
-    top: Int,
-    right: Int,
-    bottom: Int,
-  ) {
-    super.onLayout(changed, left, top, right, bottom)
-    layoutStateController.updateIfNeeded(hostName, currentHost)
   }
   // endregion
 

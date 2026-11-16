@@ -17,6 +17,15 @@ namespace facebook::react {
     void adopt(ShadowNode &shadowNode) const override {
       ConcreteComponentDescriptor::adopt(shadowNode);
     }
+
+    ShadowNodeFamily::Shared createFamily(const ShadowNodeFamilyFragment &fragment) const override {
+      auto family = ConcreteComponentDescriptor::createFamily(fragment);
+
+      // lets a teleported portal find this host in the shadow tree
+      PortalShadowRegistry::getInstance().registerHostFamily(fragment.tag, family);
+
+      return family;
+    }
   };
 
 } // namespace facebook::react
