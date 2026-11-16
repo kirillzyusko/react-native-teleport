@@ -1,7 +1,6 @@
 import type { ScreenNames } from "../../constants/screenNames";
 
 export type ExampleScreen =
-  | ScreenNames.SCROLLING_SOURCE
   | ScreenNames.GESTURE_HANDLER_TOUCHABLE
   | ScreenNames.REACT_NATIVE_TOUCHABLE
   | ScreenNames.MENU
@@ -24,7 +23,8 @@ export type ExampleScreen =
   | ScreenNames.SCALED_HOST
   | ScreenNames.TRANSITION_REPARENT
   | ScreenNames.STABLE_HOST_REMOUNT
-  | ScreenNames.NESTED_STACK_POP;
+  | ScreenNames.NESTED_STACK_POP
+  | ScreenNames.SCROLLING_SOURCE;
 
 export type Example = {
   testID: string;

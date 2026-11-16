@@ -93,7 +93,9 @@
     "swiftpm",
     "xcframeworks",
     "NDEBUG",
-    "IPHONEOS"
+    "IPHONEOS",
+    "Pressability",
+    "scroller"
   ],
   "ignorePaths": [
     "node_modules",
