@@ -137,7 +137,7 @@ describe("`usePortal` functional spec", () => {
 /**
  * Renders the `isHostAvailable` value for a host that can be unmounted.
  *
- * @returns Test component with a toggleable host.
+ * @returns Test component with a host that can be unmounted.
  */
 function IsHostAvailableHook() {
   const [showHost, setShowHost] = useState(true);
