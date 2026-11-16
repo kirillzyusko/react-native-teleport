@@ -53,3 +53,35 @@ describe("`Portal` ScrollView context", () => {
     expect(screen.getByText("vertical")).toBeOnTheScreen();
   });
 });
+
+it("follows the selected host as it mounts, changes scroll direction and unmounts", () => {
+  const owner = (
+    <ScrollViewContext.Provider value={{ horizontal: false }}>
+      <Portal hostName="detail">
+        <ScrollViewContextMarker />
+      </Portal>
+    </ScrollViewContext.Provider>
+  );
+  function Fixture({ direction }: { direction?: boolean | null }) {
+    return (
+      <PortalProvider>
+        {owner}
+        {direction !== undefined && (
+          <ScrollViewContext.Provider
+            value={direction === null ? null : { horizontal: direction }}
+          >
+            <PortalHost name="detail" />
+          </ScrollViewContext.Provider>
+        )}
+      </PortalProvider>
+    );
+  }
+  const { rerender } = render(<Fixture />);
+  expect(screen.getByText("vertical")).toBeOnTheScreen();
+  rerender(<Fixture direction />);
+  expect(screen.getByText("horizontal")).toBeOnTheScreen();
+  rerender(<Fixture direction={null} />);
+  expect(screen.getByText("none")).toBeOnTheScreen();
+  rerender(<Fixture />);
+  expect(screen.getByText("vertical")).toBeOnTheScreen();
+});
