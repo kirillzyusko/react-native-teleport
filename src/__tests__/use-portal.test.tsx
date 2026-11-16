@@ -220,7 +220,7 @@ describe("`usePortal` isHostAvailable", () => {
   });
 });
 
-it("keeps a removed portal hidden when its host arrives and restores it on retarget", () => {
+it("keeps a removed portal hidden when its host arrives and restores it on re-target", () => {
   function Fixture({
     destination,
     mountHost,

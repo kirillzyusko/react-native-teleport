@@ -67,10 +67,11 @@ const PortalComponent = ({ hostName, name, style, children }: PortalProps) => {
   );
 
   useEffect(() => {
-    if (hostName && name) {
-      return store.registerPortal(hostName, name, instanceId);
+    if (!hostName || !name) {
+      return;
     }
-    return undefined;
+
+    return store.registerPortal(hostName, name, instanceId);
   }, [store, hostName, name, instanceId]);
 
   return (

@@ -13,7 +13,7 @@ jest.mock("../views/Portal", () => jest.fn(() => null));
 jest.mock("../views/PortalHost", () => jest.fn(() => null));
 
 it("mounts a new host without re-rendering unrelated portals, hosts or observers", () => {
-  function ToggleHost() {
+  function ToggleDetailHost() {
     const [mounted, setMounted] = useState(false);
     return (
       <>
@@ -23,7 +23,7 @@ it("mounts a new host without re-rendering unrelated portals, hosts or observers
     );
   }
 
-  const Observer = jest.fn(function HostObserver() {
+  const ListObserver = jest.fn(function ListHostObserver() {
     const { isHostAvailable } = usePortal("list");
     return <Text>{String(isHostAvailable)}</Text>;
   });
@@ -33,8 +33,8 @@ it("mounts a new host without re-rendering unrelated portals, hosts or observers
       <PortalHost name="list" />
       <Portal name="home" />
       <Portal hostName="list" name="item" />
-      <Observer />
-      <ToggleHost />
+      <ListObserver />
+      <ToggleDetailHost />
     </PortalProvider>,
   );
   expect(screen.getByText("true")).toBeOnTheScreen();
@@ -44,7 +44,7 @@ it("mounts a new host without re-rendering unrelated portals, hosts or observers
   fireEvent.press(screen.getByText("Toggle"));
 
   expect(PortalView).not.toHaveBeenCalled();
-  expect(Observer).not.toHaveBeenCalled();
+  expect(ListObserver).not.toHaveBeenCalled();
   expect(
     jest.mocked(PortalHostView).mock.calls.map(([props]) => props.name),
   ).toEqual(["detail"]);
