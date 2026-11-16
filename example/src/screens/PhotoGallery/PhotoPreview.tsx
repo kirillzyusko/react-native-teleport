@@ -4,13 +4,15 @@ import Animated, {
   interpolate,
   useAnimatedStyle,
 } from "react-native-reanimated";
-import { Portal } from "react-native-teleport";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { Portal } from "react-native-teleport";
 
-import type { Photo } from "./photos";
+import useMeasure from "../../hooks/useMeasure";
+
 import { SCALE, SCREEN_WIDTH, THUMB_SIZE } from "./constants";
 import { useHeroTransition } from "./hero";
-import useMeasure from "../../hooks/useMeasure";
+
+import type { Photo } from "./photos";
 
 type Props = {
   photo: Photo;
@@ -69,7 +71,9 @@ function PhotoPreview({ photo, onOpen }: Props) {
   }, [position, safeAreaTop]);
 
   const onPress = useCallback(() => {
-    if (useHeroTransition.getState().id !== "") return;
+    if (useHeroTransition.getState().id !== "") {
+      return;
+    }
 
     measure((x, y) => {
       goForward(photo.id, x, y, () => onOpen(photo));
@@ -102,9 +106,9 @@ function PhotoPreview({ photo, onOpen }: Props) {
             }
           >
             <Animated.Image
-              style={[{ width: THUMB_SIZE, opacity: source }, animatedHeight]}
-              source={{ uri: photo.thumbnail }}
               resizeMode="cover"
+              source={{ uri: photo.thumbnail }}
+              style={[{ width: THUMB_SIZE, opacity: source }, animatedHeight]}
             />
           </Animated.View>
         </Portal>

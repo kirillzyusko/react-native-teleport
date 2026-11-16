@@ -1,12 +1,13 @@
-import type { ReactNode } from "react";
-import Lottie from "lottie-react";
-import clsx from "clsx";
 import Link from "@docusaurus/Link";
 import useDocusaurusContext from "@docusaurus/useDocusaurusContext";
-import Layout from "@theme/Layout";
 import Heading from "@theme/Heading";
+import Layout from "@theme/Layout";
+import clsx from "clsx";
+import Lottie from "lottie-react";
 
 import styles from "./index.module.css";
+
+import type { ReactNode } from "react";
 
 const lottie = {
   width: 600,
@@ -15,14 +16,15 @@ const lottie = {
 
 function HomepageHeader() {
   const { siteConfig } = useDocusaurusContext();
+
   return (
     <header className={clsx(styles.landing, styles.heroBanner)}>
       <div className="container">
         <div className="preview">
           <Lottie
             animationData={require("@site/static/img/lottie/ufo.lottie.json")}
-            loop={true}
             autoPlay={true}
+            loop={true}
             style={lottie}
           />
         </div>
@@ -45,10 +47,11 @@ function HomepageHeader() {
 
 export default function Home(): ReactNode {
   const { siteConfig } = useDocusaurusContext();
+
   return (
     <Layout
-      title={siteConfig.tagline}
       description="Teleport views across your component tree for seamless transitions and powerful UI patterns"
+      title={siteConfig.tagline}
     >
       <HomepageHeader />
     </Layout>

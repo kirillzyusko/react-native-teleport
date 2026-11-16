@@ -1,5 +1,6 @@
 import { FontAwesome6 } from "@react-native-vector-icons/fontawesome6/static";
-import { View, Text, StyleSheet } from "react-native";
+import { StyleSheet, Text, View } from "react-native";
+
 import type { PostType } from "../posts";
 
 type SocialSectionProps = {

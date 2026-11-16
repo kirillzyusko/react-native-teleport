@@ -1,13 +1,14 @@
-import { StyleSheet } from "react-native";
-import { PortalHost, PortalProvider } from "react-native-teleport";
 import { PortalProvider as GorhomPortalProvider } from "@gorhom/portal";
-import {
-  initialWindowMetrics,
-  SafeAreaProvider,
-} from "react-native-safe-area-context";
 import { NavigationContainer } from "@react-navigation/native";
-import RootStack from "./navigation";
+import { StyleSheet } from "react-native";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
+import {
+  SafeAreaProvider,
+  initialWindowMetrics,
+} from "react-native-safe-area-context";
+import { PortalHost, PortalProvider } from "react-native-teleport";
+
+import RootStack from "./navigation";
 import PreloadedEditor from "./screens/RichTextEditor/PreloadedEditor";
 
 export default function App() {

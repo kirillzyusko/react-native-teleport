@@ -1,21 +1,26 @@
 const fs = require("fs");
-const path = require("path");
 const http = require("http");
-const { PNG } = require("pngjs");
+const path = require("path");
+
 const pixelmatch = require("pixelmatch").default;
+const { PNG } = require("pngjs");
 
 const server = http.createServer(async (req, res) => {
   res.setHeader("Access-Control-Allow-Origin", "*");
   res.setHeader("Content-Type", "application/json");
   let body = "";
+
   req.on("data", (chunk) => {
     body += chunk.toString();
   });
   req.on("end", async () => {
     const { base, target, flow, diff: threshold = 0.3 } = JSON.parse(body);
+
     console.log("Request to compare images: ", base, target);
+
     if (!base || !target || !flow) {
       res.statusCode = 400;
+
       return res.end(
         JSON.stringify({ error: "Missing base, target or flow parameter" }),
       );
@@ -32,6 +37,7 @@ const server = http.createServer(async (req, res) => {
         "e2e",
         `${target}.png`,
       );
+
       console.log("Comparing images: ", basePath, targetPath);
       const img1 = await readPngFile(`${basePath}.png`);
       const img2 = await readPngFile(targetPath);
@@ -53,6 +59,7 @@ const server = http.createServer(async (req, res) => {
           targetPath,
           path.join(__dirname, "reports", `${target}-new.png`),
         );
+
         return res.end(
           JSON.stringify({ error: "Images have different dimensions" }),
         );
@@ -71,6 +78,7 @@ const server = http.createServer(async (req, res) => {
       const totalPixels = img1.width * img1.height;
       const diffPercent = (numDiffPixels / totalPixels) * 100;
       const matches = diffPercent <= parseFloat(threshold);
+
       console.log("Image diff: ", matches, threshold, diffPercent);
       const result = {
         matches,
@@ -79,6 +87,7 @@ const server = http.createServer(async (req, res) => {
 
       if (!matches) {
         const diffPath = path.join(__dirname, "reports", `${target}-diff.png`);
+
         fs.writeFileSync(diffPath, PNG.sync.write(diff));
         fs.copyFileSync(
           `${basePath}.png`,
@@ -102,13 +111,17 @@ const server = http.createServer(async (req, res) => {
 function readPngFile(filePath) {
   return new Promise((resolve, reject) => {
     fs.readFile(filePath, (err, data) => {
-      if (err) reject(err);
-      else resolve(PNG.sync.read(data));
+      if (err) {
+        reject(err);
+      } else {
+        resolve(PNG.sync.read(data));
+      }
     });
   });
 }
 
 const PORT = 3000;
+
 server.listen(PORT, () => {
   console.log(`Snapshot engine running on port ${PORT}`);
 });

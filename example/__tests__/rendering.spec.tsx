@@ -1,8 +1,6 @@
 import { render, screen } from "@testing-library/react-native";
-
 import { View } from "react-native";
-
-import { PortalProvider, PortalHost, Portal } from "react-native-teleport";
+import { Portal, PortalHost, PortalProvider } from "react-native-teleport";
 
 function TestComponent() {
   return (

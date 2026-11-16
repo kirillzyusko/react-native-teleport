@@ -1,14 +1,14 @@
-import { View, StyleSheet } from "react-native";
+import { StyleSheet, View } from "react-native";
 import { TextInput } from "react-native-gesture-handler";
 import {
-  GestureHandlerRootView,
   GestureDetector,
+  GestureHandlerRootView,
   usePanGesture,
 } from "react-native-gesture-handler";
 import Animated, {
-  useSharedValue,
-  useAnimatedStyle,
   useAnimatedProps,
+  useAnimatedStyle,
+  useSharedValue,
 } from "react-native-reanimated";
 
 const INITIAL_BOX_SIZE = 50;
@@ -23,17 +23,15 @@ const Slider = () => {
 
   const pan = usePanGesture({
     onUpdate: (event) => {
-      offset.value =
-        Math.abs(offset.value) <= MAX_VALUE
-          ? offset.value + event.changeX <= 0
-            ? 0
-            : offset.value + event.changeX >= MAX_VALUE
-              ? MAX_VALUE
-              : offset.value + event.changeX
-          : offset.value;
+      if (Math.abs(offset.value) <= MAX_VALUE) {
+        offset.set(
+          Math.min(Math.max(offset.value + event.changeX, 0), MAX_VALUE),
+        );
+      }
 
       const newWidth = INITIAL_BOX_SIZE + offset.value;
-      boxWidth.value = newWidth;
+
+      boxWidth.set(newWidth);
     },
   });
 
@@ -60,8 +58,8 @@ const Slider = () => {
     <GestureHandlerRootView style={styles.container}>
       <AnimatedTextInput
         animatedProps={animatedProps}
-        style={[styles.boxWidthText]}
         editable={false}
+        style={[styles.boxWidthText]}
       />
       <Animated.View style={[styles.box, boxStyle]} />
       <View style={styles.sliderTrack}>

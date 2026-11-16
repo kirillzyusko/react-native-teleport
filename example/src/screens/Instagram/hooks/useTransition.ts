@@ -1,7 +1,7 @@
 import {
+  type SharedValue,
   makeMutable,
   withSpring,
-  type SharedValue,
 } from "react-native-reanimated";
 import { scheduleOnRN } from "react-native-worklets";
 import { create } from "zustand";
@@ -36,6 +36,7 @@ export const useTransition = create<Transition>((set, get) => ({
     const moveToReels = () => {
       set({ destination: "reels" });
     };
+
     get().progress.set(
       withSpring(1, SPRING_CONFIG, () => {
         scheduleOnRN(moveToReels);
@@ -48,6 +49,7 @@ export const useTransition = create<Transition>((set, get) => ({
       set({ destination: undefined, y: 0 });
       onFinish?.();
     };
+
     get().progress.set(
       withSpring(0, SPRING_CONFIG, () => {
         scheduleOnRN(moveToFeed);

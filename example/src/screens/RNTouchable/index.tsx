@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { View, StyleSheet, Button, TouchableOpacity } from "react-native";
+import { Button, StyleSheet, TouchableOpacity, View } from "react-native";
 import { Portal, PortalHost } from "react-native-teleport";
 
 export default function RNTouchableExample() {

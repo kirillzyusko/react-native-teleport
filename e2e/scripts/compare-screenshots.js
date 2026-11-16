@@ -1,4 +1,4 @@
-/* eslint-disable no-undef */
+/* global base, target, diff, MAESTRO_FILENAME, http, output, json */
 const BASE = base;
 const TARGET = target;
 const DIFF = diff;

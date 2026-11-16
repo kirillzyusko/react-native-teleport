@@ -1,40 +1,41 @@
-import {
-  createNativeStackNavigator,
-  type NativeStackNavigationProp,
-} from "@react-navigation/native-stack";
 import { HeaderBackButton } from "@react-navigation/elements";
+import {
+  type NativeStackNavigationProp,
+  createNativeStackNavigator,
+} from "@react-navigation/native-stack";
 
 import { ScreenNames } from "../../constants/screenNames";
-import GestureHandlerTouchableExample from "../../screens/Touchable";
-import RNTouchableExample from "../../screens/RNTouchable";
-import DynamicChildrenExample from "../../screens/DynamicChildren";
-import InstantRoot from "../../screens/InstantRoot";
-import Hook from "../../screens/Hook/Hook";
-import FlexibleStyles from "../../screens/FlexibleStyles";
 import BottomSheet from "../../screens/BottomSheet";
-import Messenger from "../../screens/Messenger";
-import PortalBeforeHost from "../../screens/PortalBeforeHost";
-import RecycleRepro from "../../screens/RecycleRepro";
-import InstagramFeed from "../../screens/Instagram/Feed";
-import InstagramReels from "../../screens/Instagram/Reels";
 import DeepNavigation from "../../screens/DeepNavigation/Screen1";
 import DeepNavigationNested from "../../screens/DeepNavigation/Screen2";
-import TravelExplore from "../../screens/Travel/Explore";
-import TravelDetails from "../../screens/Travel/Details";
-import type { PostType } from "../../screens/Instagram/posts";
-import type { ImageProps } from "react-native";
-import TeleportationOrder from "../../screens/TeleportationOrder";
-import RichTextEditor from "../../screens/RichTextEditor";
-import PersistedPortal from "../../screens/PersistedPortal";
-import PhotoGallery from "../../screens/PhotoGallery/PhotoGallery";
-import PhotoDetail from "../../screens/PhotoGallery/PhotoDetail";
-import type { Photo } from "../../screens/PhotoGallery/photos";
-import Orientation from "../../screens/Orientation";
-import ScaledHost from "../../screens/ScaledHost";
-import TransitionReparent from "../../screens/TransitionReparent";
-import StableHostRemount from "../../screens/StableHostRemount";
-import NestedStackPop from "../../screens/NestedStackPop";
+import DynamicChildrenExample from "../../screens/DynamicChildren";
+import FlexibleStyles from "../../screens/FlexibleStyles";
+import Hook from "../../screens/Hook/Hook";
+import InstagramFeed from "../../screens/Instagram/Feed";
+import InstagramReels from "../../screens/Instagram/Reels";
+import InstantRoot from "../../screens/InstantRoot";
 import Menu from "../../screens/Menu";
+import Messenger from "../../screens/Messenger";
+import NestedStackPop from "../../screens/NestedStackPop";
+import Orientation from "../../screens/Orientation";
+import PersistedPortal from "../../screens/PersistedPortal";
+import PhotoDetail from "../../screens/PhotoGallery/PhotoDetail";
+import PhotoGallery from "../../screens/PhotoGallery/PhotoGallery";
+import PortalBeforeHost from "../../screens/PortalBeforeHost";
+import RecycleRepro from "../../screens/RecycleRepro";
+import RichTextEditor from "../../screens/RichTextEditor";
+import RNTouchableExample from "../../screens/RNTouchable";
+import ScaledHost from "../../screens/ScaledHost";
+import StableHostRemount from "../../screens/StableHostRemount";
+import TeleportationOrder from "../../screens/TeleportationOrder";
+import GestureHandlerTouchableExample from "../../screens/Touchable";
+import TransitionReparent from "../../screens/TransitionReparent";
+import TravelDetails from "../../screens/Travel/Details";
+import TravelExplore from "../../screens/Travel/Explore";
+
+import type { PostType } from "../../screens/Instagram/posts";
+import type { Photo } from "../../screens/PhotoGallery/photos";
+import type { ImageProps } from "react-native";
 
 export type ExamplesStackParamList = {
   [ScreenNames.GESTURE_HANDLER_TOUCHABLE]: undefined;
@@ -255,9 +256,9 @@ const ExamplesStack = () => (
         headerLeft: ({ label, tintColor }) => (
           <HeaderBackButton
             label={label}
-            onPress={() => navigation.goBack()}
             testID="go_back"
             tintColor={tintColor}
+            onPress={() => navigation.goBack()}
           />
         ),
       })}

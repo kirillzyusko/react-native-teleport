@@ -1,6 +1,6 @@
-import { useEffect, useId, useMemo, useRef, useState } from "react";
 import BrowserOnly from "@docusaurus/BrowserOnly";
 import useBaseUrl from "@docusaurus/useBaseUrl";
+import { useEffect, useId, useMemo, useRef, useState } from "react";
 
 import styles from "./styles.module.css";
 
@@ -21,10 +21,12 @@ const cellRect = (i: number): Rect => ({
   w: TH,
   h: TH,
 });
+
 // the tapped photo: its cell in the grid and its proportions
 type Hero = { cell: number; id: number; aspect: number };
 const heroAt = (cell: number): Hero => {
   const id = IDS[cell] ?? IDS[0]!;
+
   return { cell, id, aspect: ASPECT[id] ?? 1 };
 };
 // the photo's frame at progress p: its cell at 0, full width below the status bar at 1
@@ -32,6 +34,7 @@ const heroRect = ({ cell, aspect }: Hero, p: number): Rect => {
   const c = cellRect(cell);
   const s = 1 + (SC - 1) * p;
   const diff = (390 * aspect) / SC - TH;
+
   return {
     x: c.x * (1 - p),
     y: c.y * (1 - p) + SAFE * p,
@@ -44,21 +47,29 @@ const clamp = (v: number, a = 0, b = 1) => Math.min(b, Math.max(a, v));
 const mix = (a: number, b: number, k: number) => a + (b - a) * k;
 const ss = (t: number, a: number, b: number) => {
   const k = clamp((t - a) / (b - a));
+
   return k * k * (3 - 2 * k);
 };
 // critically damped spring that settles with ~zero velocity at u = 1
 const spring = (u: number) => {
   const k = 7;
+
   return (1 - (1 + k * u) * Math.exp(-k * u)) / (1 - (1 + k) * Math.exp(-k));
 };
 // position for a trapezoid velocity profile: eases in over `ai`, out over `ao`
-const ramp = (x: number, ai: number, ao: number) => {
-  x = clamp(x);
+const ramp = (value: number, ai: number, ao: number) => {
+  const x = clamp(value);
   const area = 1 - ai / 2 - ao / 2;
   let d: number;
-  if (x < ai) d = (x * x) / (2 * ai);
-  else if (x <= 1 - ao) d = ai / 2 + (x - ai);
-  else d = ai / 2 + (1 - ao - ai) + ao / 2 - ((1 - x) * (1 - x)) / (2 * ao);
+
+  if (x < ai) {
+    d = (x * x) / (2 * ai);
+  } else if (x <= 1 - ao) {
+    d = ai / 2 + (x - ai);
+  } else {
+    d = ai / 2 + (1 - ao - ai) + ao / 2 - ((1 - x) * (1 - x)) / (2 * ao);
+  }
+
   return d / area;
 };
 const px = (v: number) => `${v.toFixed(2)}px`;
@@ -84,6 +95,7 @@ const READOUTS: Array<keyof Readout> = [
   "target",
   "fullRes",
 ];
+
 // what the app looks like at a moment of a chapter
 type Core = {
   tap: "thumb" | "close" | null;
@@ -181,16 +193,35 @@ type Chapter = {
 
 const H = { F0: 1.6, FS: 4.16, SWAP: 0.24, LAND: 1.3, RESUME: 7.1, FE: 10.7 };
 const handoffU = (u: number) => {
-  if (u <= H.F0) return 0;
-  if (u < H.FS) return H.SWAP * ramp((u - H.F0) / (H.FS - H.F0), 0, 0.25);
-  if (u < H.RESUME) return H.SWAP;
-  if (u < H.FE)
+  if (u <= H.F0) {
+    return 0;
+  }
+  if (u < H.FS) {
+    return H.SWAP * ramp((u - H.F0) / (H.FS - H.F0), 0, 0.25);
+  }
+  if (u < H.RESUME) {
+    return H.SWAP;
+  }
+  if (u < H.FE) {
     return (
       H.SWAP + (1 - H.SWAP) * ramp((u - H.RESUME) / (H.FE - H.RESUME), 0.2, 0)
     );
+  }
+
   return 1;
 };
 const LOADED = "loaded (onLoad fired)";
+const fullResState = (
+  requested: boolean,
+  loaded: boolean,
+  loadedLabel = "loaded",
+) => {
+  if (!requested) {
+    return "not requested";
+  }
+
+  return loaded ? loadedLabel : "loading";
+};
 
 const CHAPTERS: Record<ChapterId, Chapter> = {
   teleport: {
@@ -212,6 +243,7 @@ const CHAPTERS: Record<ChapterId, Chapter> = {
     ],
     at: (u) => {
       const inHost = u >= 0.9;
+
       return core({
         tap: "thumb",
         tapK: (u - 0.9) / 0.7,
@@ -246,6 +278,7 @@ const CHAPTERS: Record<ChapterId, Chapter> = {
     ],
     at: (u) => {
       const p = spring(clamp((u - 1.4) / 3.6));
+
       return core({
         lift: 1,
         inHost: true,
@@ -259,8 +292,7 @@ const CHAPTERS: Record<ChapterId, Chapter> = {
         readout: {
           progress: p,
           host: HOST,
-          fullRes:
-            u < 0.2 ? "not requested" : u < 2.4 ? "loading" : "loaded, hidden",
+          fullRes: fullResState(u >= 0.2, u >= 2.4, "loaded, hidden"),
         },
       });
     },
@@ -296,6 +328,7 @@ const CHAPTERS: Record<ChapterId, Chapter> = {
       const p = spring(handoffU(u));
       const swapped = u >= H.FS;
       const landed = u >= H.FS + H.LAND;
+
       return core({
         lift: 1,
         inHost: true,
@@ -322,7 +355,7 @@ const CHAPTERS: Record<ChapterId, Chapter> = {
           source: swapped ? 0 : 1,
           target: swapped ? 1 : 0,
           host: HOST,
-          fullRes: u < 0.2 ? "not requested" : swapped ? LOADED : "loading",
+          fullRes: fullResState(u >= 0.2, swapped, LOADED),
         },
       });
     },
@@ -343,6 +376,7 @@ const CHAPTERS: Record<ChapterId, Chapter> = {
       const reset = u >= 0.4;
       // the hidden thumbnail's progress resets to 0 instantly; fade its outline through the jump
       const resetFade = reset ? ss(u, 0.4, 0.65) : 1 - ss(u, 0.15, 0.4);
+
       return core({
         lift: 1 - ss(u, 0.7, 1.9),
         inHost: !reset,
@@ -386,6 +420,7 @@ const CHAPTERS: Record<ChapterId, Chapter> = {
       const end = 3.9;
       const p = 1 - spring(clamp((u - 1.1) / (end - 1.1)));
       const done = u >= end;
+
       return core({
         tap: "close",
         tapK: (u - 0.5) / 0.7,
@@ -438,6 +473,7 @@ const ALONE: Partial<Record<ChapterId, Chapter>> = {
       const inHost = u >= 0.9;
       const loaded = u >= 4.4;
       const loading = loaded ? 0 : ss(u, 3.6, 3.9);
+
       return core({
         tap: "thumb",
         tapK: (u - 0.9) / 0.7,
@@ -457,7 +493,7 @@ const ALONE: Partial<Record<ChapterId, Chapter>> = {
         chips: { low: ss(u, 2.5, 3) },
         readout: {
           host: inHost ? HOST : "undefined",
-          fullRes: u < 3.4 ? "not requested" : loaded ? "loaded" : "loading",
+          fullRes: fullResState(u >= 3.4, loaded),
         },
       });
     },
@@ -495,7 +531,9 @@ const makePlan = (ids: ChapterId[]): Plan => {
   const chapters = ids.map((id) => {
     const chapter = (!full && ALONE[id]) || CHAPTERS[id];
     const c = { id, start: t, chapter };
+
     t += chapter.duration;
+
     return c;
   });
   const first = chapters[0] ?? {
@@ -504,14 +542,21 @@ const makePlan = (ids: ChapterId[]): Plan => {
     chapter: CHAPTERS.teleport,
   };
   const captions: Array<[number, string, string]> = [];
-  if (full) captions.push([0, ...INTRO]);
+
+  if (full) {
+    captions.push([0, ...INTRO]);
+  }
   chapters.forEach((c, i) =>
     c.chapter.captions.forEach(([s, a, b]) =>
       captions.push([!full && i === 0 && s === 0 ? 0 : c.start + s, a, b]),
     ),
   );
-  if (full) captions.push([t + 0.4, ...OUTRO]);
+
+  if (full) {
+    captions.push([t + 0.4, ...OUTRO]);
+  }
   const handoff = chapters.find((c) => c.id === "handoff");
+
   return {
     full,
     chapters,
@@ -534,7 +579,12 @@ const sceneAt = (plan: Plan, t: number): Scene => {
     start: 0,
     chapter: CHAPTERS.teleport,
   };
-  for (const c of plan.chapters) if (t >= c.start) ch = c;
+
+  for (const c of plan.chapters) {
+    if (t >= c.start) {
+      ch = c;
+    }
+  }
   const { chapter } = ch;
   const c = chapter.at(clamp(t - ch.start, 0, chapter.duration));
   const { full, end } = plan;
@@ -547,9 +597,13 @@ const sceneAt = (plan: Plan, t: number): Scene => {
   const hud = (full ? 1 - ss(t, end, end + 0.4) : 1) * (1 - ss(c.flat, 0, 0.3));
   const [in0, in2] = full ? [2.2, 2.7] : [1.2, 1.5];
   let caption = 0;
+
   plan.captions.forEach(([start], i) => {
-    if (t >= start) caption = i;
+    if (t >= start) {
+      caption = i;
+    }
   });
+
   return {
     ...c,
     ex,
@@ -624,13 +678,15 @@ const tipFor = (key: TipKey, sc: Core): Tip => {
         code: "<View style={{ width, height }}>",
       };
     case "detail":
-      if (sc.plain)
+      if (sc.plain) {
         return {
           tone: "detail",
           title: "Detail screen",
           body: "A transparent modal with a black backdrop. It covers the gallery, but not the root host above it, so the teleported thumbnail stays in sight.",
           code: 'presentation: "containedTransparentModal"',
         };
+      }
+
       return {
         tone: "detail",
         title: "Detail screen",
@@ -638,7 +694,7 @@ const tipFor = (key: TipKey, sc: Core): Tip => {
         code: 'presentation: "containedTransparentModal"',
       };
     case "full":
-      if (sc.plain)
+      if (sc.plain) {
         return sc.detailShown
           ? {
               tone: "hot",
@@ -652,13 +708,16 @@ const tipFor = (key: TipKey, sc: Core): Tip => {
               body: "A plain <Image> on the detail screen. Until it’s downloaded and decoded, the screen stays black, as in step 2.",
               code: "source={{ uri: photo.fullSize }}",
             };
-      if (sc.detailShown)
+      }
+      if (sc.detailShown) {
         return {
           tone: "hot",
           title: "Full-res photo",
           body: "Rendered once, only on the detail screen. It follows the same interpolation as the thumbnail, so it can take over at any point of the animation.",
           code: "onLoad={onLoad}",
         };
+      }
+
       return sc.ghostText === IDLE.ghostText
         ? {
             tone: "detail",
@@ -673,13 +732,15 @@ const tipFor = (key: TipKey, sc: Core): Tip => {
             code: "opacity: visibility.target",
           };
     case "close":
-      if (sc.plain)
+      if (sc.plain) {
         return {
           tone: "detail",
           title: "Close button",
           body: "Goes through the store: goBack clears id, so the thumbnail’s <Portal> renders in its cell again.",
           code: "goBack(navigation.goBack)",
         };
+      }
+
       return {
         tone: "detail",
         title: "Close button",
@@ -694,14 +755,15 @@ const tipFor = (key: TipKey, sc: Core): Tip => {
         code: "<PortalProvider>",
       };
     case "thumb":
-      if (!sc.inHost && sc.thumbShown)
+      if (!sc.inHost && sc.thumbShown) {
         return {
           tone: "gallery",
           title: "Thumbnail",
           body: "A low-res image in its cell. On tap, its <Portal> switches to the root host.",
           code: 'hostName={isAnimating ? "root" : undefined}',
         };
-      if (sc.thumbShown)
+      }
+      if (sc.thumbShown) {
         return {
           tone: "host",
           title: "Teleported thumbnail",
@@ -710,13 +772,16 @@ const tipFor = (key: TipKey, sc: Core): Tip => {
             : "The same native view, now a child of the root PortalHost: nothing is re-mounted or re-decoded. progress drives its translate, scale and height.",
           code: '<Portal hostName="root">',
         };
-      if (sc.inHost)
+      }
+      if (sc.inHost) {
         return {
           tone: "host",
           title: "Thumbnail, hidden",
           body: "visibility.source is 0. It keeps following progress until the spring finishes, then teleports back to its cell.",
           code: "opacity: visibility.source",
         };
+      }
+
       return {
         tone: "gallery",
         title: "Thumbnail, back in its cell",
@@ -741,8 +806,10 @@ const quadMap = ([[x0, y0], [x1, y1], [x2, y2], [x3, y3]]: Quad) => {
   const den = dx1 * dy2 - dx2 * dy1 || 1e-6;
   const g = (dx3 * dy2 - dx2 * dy3) / den;
   const h = (dx1 * dy3 - dx3 * dy1) / den;
+
   return (u: number, v: number): Pt => {
     const w = g * u + h * v + 1;
+
     return [
       ((x1 - x0 + g * x1) * u + (x3 - x0 + h * x3) * v + x0) / w,
       ((y1 - y0 + g * y1) * u + (y3 - y0 + h * y3) * v + y0) / w,
@@ -757,6 +824,7 @@ const subQuad = (q: Quad, r: Rect): Quad => {
     (r.x + r.w) / 390,
     (r.y + r.h) / 844,
   ];
+
   return [m(u0, v0), m(u1, v0), m(u1, v1), m(u0, v1)];
 };
 
@@ -769,8 +837,10 @@ const readPalette = (el: Element): Palette => {
       .getPropertyValue(name)
       .split(",")
       .map((c) => Number(c.trim()));
+
     return [r, g, b];
   };
+
   return {
     gallery: rgb("--viz-gallery-rgb"),
     detail: rgb("--viz-detail-rgb"),
@@ -809,15 +879,22 @@ function createScene(
   const cache = new Map<string, Element>();
   const q = <E extends Element = HTMLElement>(k: string) => {
     let el = cache.get(k);
+
     if (!el) {
       el = root.querySelector(`[data-k="${k}"]`) ?? undefined;
-      if (el) cache.set(k, el);
+
+      if (el) {
+        cache.set(k, el);
+      }
     }
+
     return el as unknown as E;
   };
   const canvas = q("canvas");
   const attrs = (el: Element, a: Record<string, string | number>) => {
-    for (const key in a) el.setAttribute(key, String(a[key]));
+    for (const key in a) {
+      el.setAttribute(key, String(a[key]));
+    }
   };
   const box = (el: Element, r: Rect) =>
     attrs(el, { x: r.x, y: r.y, width: r.w, height: r.h });
@@ -826,6 +903,7 @@ function createScene(
   const photoBox = (r: Rect): Rect => {
     const h = Math.max(r.h, r.w * hero.aspect);
     const w = h / hero.aspect;
+
     return { x: r.x - (w - r.w) / 2, y: r.y - (h - r.h) / 2, w, h };
   };
   const corners4 = (prefix: string, r: Rect) =>
@@ -850,6 +928,7 @@ function createScene(
     const k = cr.width / 1920 || 1;
     const center = (el: Element): Pt => {
       const r = el.getBoundingClientRect();
+
       return [
         (r.left + r.width / 2 - cr.left) / k,
         (r.top + r.height / 2 - cr.top) / k,
@@ -877,6 +956,7 @@ function createScene(
     const sCam = mix(0.9, 0.96, ex);
     const cx = mix(960, 860, ex);
     const cy = mix(520, 575, ex);
+
     q("stage").style.transform =
       `translate3d(${px(cx - 195)}, ${px(cy - 422)}, 0) scale(${sCam}) rotateX(${(54 + 3 * fx.tiltY) * ex}deg) rotateZ(${(-36 + 5 * sc.drift + 3 * fx.tiltX) * ex}deg)`;
     q("viewport").style.opacity = String(sc.fade * fx.fadeIn);
@@ -887,6 +967,7 @@ function createScene(
       number,
       number,
     ];
+
     q("bezel").style.opacity = String((1 - 0.75 * ex) * dim(own0));
     q("L0").style.transform = `translateZ(${px(z0)})`;
     q("L1").style.transform = `translateZ(${px(z1)})`;
@@ -898,10 +979,12 @@ function createScene(
       const g = q(key);
       const on = Math.max(ex, 0.9 * own);
       const lit = own * breathe;
+
       g.style.borderColor = rgba(c, (0.85 + 0.15 * lit) * on);
       g.style.background = rgba(c, (a + 0.06 * lit) * on);
       g.style.boxShadow = `0 0 ${px(40 + 60 * lit)} ${rgba(c, (0.35 + 0.45 * lit) * on * pal.glow)}, inset 0 0 ${px(30 + 40 * lit)} ${rgba(c, (0.12 + 0.2 * lit) * on * pal.glow)}`;
     };
+
     glass("g0", pal.gallery, 0, own0);
     glass("g1", pal.detail, 0.07, own1);
     glass("g2", pal.host, 0.06, own2);
@@ -909,6 +992,7 @@ function createScene(
     // detail screen: full-res photo + its invisible outline, as SVG geometry (sub-pixel, no layout snapping)
     q("backdrop").style.opacity = String(sc.backdrop);
     const dr = rect(sc.detailP);
+
     box(q("detailClipRect"), dr);
     box(q("ghostRect"), dr);
     box(q("detailImage"), photoBox(dr));
@@ -920,6 +1004,7 @@ function createScene(
     // the thumbnail: moves along z between its cell and the root host, geometry drawn in SVG
     const fz = mix(z0, z2, sc.lift) + 2;
     const fr = rect(sc.thumbP);
+
     q("flyer").style.transform = `translate3d(0, 0, ${px(fz)})`;
     q("flyer").style.opacity = String(dim(ownFly));
     box(q("thumbClipRect"), fr);
@@ -929,12 +1014,14 @@ function createScene(
     opacity("thumbImage", sc.thumbShown ? 1 : 0);
     // a hidden thumbnail is drawn as its outline; a visible one is outlined only to point it out on the flat phone
     const outlineK = sc.thumbShown ? sc.outline : ex * sc.outline;
+
     opacity("thumbOutline", outlineK);
     q("slot").style.borderColor = rgba(pal.host, 0.9 * ex * sc.lift);
 
     // handoff: the visible image travels from the root host down to the detail screen and sharpens on the way
     const handK = sc.handT === null ? 0 : ss(sc.handT, 0, H.LAND);
     const inHandoff = sc.handT !== null && sc.handT < H.LAND;
+
     q("handoff").style.transform =
       `translate3d(0, 0, ${px(mix(z2, z1, handK) + 3)})`;
     q("handoff").style.opacity = String(
@@ -949,18 +1036,22 @@ function createScene(
       sc.handT === null ? 1 : 1 - ss(sc.handT, 0.1, 0.85),
     );
     corners4("x", dr);
+
     for (let i = 0; i < 3; i++) {
       const lag = 0.11 * (i + 1);
       const kk = sc.handT === null ? 0 : ss(sc.handT, lag, H.LAND + lag);
       const on = sc.handT !== null && sc.handT < H.LAND + lag;
       const plane = q(`trail${i}`);
+
       plane.style.transform = `translate3d(0, 0, ${px(mix(z2, z1, kk) + 2)})`;
       plane.style.opacity = String(
         on ? (0.75 - 0.18 * i) * ex * Math.sin(Math.PI * kk) : 0,
       );
       const c = mixRgb(pal.host, pal.detail, kk);
+
       for (const part of ["Glow", "Line"]) {
         const el = q(`trail${part}${i}`);
+
         box(el, dr);
         el.setAttribute("stroke", rgba(c, part === "Glow" ? 0.35 : 1));
       }
@@ -970,6 +1061,7 @@ function createScene(
     const labOwn = [own0, own1, own2];
     const labColors = [pal.gallery, pal.detail, pal.host];
     const labDy = [46, 0, -46] as const;
+
     sc.labels.forEach((kk, i) => {
       const [ax, ay] = center(q(`a${i}`));
       const lx = 1390;
@@ -977,6 +1069,7 @@ function createScene(
       const own = labOwn[i] ?? 0;
       const op = kk * ex * dim(own);
       const lab = q(`lab${i}`);
+
       lab.style.transform = `translate(${px(lx + 18)}, ${px(ly - 30)}) scale(${1 + 0.06 * own})`;
       lab.style.opacity = String(op);
       attrs(q(`labDot${i}`), {
@@ -995,9 +1088,11 @@ function createScene(
     const beam = inHandoff ? Math.sin(Math.PI * handK) : 0;
     const slotQuad =
       sc.drop > 0 ? subQuad(corners("c0"), cellRect(hero.cell)) : null;
+
     for (let i = 0; i < 4; i++) {
       const [x1, y1] = center(q(`f${i}`));
       const [x2, y2] = slotQuad?.[i] ?? center(q(`d${i}`));
+
       attrs(q(`align${i}`), {
         x1,
         y1,
@@ -1015,6 +1110,7 @@ function createScene(
         ? center(q("closeAnchor"))
         : [(fQuad[0][0] + fQuad[2][0]) / 2, (fQuad[0][1] + fQuad[2][1]) / 2];
     const rippleOn = sc.tap !== null && sc.tapK > 0 && sc.tapK < 1;
+
     attrs(q("ripple"), {
       cx: tapAt[0],
       cy: tapAt[1],
@@ -1029,6 +1125,7 @@ function createScene(
     });
 
     const flashOn = sc.flashK !== null && sc.flashK >= 0 && sc.flashK < 1;
+
     attrs(q("flash"), {
       "points": dQuad.map((pt) => pt.join(",")).join(" "),
       "stroke": rgba(pal.hot, 1),
@@ -1041,15 +1138,19 @@ function createScene(
     const chipK = ex * sc.hud;
     const place = (key: string, x: number, y: number, op: number) => {
       const c = q(key);
+
       c.style.transform = `translate(${px(x)}, ${px(y)})`;
       c.style.opacity = String(op * chipK);
     };
+
     place("chipLow", f0x - 10, f0y - 62, sc.chips.low);
     place("chipHidden", f0x - 10, f0y - 62, sc.chips.hidden);
     place("chipGhost", d1x + 16, d1y - 8, sc.chips.ghost);
     place("chipFull", d1x + 16, d1y - 8, sc.chips.full);
-    if (q("chipGhost").textContent !== sc.ghostText)
+
+    if (q("chipGhost").textContent !== sc.ghostText) {
       q("chipGhost").textContent = sc.ghostText;
+    }
 
     // what can be hovered right now
     const vis: Record<TipKey, number> = {
@@ -1085,6 +1186,7 @@ function createScene(
           return subQuad(corners("c0"), { x: 0, y: 0, w: 390, h: TOP });
         case "close": {
           const btn = q("closeBtn");
+
           return subQuad(corners("c1"), {
             x: btn.offsetLeft,
             y: btn.offsetTop,
@@ -1095,9 +1197,11 @@ function createScene(
       }
     };
     const focusQuad = fx.focus ? quadFor(fx.focus) : null;
+
     if (focusQuad && fx.focus) {
       const pts = focusQuad.map((pt) => pt.join(",")).join(" ");
       const c = pal[tipFor(fx.focus, sc).tone];
+
       for (const part of ["auraGlow", "auraLine"]) {
         attrs(q(part), {
           "points": pts,
@@ -1125,7 +1229,7 @@ const rich = (text: string) =>
 function Transcript({ plan }: { plan: Plan }) {
   return (
     <figure className={styles.root}>
-      <div className={styles.stageWrap} role="img" aria-label={plan.title} />
+      <div aria-label={plan.title} className={styles.stageWrap} role="img" />
       <figcaption className={styles.srOnly}>
         <p>Animation transcript:</p>
         <ol>
@@ -1151,9 +1255,10 @@ export default function PhotoTransitionExplainer({
 }: Props) {
   const key = chapters.join(",");
   const plan = useMemo(() => makePlan(key.split(",") as ChapterId[]), [key]);
+
   return (
     <BrowserOnly fallback={<Transcript plan={plan} />}>
-      {() => <Explainer plan={plan} compact={compact} />}
+      {() => <Explainer compact={compact} plan={plan} />}
     </BrowserOnly>
   );
 }
@@ -1220,54 +1325,87 @@ function Explainer({ plan, compact }: { plan: Plan; compact: boolean }) {
   const draw = (t: number) => {
     const sc = sceneAt(plan, t);
     const frame = renderRef.current?.(sc, fxRef.current);
-    if (!frame) return;
+
+    if (!frame) {
+      return;
+    }
     sceneRef.current = sc;
     frameRef.current = frame;
     const { readout } = sc;
-    if (scrubRef.current) scrubRef.current.value = String(t);
-    if (progressRef.current)
+
+    if (scrubRef.current) {
+      scrubRef.current.value = String(t);
+    }
+    if (progressRef.current) {
       progressRef.current.textContent = readout.progress.toFixed(2);
-    if (barRef.current)
+    }
+    if (barRef.current) {
       barRef.current.style.width = `${(readout.progress * 100).toFixed(1)}%`;
-    if (sourceRef.current)
+    }
+    if (sourceRef.current) {
       sourceRef.current.textContent = String(readout.source);
-    if (targetRef.current)
+    }
+    if (targetRef.current) {
       targetRef.current.textContent = String(readout.target);
-    if (hostRef.current) hostRef.current.textContent = readout.host;
-    if (loadRef.current) loadRef.current.textContent = readout.fullRes;
+    }
+    if (hostRef.current) {
+      hostRef.current.textContent = readout.host;
+    }
+    if (loadRef.current) {
+      loadRef.current.textContent = readout.fullRes;
+    }
     setCaption(sc.caption);
   };
 
   // topmost visible part under the pointer: objects win over layers, and an opaque layer hides what's below it
   const pick = (x: number, y: number): [TipKey | null, number] => {
     const frame = frameRef.current;
-    if (!frame) return [null, -1];
+
+    if (!frame) {
+      return [null, -1];
+    }
     let glassKey: TipKey | null = null;
+
     for (const el of document.elementsFromPoint(x, y)) {
       const target = el.closest<HTMLElement | SVGElement>("[data-tip]");
-      if (!target || !rootRef.current?.contains(target)) continue;
-      const key = target.dataset.tip as TipKey;
-      const cell = Number(target.dataset.cell ?? -1);
-      if (target.dataset.direct !== undefined) {
-        if (Number(target.style.opacity || 1) > 0.3) return [key, cell];
+
+      if (!target || !rootRef.current?.contains(target)) {
         continue;
       }
-      if (frame.vis[key] < 0.15) continue;
-      if (!PLANES.includes(key)) return [key, cell];
-      if (key === "gallery" || (key === "detail" && frame.solidDetail))
+      const key = target.dataset.tip as TipKey;
+      const cell = Number(target.dataset.cell ?? -1);
+
+      if (target.dataset.direct !== undefined) {
+        if (Number(target.style.opacity || 1) > 0.3) {
+          return [key, cell];
+        }
+        continue;
+      }
+      if (frame.vis[key] < 0.15) {
+        continue;
+      }
+      if (!PLANES.includes(key)) {
         return [key, cell];
+      }
+      if (key === "gallery" || (key === "detail" && frame.solidDetail)) {
+        return [key, cell];
+      }
       glassKey ??= key;
     }
+
     return [glassKey, -1];
   };
 
   const step = (now: number) => {
     rafRef.current = 0;
     const dt = Math.min(0.05, (now - lastRef.current) / 1000);
+
     lastRef.current = now;
     const fx = fxRef.current;
+
     if (playingRef.current) {
       let t = timeRef.current + dt;
+
       if (t > plan.total) {
         t = plan.loopTo;
         loopedAt.current = plan.full ? null : now;
@@ -1276,70 +1414,107 @@ function Explainer({ plan, compact }: { plan: Plan; compact: boolean }) {
     }
     fx.fadeIn =
       loopedAt.current === null ? 1 : ss(now - loopedAt.current, 0, 350);
-    if (fx.fadeIn === 1) loopedAt.current = null;
+
+    if (fx.fadeIn === 1) {
+      loopedAt.current = null;
+    }
     const t = Math.min(timeRef.current, plan.total);
     const ptr = pointer.current;
     const root = rootRef.current;
     const stage = stageRef.current;
+
     fx.now = now;
 
     if ((ptr.inside || ptr.tapped) && root) {
       const [key, cell] = pick(ptr.x, ptr.y);
+
       ptr.tapped = false;
       fx.key = key;
-      if (key === "cell") fx.cell = cell;
-    } else if (!ptr.pinned) fx.key = null;
+
+      if (key === "cell") {
+        fx.cell = cell;
+      }
+    } else if (!ptr.pinned) {
+      fx.key = null;
+    }
     const ease = 1 - Math.exp(-dt * 11);
     let busy = loopedAt.current !== null;
+
     for (const key of KEYS) {
       const aim = fx.key === key ? 1 : 0;
+
       fx.hk[key] += (aim - fx.hk[key]) * ease;
-      if (Math.abs(aim - fx.hk[key]) < 0.002) fx.hk[key] = aim;
-      else busy = true;
+
+      if (Math.abs(aim - fx.hk[key]) < 0.002) {
+        fx.hk[key] = aim;
+      } else {
+        busy = true;
+      }
     }
-    if (fx.key) fx.focus = fx.key;
+
+    if (fx.key) {
+      fx.focus = fx.key;
+    }
     fx.focusK = fx.focus ? fx.hk[fx.focus] : 0;
-    if (!fx.key && fx.focusK === 0) fx.focus = null;
+
+    if (!fx.key && fx.focusK === 0) {
+      fx.focus = null;
+    }
     const r = stage?.getBoundingClientRect();
     const tilt = ptr.inside && ptr.type === "mouse" && fx.motion && r;
     const aimX = tilt ? clamp(((ptr.x - r.left) / r.width) * 2 - 1, -1, 1) : 0;
     const aimY = tilt ? clamp(((ptr.y - r.top) / r.height) * 2 - 1, -1, 1) : 0;
+
     fx.tiltX += (aimX - fx.tiltX) * (1 - Math.exp(-dt * 4));
     fx.tiltY += (aimY - fx.tiltY) * (1 - Math.exp(-dt * 4));
-    if (Math.abs(aimX - fx.tiltX) + Math.abs(aimY - fx.tiltY) > 0.002)
+
+    if (Math.abs(aimX - fx.tiltX) + Math.abs(aimY - fx.tiltY) > 0.002) {
       busy = true;
+    }
     draw(t);
 
     // tooltip next to the pointer, kept inside the figure
     const sc = sceneRef.current;
     const next = fx.key && sc ? tipFor(fx.key, sc) : null;
     const id = next ? `${fx.key}:${next.title}` : "";
+
     if (id !== fx.tipId) {
       fx.tipId = id;
-      if (next) setTip(next);
+
+      if (next) {
+        setTip(next);
+      }
       setTipOn(!!next);
     }
     const el = tipRef.current;
+
     if (next && el && root) {
       const rr = root.getBoundingClientRect();
       const w = el.offsetWidth;
       let x = ptr.x - rr.left + 16;
-      if (x + w > rr.width) x = ptr.x - rr.left - w - 16;
+
+      if (x + w > rr.width) {
+        x = ptr.x - rr.left - w - 16;
+      }
       el.style.left = px(clamp(x, 0, Math.max(0, rr.width - w)));
       el.style.top = px(ptr.y - rr.top + 18);
     }
 
-    if (playingRef.current || ptr.inside || ptr.pinned || busy)
+    if (playingRef.current || ptr.inside || ptr.pinned || busy) {
       rafRef.current = requestAnimationFrame(step);
+    }
   };
   const kick = () => {
-    if (rafRef.current) return;
+    if (rafRef.current) {
+      return;
+    }
     lastRef.current = performance.now();
     rafRef.current = requestAnimationFrame(step);
   };
   // effects reach the loop through refs, so they don't depend on this render's closures
   const kickRef = useRef(kick);
   const drawRef = useRef(draw);
+
   useEffect(() => {
     kickRef.current = kick;
     drawRef.current = draw;
@@ -1349,8 +1524,12 @@ function Explainer({ plan, compact }: { plan: Plan; compact: boolean }) {
   useEffect(() => {
     const root = rootRef.current;
     const stageWrap = stageRef.current;
-    if (!root || !stageWrap) return;
+
+    if (!root || !stageWrap) {
+      return;
+    }
     const palette = { current: readPalette(root) };
+
     renderRef.current = createScene(root, palette, plan.hero);
     const canvas = root.querySelector<HTMLElement>(`.${styles.canvas}`)!;
     const fit = () => {
@@ -1360,24 +1539,29 @@ function Explainer({ plan, compact }: { plan: Plan; compact: boolean }) {
     const reduced = window.matchMedia(
       "(prefers-reduced-motion: reduce)",
     ).matches;
+
     fxRef.current.motion = !reduced;
+
     if (reduced) {
       timeRef.current = plan.still;
       userPaused.current = true;
     }
     fit();
     const ro = new ResizeObserver(fit);
+
     ro.observe(stageWrap);
     const io = new IntersectionObserver(
       ([entry]) => setVisible(entry?.isIntersecting ?? false),
       { threshold: 0.4 },
     );
+
     io.observe(stageWrap);
     // colors follow the docs theme
     const mo = new MutationObserver(() => {
       palette.current = readPalette(root);
       drawRef.current(timeRef.current);
     });
+
     mo.observe(document.documentElement, { attributeFilter: ["data-theme"] });
     // a tap outside the figure closes a tooltip opened by touch
     const outside = (e: Event) => {
@@ -1386,7 +1570,9 @@ function Explainer({ plan, compact }: { plan: Plan; compact: boolean }) {
         kickRef.current();
       }
     };
+
     document.addEventListener("pointerdown", outside);
+
     return () => {
       ro.disconnect();
       io.disconnect();
@@ -1404,12 +1590,18 @@ function Explainer({ plan, compact }: { plan: Plan; compact: boolean }) {
 
   useEffect(() => {
     playingRef.current = playing;
-    if (playing) kickRef.current();
+
+    if (playing) {
+      kickRef.current();
+    }
   }, [playing]);
 
   const toggle = () => {
     userPaused.current = playing;
-    if (!playing && timeRef.current >= plan.total) timeRef.current = 0;
+
+    if (!playing && timeRef.current >= plan.total) {
+      timeRef.current = 0;
+    }
     setPlaying(!playing);
   };
   const scrub = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -1424,7 +1616,9 @@ function Explainer({ plan, compact }: { plan: Plan; compact: boolean }) {
 
   // mouse: hover; touch and pen: tap to show the tooltip, tap elsewhere to hide it
   const onPointerMove = (e: React.PointerEvent) => {
-    if (e.pointerType !== "mouse") return;
+    if (e.pointerType !== "mouse") {
+      return;
+    }
     Object.assign(pointer.current, {
       inside: true,
       type: "mouse",
@@ -1434,7 +1628,9 @@ function Explainer({ plan, compact }: { plan: Plan; compact: boolean }) {
     kick();
   };
   const onPointerLeave = (e: React.PointerEvent) => {
-    if (e.pointerType !== "mouse") return;
+    if (e.pointerType !== "mouse") {
+      return;
+    }
     pointer.current.inside = false;
     kick();
   };
@@ -1442,7 +1638,9 @@ function Explainer({ plan, compact }: { plan: Plan; compact: boolean }) {
     pointer.current.type = e.pointerType;
   };
   const onClick = (e: React.MouseEvent) => {
-    if (pointer.current.type === "mouse") return;
+    if (pointer.current.type === "mouse") {
+      return;
+    }
     Object.assign(pointer.current, {
       pinned: true,
       tapped: true,
@@ -1473,32 +1671,32 @@ function Explainer({ plan, compact }: { plan: Plan; compact: boolean }) {
 
   const playButton = (
     <button
-      type="button"
-      className={styles.play}
-      onClick={toggle}
       aria-label={playing ? "Pause animation" : "Play animation"}
+      className={styles.play}
+      type="button"
+      onClick={toggle}
     >
       {playing ? (
-        <svg viewBox="0 0 16 16" width="14" height="14" aria-hidden="true">
+        <svg aria-hidden="true" height="14" viewBox="0 0 16 16" width="14">
           <rect
+            fill="currentColor"
+            height="12"
+            rx="1"
+            width="3.5"
             x="3"
             y="2"
-            width="3.5"
-            height="12"
-            rx="1"
-            fill="currentColor"
           />
           <rect
-            x="9.5"
-            y="2"
-            width="3.5"
+            fill="currentColor"
             height="12"
             rx="1"
-            fill="currentColor"
+            width="3.5"
+            x="9.5"
+            y="2"
           />
         </svg>
       ) : (
-        <svg viewBox="0 0 16 16" width="14" height="14" aria-hidden="true">
+        <svg aria-hidden="true" height="14" viewBox="0 0 16 16" width="14">
           <path
             d="M4 2.5v11a1 1 0 0 0 1.5.86l9-5.5a1 1 0 0 0 0-1.72l-9-5.5A1 1 0 0 0 4 2.5z"
             fill="currentColor"
@@ -1509,16 +1707,16 @@ function Explainer({ plan, compact }: { plan: Plan; compact: boolean }) {
   );
 
   return (
-    <figure className={styles.root} ref={rootRef}>
+    <figure ref={rootRef} className={styles.root}>
       <div
         ref={stageRef}
+        aria-label={plan.title}
         className={styles.stageWrap}
         role="img"
-        aria-label={plan.title}
-        onPointerMove={onPointerMove}
-        onPointerLeave={onPointerLeave}
-        onPointerDown={onPointerDown}
         onClick={onClick}
+        onPointerDown={onPointerDown}
+        onPointerLeave={onPointerLeave}
+        onPointerMove={onPointerMove}
       >
         <div className={styles.canvas} data-k="canvas">
           <div className={styles.viewport} data-k="viewport">
@@ -1535,8 +1733,8 @@ function Explainer({ plan, compact }: { plan: Plan; compact: boolean }) {
                     <div
                       key={id}
                       className={styles.cell}
-                      data-tip="cell"
                       data-cell={i}
+                      data-tip="cell"
                       style={{
                         left: cellRect(i).x,
                         top: cellRect(i).y,
@@ -1571,9 +1769,9 @@ function Explainer({ plan, compact }: { plan: Plan; compact: boolean }) {
                 <div className={styles.backdrop} data-k="backdrop" />
                 <svg
                   className={styles.svgLayer}
-                  width="390"
                   height="844"
                   viewBox="0 0 390 844"
+                  width="390"
                 >
                   <defs>
                     <clipPath id={detailClip}>
@@ -1581,19 +1779,19 @@ function Explainer({ plan, compact }: { plan: Plan; compact: boolean }) {
                     </clipPath>
                   </defs>
                   <image
+                    clipPath={`url(#${detailClip})`}
                     data-k="detailImage"
                     href={`${base}full_${hero.id}.jpg`}
                     preserveAspectRatio="none"
-                    clipPath={`url(#${detailClip})`}
                   />
                   <rect
+                    className={styles.hit}
                     data-k="ghostRect"
                     data-tip="full"
-                    className={styles.hit}
                     fill="none"
                     stroke="#a77bff"
-                    strokeWidth="2.5"
                     strokeDasharray="10 7"
+                    strokeWidth="2.5"
                   />
                 </svg>
                 <div
@@ -1631,9 +1829,9 @@ function Explainer({ plan, compact }: { plan: Plan; compact: boolean }) {
               <div className={styles.flyer} data-k="flyer">
                 <svg
                   className={styles.svgLayer}
-                  width="390"
                   height="844"
                   viewBox="0 0 390 844"
+                  width="390"
                 >
                   <defs>
                     <clipPath id={thumbClip}>
@@ -1641,20 +1839,20 @@ function Explainer({ plan, compact }: { plan: Plan; compact: boolean }) {
                     </clipPath>
                   </defs>
                   <image
+                    clipPath={`url(#${thumbClip})`}
                     data-k="thumbImage"
                     href={`${base}thumb_${hero.id}.jpg`}
                     preserveAspectRatio="none"
-                    clipPath={`url(#${thumbClip})`}
                   />
                   <rect
+                    className={styles.hit}
                     data-k="thumbOutline"
                     data-tip="thumb"
-                    className={styles.hit}
                     fill="none"
                     stroke="#2fe0c4"
-                    strokeWidth="3"
                     strokeDasharray="0.01 7"
                     strokeLinecap="round"
+                    strokeWidth="3"
                   />
                 </svg>
                 {anchors("f")}
@@ -1664,9 +1862,9 @@ function Explainer({ plan, compact }: { plan: Plan; compact: boolean }) {
                 <div key={i} className={styles.flyer} data-k={`trail${i}`}>
                   <svg
                     className={styles.svgLayer}
-                    width="390"
                     height="844"
                     viewBox="0 0 390 844"
+                    width="390"
                   >
                     <rect
                       data-k={`trailGlow${i}`}
@@ -1685,9 +1883,9 @@ function Explainer({ plan, compact }: { plan: Plan; compact: boolean }) {
               <div className={styles.flyer} data-k="handoff">
                 <svg
                   className={styles.svgLayer}
-                  width="390"
                   height="844"
                   viewBox="0 0 390 844"
+                  width="390"
                 >
                   <defs>
                     <clipPath id={handoffClip}>
@@ -1695,21 +1893,21 @@ function Explainer({ plan, compact }: { plan: Plan; compact: boolean }) {
                     </clipPath>
                   </defs>
                   <image
+                    clipPath={`url(#${handoffClip})`}
                     data-k="handoffFull"
                     href={`${base}full_${hero.id}.jpg`}
                     preserveAspectRatio="none"
-                    clipPath={`url(#${handoffClip})`}
                   />
                   <image
+                    clipPath={`url(#${handoffClip})`}
                     data-k="handoffThumb"
                     href={`${base}thumb_${hero.id}.jpg`}
                     preserveAspectRatio="none"
-                    clipPath={`url(#${handoffClip})`}
                   />
                   <rect
+                    className={styles.hit}
                     data-k="handoffHit"
                     data-tip="full"
-                    className={styles.hit}
                     fill="none"
                   />
                 </svg>
@@ -1718,15 +1916,15 @@ function Explainer({ plan, compact }: { plan: Plan; compact: boolean }) {
             </div>
           </div>
 
-          <div className={styles.hud} aria-hidden="true">
-            <svg className={styles.hudSvg} width="1920" height="1080">
+          <div aria-hidden="true" className={styles.hud}>
+            <svg className={styles.hudSvg} height="1080" width="1920">
               {[0, 1, 2].map((i) => (
                 <g key={i}>
                   <path
-                    data-k={`labLine${i}`}
                     className={styles.labLine}
-                    strokeWidth="2"
+                    data-k={`labLine${i}`}
                     fill="none"
+                    strokeWidth="2"
                   />
                   <circle data-k={`labDot${i}`} />
                 </g>
@@ -1734,10 +1932,10 @@ function Explainer({ plan, compact }: { plan: Plan; compact: boolean }) {
               {[0, 1, 2, 3].map((i) => (
                 <line
                   key={i}
-                  data-k={`align${i}`}
                   className={styles.guide}
-                  strokeWidth="2"
+                  data-k={`align${i}`}
                   strokeDasharray="6 7"
+                  strokeWidth="2"
                 />
               ))}
               <circle
@@ -1752,23 +1950,23 @@ function Explainer({ plan, compact }: { plan: Plan; compact: boolean }) {
                 <polygon
                   data-k="auraGlow"
                   fill="none"
-                  strokeWidth="14"
                   strokeLinejoin="round"
+                  strokeWidth="14"
                 />
                 <polygon
                   data-k="auraLine"
                   fill="none"
-                  strokeWidth="3"
                   strokeDasharray="22 10"
                   strokeLinejoin="round"
+                  strokeWidth="3"
                 />
               </g>
             </svg>
             <div
               className={styles.label}
+              data-direct=""
               data-k="lab0"
               data-tip="gallery"
-              data-direct=""
             >
               <div className={`${styles.labelName} ${styles.cGallery}`}>
                 Gallery screen
@@ -1777,9 +1975,9 @@ function Explainer({ plan, compact }: { plan: Plan; compact: boolean }) {
             </div>
             <div
               className={styles.label}
+              data-direct=""
               data-k="lab1"
               data-tip="detail"
-              data-direct=""
             >
               <div className={`${styles.labelName} ${styles.cDetail}`}>
                 Detail screen
@@ -1788,9 +1986,9 @@ function Explainer({ plan, compact }: { plan: Plan; compact: boolean }) {
             </div>
             <div
               className={styles.label}
+              data-direct=""
               data-k="lab2"
               data-tip="host"
-              data-direct=""
             >
               <div className={`${styles.labelName} ${styles.cHost}`}>
                 PortalHost “root”
@@ -1799,33 +1997,33 @@ function Explainer({ plan, compact }: { plan: Plan; compact: boolean }) {
             </div>
             <div
               className={`${styles.chip} ${styles.chipLow}`}
+              data-direct=""
               data-k="chipLow"
               data-tip="thumb"
-              data-direct=""
             >
               LOW-RES thumbnail
             </div>
             <div
               className={`${styles.chip} ${styles.chipHost}`}
+              data-direct=""
               data-k="chipHidden"
               data-tip="thumb"
-              data-direct=""
             >
               thumbnail, hidden
             </div>
             <div
               className={`${styles.chip} ${styles.chipDetail}`}
+              data-direct=""
               data-k="chipGhost"
               data-tip="full"
-              data-direct=""
             >
               full-res, loading
             </div>
             <div
               className={`${styles.chip} ${styles.chipHot}`}
+              data-direct=""
               data-k="chipFull"
               data-tip="full"
-              data-direct=""
             >
               FULL-RES photo
             </div>
@@ -1835,8 +2033,8 @@ function Explainer({ plan, compact }: { plan: Plan; compact: boolean }) {
 
       <div
         ref={tipRef}
-        className={`${styles.tip} ${tip ? TONE_CLASS[tip.tone] : ""} ${tipOn ? styles.tipOn : ""}`}
         aria-hidden="true"
+        className={`${styles.tip} ${tip ? TONE_CLASS[tip.tone] : ""} ${tipOn ? styles.tipOn : ""}`}
       >
         <div className={styles.tipTitle}>{tip?.title}</div>
         <div className={styles.tipBody}>{tip?.body}</div>
@@ -1854,14 +2052,14 @@ function Explainer({ plan, compact }: { plan: Plan; compact: boolean }) {
         {playButton}
         <input
           ref={scrubRef}
-          className={styles.scrubber}
-          type="range"
-          min={0}
-          max={plan.total}
-          step={1 / 60}
-          defaultValue={0}
-          onChange={scrub}
           aria-label="Animation timeline"
+          className={styles.scrubber}
+          defaultValue={0}
+          max={plan.total}
+          min={0}
+          step={1 / 60}
+          type="range"
+          onChange={scrub}
         />
         {compact ? null : (
           <dl className={styles.state}>

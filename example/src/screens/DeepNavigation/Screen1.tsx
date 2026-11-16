@@ -1,8 +1,10 @@
+import { useNavigation } from "@react-navigation/native";
 import { useState } from "react";
 import { Button, View } from "react-native";
-import { ScreenNames } from "../../constants/screenNames";
 import { Portal } from "react-native-teleport";
-import { useNavigation } from "@react-navigation/native";
+
+import { ScreenNames } from "../../constants/screenNames";
+
 import type { ExamplesStackNavigation } from "../../navigation/ExamplesStack";
 
 function Screen1() {
@@ -12,14 +14,14 @@ function Screen1() {
   return (
     <View style={{ flex: 1 }}>
       <Button
+        testID="unmount"
         title="Unmount"
         onPress={() => setMounted(false)}
-        testID="unmount"
       />
-      <Button title="Mount" onPress={() => setMounted(true)} testID="mount" />
+      <Button testID="mount" title="Mount" onPress={() => setMounted(true)} />
       <Button
-        title="Go to next screen"
         testID="go_next"
+        title="Go to next screen"
         onPress={() =>
           navigation.navigate(ScreenNames.NAVIGATION_LIFECYCLE_NESTED)
         }

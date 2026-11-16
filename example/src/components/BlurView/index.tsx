@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import { Animated } from "react-native";
 
 type BlurViewProps = {
@@ -7,7 +7,7 @@ type BlurViewProps = {
 
 function BlurView({ visible }: BlurViewProps) {
   const [blurValue, setBlurValue] = useState(visible ? 16 : 0);
-  const opacity = useRef(new Animated.Value(visible ? 1 : 0)).current;
+  const [opacity] = useState(() => new Animated.Value(visible ? 1 : 0));
 
   useEffect(() => {
     Animated.timing(opacity, {
@@ -19,6 +19,7 @@ function BlurView({ visible }: BlurViewProps) {
 
   useEffect(() => {
     const id = opacity.addListener(({ value }) => setBlurValue(value));
+
     return () => opacity.removeListener(id);
   }, [opacity]);
 

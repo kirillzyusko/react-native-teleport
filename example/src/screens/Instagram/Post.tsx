@@ -1,15 +1,22 @@
-import {
-  View,
-  StyleSheet,
-  Image,
-  TouchableWithoutFeedback,
-} from "react-native";
-import type { PostType } from "./posts";
-import Video, { ViewType } from "react-native-video";
-import type { ExamplesStackNavigation } from "../../navigation/ExamplesStack";
 import { useNavigation } from "@react-navigation/native";
 import { useRef } from "react";
+import {
+  Image,
+  StyleSheet,
+  TouchableWithoutFeedback,
+  View,
+} from "react-native";
+import Reanimated, {
+  interpolate,
+  useAnimatedStyle,
+} from "react-native-reanimated";
+import { Portal } from "react-native-teleport";
+import Video, { ViewType } from "react-native-video";
+
 import { ScreenNames } from "../../constants/screenNames";
+import useMeasure from "../../hooks/useMeasure";
+
+import SocialSection from "./components/SocialSection";
 import {
   ASPECT_RATIO,
   CARD_HEIGHT,
@@ -17,14 +24,10 @@ import {
   SCREEN_WIDTH,
   VIDEO_HEIGHT,
 } from "./constants";
-import { Portal } from "react-native-teleport";
-import SocialSection from "./components/SocialSection";
 import { useTransition } from "./hooks/useTransition";
-import Reanimated, {
-  interpolate,
-  useAnimatedStyle,
-} from "react-native-reanimated";
-import useMeasure from "../../hooks/useMeasure";
+
+import type { PostType } from "./posts";
+import type { ExamplesStackNavigation } from "../../navigation/ExamplesStack";
 
 type PostProps = {
   post: PostType;
@@ -90,12 +93,12 @@ const Post = ({ post, active }: PostProps) => {
             >
               {post.video && (
                 <Video
+                  repeat
+                  controls={false}
+                  paused={!active}
+                  resizeMode="cover"
                   source={{ uri: post.video }}
                   style={[styles.video, { top: shouldMove ? y : 0 }]}
-                  repeat
-                  paused={!active}
-                  controls={false}
-                  resizeMode="cover"
                   viewType={ViewType.TEXTURE}
                 />
               )}

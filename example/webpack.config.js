@@ -1,6 +1,7 @@
 const path = require("path");
-const webpack = require("webpack");
+
 const HtmlWebpackPlugin = require("html-webpack-plugin");
+const webpack = require("webpack");
 const appDirectory = path.resolve(__dirname);
 const { presets, plugins } = require(`${appDirectory}/babel.config.js`);
 const compileNodeModules = [

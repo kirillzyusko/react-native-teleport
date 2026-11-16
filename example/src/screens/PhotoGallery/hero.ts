@@ -6,6 +6,7 @@ import {
   withTiming,
 } from "react-native-reanimated";
 import { create } from "zustand";
+
 import { SPRING_CONFIG } from "./constants";
 
 type Position = {
@@ -64,6 +65,7 @@ export const useHeroTransition = create<HeroStore>((set, get) => ({
       // Full-res image is ready mid-flight: it follows the same animation,
       // so swap it in now and teleport back once the animation completes
       set({ visibility: { source: 0, target: 1 } });
+
       return;
     }
 
@@ -131,6 +133,7 @@ export const useHeroTransition = create<HeroStore>((set, get) => ({
     });
 
     const transitionCompleted = get().transitionCompleted;
+
     requestAnimationFrame(() => {
       get().progress.set(
         withSpring(1, SPRING_CONFIG, () => {

@@ -1,4 +1,5 @@
 const path = require("path");
+
 const pkg = require("../package.json");
 const spmOnly = process.env.TELEPORT_SPM_ONLY === "1";
 const disabledIOSDependencies = spmOnly

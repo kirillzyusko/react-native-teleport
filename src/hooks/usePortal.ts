@@ -6,9 +6,9 @@ import {
 /**
  * The `usePortal` hook allows you to manage portals in imperative way.
  *
+ * @param hostName - `name` of the `<PortalHost />` component.
+ * @returns An object that helps to manipulate portals.
  * @category hooks
- * @param `hostName` - `name` of the `<PortalHost />` component
- * @returns an object that helps to manipulate portals
  * @example
  * ```tsx
  * import { usePortal } from "react-native-teleport";
@@ -42,6 +42,7 @@ export default function usePortal(hostName: string = "root") {
      * prevent new portal from being added).
      *
      * @param name - `name` of `<Portal />` component.
+     * @returns Nothing.
      */
     removePortal: (name: string) => store.removePortal(hostName, name),
   };

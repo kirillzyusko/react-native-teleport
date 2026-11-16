@@ -1,4 +1,4 @@
-import { codegenNativeComponent, type ViewProps } from "react-native";
+import { type ViewProps, codegenNativeComponent } from "react-native";
 
 interface NativeProps extends ViewProps {
   name?: string;

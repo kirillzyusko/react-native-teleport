@@ -8,9 +8,9 @@ function Screen2() {
     <View style={{ flex: 1, alignItems: "center", justifyContent: "center" }}>
       <Text>Hello from second screen!</Text>
       <Button
+        testID="go_back"
         title="Go back"
         onPress={() => navigation.goBack()}
-        testID="go_back"
       />
     </View>
   );

@@ -23,13 +23,14 @@ export function BottomSheetContainer({
   const height = useSharedValue(9999);
 
   const onLayout = (e: LayoutChangeEvent) => {
-    height.value = e.nativeEvent.layout.height;
+    height.set(e.nativeEvent.layout.height);
   };
 
+  if (visible && !shown) {
+    setShown(true);
+  }
+
   useEffect(() => {
-    if (visible) {
-      setShown(true);
-    }
     progress.set(
       withSpring(
         visible ? 1 : 0,

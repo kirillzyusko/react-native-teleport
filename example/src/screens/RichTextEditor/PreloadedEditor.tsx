@@ -1,4 +1,4 @@
-import { View, StyleSheet, Dimensions } from "react-native";
+import { Dimensions, StyleSheet, View } from "react-native";
 import { Portal } from "react-native-teleport";
 import { WebView } from "react-native-webview";
 

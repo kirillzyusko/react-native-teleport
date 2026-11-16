@@ -38,20 +38,21 @@ export default function ScaledHost() {
 
   const open = () => {
     setActive(true);
-    backdrop.value = withSpring(1, { duration: 400 });
+    backdrop.set(withSpring(1, { duration: 400 }));
   };
 
   const close = () => {
     setActive(false);
-    backdrop.value = withSpring(0, { duration: 300 });
-    topWH.value = TOP_FIXED;
-    bottomWH.value = BOTTOM_FIXED;
+    backdrop.set(withSpring(0, { duration: 300 }));
+    topWH.set(TOP_FIXED);
+    bottomWH.set(BOTTOM_FIXED);
     setTopSize(null);
     setBottomSize(null);
   };
 
   const topItemStyle = useAnimatedStyle(() => {
     const size = feedback ? topWH.value : TOP_FIXED;
+
     return {
       height: size.h,
       left: MESSAGE.x,
@@ -64,6 +65,7 @@ export default function ScaledHost() {
 
   const bottomItemStyle = useAnimatedStyle(() => {
     const size = feedback ? bottomWH.value : BOTTOM_FIXED;
+
     return {
       height: size.h,
       left: MESSAGE.x,
@@ -75,14 +77,23 @@ export default function ScaledHost() {
   });
 
   const topOk = topSize ? topSize.w >= TOP_OK_MIN_WIDTH : null;
+  let status = "idle";
+
+  if (active) {
+    if (topOk === null) {
+      status = "…";
+    } else {
+      status = topOk ? "OK" : "COLLAPSED";
+    }
+  }
 
   return (
     <View style={styles.screen}>
       <Pressable
         disabled={active}
-        onPress={() => setFeedback((f) => !f)}
         style={[styles.mode, active && styles.modeDisabled]}
         testID="sizing_mode"
+        onPress={() => setFeedback((f) => !f)}
       >
         <Text style={styles.modeText}>
           sizing: {feedback ? "feedback" : "scale-only"}
@@ -97,13 +108,12 @@ export default function ScaledHost() {
         bottom: {format(bottomSize)}
       </Text>
       <Text style={styles.status} testID="top_status">
-        status:{" "}
-        {active ? (topOk === null ? "…" : topOk ? "OK" : "COLLAPSED") : "idle"}
+        status: {status}
       </Text>
       <Pressable
-        onPress={active ? close : open}
         style={styles.button}
         testID="context_menu_toggle"
+        onPress={active ? close : open}
       >
         <Text style={styles.buttonText}>
           {active ? "Close" : "Open context menu"}
@@ -113,12 +123,13 @@ export default function ScaledHost() {
       <Portal hostName={active ? "top-item" : undefined}>
         {active ? (
           <View
+            style={styles.reactionBar}
             onLayout={(e) => {
               const { width: w, height: h } = e.nativeEvent.layout;
-              topWH.value = { h, w };
+
+              topWH.set({ h, w });
               setTopSize({ h, w });
             }}
-            style={styles.reactionBar}
           >
             {REACTIONS.map((r) => (
               <Text key={r} style={styles.reaction}>
@@ -132,12 +143,13 @@ export default function ScaledHost() {
       <Portal hostName={active ? "bottom-item" : undefined}>
         {active ? (
           <View
+            style={styles.actionList}
             onLayout={(e) => {
               const { width: w, height: h } = e.nativeEvent.layout;
-              bottomWH.value = { h, w };
+
+              bottomWH.set({ h, w });
               setBottomSize({ h, w });
             }}
-            style={styles.actionList}
           >
             {ACTIONS.map((a) => (
               <Text key={a} style={styles.action}>

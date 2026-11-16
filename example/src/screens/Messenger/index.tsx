@@ -1,8 +1,9 @@
 import LottieView from "lottie-react-native";
 import { useRef, useState } from "react";
-import { View, Text, ScrollView, Pressable } from "react-native";
-import BlurView from "../../components/BlurView";
+import { Pressable, ScrollView, Text, View } from "react-native";
 import { Portal } from "react-native-teleport";
+
+import BlurView from "../../components/BlurView";
 import useMeasure from "../../hooks/useMeasure";
 
 const messages = [
@@ -60,6 +61,7 @@ export default function Messenger() {
         setTeleported(false);
         setStyle({ paddingTop: 0 });
       }, 500);
+
       return;
     }
     clearTimeout(timeoutId.current);
@@ -88,13 +90,13 @@ export default function Messenger() {
           }}
         >
           <Portal hostName={teleport ? "overlay" : undefined}>
-            <Pressable onPress={handleClick} style={style}>
+            <Pressable style={style} onPress={handleClick}>
               <View style={{ width: 200, height: 200 }}>
                 <LottieView
-                  source={require("../../assets/lottie/bear.json")}
-                  style={{ width: 200, height: 200 }}
                   autoPlay
                   loop
+                  source={require("../../assets/lottie/bear.json")}
+                  style={{ width: 200, height: 200 }}
                 />
               </View>
             </Pressable>

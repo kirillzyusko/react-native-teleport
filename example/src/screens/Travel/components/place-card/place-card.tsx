@@ -1,16 +1,18 @@
-import {
-  View,
-  Image,
-  Text,
-  StyleSheet,
-  type ImageProps,
-  TouchableOpacity,
-} from "react-native";
 import { FontAwesome6 } from "@react-native-vector-icons/fontawesome6/static";
-import LinearGradient from "react-native-linear-gradient";
-import { useState } from "react";
 import { useNavigation } from "@react-navigation/native";
+import { useState } from "react";
+import {
+  Image,
+  type ImageProps,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
+} from "react-native";
+import LinearGradient from "react-native-linear-gradient";
+
 import { ScreenNames } from "../../../../constants/screenNames";
+
 import type { ExamplesStackNavigation } from "../../../../navigation/ExamplesStack";
 
 type Props = {
@@ -25,7 +27,7 @@ export default function PlaceCard({ text, image, header, rate }: Props) {
   const navigation = useNavigation<ExamplesStackNavigation>();
 
   const handlePress = () => {
-    liked ? setLiked(false) : setLiked(true);
+    setLiked((l) => !l);
   };
   const handleCardPress = () => {
     navigation.navigate(ScreenNames.TRAVEL_DETAILS, {
@@ -43,7 +45,7 @@ export default function PlaceCard({ text, image, header, rate }: Props) {
       style={styles.card}
       onPress={handleCardPress}
     >
-      <Image style={styles.card} source={image}></Image>
+      <Image source={image} style={styles.card} />
       <LinearGradient
         colors={["rgba(0, 0, 0, 0)", "rgba(0, 0, 0, 0.89)"]}
         style={[styles.card, styles.absolute]}
@@ -52,8 +54,8 @@ export default function PlaceCard({ text, image, header, rate }: Props) {
           <Text style={styles.header}>{header}</Text>
           <View style={styles.container}>
             <FontAwesome6
-              name="location-dot"
               iconStyle="solid"
+              name="location-dot"
               size={12}
               style={styles.white}
             />
@@ -62,32 +64,32 @@ export default function PlaceCard({ text, image, header, rate }: Props) {
           <View style={styles.container}>
             <View style={styles.container}>
               <FontAwesome6
-                name="star"
                 iconStyle="solid"
+                name="star"
                 size={12}
                 style={styles.yellow}
               />
               <FontAwesome6
-                name="star"
                 iconStyle="solid"
+                name="star"
                 size={12}
                 style={styles.yellow}
               />
               <FontAwesome6
-                name="star"
                 iconStyle="solid"
+                name="star"
                 size={12}
                 style={styles.yellow}
               />
               <FontAwesome6
-                name="star"
                 iconStyle="solid"
+                name="star"
                 size={12}
                 style={styles.yellow}
               />
               <FontAwesome6
-                name="star"
                 iconStyle="solid"
+                name="star"
                 size={12}
                 style={styles.white}
               />
@@ -101,10 +103,10 @@ export default function PlaceCard({ text, image, header, rate }: Props) {
           onPress={handlePress}
         >
           <FontAwesome6
-            name="heart"
-            iconStyle={liked ? "solid" : "regular"}
-            size={16}
             color={liked ? "#FD5B1F" : "#161616"}
+            iconStyle={liked ? "solid" : "regular"}
+            name="heart"
+            size={16}
           />
         </TouchableOpacity>
       </LinearGradient>

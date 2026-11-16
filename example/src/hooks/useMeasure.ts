@@ -7,7 +7,7 @@ const useMeasure = (viewRef: React.RefObject<View | null>) => {
   const insets = useSafeAreaInsets();
 
   return (callback: MeasureCallback) => {
-    // @ts-expect-error
+    // @ts-expect-error `View` is typed as a component, not as a host instance
     viewRef.current?.measureInWindow((x: number, y: number) => {
       // it looks like enabled edge-to-edge (Android 16+) produces incorrect
       // measurement offset

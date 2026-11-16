@@ -1,9 +1,10 @@
 import { useState } from "react";
 import { Button, StyleSheet, Text, View } from "react-native";
-import type { NativeStackScreenProps } from "@react-navigation/native-stack";
 
 import { useExpand } from "./HostProvider";
+
 import type { StableHostRemountParamList } from "./navigation";
+import type { NativeStackScreenProps } from "@react-navigation/native-stack";
 
 const wait = (ms: number) =>
   new Promise<void>((resolve) => {
@@ -37,9 +38,9 @@ export default function Controls({ navigation }: Props) {
     <View style={styles.screen} testID="repro_controls">
       <Button
         disabled={running}
-        onPress={runRepro}
         testID="repro_run"
         title={running ? "Running repro" : "Run repro"}
+        onPress={runRepro}
       />
       {completed && (
         <Text style={styles.completed} testID="repro_complete">

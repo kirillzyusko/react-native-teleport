@@ -7,9 +7,9 @@ function Player() {
 
   const player = (
     <Pressable
-      onPress={() => setIsFullscreen((value) => !value)}
       style={styles.player}
       testID="orientation_toggle"
+      onPress={() => setIsFullscreen((value) => !value)}
     >
       <Text style={styles.title}>Orientation</Text>
       <Text style={styles.subtitle}>
