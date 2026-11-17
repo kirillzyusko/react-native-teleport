@@ -20,11 +20,12 @@ The style of the portal host. Accepts [ViewStyle](https://reactnative.dev/docs/v
 
 ```
 import { StyleSheet, View } from "react-native";
-import { PortalHost, PortalProvider } from "react-native-teleport";
 import {
-  initialWindowMetrics,
   SafeAreaProvider,
+  initialWindowMetrics,
 } from "react-native-safe-area-context";
+import { PortalHost, PortalProvider } from "react-native-teleport";
+
 import RootStack from "./navigation";
 
 export default function App() {

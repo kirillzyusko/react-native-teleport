@@ -82,7 +82,7 @@ This component renders at the app root. It contains a `Portal` wrapping the WebV
 `PreloadedEditor.tsx`
 
 ```
-import { View, StyleSheet, Dimensions } from "react-native";
+import { Dimensions, StyleSheet, View } from "react-native";
 import { Portal } from "react-native-teleport";
 import { WebView } from "react-native-webview";
 
@@ -130,6 +130,7 @@ Add `<PreloadedEditor />` inside your `PortalProvider` so it starts loading imme
 ```
 import { StyleSheet } from "react-native";
 import { PortalProvider } from "react-native-teleport";
+
 import PreloadedEditor from "./screens/RichTextEditor/PreloadedEditor";
 
 export default function App() {
@@ -151,7 +152,7 @@ The screen provides a `<PortalHost>` as the teleport destination. No coordinatio
 `EditorScreen.tsx`
 
 ```
-import { View, StyleSheet } from "react-native";
+import { StyleSheet, View } from "react-native";
 import { PortalHost } from "react-native-teleport";
 
 export default function EditorScreen() {

@@ -135,8 +135,9 @@ A thumbnail is an image in a fixed-size `View`. That fixed size will matter late
 import React from "react";
 import { Image, View } from "react-native";
 
-import type { Photo } from "./photos";
 import { THUMB_SIZE } from "./constants";
+
+import type { Photo } from "./photos";
 
 type Props = {
   photo: Photo;
@@ -169,8 +170,8 @@ The gallery is a regular `FlatList`:
 ```
 import { FlatList, StyleSheet, View } from "react-native";
 
-import PHOTOS from "./photos";
 import PhotoPreview from "./PhotoPreview";
+import PHOTOS from "./photos";
 
 function PhotoGallery() {
   return (
@@ -261,6 +262,7 @@ import { createNativeStackNavigator } from "@react-navigation/native-stack";
 
 import PhotoDetail from "./PhotoDetail";
 import PhotoGallery from "./PhotoGallery";
+
 import type { Photo } from "./photos";
 
 export type RootStackParamList = {
@@ -301,13 +303,14 @@ The detail screen draws a black backdrop, the full-res photo at full width and a
 `PhotoDetail.tsx`
 
 ```
+import { useNavigation } from "@react-navigation/native";
 import { Image, Pressable, StyleSheet, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { useNavigation } from "@react-navigation/native";
-import type { StaticScreenProps } from "@react-navigation/native";
+
+import { SCREEN_WIDTH } from "./constants";
 
 import type { Photo } from "./photos";
-import { SCREEN_WIDTH } from "./constants";
+import type { StaticScreenProps } from "@react-navigation/native";
 
 type PhotoDetailProps = StaticScreenProps<{ photo: Photo }>;
 
@@ -377,8 +380,9 @@ Each thumbnail reports the tap:
 import React from "react";
 import { Image, TouchableWithoutFeedback, View } from "react-native";
 
-import type { Photo } from "./photos";
 import { THUMB_SIZE } from "./constants";
+
+import type { Photo } from "./photos";
 
 type Props = {
   photo: Photo;
@@ -403,13 +407,15 @@ And the gallery opens the detail screen:
 `PhotoGallery.tsx` (updated)
 
 ```
-import { FlatList, StyleSheet, View } from "react-native";
 import { useNavigation } from "@react-navigation/native";
-import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
+import { FlatList, StyleSheet, View } from "react-native";
 
-import PHOTOS, { type Photo } from "./photos";
+
 import PhotoPreview from "./PhotoPreview";
+import PHOTOS, { type Photo } from "./photos";
+
 import type { RootStackParamList } from "./navigation";
+import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 
 function PhotoGallery() {
   const navigation =
@@ -583,10 +589,11 @@ import React, { useCallback, useRef } from "react";
 import { Image, TouchableWithoutFeedback, View } from "react-native";
 import { Portal } from "react-native-teleport";
 
-import type { Photo } from "./photos";
 import { THUMB_SIZE } from "./constants";
 import { useHeroTransition } from "./hero";
 import useMeasure from "./useMeasure";
+
+import type { Photo } from "./photos";
 
 // ...
 
@@ -649,6 +656,7 @@ The Close button now goes through the store, which clears `id` and sends the thu
 
 ```
 import { useCallback } from "react";
+
 // ...
 import { useHeroTransition } from "./hero";
 
@@ -727,6 +735,7 @@ import {
   withSpring,
 } from "react-native-reanimated";
 import { create } from "zustand";
+
 import { SPRING_CONFIG } from "./constants";
 
 type Position = {
@@ -814,13 +823,14 @@ import Animated, {
   interpolate,
   useAnimatedStyle,
 } from "react-native-reanimated";
-import { Portal } from "react-native-teleport";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { Portal } from "react-native-teleport";
 
-import type { Photo } from "./photos";
 import { SCALE, SCREEN_WIDTH, THUMB_SIZE } from "./constants";
 import { useHeroTransition } from "./hero";
 import useMeasure from "./useMeasure";
+
+import type { Photo } from "./photos";
 
 // ...
 
@@ -1060,6 +1070,7 @@ import Animated, {
   interpolate,
   useAnimatedStyle,
 } from "react-native-reanimated";
+
 // ...
 import { SCALE, SCREEN_WIDTH } from "./constants";
 import { useHeroTransition } from "./hero";
@@ -1350,6 +1361,7 @@ import Animated, {
   useSharedValue,
   withTiming,
 } from "react-native-reanimated";
+
 // ...
 import { useHeroTransition } from "./hero";
 
