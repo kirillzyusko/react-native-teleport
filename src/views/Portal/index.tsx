@@ -10,17 +10,6 @@ import type { PortalProps } from "../../types";
 const supportsMoveBefore =
   typeof Element !== "undefined" && "moveBefore" in Element.prototype;
 
-/**
- * Moves `child` into `parent`, keeping the DOM node state when `moveBefore` is supported.
- *
- * @param parent - The new parent element.
- * @param child - The element to move.
- * @param before - The element to insert `child` before. Appends to the end when `null`.
- * @example
- * ```ts
- * moveElementTo(hostNode, portalNode);
- * ```
- */
 function moveElementTo(
   parent: Element,
   child: Element,
