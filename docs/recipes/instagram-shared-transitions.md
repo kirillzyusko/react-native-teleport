@@ -105,15 +105,16 @@ Each post card shows a video (or image) with a social section underneath:
 `Post.tsx`
 
 ```
-import { View, StyleSheet, Image } from "react-native";
+import { Image, StyleSheet, View } from "react-native";
 import Video from "react-native-video";
+
+import SocialSection from "./components/SocialSection";
 import {
-  VIDEO_HEIGHT,
-  SCREEN_WIDTH,
   ASPECT_RATIO,
   CARD_HEIGHT,
+  SCREEN_WIDTH,
+  VIDEO_HEIGHT,
 } from "./constants";
-import SocialSection from "./components/SocialSection";
 
 const Post = ({ post, active }) => {
   return (
@@ -163,7 +164,8 @@ export default Post;
 
 ```
 import { FontAwesome6 } from "@react-native-vector-icons/fontawesome6";
-import { View, Text, StyleSheet } from "react-native";
+import { StyleSheet, Text, View } from "react-native";
+
 import type { PostType } from "../posts";
 
 type SocialSectionProps = {
@@ -245,10 +247,11 @@ So let's create a simple scrollable list of posts:
 
 ```
 import { useState } from "react";
-import { View, ScrollView, StyleSheet } from "react-native";
+import { ScrollView, StyleSheet, View } from "react-native";
+
 import { CARD_HEIGHT } from "./constants";
-import { posts } from "./posts";
 import Post from "./Post";
+import { posts } from "./posts";
 
 export default function Feed() {
   const [index, setIndex] = useState(0);
@@ -282,10 +285,11 @@ The Reels screen is a vertical pager — each reel takes up the full screen and 
 
 ```
 import { useState } from "react";
-import { View, ScrollView, StyleSheet } from "react-native";
+import { ScrollView, StyleSheet, View } from "react-native";
+
+import FullScreenReel from "./components/FullScreenReel";
 import { SCREEN_HEIGHT } from "./constants";
 import { posts } from "./posts";
-import FullScreenReel from "./components/FullScreenReel";
 
 export default function Reels({ route }) {
   const post = route.params.post;
@@ -415,9 +419,9 @@ The store tracks everything needed to orchestrate the animation:
 
 ```
 import {
+  type SharedValue,
   makeMutable,
   withSpring,
-  type SharedValue,
 } from "react-native-reanimated";
 import { scheduleOnRN } from "react-native-worklets";
 import { create } from "zustand";
@@ -493,10 +497,10 @@ The `"overlay"` `PortalHost` must be placed at the root of your app, **after** t
 `App.tsx`
 
 ```
-import { StyleSheet } from "react-native";
-import { PortalHost, PortalProvider } from "react-native-teleport";
 import { NavigationContainer } from "@react-navigation/native";
+import { StyleSheet } from "react-native";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
+import { PortalHost, PortalProvider } from "react-native-teleport";
 
 export default function App() {
   return (
@@ -553,24 +557,26 @@ The `Post` component is the heart of the transition. It wraps the video in a `<P
 `Post.tsx` (final)
 
 ```
+import { useNavigation } from "@react-navigation/native";
+import { useRef } from "react";
 import {
-  View,
-  StyleSheet,
   Image,
+  StyleSheet,
   TouchableWithoutFeedback,
+  View,
 } from "react-native";
-import Video, { ViewType } from "react-native-video";
-import { Portal } from "react-native-teleport";
 import Reanimated, {
   interpolate,
   useAnimatedStyle,
 } from "react-native-reanimated";
-import { useNavigation } from "@react-navigation/native";
-import { useRef } from "react";
-import { useTransition } from "./hooks/useTransition";
+import { Portal } from "react-native-teleport";
+import Video, { ViewType } from "react-native-video";
+
 import useMeasure from "../../hooks/useMeasure";
-import { VIDEO_HEIGHT, SCREEN_HEIGHT, CARD_HEIGHT } from "./constants";
+
 import SocialSection from "./components/SocialSection";
+import { CARD_HEIGHT, SCREEN_HEIGHT, VIDEO_HEIGHT } from "./constants";
+import { useTransition } from "./hooks/useTransition";
 
 const Post = ({ post, active }) => {
   const videoRef = useRef(null);
@@ -673,16 +679,17 @@ The first reel (the one the user tapped) needs a `<PortalHost>` to receive the t
 `components/FullScreenReel.tsx`
 
 ```
-import { View, StyleSheet } from "react-native";
-import Video from "react-native-video";
+import { StyleSheet, View } from "react-native";
+import Reanimated, { useAnimatedStyle } from "react-native-reanimated";
 import { Portal, PortalHost } from "react-native-teleport";
+import Video from "react-native-video";
+
 import {
+  FLOATING_ELEMENTS_DESTINATION,
   SCREEN_HEIGHT,
   SCREEN_WIDTH,
-  FLOATING_ELEMENTS_DESTINATION,
 } from "../constants";
 import { useTransition } from "../hooks/useTransition";
-import Reanimated, { useAnimatedStyle } from "react-native-reanimated";
 
 function FullScreenReel({ post, active, portal = false }) {
   const progress = useTransition((state) => state.progress);
@@ -740,6 +747,7 @@ Both screens need to lock scrolling while the animation is in progress. Otherwis
 
 ```
 import Reanimated, { useAnimatedProps } from "react-native-reanimated";
+
 import { useTransition } from "./hooks/useTransition";
 
 export default function Feed() {
@@ -778,23 +786,24 @@ Instagram uses a custom header in its app, and we'll build one too. The header a
 `components/ReelsHeader.tsx`
 
 ```
+import { useNavigation } from "@react-navigation/native";
+import { useCallback, useEffect } from "react";
 import {
-  View,
+  BackHandler,
+  StyleSheet,
   Text,
   TouchableOpacity,
-  StyleSheet,
-  BackHandler,
+  View,
 } from "react-native";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { useNavigation } from "@react-navigation/native";
 import Reanimated, {
   interpolate,
   useAnimatedStyle,
 } from "react-native-reanimated";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Portal } from "react-native-teleport";
+
 import { FLOATING_ELEMENTS_DESTINATION } from "../constants";
 import { useTransition } from "../hooks/useTransition";
-import { useCallback, useEffect } from "react";
 
 function ReelsHeader() {
   const insets = useSafeAreaInsets();

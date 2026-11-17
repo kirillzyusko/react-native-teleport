@@ -30,7 +30,7 @@ The content that should be rendered in the portal.
 
 ```
 import { useState } from "react";
-import { View, StyleSheet, Button } from "react-native";
+import { Button, StyleSheet, View } from "react-native";
 import { Portal } from "react-native-teleport";
 
 export default function InstantRootExample() {
