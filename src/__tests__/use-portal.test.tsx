@@ -1,9 +1,9 @@
 import { fireEvent, render, screen } from "@testing-library/react-native";
+import { useState } from "react";
+import { Button, StyleSheet, View } from "react-native";
 
-import { Button, View, StyleSheet } from "react-native";
 import Portal from "../components/Portal";
 import PortalHost from "../components/PortalHost";
-import { useState } from "react";
 import usePortal from "../hooks/usePortal";
 import PortalProvider from "../PortalProvider";
 
@@ -229,11 +229,12 @@ it("keeps a removed portal hidden when its host arrives and restores it on re-ta
     mountHost?: boolean;
   }) {
     const { removePortal } = usePortal("first");
+
     return (
       <>
         <Button title="Remove" onPress={() => removePortal("item")} />
         {mountHost && <PortalHost name="first" />}
-        <Portal name="item" hostName={destination}>
+        <Portal hostName={destination} name="item">
           <View testID="content" />
         </Portal>
       </>
@@ -245,6 +246,7 @@ it("keeps a removed portal hidden when its host arrives and restores it on re-ta
     </PortalProvider>
   );
   const { rerender } = render(view("first"));
+
   fireEvent.press(screen.getByText("Remove"));
   expect(screen.queryByTestId("content")).toBeNull();
   rerender(view("first", true));

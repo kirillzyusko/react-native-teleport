@@ -1,12 +1,15 @@
-import { Image, StyleSheet, Text, View, type ImageProps } from "react-native";
-import Button from "../Travel/components/button/button";
-import LinearGradient from "react-native-linear-gradient";
 import { FontAwesome6 } from "@react-native-vector-icons/fontawesome6/static";
-import type { NativeStackScreenProps } from "@react-navigation/native-stack";
-import type { ExamplesStackParamList } from "../../navigation/ExamplesStack";
-import type { ScreenNames } from "../../constants/screenNames";
-import verify from "./images/verify.png";
+import { Image, type ImageProps, StyleSheet, Text, View } from "react-native";
+import LinearGradient from "react-native-linear-gradient";
+
+import Button from "../Travel/components/button/button";
+
 import group1 from "./images/group1.png";
+import verify from "./images/verify.png";
+
+import type { ScreenNames } from "../../constants/screenNames";
+import type { ExamplesStackParamList } from "../../navigation/ExamplesStack";
+import type { NativeStackScreenProps } from "@react-navigation/native-stack";
 
 type Props = {
   image: ImageProps["source"];
@@ -33,7 +36,7 @@ const DetailScreen = ({
 }: Props) => {
   return (
     <View style={styles.screen}>
-      <Image style={styles.image} source={image} />
+      <Image source={image} style={styles.image} />
       <View style={styles.mainContainer}>
         <LinearGradient
           colors={["rgba(0, 0, 0, 0)", "rgba(0, 0, 0, 0.89)"]}
@@ -47,8 +50,8 @@ const DetailScreen = ({
             <Text style={styles.mainText}>{header}</Text>
             <View style={styles.verification}>
               <FontAwesome6
-                name="location-dot"
                 iconStyle="solid"
+                name="location-dot"
                 size={18}
                 style={styles.white}
               />
@@ -65,8 +68,8 @@ const DetailScreen = ({
             <View style={[styles.textContainer, styles.mt30]}>
               <View style={styles.verification}>
                 <FontAwesome6
-                  name="star"
                   iconStyle="solid"
+                  name="star"
                   size={18}
                   style={styles.yellow}
                 />
@@ -74,8 +77,8 @@ const DetailScreen = ({
               </View>
               <View>
                 <FontAwesome6
-                  name="arrow-down"
                   iconStyle="solid"
+                  name="arrow-down"
                   size={18}
                   style={styles.white}
                 />
@@ -107,15 +110,15 @@ export default function Detail({ route }: DetailsProps) {
 
   return (
     <DetailScreen
-      image={image}
-      header={header}
-      text="FAVORITE PLACE"
-      location={location}
-      description="Bali is an island in Indonesia known for its verdant volcanoes, unique rice terraces, beaches, and beautiful coral reefs. Before becoming a tourist attraction, Kuta was a trading port where local products were traded to buyers from outside Bali."
-      substring="100+ "
-      rating={rating}
-      price="$245,00 "
       buttonText="Booking"
+      description="Bali is an island in Indonesia known for its verdant volcanoes, unique rice terraces, beaches, and beautiful coral reefs. Before becoming a tourist attraction, Kuta was a trading port where local products were traded to buyers from outside Bali."
+      header={header}
+      image={image}
+      location={location}
+      price="$245,00 "
+      rating={rating}
+      substring="100+ "
+      text="FAVORITE PLACE"
     />
   );
 }

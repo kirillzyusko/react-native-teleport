@@ -8,6 +8,7 @@ it("releases a route name once its last host, portal and subscriber are gone", (
   const unregisterFirst = store.registerHost("route");
   const unregisterSecond = store.registerHost("route");
   const unregisterPortal = store.registerPortal("route", "item", "instance");
+
   store.removePortal("route", "item");
 
   unregisterFirst();

@@ -100,6 +100,12 @@ function StatusLine({ label, value }: { label: string; value: string }) {
   );
 }
 
+const STAGE_TEXT = [
+  "Ready",
+  "First teleport cycle",
+  "Second teleport cycle",
+] as const;
+
 export default function RecycleRepro() {
   const [showHost, setShowHost] = useState(true);
   const [showPortal, setShowPortal] = useState(false);
@@ -107,12 +113,7 @@ export default function RecycleRepro() {
   const [isRunning, setIsRunning] = useState(false);
   const { isHostAvailable } = usePortal(HOST_NAME);
 
-  const stageText =
-    cycle === 0
-      ? "Ready"
-      : cycle === 1
-        ? "First teleport cycle"
-        : "Second teleport cycle";
+  const stageText = STAGE_TEXT[cycle];
 
   const hostStyle = [styles.hostArea, !showHost && styles.hostAreaInactive];
 
@@ -197,32 +198,32 @@ export default function RecycleRepro() {
             </Text>
           </View>
           <Button
+            testID="teleport_first_time"
             title="Teleport First Time"
             onPress={teleportFirstTime}
-            testID="teleport_first_time"
           />
           <Button
+            testID="unmount_host"
             title="Unmount Host"
             onPress={unmountHost}
-            testID="unmount_host"
           />
           <Button
+            testID="remount_host"
             title="Remount Host"
             onPress={remountHost}
-            testID="remount_host"
           />
           <Button
+            testID="teleport_second_time"
             title="Teleport Second Time"
             onPress={teleportSecondTime}
-            testID="teleport_second_time"
           />
           <Button
-            title={isRunning ? "Running Repro..." : "Run Repro"}
             disabled={isRunning}
-            onPress={runRepro}
             testID="run_repro"
+            title={isRunning ? "Running Repro..." : "Run Repro"}
+            onPress={runRepro}
           />
-          <Button title="Reset" onPress={reset} testID="reset_repro" />
+          <Button testID="reset_repro" title="Reset" onPress={reset} />
         </View>
 
         <View style={styles.column}>

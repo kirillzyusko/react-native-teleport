@@ -1,16 +1,18 @@
-import { View, Text, StyleSheet, TouchableOpacity } from "react-native";
-import Video from "react-native-video";
-import { Portal, PortalHost } from "react-native-teleport";
 import { FontAwesome6 } from "@react-native-vector-icons/fontawesome6/static";
+import { useState } from "react";
+import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import Reanimated, { useAnimatedStyle } from "react-native-reanimated";
+import { Portal, PortalHost } from "react-native-teleport";
+import Video from "react-native-video";
+
 import {
   FLOATING_ELEMENTS_DESTINATION,
   SCREEN_HEIGHT,
   SCREEN_WIDTH,
 } from "../constants";
-import type { PostType } from "../posts";
 import { useTransition } from "../hooks/useTransition";
-import Reanimated, { useAnimatedStyle } from "react-native-reanimated";
-import { useState } from "react";
+
+import type { PostType } from "../posts";
 
 type FullScreenReelProps = {
   post: PostType;
@@ -40,10 +42,10 @@ function FullScreenReel({ post, active, portal = false }: FullScreenReelProps) {
         <PortalHost name="reels" style={styles.container} />
       ) : (
         <Video
-          source={{ uri: post.video }}
-          style={styles.video}
           paused={!active}
           resizeMode="cover"
+          source={{ uri: post.video }}
+          style={styles.video}
         />
       )}
       <Portal
@@ -57,10 +59,10 @@ function FullScreenReel({ post, active, portal = false }: FullScreenReelProps) {
           <View>
             <TouchableOpacity onPress={onToggleLike}>
               <FontAwesome6
-                name="heart"
-                iconStyle={isLiked ? "solid" : "regular"}
-                size={24}
                 color={isLiked ? "red" : "white"}
+                iconStyle={isLiked ? "solid" : "regular"}
+                name="heart"
+                size={24}
                 style={styles.icon}
               />
             </TouchableOpacity>
@@ -70,28 +72,28 @@ function FullScreenReel({ post, active, portal = false }: FullScreenReelProps) {
           </View>
           <View>
             <FontAwesome6
+              color="white"
               name="comments"
               size={24}
-              color="white"
               style={styles.icon}
             />
             <Text style={styles.text}>{post.comments}</Text>
           </View>
           <View>
             <FontAwesome6
+              color="white"
               name="paper-plane"
               size={24}
-              color="white"
               style={styles.icon}
             />
             <Text style={styles.text}>{post.sent}</Text>
           </View>
           <View>
             <FontAwesome6
-              name="ellipsis"
-              iconStyle="solid"
-              size={22}
               color="white"
+              iconStyle="solid"
+              name="ellipsis"
+              size={22}
               style={styles.icon}
             />
           </View>

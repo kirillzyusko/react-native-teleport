@@ -1,22 +1,22 @@
+import {
+  type CompositeNavigationProp,
+  useNavigation,
+} from "@react-navigation/native";
+import {
+  type NativeStackNavigationProp,
+  createNativeStackNavigator,
+} from "@react-navigation/native-stack";
 import { useCallback } from "react";
 import { StyleSheet } from "react-native";
 import { ScrollView } from "react-native-gesture-handler";
-import {
-  createNativeStackNavigator,
-  type NativeStackNavigationProp,
-} from "@react-navigation/native-stack";
-import {
-  useNavigation,
-  type CompositeNavigationProp,
-} from "@react-navigation/native";
 
 import { MainScreenNames, StackNames } from "../../constants/screenNames";
 
 import ExampleLink from "./components/ExampleLink";
 import { demos, fixtures } from "./constants";
 
-import type { RootStackParamList } from "../../navigation/index";
 import type { Example, ExampleScreen } from "./types";
+import type { RootStackParamList } from "../../navigation/index";
 
 export type MainStackParamList = {
   [MainScreenNames.CATEGORIES]: undefined;
@@ -56,17 +56,17 @@ const Categories = () => {
         icons="🎨"
         index={1}
         info={MainScreenNames.DEMOS}
-        onPress={onCategoryPress}
         testID="demo"
         title="Demos"
+        onPress={onCategoryPress}
       />
       <ExampleLink
         icons="🧪"
         index={2}
         info={MainScreenNames.FIXTURES}
-        onPress={onCategoryPress}
         testID="fixture"
         title="Fixtures"
+        onPress={onCategoryPress}
       />
     </ScrollView>
   );

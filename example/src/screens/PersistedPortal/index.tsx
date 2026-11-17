@@ -11,7 +11,7 @@ export default function PersistedPortal() {
   return (
     <View style={styles.container}>
       <Portal hostName={PERSISTED_PORTAL_HOST}>
-        <View testID="persisted_portal_teleported" style={styles.teleported}>
+        <View style={styles.teleported} testID="persisted_portal_teleported">
           <Text style={styles.teleportedText}>TELEPORTED CONTENT</Text>
         </View>
       </Portal>

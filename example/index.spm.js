@@ -1,6 +1,7 @@
 import React from "react";
 import { AppRegistry, StyleSheet, Text, View } from "react-native";
 import { Portal, PortalHost, PortalProvider } from "react-native-teleport";
+
 import { name as appName } from "./app.json";
 
 function App() {

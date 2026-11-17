@@ -1,7 +1,20 @@
 import { useCallback, useMemo, useRef } from "react";
+
 import { PortalRegistryContext } from "../../contexts/PortalRegistry";
+
 import type { PortalProviderProps } from "../../types";
 
+/**
+ * Web provider that keeps track of mounted hosts and teleports portals once their host appears.
+ *
+ * @param props - Provider props.
+ * @param props.children - Your application tree.
+ * @returns `children` wrapped into `PortalRegistryContext`.
+ * @example
+ * ```tsx
+ * <PortalProvider>{children}</PortalProvider>
+ * ```
+ */
 export default function PortalProvider({ children }: PortalProviderProps) {
   const hostsRef = useRef<Map<string, HTMLElement>>(new Map());
   const pendingPortalsRef = useRef<Map<string, Set<() => void>>>(new Map());
@@ -14,6 +27,7 @@ export default function PortalProvider({ children }: PortalProviderProps) {
     }
 
     const callbacks = pendingPortalsRef.current.get(name);
+
     if (callbacks) {
       callbacks.forEach((callback) => callback());
     }
@@ -25,6 +39,7 @@ export default function PortalProvider({ children }: PortalProviderProps) {
   const registerPendingPortal = useCallback(
     (name: string, callback: () => void) => {
       const callbacks = pendingPortalsRef.current.get(name) ?? new Set();
+
       callbacks.add(callback);
       pendingPortalsRef.current.set(name, callbacks);
     },
@@ -33,8 +48,10 @@ export default function PortalProvider({ children }: PortalProviderProps) {
   const unregisterPendingPortal = useCallback(
     (name: string, callback: () => void) => {
       const callbacks = pendingPortalsRef.current.get(name);
+
       if (callbacks) {
         callbacks.delete(callback);
+
         if (callbacks.size === 0) {
           pendingPortalsRef.current.delete(name);
         }

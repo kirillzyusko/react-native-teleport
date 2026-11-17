@@ -1,5 +1,5 @@
 import { BlurView } from "@react-native-community/blur";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import { Animated, Easing, StyleSheet } from "react-native";
 
 type BlurViewProps = {
@@ -8,10 +8,11 @@ type BlurViewProps = {
 
 const AnimatedBlurView = ({ visible }: BlurViewProps) => {
   const [blurred, setBlurred] = useState(visible);
-  const opacity = useRef(new Animated.Value(0)).current;
+  const [opacity] = useState(() => new Animated.Value(0));
 
   useEffect(() => {
     if (visible) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- mount the blur before the fade-in starts
       setBlurred(true);
     }
     Animated.timing(opacity, {
@@ -26,15 +27,15 @@ const AnimatedBlurView = ({ visible }: BlurViewProps) => {
 
   return (
     <Animated.View
-      style={[StyleSheet.absoluteFill, { opacity: opacity }]}
       pointerEvents="none"
+      style={[StyleSheet.absoluteFill, { opacity: opacity }]}
     >
       {blurred && (
         <BlurView
-          style={StyleSheet.absoluteFill}
-          overlayColor={"#00000000"}
-          blurType="light"
           blurAmount={16}
+          blurType="light"
+          overlayColor={"#00000000"}
+          style={StyleSheet.absoluteFill}
         />
       )}
     </Animated.View>

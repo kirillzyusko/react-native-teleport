@@ -1,21 +1,26 @@
 import { useContext, useEffect } from "react";
+
 import {
   useHostSnapshot,
   usePortalManagerContext,
 } from "../contexts/PortalManager";
 import ScrollViewContext from "../contexts/ScrollViewContext";
-import PortalView from "../views/Portal";
 import useId from "../hooks/useId";
+import PortalView from "../views/Portal";
+
 import type { PortalProps } from "../types";
 
 /**
  * Portal helps you to render a component in a different place in the view hierarchy.
  * This is useful when you need a view to visually “break out” of its parent container (for example: modals, toasts, floating UI, popovers).
  *
+ * @param props - Portal props.
+ * @param props.hostName - The `name` of the `PortalHost`. It's used to identify the host where the content should be rendered.
+ * @param props.name - The name of the portal. It's used to identify the portal.
+ * @param props.style - Style of the portal container.
+ * @param props.children - The content that should be rendered in the portal.
+ * @returns A view that renders `children` inside the specified host.
  * @category components
- * @param hostName - The `name` of the `PortalHost`. It's used to identify the host where the content should be rendered.
- * @param name - The name of the portal. It's used to identify the portal.
- * @param children - The content that should be rendered in the portal.
  * @example
  * ```tsx
  * import { useState } from "react";

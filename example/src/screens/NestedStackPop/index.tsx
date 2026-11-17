@@ -1,11 +1,12 @@
+import {
+  type NativeStackScreenProps,
+  createNativeStackNavigator,
+} from "@react-navigation/native-stack";
 import { useEffect, useState } from "react";
 import { Button, StyleSheet, Text, View } from "react-native";
-import type { NavigatorScreenParams } from "@react-navigation/native";
-import {
-  createNativeStackNavigator,
-  type NativeStackScreenProps,
-} from "@react-navigation/native-stack";
 import { Portal, PortalHost } from "react-native-teleport";
+
+import type { NavigatorScreenParams } from "@react-navigation/native";
 
 const HOST = "nested-stack-pop";
 
@@ -51,6 +52,7 @@ function HostScreen({
 }) {
   useEffect(() => {
     setHostName(HOST);
+
     return () => setHostName(undefined);
   }, [setHostName]);
 

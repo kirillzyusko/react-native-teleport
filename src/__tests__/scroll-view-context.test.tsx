@@ -9,11 +9,11 @@ import PortalProvider from "../PortalProvider";
 
 function ScrollViewContextMarker() {
   const context = useContext(ScrollViewContext);
-  const label = context
-    ? context.horizontal
-      ? "horizontal"
-      : "vertical"
-    : "none";
+  let label = "none";
+
+  if (context) {
+    label = context.horizontal ? "horizontal" : "vertical";
+  }
 
   return <Text>{label}</Text>;
 }
@@ -62,6 +62,7 @@ it("follows the selected host as it mounts, changes scroll direction and unmount
       </Portal>
     </ScrollViewContext.Provider>
   );
+
   function Fixture({ direction }: { direction?: boolean | null }) {
     return (
       <PortalProvider>
@@ -77,6 +78,7 @@ it("follows the selected host as it mounts, changes scroll direction and unmount
     );
   }
   const { rerender } = render(<Fixture />);
+
   expect(screen.getByText("vertical")).toBeOnTheScreen();
   rerender(<Fixture direction />);
   expect(screen.getByText("horizontal")).toBeOnTheScreen();

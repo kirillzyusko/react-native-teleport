@@ -1,10 +1,10 @@
 import {
-  View,
   Image,
-  Text,
-  StyleSheet,
-  TouchableOpacity,
   type ImageProps,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
 } from "react-native";
 
 type Props = {
@@ -17,7 +17,7 @@ export default function CategoryCard({ text, image }: Props) {
     <View>
       <TouchableOpacity style={styles.container}>
         <View style={styles.imageView}>
-          <Image style={styles.image} source={image}></Image>
+          <Image source={image} style={styles.image} />
         </View>
         <Text style={styles.text}>{text}</Text>
       </TouchableOpacity>

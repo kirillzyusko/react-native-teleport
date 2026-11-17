@@ -1,17 +1,22 @@
 import { useContext, useEffect } from "react";
+
 import { usePortalManagerContext } from "../contexts/PortalManager";
 import ScrollViewContext from "../contexts/ScrollViewContext";
-import type { PortalHostProps } from "../types";
 import PortalHost from "../views/PortalHost";
+
+import type { PortalHostProps } from "../types";
 
 /**
  * PortalHost is a component that acts as an anchor for the portals.
  * You can define multiple portal hosts in your app and use them to render different portals.
  * Each portal host has a unique name that you can use to identify a necessary one among the others.
  *
+ * @param props - Portal host props.
+ * @param props.name - The name of the portal host. It's used by `<Portal />` component to identify the host.
+ * @param props.style - Style of the host container.
+ * @param props.children - Content rendered inside the host before teleported portals.
+ * @returns A view that acts as a target for portals.
  * @category components
- * @param name - The name of the portal host. It's used by `<Portal />` component to identify the host.
- *
  * @example
  * ```tsx
  * import { StyleSheet, View } from "react-native";

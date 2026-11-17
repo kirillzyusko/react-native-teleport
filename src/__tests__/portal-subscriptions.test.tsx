@@ -15,6 +15,7 @@ jest.mock("../views/PortalHost", () => jest.fn(() => null));
 it("mounts a new host without re-rendering unrelated portals, hosts or observers", () => {
   function ToggleDetailHost() {
     const [mounted, setMounted] = useState(false);
+
     return (
       <>
         <Button title="Toggle" onPress={() => setMounted(!mounted)} />
@@ -25,6 +26,7 @@ it("mounts a new host without re-rendering unrelated portals, hosts or observers
 
   const ListObserver = jest.fn(function ListHostObserver() {
     const { isHostAvailable } = usePortal("list");
+
     return <Text>{String(isHostAvailable)}</Text>;
   });
 

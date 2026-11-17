@@ -23,11 +23,12 @@ export function BottomSheetContainer({
   const height = useSharedValue(9999);
 
   const onLayout = (e: LayoutChangeEvent) => {
-    height.value = e.nativeEvent.layout.height;
+    height.set(e.nativeEvent.layout.height);
   };
 
   useEffect(() => {
     if (visible) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- show the sheet before the opening animation starts
       setShown(true);
     }
     progress.set(

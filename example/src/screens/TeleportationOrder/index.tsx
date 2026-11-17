@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { StyleSheet, Text, View, Pressable } from "react-native";
+import { Pressable, StyleSheet, Text, View } from "react-native";
 import { Portal, PortalHost } from "react-native-teleport";
 
 interface DialogProps {
@@ -12,7 +12,11 @@ interface DialogProps {
 
 function Dialog(props: DialogProps) {
   const { open, onClose, title, message, children } = props;
-  if (!open) return null;
+
+  if (!open) {
+    return null;
+  }
+
   return (
     <Portal hostName="overlay">
       <View style={styles.overlay}>
@@ -56,10 +60,10 @@ export default function TeleportationOrder() {
       </Pressable>
 
       <Dialog
-        open={firstDialogOpen}
-        onClose={() => setFirstDialogOpen(false)}
-        title="First Dialog"
         message="This is the first dialog. You can open another dialog from here."
+        open={firstDialogOpen}
+        title="First Dialog"
+        onClose={() => setFirstDialogOpen(false)}
       >
         <Pressable
           style={({ pressed }) => [
@@ -73,10 +77,10 @@ export default function TeleportationOrder() {
       </Dialog>
 
       <Dialog
-        open={secondDialogOpen}
-        onClose={() => setSecondDialogOpen(false)}
-        title="Second Dialog"
         message="This is the second dialog, opened from the first one. Go even deeper?"
+        open={secondDialogOpen}
+        title="Second Dialog"
+        onClose={() => setSecondDialogOpen(false)}
       >
         <Pressable
           style={({ pressed }) => [
@@ -90,10 +94,10 @@ export default function TeleportationOrder() {
       </Dialog>
 
       <Dialog
-        open={thirdDialogOpen}
-        onClose={() => setThirdDialogOpen(false)}
-        title="Third Dialog"
         message="You've reached the third level of nested dialogs! 🎉"
+        open={thirdDialogOpen}
+        title="Third Dialog"
+        onClose={() => setThirdDialogOpen(false)}
       />
 
       <PortalHost name="dialog" style={StyleSheet.absoluteFill} />

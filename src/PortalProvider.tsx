@@ -1,6 +1,6 @@
 import PortalHost from "./components/PortalHost";
-import NativePortalProvider from "./views/PortalProvider";
 import { PortalManagerProvider } from "./contexts/PortalManager";
+import NativePortalProvider from "./views/PortalProvider";
 
 type PortalProviderProps = {
   children: React.ReactNode;
@@ -11,6 +11,9 @@ type PortalProviderProps = {
  *
  * This component provides a context/registry for all Portals so that you can use imperative API, such as `usePortal` hook to manage Portals.
  *
+ * @param props - Provider props.
+ * @param props.children - Your application tree.
+ * @returns A provider that wraps the app and mounts the default `root` host.
  * @category components
  * @example
  * ```tsx

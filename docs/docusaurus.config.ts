@@ -1,6 +1,7 @@
 import { themes as prismThemes } from "prism-react-renderer";
-import type { Config } from "@docusaurus/types";
+
 import type * as Preset from "@docusaurus/preset-classic";
+import type { Config } from "@docusaurus/types";
 
 let baseUrl = "/react-native-teleport/";
 
@@ -21,6 +22,7 @@ type HastNode = {
 const rehypeCodeBlockTitles = () => (tree: HastNode) => {
   const visit = (node: HastNode) => {
     const className = node.properties?.className;
+
     if (
       Array.isArray(className) &&
       className.some((c) => String(c).startsWith("codeBlockTitle"))
@@ -29,6 +31,7 @@ const rehypeCodeBlockTitles = () => (tree: HastNode) => {
         .map((child) => child.value ?? "")
         .join("")
         .split(" ");
+
       node.tagName = "p";
       node.children = [
         {
@@ -39,10 +42,12 @@ const rehypeCodeBlockTitles = () => (tree: HastNode) => {
         },
         ...(rest.length ? [{ type: "text", value: ` ${rest.join(" ")}` }] : []),
       ];
+
       return;
     }
     node.children?.forEach(visit);
   };
+
   visit(tree);
 };
 

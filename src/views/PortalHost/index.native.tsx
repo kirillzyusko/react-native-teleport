@@ -1,4 +1,5 @@
 import PortalHostNativeComponent from "../../specs/PortalHostViewNativeComponent";
+
 import type { PortalHostProps } from "../../types";
 
 const PortalHost = (props: PortalHostProps) => {

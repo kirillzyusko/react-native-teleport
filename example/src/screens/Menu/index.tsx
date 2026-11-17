@@ -1,7 +1,8 @@
 import { useRef, useState } from "react";
-import type { ComponentRef } from "react";
 import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import { Portal, PortalHost } from "react-native-teleport";
+
+import type { ComponentRef } from "react";
 
 const HOST_NAME = "menu-overlay";
 
@@ -45,12 +46,12 @@ export default function Menu() {
       </Text>
 
       <Pressable
-        onPress={() => setCounter((current) => current + 1)}
         style={({ pressed }) => [
           styles.counterButton,
           pressed ? styles.pressed : undefined,
         ]}
         testID="outside-counter"
+        onPress={() => setCounter((current) => current + 1)}
       >
         <Text style={styles.counterText}>Outside counter: {counter}</Text>
       </Pressable>
@@ -60,12 +61,12 @@ export default function Menu() {
         <View ref={triggerRef} collapsable={false}>
           <Pressable
             accessibilityRole="button"
-            onPress={openSelect}
             style={({ pressed }) => [
               styles.trigger,
               pressed ? styles.pressed : undefined,
             ]}
             testID="select-trigger"
+            onPress={openSelect}
           >
             <Text style={styles.triggerText}>
               {value === null ? "Choose a country" : value}
@@ -79,9 +80,9 @@ export default function Menu() {
             <View pointerEvents="box-none" style={styles.portalContent}>
               <Pressable
                 accessibilityLabel="Close select"
-                onPress={() => setOpen(false)}
                 style={styles.backdrop}
                 testID="select-backdrop"
+                onPress={() => setOpen(false)}
               />
 
               <View
@@ -99,15 +100,15 @@ export default function Menu() {
                   {COUNTRIES.map(([countryValue, label]) => (
                     <Pressable
                       key={countryValue}
-                      onPress={() => {
-                        setValue(countryValue);
-                        setOpen(false);
-                      }}
                       style={({ pressed }) => [
                         styles.option,
                         pressed ? styles.pressed : undefined,
                       ]}
                       testID={`select-option-${countryValue}`}
+                      onPress={() => {
+                        setValue(countryValue);
+                        setOpen(false);
+                      }}
                     >
                       <Text style={styles.optionText}>{label}</Text>
                     </Pressable>

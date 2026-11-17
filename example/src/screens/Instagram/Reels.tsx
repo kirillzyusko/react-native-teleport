@@ -1,14 +1,16 @@
 import { useState } from "react";
-import { View, StyleSheet, type ScrollEvent } from "react-native";
+import { type ScrollEvent, StyleSheet, View } from "react-native";
 import Reanimated, { useAnimatedProps } from "react-native-reanimated";
-import { posts } from "./posts";
+
+import FullScreenReel from "./components/FullScreenReel";
 import ReelsHeader from "./components/ReelsHeader";
 import { SCREEN_HEIGHT } from "./constants";
-import FullScreenReel from "./components/FullScreenReel";
 import { useTransition } from "./hooks/useTransition";
-import type { NativeStackScreenProps } from "@react-navigation/native-stack";
-import type { ExamplesStackParamList } from "../../navigation/ExamplesStack";
+import { posts } from "./posts";
+
 import type { ScreenNames } from "../../constants/screenNames";
+import type { ExamplesStackParamList } from "../../navigation/ExamplesStack";
+import type { NativeStackScreenProps } from "@react-navigation/native-stack";
 
 type Props = NativeStackScreenProps<
   ExamplesStackParamList,
@@ -23,6 +25,7 @@ export default function Reels({ route }: Props) {
 
   const onScroll = (e: ScrollEvent) => {
     const { y } = e.nativeEvent.contentOffset;
+
     setIndex(Math.round(y / SCREEN_HEIGHT));
   };
 
@@ -38,16 +41,16 @@ export default function Reels({ route }: Props) {
     <View style={styles.container}>
       <Reanimated.ScrollView
         animatedProps={animatedProps}
-        snapToInterval={SCREEN_HEIGHT}
-        decelerationRate="fast"
-        showsVerticalScrollIndicator={false}
-        onScroll={onScroll}
-        overScrollMode="never"
         bounces={false}
+        decelerationRate="fast"
+        overScrollMode="never"
+        showsVerticalScrollIndicator={false}
+        snapToInterval={SCREEN_HEIGHT}
+        onScroll={onScroll}
       >
-        <FullScreenReel post={post} portal active={index === 0} />
+        <FullScreenReel portal active={index === 0} post={post} />
         {reels.map((p, i) => (
-          <FullScreenReel key={p.id} post={p} active={index === i + 1} />
+          <FullScreenReel key={p.id} active={index === i + 1} post={p} />
         ))}
       </Reanimated.ScrollView>
       <ReelsHeader />

@@ -1,10 +1,10 @@
 import { useState } from "react";
-import { View, StyleSheet, Button } from "react-native";
-import { Portal, PortalHost } from "react-native-teleport";
+import { Button, StyleSheet, View } from "react-native";
 import {
   GestureHandlerRootView,
   TouchableOpacity,
 } from "react-native-gesture-handler";
+import { Portal, PortalHost } from "react-native-teleport";
 
 export default function GestureHandlerTouchableExample() {
   const [isPressed, setPressed] = useState(false);

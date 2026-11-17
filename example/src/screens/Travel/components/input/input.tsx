@@ -6,15 +6,15 @@ export default function TravelInput() {
     <View>
       <TextInput
         placeholder="Search destination"
-        style={styles.input}
         placeholderTextColor={"#BABABA"}
+        style={styles.input}
       />
       <TouchableOpacity style={styles.image}>
         <FontAwesome6
-          name="magnifying-glass"
-          iconStyle="solid"
-          size={20}
           color={"black"}
+          iconStyle="solid"
+          name="magnifying-glass"
+          size={20}
         />
       </TouchableOpacity>
     </View>

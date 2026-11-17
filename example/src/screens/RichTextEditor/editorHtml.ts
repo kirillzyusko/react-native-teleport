@@ -35,7 +35,7 @@ export const EDITOR_HTML = `<!DOCTYPE html>
     <p><br></p>
     <p>Try editing this text, applying <strong>bold</strong>, <em>italic</em>, or <u>underline</u> formatting!</p>
   </div>
-  <script src="https://cdn.quilljs.com/1.3.7/quill.min.js"><\/script>
+  <script src="https://cdn.quilljs.com/1.3.7/quill.min.js"></script>
   <script>
     var quill = new Quill('#editor', {
       theme: 'snow',

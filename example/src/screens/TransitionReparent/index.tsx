@@ -1,8 +1,9 @@
+import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import { useState } from "react";
 import { Button, StyleSheet, Text, View } from "react-native";
-import { createNativeStackNavigator } from "@react-navigation/native-stack";
-import type { NativeStackScreenProps } from "@react-navigation/native-stack";
 import { Portal, PortalHost } from "react-native-teleport";
+
+import type { NativeStackScreenProps } from "@react-navigation/native-stack";
 
 const LOCAL_HOST = "transition-reparent-local";
 
@@ -28,12 +29,12 @@ function Instructions({
         overlay host in the same update, while both hosts are attached.
       </Text>
       <Button
+        testID="open-transition-reparent"
+        title="Open departing screen"
         onPress={() => {
           onOpen();
           navigation.navigate("DepartingScreen");
         }}
-        testID="open-transition-reparent"
-        title="Open departing screen"
       />
     </View>
   );
@@ -58,12 +59,12 @@ function DepartingScreen({
       </View>
 
       <Button
+        testID="trigger-transition-reparent"
+        title="Pop and switch host"
         onPress={() => {
           navigation.goBack();
           onClosing();
         }}
-        testID="trigger-transition-reparent"
-        title="Pop and switch host"
       />
     </View>
   );

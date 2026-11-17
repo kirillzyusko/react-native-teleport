@@ -1,11 +1,13 @@
-import { FlatList, StyleSheet, View } from "react-native";
 import { useNavigation } from "@react-navigation/native";
-import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
+import { FlatList, StyleSheet, View } from "react-native";
 
-import PHOTOS, { type Photo } from "./photos";
-import PhotoPreview from "./PhotoPreview";
 import { ScreenNames } from "../../constants/screenNames";
+
+import PhotoPreview from "./PhotoPreview";
+import PHOTOS, { type Photo } from "./photos";
+
 import type { ExamplesStackParamList } from "../../navigation/ExamplesStack";
+import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 
 function PhotoGallery() {
   const navigation =

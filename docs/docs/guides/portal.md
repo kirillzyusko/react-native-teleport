@@ -38,7 +38,7 @@ Unlike simple `zIndex` tricks, Portals actually move the native view to another 
 
 ```tsx
 import { useState } from "react";
-import { View, StyleSheet, Button } from "react-native";
+import { Button, StyleSheet, View } from "react-native";
 import { Portal } from "react-native-teleport";
 
 export default function InstantRootExample() {

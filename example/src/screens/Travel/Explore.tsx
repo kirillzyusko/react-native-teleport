@@ -1,3 +1,4 @@
+import { FontAwesome6 } from "@react-native-vector-icons/fontawesome6/static";
 import {
   Image,
   ScrollView,
@@ -6,31 +7,31 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
-import TravelInput from "./components/input/input";
 import { SafeAreaView } from "react-native-safe-area-context";
-import Subheader from "./components/subheader/subheader";
+
 import CategoryCard from "./components/category-card/category-card";
+import TravelInput from "./components/input/input";
 import PlaceCard from "./components/place-card/place-card";
-import { FontAwesome6 } from "@react-native-vector-icons/fontawesome6/static";
+import Subheader from "./components/subheader/subheader";
 import avatar from "./images/avatar.png";
 import beach from "./images/beach.png";
-import mountain from "./images/mountain.png";
+import bromo from "./images/bromo.jpg";
 import forest from "./images/forest.png";
 import kuta from "./images/kuta.jpg";
-import bromo from "./images/bromo.jpg";
+import mountain from "./images/mountain.png";
 
 export default function Login() {
   return (
     <SafeAreaView style={styles.view}>
       <View style={styles.textContainer}>
         <View style={styles.avatarContainer}>
-          <Image style={styles.image} source={avatar} />
+          <Image source={avatar} style={styles.image} />
           <Text style={styles.avatarText}>Hello, Pristia!</Text>
         </View>
         <TouchableOpacity>
           <FontAwesome6
-            name="bell"
             iconStyle="regular"
+            name="bell"
             size={20}
             style={styles.black}
           />
@@ -40,35 +41,35 @@ export default function Login() {
       <Text style={styles.mainText}>Where do you want to explore today?</Text>
       <TravelInput />
 
-      <Subheader text="Choose Category" subtext="Sell All" />
+      <Subheader subtext="Sell All" text="Choose Category" />
       <View>
         <ScrollView
-          contentContainerStyle={styles.placeContainer}
           horizontal
+          contentContainerStyle={styles.placeContainer}
           showsHorizontalScrollIndicator={false}
         >
-          <CategoryCard text="Beach" image={beach} />
-          <CategoryCard text="Mountain" image={mountain} />
-          <CategoryCard text="Forest" image={forest} />
+          <CategoryCard image={beach} text="Beach" />
+          <CategoryCard image={mountain} text="Mountain" />
+          <CategoryCard image={forest} text="Forest" />
         </ScrollView>
       </View>
-      <Subheader text="Favorite" subtext="Explore" />
+      <Subheader subtext="Explore" text="Favorite" />
       <ScrollView
         horizontal
         contentContainerStyle={styles.placeCardContainer}
         showsHorizontalScrollIndicator={false}
       >
         <PlaceCard
-          image={kuta}
           header="Kuta Beach"
-          text="Bali, Indonesia"
+          image={kuta}
           rate="4.8"
+          text="Bali, Indonesia"
         />
         <PlaceCard
-          text={"Jawa Ti, Indonesia"}
           header={"Bromo Mountain"}
-          rate="4.0"
           image={bromo}
+          rate="4.0"
+          text={"Jawa Ti, Indonesia"}
         />
       </ScrollView>
     </SafeAreaView>

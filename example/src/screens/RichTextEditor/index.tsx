@@ -1,10 +1,10 @@
 import { useCallback, useState } from "react";
 import {
-  View,
+  ActivityIndicator,
+  StyleSheet,
   Text,
   TouchableOpacity,
-  StyleSheet,
-  ActivityIndicator,
+  View,
 } from "react-native";
 import { PortalHost } from "react-native-teleport";
 import { WebView } from "react-native-webview";
@@ -59,8 +59,8 @@ export default function RichTextEditorExample() {
 
           <TouchableOpacity
             style={[styles.card, styles.cardHighlight]}
-            onPress={openPreloaded}
             testID="rich_text_editor_preloaded"
+            onPress={openPreloaded}
           >
             <Text style={[styles.cardTitle, styles.cardTitleHighlight]}>
               Pre-loaded (Teleport)
@@ -78,7 +78,7 @@ export default function RichTextEditorExample() {
   return (
     <View style={styles.container}>
       <View style={styles.editorHeader}>
-        <TouchableOpacity onPress={close} style={styles.backButton}>
+        <TouchableOpacity style={styles.backButton} onPress={close}>
           <Text style={styles.backText}>{"\u2190"} Back</Text>
         </TouchableOpacity>
         <Text style={styles.editorLabel}>
@@ -94,7 +94,7 @@ export default function RichTextEditorExample() {
         <View style={styles.editor}>
           {!standardReady && (
             <View style={styles.loading}>
-              <ActivityIndicator size="large" color="#007AFF" />
+              <ActivityIndicator color="#007AFF" size="large" />
               <Text style={styles.loadingText}>Loading editor...</Text>
             </View>
           )}

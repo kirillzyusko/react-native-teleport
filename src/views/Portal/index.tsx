@@ -1,8 +1,10 @@
 /// <reference lib="dom" />
 
-import { useRef, useLayoutEffect, useCallback } from "react";
+import { useCallback, useLayoutEffect, useRef } from "react";
 import { createPortal } from "react-dom";
+
 import { usePortalRegistryContext } from "../../contexts/PortalRegistry";
+
 import type { PortalProps } from "../../types";
 
 const supportsMoveBefore =
@@ -15,6 +17,7 @@ function moveElementTo(
 ) {
   if (supportsMoveBefore && child.parentNode) {
     parent.moveBefore(child, before);
+
     return;
   }
 
@@ -25,11 +28,27 @@ function moveElementTo(
   parent.insertBefore(child, before);
 }
 
+/**
+ * Web implementation of the portal: renders `children` into a detached element and moves it into the host.
+ *
+ * @param props - Portal props.
+ * @param props.hostName - The `name` of the host where the content should be rendered.
+ * @param props.children - The content that should be rendered in the portal.
+ * @param props.style - Style of the portal container.
+ * @returns A React portal and an invisible sentinel that marks the local position.
+ * @example
+ * ```tsx
+ * <Portal hostName="overlay">
+ *   <View />
+ * </Portal>
+ * ```
+ */
 export default function Portal({ hostName, children, style }: PortalProps) {
   const { getHost, registerPendingPortal, unregisterPendingPortal } =
     usePortalRegistryContext();
   const elRef = useRef<HTMLDivElement | null>(null);
-  if (!elRef.current) {
+
+  if (elRef.current === null) {
     elRef.current = document.createElement("div");
   }
 
@@ -43,15 +62,20 @@ export default function Portal({ hostName, children, style }: PortalProps) {
 
   const teleportToHost = useCallback(() => {
     const el = elRef.current;
-    if (!el) return;
+
+    if (!el) {
+      return;
+    }
 
     const hostNode = hostName ? getHost(hostName) : null;
+
     if (hostNode) {
       // teleport view to the host
       moveElementTo(hostNode, el);
     } else if (sentinelRef.current && sentinelRef.current.parentElement) {
       // keep view locally
       const parent = sentinelRef.current.parentElement;
+
       moveElementTo(parent, el, sentinelRef.current);
     }
   }, [hostName, getHost]);
@@ -59,9 +83,12 @@ export default function Portal({ hostName, children, style }: PortalProps) {
   useLayoutEffect(() => {
     teleportToHost();
 
-    if (!hostName) return;
+    if (!hostName) {
+      return;
+    }
 
     registerPendingPortal(hostName, teleportToHost);
+
     return () => {
       unregisterPendingPortal(hostName, teleportToHost);
     };
@@ -75,6 +102,7 @@ export default function Portal({ hostName, children, style }: PortalProps) {
   useLayoutEffect(() => {
     return () => {
       const el = elRef.current;
+
       if (el?.parentNode) {
         el.parentNode.removeChild(el);
       }
@@ -83,6 +111,7 @@ export default function Portal({ hostName, children, style }: PortalProps) {
 
   return (
     <>
+      {/* eslint-disable-next-line react-hooks/refs -- the container is created once and never replaced */}
       {createPortal(children, elRef.current)}
       {/* Invisible sentinel for local position */}
       <div ref={sentinelRef} style={styles.anchor} />

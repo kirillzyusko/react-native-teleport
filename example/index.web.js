@@ -1,10 +1,11 @@
+import iconFontRegular from "@react-native-vector-icons/fontawesome6/fonts/FontAwesome6_Regular.ttf";
+import iconFontSolid from "@react-native-vector-icons/fontawesome6/fonts/FontAwesome6_Solid.ttf";
 import { AppRegistry } from "react-native";
+
 import name from "./app.json";
 import App from "./src/App";
 
 // Generate the required CSS
-import iconFontRegular from "@react-native-vector-icons/fontawesome6/fonts/FontAwesome6_Regular.ttf";
-import iconFontSolid from "@react-native-vector-icons/fontawesome6/fonts/FontAwesome6_Solid.ttf";
 const iconFontStyles = `
 @font-face {
   src: url(${iconFontRegular});
@@ -19,6 +20,7 @@ const iconFontStyles = `
 
 // Create a stylesheet
 const style = document.createElement("style");
+
 style.type = "text/css";
 
 // Append the iconFontStyles to the stylesheet

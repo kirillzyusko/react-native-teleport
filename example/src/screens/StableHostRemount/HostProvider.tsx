@@ -1,9 +1,9 @@
 import {
+  type PropsWithChildren,
   createContext,
   useContext,
   useEffect,
   useState,
-  type PropsWithChildren,
 } from "react";
 import { StyleSheet, View } from "react-native";
 import { Portal } from "react-native-teleport";
@@ -20,6 +20,7 @@ export default function HostProvider({ children }: PropsWithChildren) {
 
   useEffect(() => {
     const timer = setTimeout(() => setRedrawNudge((n) => n + 1), 150);
+
     return () => clearTimeout(timer);
   }, [hostName]);
 

@@ -15,6 +15,7 @@ export function createPortalStore() {
 
   function getOrCreate(name: string): Host {
     let host = hosts.get(name);
+
     if (!host) {
       host = {
         mounts: 0,
@@ -24,6 +25,7 @@ export function createPortalStore() {
       };
       hosts.set(name, host);
     }
+
     return host;
   }
 
@@ -42,9 +44,13 @@ export function createPortalStore() {
       name === undefined ? undefined : hosts.get(name),
 
     subscribe(name: string | undefined, listener: Listener) {
-      if (name === undefined) return () => {};
+      if (name === undefined) {
+        return () => {};
+      }
       const host = getOrCreate(name);
+
       host.listeners.add(listener);
+
       return () => {
         host.listeners.delete(listener);
         release(name, host);
@@ -53,10 +59,16 @@ export function createPortalStore() {
 
     registerHost(name: string) {
       const host = getOrCreate(name);
+
       host.mounts++;
-      if (host.mounts === 1) notify(host);
+
+      if (host.mounts === 1) {
+        notify(host);
+      }
+
       return () => {
         host.mounts--;
+
         if (host.mounts === 0) {
           host.scrollContext = null;
           notify(host);
@@ -67,6 +79,7 @@ export function createPortalStore() {
 
     setScrollContext(name: string, value: ScrollViewContextValue) {
       const host = hosts.get(name);
+
       if (host && host.scrollContext !== value) {
         host.scrollContext = value;
         notify(host);
@@ -76,13 +89,21 @@ export function createPortalStore() {
     registerPortal(hostName: string, name: string, id: string) {
       const host = getOrCreate(hostName);
       const instances = host.portals.get(name) ?? new Map<string, boolean>();
+
       host.portals.set(name, instances);
       instances.set(id, false);
+
       return () => {
         const wasRemoved = instances.get(id);
+
         instances.delete(id);
-        if (!instances.size) host.portals.delete(name);
-        if (wasRemoved) notify(host);
+
+        if (!instances.size) {
+          host.portals.delete(name);
+        }
+        if (wasRemoved) {
+          notify(host);
+        }
         release(hostName, host);
       };
     },
@@ -90,7 +111,10 @@ export function createPortalStore() {
     removePortal(hostName: string, name: string) {
       const host = hosts.get(hostName);
       const instances = host?.portals.get(name);
-      if (!host || !instances) return;
+
+      if (!host || !instances) {
+        return;
+      }
       instances.forEach((_, id) => instances.set(id, true));
       notify(host);
     },

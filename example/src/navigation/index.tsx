@@ -1,9 +1,11 @@
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
-import type { NavigatorScreenParams } from "@react-navigation/native";
 
 import { StackNames } from "../constants/screenNames";
 import ExampleMain from "../screens/Main/index";
+
 import ExamplesStack, { type ExamplesStackParamList } from "./ExamplesStack";
+
+import type { NavigatorScreenParams } from "@react-navigation/native";
 
 export type RootStackParamList = {
   [StackNames.EXAMPLES]: undefined;

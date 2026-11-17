@@ -1,21 +1,22 @@
+import { FontAwesome6 } from "@react-native-vector-icons/fontawesome6/static";
+import { useNavigation } from "@react-navigation/native";
+import { useCallback, useEffect } from "react";
 import {
-  View,
+  BackHandler,
+  StyleSheet,
   Text,
   TouchableOpacity,
-  StyleSheet,
-  BackHandler,
+  View,
 } from "react-native";
-import { FontAwesome6 } from "@react-native-vector-icons/fontawesome6/static";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { useNavigation } from "@react-navigation/native";
 import Reanimated, {
   interpolate,
   useAnimatedStyle,
 } from "react-native-reanimated";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Portal } from "react-native-teleport";
+
 import { FLOATING_ELEMENTS_DESTINATION } from "../constants";
 import { useTransition } from "../hooks/useTransition";
-import { useCallback, useEffect } from "react";
 
 function ReelsHeader() {
   const insets = useSafeAreaInsets();
@@ -65,12 +66,12 @@ function ReelsHeader() {
           <Text style={styles.title}>Reels</Text>
           <TouchableOpacity
             accessibilityLabel="Examples, back"
-            onPress={onGoBack}
             testID="go_back"
+            onPress={onGoBack}
           >
             <FontAwesome6
-              name="chevron-left"
               iconStyle="solid"
+              name="chevron-left"
               size={22}
               style={styles.back}
             />
