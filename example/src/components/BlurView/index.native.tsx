@@ -11,6 +11,10 @@ const AnimatedBlurView = ({ visible }: BlurViewProps) => {
   const [opacity] = useState(() => new Animated.Value(0));
 
   useEffect(() => {
+    if (visible) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- mount the blur before the fade-in starts
+      setBlurred(true);
+    }
     Animated.timing(opacity, {
       toValue: visible ? 1 : 0,
       duration: 250,
@@ -26,7 +30,7 @@ const AnimatedBlurView = ({ visible }: BlurViewProps) => {
       pointerEvents="none"
       style={[StyleSheet.absoluteFill, { opacity: opacity }]}
     >
-      {(visible || blurred) && (
+      {blurred && (
         <BlurView
           blurAmount={16}
           blurType="light"

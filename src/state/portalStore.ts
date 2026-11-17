@@ -10,24 +10,9 @@ type Host = {
   listeners: Set<Listener>;
 };
 
-/**
- * Creates a store that keeps hosts state (mounts, scroll context and removed portals) and notifies subscribers per host.
- *
- * @returns Store API to register hosts and portals and to subscribe to host changes.
- * @example
- * ```ts
- * const store = createPortalStore();
- * ```
- */
 export function createPortalStore() {
   const hosts = new Map<string, Host>();
 
-  /**
-   * Returns the host with the given name, creating it when it doesn't exist yet.
-   *
-   * @param name - Host name.
-   * @returns Host state.
-   */
   function getOrCreate(name: string): Host {
     let host = hosts.get(name);
 
@@ -44,23 +29,12 @@ export function createPortalStore() {
     return host;
   }
 
-  /**
-   * Removes the host from the store once nothing references it anymore.
-   *
-   * @param name - Host name.
-   * @param host - Host state.
-   */
   function release(name: string, host: Host) {
     if (!host.mounts && !host.portals.size && !host.listeners.size) {
       hosts.delete(name);
     }
   }
 
-  /**
-   * Calls all listeners subscribed to the host.
-   *
-   * @param host - Host state.
-   */
   function notify(host: Host) {
     host.listeners.forEach((listener) => listener());
   }

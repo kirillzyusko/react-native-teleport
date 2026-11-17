@@ -27,6 +27,10 @@ export function BottomSheetContainer({
   };
 
   useEffect(() => {
+    if (visible) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- show the sheet before the opening animation starts
+      setShown(true);
+    }
     progress.set(
       withSpring(
         visible ? 1 : 0,
@@ -42,17 +46,14 @@ export function BottomSheetContainer({
     );
   }, [visible, progress]);
 
-  // keep the sheet in place until the closing animation finishes
-  const isShown = visible || shown;
-
   const style = useAnimatedStyle(
     () => ({
       transform: [
         { translateY: height.value },
-        { translateY: isShown ? -(progress.value * height.value) : 0 },
+        { translateY: shown ? -(progress.value * height.value) : 0 },
       ],
     }),
-    [isShown],
+    [shown],
   );
 
   const scrimStyle = useAnimatedStyle(() => {
