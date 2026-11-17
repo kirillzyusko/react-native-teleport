@@ -7,11 +7,6 @@ import PortalHost from "../components/PortalHost";
 import usePortal from "../hooks/usePortal";
 import PortalProvider from "../PortalProvider";
 
-/**
- * Renders portals that can be removed via `usePortal().removePortal`.
- *
- * @returns Test component with portals, a host and control buttons.
- */
 function Hook() {
   const [_, setN] = useState(0);
   const [shouldShowSecondPortal, setShowSecondPortal] = useState(false);
@@ -134,11 +129,6 @@ describe("`usePortal` functional spec", () => {
   });
 });
 
-/**
- * Renders the `isHostAvailable` value for a host that can be unmounted.
- *
- * @returns Test component with a host that can be unmounted.
- */
 function IsHostAvailableHook() {
   const [showHost, setShowHost] = useState(true);
   const { isHostAvailable } = usePortal("dynamic");
@@ -192,11 +182,6 @@ describe("`usePortal` isHostAvailable", () => {
   });
 
   it("should return false for a host that was never mounted", () => {
-    /**
-     * Renders whether a host that was never mounted is available.
-     *
-     * @returns An `available` or `unavailable` marker.
-     */
     function NoHost() {
       const { isHostAvailable } = usePortal("nonexistent");
 
@@ -216,11 +201,6 @@ describe("`usePortal` isHostAvailable", () => {
   });
 
   it("should return true for the default root host", () => {
-    /**
-     * Renders whether the default `root` host is available.
-     *
-     * @returns An `available` or `unavailable` marker.
-     */
     function RootHost() {
       const { isHostAvailable } = usePortal();
 
@@ -241,14 +221,6 @@ describe("`usePortal` isHostAvailable", () => {
 });
 
 it("keeps a removed portal hidden when its host arrives and restores it on re-target", () => {
-  /**
-   * Renders a named portal that targets `destination`.
-   *
-   * @param props - Fixture props.
-   * @param props.destination - Host name the portal targets.
-   * @param props.mountHost - Whether the `first` host is mounted.
-   * @returns Provider with the portal and hosts.
-   */
   function Fixture({
     destination,
     mountHost,

@@ -30,15 +30,16 @@ This means the component keeps its internal state (animations, scroll position, 
 ## Example
 
 ```tsx title="App.tsx"
-import { StyleSheet, View } from "react-native";
-import { PortalHost, PortalProvider } from "react-native-teleport";
-import {
-  initialWindowMetrics,
-  SafeAreaProvider,
-} from "react-native-safe-area-context";
 import { NavigationContainer } from "@react-navigation/native";
-import RootStack from "./navigation";
+import { StyleSheet, View } from "react-native";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
+import {
+  SafeAreaProvider,
+  initialWindowMetrics,
+} from "react-native-safe-area-context";
+import { PortalHost, PortalProvider } from "react-native-teleport";
+
+import RootStack from "./navigation";
 
 export default function App() {
   return (
@@ -61,20 +62,20 @@ const styles = StyleSheet.create({
 ```
 
 ```tsx title="Teleport.tsx"
+import { BlurView } from "@react-native-community/blur";
 import LottieView from "lottie-react-native";
 import { useRef, useState } from "react";
 import {
-  View,
-  Text,
-  ScrollView,
-  TouchableWithoutFeedback,
-  StyleSheet,
   Animated,
-  useAnimatedValue,
   Easing,
   Pressable,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TouchableWithoutFeedback,
+  View,
+  useAnimatedValue,
 } from "react-native";
-import { BlurView } from "@react-native-community/blur";
 import { Portal } from "react-native-teleport";
 
 const messages = [

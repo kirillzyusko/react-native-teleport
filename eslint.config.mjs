@@ -191,7 +191,7 @@ export default defineConfig([
         },
         {
           files: ["src/**"],
-          excludedFiles: ["src/specs/**"],
+          excludedFiles: ["src/specs/**", "src/**/__tests__/**"],
           rules: {
             "jsdoc/check-access": "error",
             "jsdoc/check-alignment": "error",
@@ -259,6 +259,12 @@ export default defineConfig([
     extends: fixupConfigRules(compat.extends("plugin:testing-library/react")),
   },
   {
-    ignores: ["node_modules/", "lib/", "scripts/", "docs/build/"],
+    ignores: [
+      "node_modules/",
+      "lib/",
+      "scripts/",
+      "docs/build/",
+      "docs/.docusaurus/",
+    ],
   },
 ]);

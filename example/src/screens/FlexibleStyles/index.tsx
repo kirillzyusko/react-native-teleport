@@ -3,7 +3,7 @@ import {
   PortalHost as GorhomPortalHost,
 } from "@gorhom/portal";
 import { useState } from "react";
-import { Button, View } from "react-native";
+import { Button, StyleSheet, View } from "react-native";
 import { Portal, PortalHost } from "react-native-teleport";
 
 export default function FlexibleStyles() {
@@ -51,16 +51,10 @@ export default function FlexibleStyles() {
           </Portal>
         </View>
       </View>
-      <View
-        pointerEvents="none"
-        style={{ position: "absolute", top: 0, bottom: 0, left: 0, right: 0 }}
-      >
+      <View pointerEvents="none" style={StyleSheet.absoluteFill}>
         <PortalHost name="flex" style={{ flex: 1, display: "flex" }} />
       </View>
-      <View
-        pointerEvents="none"
-        style={{ position: "absolute", top: 0, bottom: 0, left: 0, right: 0 }}
-      >
+      <View pointerEvents="none" style={StyleSheet.absoluteFill}>
         <GorhomPortalHost name="gorhom-overlay" />
       </View>
     </View>

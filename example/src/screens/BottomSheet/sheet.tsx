@@ -26,10 +26,6 @@ export function BottomSheetContainer({
     height.set(e.nativeEvent.layout.height);
   };
 
-  if (visible && !shown) {
-    setShown(true);
-  }
-
   useEffect(() => {
     progress.set(
       withSpring(
@@ -46,14 +42,17 @@ export function BottomSheetContainer({
     );
   }, [visible, progress]);
 
+  // keep the sheet in place until the closing animation finishes
+  const isShown = visible || shown;
+
   const style = useAnimatedStyle(
     () => ({
       transform: [
         { translateY: height.value },
-        { translateY: shown ? -(progress.value * height.value) : 0 },
+        { translateY: isShown ? -(progress.value * height.value) : 0 },
       ],
     }),
-    [shown],
+    [isShown],
   );
 
   const scrimStyle = useAnimatedStyle(() => {

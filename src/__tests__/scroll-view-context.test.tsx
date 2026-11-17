@@ -7,11 +7,6 @@ import PortalHost from "../components/PortalHost";
 import ScrollViewContext from "../contexts/ScrollViewContext";
 import PortalProvider from "../PortalProvider";
 
-/**
- * Renders the orientation of the nearest `ScrollView` context.
- *
- * @returns A text with `horizontal`, `vertical` or `none`.
- */
 function ScrollViewContextMarker() {
   const context = useContext(ScrollViewContext);
   let label = "none";
@@ -68,13 +63,6 @@ it("follows the selected host as it mounts, changes scroll direction and unmount
     </ScrollViewContext.Provider>
   );
 
-  /**
-   * Renders the portal owner inside an optional `ScrollView` context.
-   *
-   * @param props - Fixture props.
-   * @param props.direction - `horizontal` value of the context, or `undefined` to render without context.
-   * @returns Provider with the portal owner.
-   */
   function Fixture({ direction }: { direction?: boolean | null }) {
     return (
       <PortalProvider>

@@ -1,6 +1,6 @@
 /// <reference lib="dom" />
 
-import { useCallback, useLayoutEffect, useRef, useState } from "react";
+import { useCallback, useLayoutEffect, useRef } from "react";
 import { createPortal } from "react-dom";
 
 import { usePortalRegistryContext } from "../../contexts/PortalRegistry";
@@ -57,16 +57,27 @@ function moveElementTo(
 export default function Portal({ hostName, children, style }: PortalProps) {
   const { getHost, registerPendingPortal, unregisterPendingPortal } =
     usePortalRegistryContext();
-  const [el] = useState(() => document.createElement("div"));
+  const elRef = useRef<HTMLDivElement | null>(null);
+
+  if (elRef.current === null) {
+    elRef.current = document.createElement("div");
+  }
+
   const sentinelRef = useRef<HTMLDivElement>(null);
 
   useLayoutEffect(() => {
-    if (style) {
-      Object.assign(el.style, style);
+    if (elRef.current && style) {
+      Object.assign(elRef.current.style, style);
     }
-  }, [el, style]);
+  }, [style]);
 
   const teleportToHost = useCallback(() => {
+    const el = elRef.current;
+
+    if (!el) {
+      return;
+    }
+
     const hostNode = hostName ? getHost(hostName) : null;
 
     if (hostNode) {
@@ -78,7 +89,7 @@ export default function Portal({ hostName, children, style }: PortalProps) {
 
       moveElementTo(parent, el, sentinelRef.current);
     }
-  }, [el, hostName, getHost]);
+  }, [hostName, getHost]);
 
   useLayoutEffect(() => {
     teleportToHost();
@@ -101,15 +112,18 @@ export default function Portal({ hostName, children, style }: PortalProps) {
 
   useLayoutEffect(() => {
     return () => {
-      if (el.parentNode) {
+      const el = elRef.current;
+
+      if (el?.parentNode) {
         el.parentNode.removeChild(el);
       }
     };
-  }, [el]);
+  }, []);
 
   return (
     <>
-      {createPortal(children, el)}
+      {/* eslint-disable-next-line react-hooks/refs -- the container is created once and never replaced */}
+      {createPortal(children, elRef.current)}
       {/* Invisible sentinel for local position */}
       <div ref={sentinelRef} style={styles.anchor} />
     </>

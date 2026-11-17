@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useRef } from "react";
 
 let __idCounter = 0;
 
@@ -13,7 +13,15 @@ let __idCounter = 0;
  * ```
  */
 export default function useId(prefix = "uid"): string {
-  const [id] = useState(() => `${prefix}-${++__idCounter}`);
+  const idRef = useRef<string>("");
 
-  return id;
+  // eslint-disable-next-line react-hooks/refs -- the id is generated once per instance
+  if (!idRef.current) {
+    const n = ++__idCounter;
+
+    idRef.current = `${prefix}-${n}`;
+  }
+
+  // eslint-disable-next-line react-hooks/refs -- the id never changes after the first render
+  return idRef.current;
 }

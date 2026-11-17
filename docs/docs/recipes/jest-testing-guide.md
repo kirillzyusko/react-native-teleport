@@ -20,10 +20,8 @@ Once you've set up mock - you can write your first test 😊. A sample of test c
 
 ```tsx
 import { render, screen } from "@testing-library/react-native";
-
 import { View } from "react-native";
-
-import { PortalProvider, PortalHost, Portal } from "react-native-teleport";
+import { Portal, PortalHost, PortalProvider } from "react-native-teleport";
 
 function TestComponent() {
   return (
