@@ -552,15 +552,13 @@ export const useHeroTransition = create<HeroStore>((set) => ({
 Components subscribe only to the slices they need. Each thumbnail selects `s.id === photo.id`, so a transition re-renders the tapped thumbnail and the detail screen, not the whole grid.
 :::
 
-### Measuring the thumbnail
-
-The animation starts from the thumbnail's position in the window, returned by `ref.current?.measureInWindow`.
-
-On Android, this recipe uses React Native 0.86 or newer, which [fixes `measureInWindow` with edge-to-edge enabled](https://reactnative.dev/blog/2026/06/11/react-native-0.86#edge-to-edge-on-android). Use the returned coordinates directly, without adding the status bar inset.
-
 ## Step 4: Teleport the thumbnail into the root host
 
 Here comes the core trick. When the user taps a thumbnail, we measure it, store its position and switch its [`<Portal>`](../api/components/portal.md) to the root host:
+
+:::info Android edge-to-edge measurements
+`measureInWindow` had a bug that returned incorrect coordinates with edge-to-edge enabled on Android. This was [fixed in React Native 0.86](https://reactnative.dev/blog/2026/06/11/react-native-0.86#edge-to-edge-on-android). The code below assumes RN 0.86 or newer and uses the returned coordinates directly.
+:::
 
 {/* prettier-ignore */}
 ```tsx title="PhotoPreview.tsx (updated)" {1,3,6,12-18,20-26,29,31,37-47,49-50}

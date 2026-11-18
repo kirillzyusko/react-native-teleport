@@ -527,14 +527,6 @@ export default function App() {
 }
 ```
 
-### Measuring the video
-
-Before animating, we need to know **where** the tapped video is on screen. `measureInWindow` gives us the absolute coordinates.
-
-On Android, this recipe uses React Native 0.86 or newer, which [fixes `measureInWindow` with edge-to-edge enabled](https://reactnative.dev/blog/2026/06/11/react-native-0.86#edge-to-edge-on-android). Use the returned coordinates directly, without adding the status bar inset.
-
-The measured `y` value tells the animation system how far the video needs to translate vertically to reach the top of the screen.
-
 ## Step 4: Add the `<Portal>` to share videos between screens
 
 Now we connect everything. This is where `<Portal>` and `<PortalHost>` bring the transition to life.
@@ -542,6 +534,10 @@ Now we connect everything. This is where `<Portal>` and `<PortalHost>` bring the
 ### Update the `Post` component
 
 The `Post` component is the heart of the transition. It wraps the video in a `<Portal>` whose destination changes based on the transition state:
+
+:::info Android edge-to-edge measurements
+`measureInWindow` had a bug that returned incorrect coordinates with edge-to-edge enabled on Android. This was [fixed in React Native 0.86](https://reactnative.dev/blog/2026/06/11/react-native-0.86#edge-to-edge-on-android). The code below assumes RN 0.86 or newer and uses the returned coordinates directly.
+:::
 
 ```tsx title="Post.tsx (final)"
 import { useNavigation } from "@react-navigation/native";
