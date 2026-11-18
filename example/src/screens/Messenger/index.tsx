@@ -89,12 +89,7 @@ export default function Messenger() {
           }}
         >
           <Portal hostName={teleport ? "overlay" : undefined}>
-            <Pressable
-              accessibilityLabel="Animated message"
-              style={style}
-              testID={teleport ? "message-overlay" : "message-source"}
-              onPress={handleClick}
-            >
+            <Pressable style={style} onPress={handleClick}>
               <View style={{ width: 200, height: 200 }}>
                 <LottieView
                   autoPlay

@@ -86,7 +86,6 @@ function PhotoPreview({ photo, onOpen }: Props) {
           height: THUMB_SIZE,
           width: THUMB_SIZE,
         }}
-        testID={`photo-preview-${photo.id}`}
       >
         <Portal hostName={position && isAnimating ? "root" : undefined}>
           <Animated.View
