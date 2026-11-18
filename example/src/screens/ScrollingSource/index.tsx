@@ -1,11 +1,11 @@
-import { useRef, useState, type ComponentRef } from "react";
+import { type ComponentRef, useRef, useState } from "react";
 import {
+  type GestureResponderEvent,
   Pressable,
   ScrollView,
   StyleSheet,
   Text,
   View,
-  type GestureResponderEvent,
 } from "react-native";
 import { Portal, PortalHost } from "react-native-teleport";
 
@@ -74,13 +74,13 @@ export const ScrollingSource = () => {
           {PLACEMENTS.map((item) => (
             <Pressable
               key={item}
+              style={[styles.chip, item === placement && styles.chipActive]}
               testID={`placement-${item}`}
               onPress={() => {
                 setPlacement(item);
                 setMeasured(null);
                 setActual(null);
               }}
-              style={[styles.chip, item === placement && styles.chipActive]}
             >
               <Text
                 style={[
@@ -95,6 +95,7 @@ export const ScrollingSource = () => {
         </View>
         <View style={styles.row}>
           <Pressable
+            style={styles.chip}
             testID={"scroll-source"}
             onPress={() =>
               sourceScroll.current?.scrollTo({
@@ -102,20 +103,20 @@ export const ScrollingSource = () => {
                 animated: false,
               })
             }
-            style={styles.chip}
           >
             <Text style={styles.chipLabel}>{"Scroll source"}</Text>
           </Pressable>
           <Pressable
+            style={styles.chip}
             testID={"reset-source"}
             onPress={() =>
               sourceScroll.current?.scrollTo({ y: 0, animated: false })
             }
-            style={styles.chip}
           >
             <Text style={styles.chipLabel}>{"Reset source"}</Text>
           </Pressable>
           <Pressable
+            style={styles.chip}
             testID={"scroll-host"}
             onPress={() =>
               hostScroll.current?.scrollTo({
@@ -123,16 +124,15 @@ export const ScrollingSource = () => {
                 animated: false,
               })
             }
-            style={styles.chip}
           >
             <Text style={styles.chipLabel}>{"Scroll host"}</Text>
           </Pressable>
           <Pressable
+            style={styles.chip}
             testID={"reset-host"}
             onPress={() =>
               hostScroll.current?.scrollTo({ y: 0, animated: false })
             }
-            style={styles.chip}
           >
             <Text style={styles.chipLabel}>{"Reset host"}</Text>
           </Pressable>
@@ -158,13 +158,13 @@ export const ScrollingSource = () => {
               </Text>
               <Pressable
                 ref={button}
-                testID={"increment-portal"}
-                onPressIn={onPressIn}
-                onPress={() => setPresses((value) => value + 1)}
                 style={({ pressed }) => [
                   styles.button,
                   pressed && styles.pressed,
                 ]}
+                testID={"increment-portal"}
+                onPress={() => setPresses((value) => value + 1)}
+                onPressIn={onPressIn}
               >
                 {/* keep the Pressable itself as the touch target, so that
                     `locationX/Y` are relative to the measured view */}
