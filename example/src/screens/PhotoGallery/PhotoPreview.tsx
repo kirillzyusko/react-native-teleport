@@ -7,12 +7,11 @@ import Animated, {
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Portal } from "react-native-teleport";
 
-import useMeasure from "../../hooks/useMeasure";
-
 import { SCALE, SCREEN_WIDTH, THUMB_SIZE } from "./constants";
 import { useHeroTransition } from "./hero";
 
 import type { Photo } from "./photos";
+import type { ComponentRef } from "react";
 
 type Props = {
   photo: Photo;
@@ -20,8 +19,7 @@ type Props = {
 };
 
 function PhotoPreview({ photo, onOpen }: Props) {
-  const ref = useRef<View>(null);
-  const measure = useMeasure(ref);
+  const ref = useRef<ComponentRef<typeof View>>(null);
   const isAnimating = useHeroTransition((s) => s.id === photo.id);
   const position = useHeroTransition((s) =>
     s.id === photo.id ? s.position : undefined,
@@ -75,15 +73,14 @@ function PhotoPreview({ photo, onOpen }: Props) {
       return;
     }
 
-    measure((x, y) => {
+    ref.current?.measureInWindow((x, y) => {
       goForward(photo.id, x, y, () => onOpen(photo));
     });
-  }, [photo, goForward, onOpen, measure]);
+  }, [photo, goForward, onOpen]);
 
   return (
     <TouchableWithoutFeedback onPress={onPress}>
       <View
-        // @ts-expect-error ref type mismatch between View component and host instance
         ref={ref}
         style={{
           height: THUMB_SIZE,

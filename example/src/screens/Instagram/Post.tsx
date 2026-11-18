@@ -14,7 +14,6 @@ import { Portal } from "react-native-teleport";
 import Video, { ViewType } from "react-native-video";
 
 import { ScreenNames } from "../../constants/screenNames";
-import useMeasure from "../../hooks/useMeasure";
 
 import SocialSection from "./components/SocialSection";
 import {
@@ -28,6 +27,7 @@ import { useTransition } from "./hooks/useTransition";
 
 import type { PostType } from "./posts";
 import type { ExamplesStackNavigation } from "../../navigation/ExamplesStack";
+import type { ComponentRef } from "react";
 
 type PostProps = {
   post: PostType;
@@ -35,7 +35,7 @@ type PostProps = {
 };
 
 const Post = ({ post, active }: PostProps) => {
-  const videoRef = useRef<View>(null);
+  const videoRef = useRef<ComponentRef<typeof View>>(null);
   // transition
   const shouldMove = useTransition((state) => state.id === post.id);
   const setId = useTransition((state) => state.setId);
@@ -47,7 +47,6 @@ const Post = ({ post, active }: PostProps) => {
   const y = useTransition((state) => (shouldMove ? state.y : 0));
   // other
   const navigation = useNavigation<ExamplesStackNavigation>();
-  const measure = useMeasure(videoRef);
 
   const onPress = () => {
     if (post.photo) {
@@ -55,7 +54,7 @@ const Post = ({ post, active }: PostProps) => {
       return;
     }
     setId(post.id);
-    measure((_x: number, _y: number) => {
+    videoRef.current?.measureInWindow((_x, _y) => {
       navigation.navigate(ScreenNames.INSTAGRAM_REELS, { post });
       goToReels(_y);
     });
@@ -80,11 +79,7 @@ const Post = ({ post, active }: PostProps) => {
   return (
     <View style={{ height: CARD_HEIGHT }}>
       <TouchableWithoutFeedback onPress={onPress}>
-        <View
-          // @ts-expect-error I don't know what's wrong with types here
-          ref={videoRef}
-          style={styles.container}
-        >
+        <View ref={videoRef} style={styles.container}>
           <Portal hostName={shouldMove ? destination : undefined}>
             {/* The parent touchable owns presses; native video views must not consume them. */}
             <Reanimated.View
