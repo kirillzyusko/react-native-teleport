@@ -1180,11 +1180,10 @@ Let's fix that!
 
 ## Step 3: Add the `teleport` infrastructure[​](#step-3-add-the-teleport-infrastructure "Direct link to step-3-add-the-teleport-infrastructure")
 
-This is where the magic happens. We need three things:
+This is where the magic happens. We need two things:
 
 1. **A Zustand store** to coordinate the transition state between screens
 2. **A root-level `PortalHost`** to render content above all screens
-3. **A `useMeasure` hook** to get the tapped video's position on screen
 
 ### The transition store[​](#the-transition-store "Direct link to The transition store")
 
@@ -1292,35 +1291,6 @@ export default function App() {
 }
 ```
 
-### The `useMeasure` hook[​](#the-usemeasure-hook "Direct link to the-usemeasure-hook")
-
-Before animating, we need to know **where** the tapped video is on screen. `measureInWindow` gives us the absolute coordinates:
-
-`hooks/useMeasure.ts`
-
-```
-import { Platform, type View } from "react-native";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
-
-const useMeasure = (viewRef: React.RefObject<View | null>) => {
-  const insets = useSafeAreaInsets();
-
-  return (callback: (x: number, y: number) => void) => {
-    viewRef.current?.measureInWindow((x, y) => {
-      // Android edge-to-edge mode can produce incorrect offsets
-      if (Platform.OS === "android") {
-        return callback(x, y + insets.top);
-      }
-      return callback(x, y);
-    });
-  };
-};
-
-export default useMeasure;
-```
-
-The measured `y` value tells the animation system how far the video needs to translate vertically to reach the top of the screen.
-
 ## Step 4: Add the `<Portal>` to share videos between screens[​](#step-4-add-the-portal-to-share-videos-between-screens "Direct link to step-4-add-the-portal-to-share-videos-between-screens")
 
 Now we connect everything. This is where `<Portal>` and `<PortalHost>` bring the transition to life.
@@ -1329,11 +1299,15 @@ Now we connect everything. This is where `<Portal>` and `<PortalHost>` bring the
 
 The `Post` component is the heart of the transition. It wraps the video in a `<Portal>` whose destination changes based on the transition state:
 
+Android edge-to-edge measurements
+
+`measureInWindow` had a bug that returned incorrect coordinates with edge-to-edge enabled on Android. This was [fixed in React Native 0.86](https://reactnative.dev/blog/2026/06/11/react-native-0.86#edge-to-edge-on-android). The code below assumes RN 0.86 or newer and uses the returned coordinates directly.
+
 `Post.tsx` (final)
 
 ```
 import { useNavigation } from "@react-navigation/native";
-import { useRef } from "react";
+import { type ComponentRef, useRef } from "react";
 import {
   Image,
   StyleSheet,
@@ -1347,16 +1321,13 @@ import Reanimated, {
 import { Portal } from "react-native-teleport";
 import Video, { ViewType } from "react-native-video";
 
-import useMeasure from "../../hooks/useMeasure";
-
 import SocialSection from "./components/SocialSection";
 import { CARD_HEIGHT, SCREEN_HEIGHT, VIDEO_HEIGHT } from "./constants";
 import { useTransition } from "./hooks/useTransition";
 
 const Post = ({ post, active }) => {
-  const videoRef = useRef(null);
+  const videoRef = useRef<ComponentRef<typeof View>>(null);
   const navigation = useNavigation();
-  const measure = useMeasure(videoRef);
 
   // Subscribe to only the state slices this post needs
   const shouldMove = useTransition((state) => state.id === post.id);
@@ -1371,7 +1342,7 @@ const Post = ({ post, active }) => {
   const onPress = () => {
     if (post.photo) return;
     setId(post.id);
-    measure((_x, _y) => {
+    videoRef.current?.measureInWindow((_x, _y) => {
       navigation.navigate("Reels", { post });
       goToReels(_y);
     });
@@ -1432,7 +1403,7 @@ export default Post;
 Here's what happens step by step when the user taps a video:
 
 1. **`setId(post.id)`** — Marks this post as the one being transitioned. Only this post's `shouldMove` becomes `true`.
-2. **`measure()`** — Gets the video's current Y position on screen.
+2. **`measureInWindow()`** — Gets the video's current Y position on screen.
 3. **`navigation.navigate("Reels", { post })`** — Opens the Reels screen (with `animation: "none"` so nothing visible happens yet).
 4. **`goToReels(_y)`** — Sets `destination: "overlay"` and starts the spring animation.
 5. The `<Portal>` now has `hostName="overlay"`, so the video **teleports** from the feed to the root overlay.
@@ -2400,62 +2371,32 @@ Why Zustand?
 
 Components subscribe only to the slices they need. Each thumbnail selects `s.id === photo.id`, so a transition re-renders the tapped thumbnail and the detail screen, not the whole grid.
 
-### Measuring the thumbnail[​](#measuring-the-thumbnail "Direct link to Measuring the thumbnail")
-
-The animation starts from the thumbnail's position in the window:
-
-`useMeasure.ts`
-
-```
-import { Platform, type View } from "react-native";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
-
-type MeasureCallback = (x: number, y: number) => void;
-
-const useMeasure = (viewRef: React.RefObject<View | null>) => {
-  const insets = useSafeAreaInsets();
-
-  return (callback: MeasureCallback) => {
-    // @ts-expect-error
-    viewRef.current?.measureInWindow((x: number, y: number) => {
-      // it looks like enabled edge-to-edge (Android 16+) produces incorrect
-      // measurement offset
-      if (Platform.OS === "android") {
-        return callback(x, y + insets.top);
-      }
-
-      return callback(x, y);
-    });
-  };
-};
-
-export default useMeasure;
-```
-
 ## Step 4: Teleport the thumbnail into the root host[​](#step-4-teleport-the-thumbnail-into-the-root-host "Direct link to Step 4: Teleport the thumbnail into the root host")
 
 Here comes the core trick. When the user taps a thumbnail, we measure it, store its position and switch its [`<Portal>`](/react-native-teleport/docs/api/components/portal.md) to the root host:
+
+Android edge-to-edge measurements
+
+`measureInWindow` had a bug that returned incorrect coordinates with edge-to-edge enabled on Android. This was [fixed in React Native 0.86](https://reactnative.dev/blog/2026/06/11/react-native-0.86#edge-to-edge-on-android). The code below assumes RN 0.86 or newer and uses the returned coordinates directly.
 
 <!-- -->
 
 `PhotoPreview.tsx` (updated)
 
 ```
-import React, { useCallback, useRef } from "react";
+import React, { type ComponentRef, useCallback, useRef } from "react";
 import { Image, TouchableWithoutFeedback, View } from "react-native";
 import { Portal } from "react-native-teleport";
 
 import { THUMB_SIZE } from "./constants";
 import { useHeroTransition } from "./hero";
-import useMeasure from "./useMeasure";
 
 import type { Photo } from "./photos";
 
 // ...
 
 function PhotoPreview({ photo, onOpen }: Props) {
-  const ref = useRef<View>(null);
-  const measure = useMeasure(ref);
+  const ref = useRef<ComponentRef<typeof View>>(null);
   const isAnimating = useHeroTransition((s) => s.id === photo.id);
   const position = useHeroTransition((s) =>
     s.id === photo.id ? s.position : undefined,
@@ -2465,15 +2406,14 @@ function PhotoPreview({ photo, onOpen }: Props) {
   const onPress = useCallback(() => {
     if (useHeroTransition.getState().id !== "") return;
 
-    measure((x, y) => {
+    ref.current?.measureInWindow((x, y) => {
       goForward(photo.id, x, y, () => onOpen(photo));
     });
-  }, [photo, goForward, onOpen, measure]);
+  }, [photo, goForward, onOpen]);
 
   return (
     <TouchableWithoutFeedback onPress={onPress}>
       <View
-        // @ts-expect-error ref type mismatch between View component and host instance
         ref={ref}
         style={{
           height: THUMB_SIZE,
@@ -2673,7 +2613,7 @@ The thumbnail turns every `progress` value into a position, a scale and a height
 `PhotoPreview.tsx` (updated)
 
 ```
-import React, { useCallback, useRef } from "react";
+import React, { type ComponentRef, useCallback, useRef } from "react";
 import { StyleSheet, TouchableWithoutFeedback, View } from "react-native";
 import Animated, {
   interpolate,
@@ -2684,7 +2624,6 @@ import { Portal } from "react-native-teleport";
 
 import { SCALE, SCREEN_WIDTH, THUMB_SIZE } from "./constants";
 import { useHeroTransition } from "./hero";
-import useMeasure from "./useMeasure";
 
 import type { Photo } from "./photos";
 
@@ -2738,7 +2677,6 @@ function PhotoPreview({ photo, onOpen }: Props) {
   return (
     <TouchableWithoutFeedback onPress={onPress}>
       <View
-        // @ts-expect-error ref type mismatch between View component and host instance
         ref={ref}
         style={{
           height: THUMB_SIZE,
@@ -3408,7 +3346,6 @@ The thumbnail and the full-res image must have the same aspect ratio and the sam
 ### 🎬 Starting the animation on Android[​](#starting-the-animation-on-android "Direct link to 🎬 Starting the animation on Android")
 
 * **Blank frame when the animation starts.** Keep animated styles attached for the component's whole lifetime instead of adding them when the animation begins.
-* **Wrong start position.** With edge-to-edge enabled, `measureInWindow` can be offset by the status bar height. `useMeasure` compensates for it.
 
 ### 🔁 After the handoff[​](#after-the-handoff "Direct link to 🔁 After the handoff")
 

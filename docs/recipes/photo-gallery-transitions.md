@@ -544,62 +544,32 @@ Why Zustand?
 
 Components subscribe only to the slices they need. Each thumbnail selects `s.id === photo.id`, so a transition re-renders the tapped thumbnail and the detail screen, not the whole grid.
 
-### Measuring the thumbnail[​](#measuring-the-thumbnail "Direct link to Measuring the thumbnail")
-
-The animation starts from the thumbnail's position in the window:
-
-`useMeasure.ts`
-
-```
-import { Platform, type View } from "react-native";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
-
-type MeasureCallback = (x: number, y: number) => void;
-
-const useMeasure = (viewRef: React.RefObject<View | null>) => {
-  const insets = useSafeAreaInsets();
-
-  return (callback: MeasureCallback) => {
-    // @ts-expect-error
-    viewRef.current?.measureInWindow((x: number, y: number) => {
-      // it looks like enabled edge-to-edge (Android 16+) produces incorrect
-      // measurement offset
-      if (Platform.OS === "android") {
-        return callback(x, y + insets.top);
-      }
-
-      return callback(x, y);
-    });
-  };
-};
-
-export default useMeasure;
-```
-
 ## Step 4: Teleport the thumbnail into the root host[​](#step-4-teleport-the-thumbnail-into-the-root-host "Direct link to Step 4: Teleport the thumbnail into the root host")
 
 Here comes the core trick. When the user taps a thumbnail, we measure it, store its position and switch its [`<Portal>`](/react-native-teleport/docs/api/components/portal.md) to the root host:
+
+Android edge-to-edge measurements
+
+`measureInWindow` had a bug that returned incorrect coordinates with edge-to-edge enabled on Android. This was [fixed in React Native 0.86](https://reactnative.dev/blog/2026/06/11/react-native-0.86#edge-to-edge-on-android). The code below assumes RN 0.86 or newer and uses the returned coordinates directly.
 
 <!-- -->
 
 `PhotoPreview.tsx` (updated)
 
 ```
-import React, { useCallback, useRef } from "react";
+import React, { type ComponentRef, useCallback, useRef } from "react";
 import { Image, TouchableWithoutFeedback, View } from "react-native";
 import { Portal } from "react-native-teleport";
 
 import { THUMB_SIZE } from "./constants";
 import { useHeroTransition } from "./hero";
-import useMeasure from "./useMeasure";
 
 import type { Photo } from "./photos";
 
 // ...
 
 function PhotoPreview({ photo, onOpen }: Props) {
-  const ref = useRef<View>(null);
-  const measure = useMeasure(ref);
+  const ref = useRef<ComponentRef<typeof View>>(null);
   const isAnimating = useHeroTransition((s) => s.id === photo.id);
   const position = useHeroTransition((s) =>
     s.id === photo.id ? s.position : undefined,
@@ -609,15 +579,14 @@ function PhotoPreview({ photo, onOpen }: Props) {
   const onPress = useCallback(() => {
     if (useHeroTransition.getState().id !== "") return;
 
-    measure((x, y) => {
+    ref.current?.measureInWindow((x, y) => {
       goForward(photo.id, x, y, () => onOpen(photo));
     });
-  }, [photo, goForward, onOpen, measure]);
+  }, [photo, goForward, onOpen]);
 
   return (
     <TouchableWithoutFeedback onPress={onPress}>
       <View
-        // @ts-expect-error ref type mismatch between View component and host instance
         ref={ref}
         style={{
           height: THUMB_SIZE,
@@ -817,7 +786,7 @@ The thumbnail turns every `progress` value into a position, a scale and a height
 `PhotoPreview.tsx` (updated)
 
 ```
-import React, { useCallback, useRef } from "react";
+import React, { type ComponentRef, useCallback, useRef } from "react";
 import { StyleSheet, TouchableWithoutFeedback, View } from "react-native";
 import Animated, {
   interpolate,
@@ -828,7 +797,6 @@ import { Portal } from "react-native-teleport";
 
 import { SCALE, SCREEN_WIDTH, THUMB_SIZE } from "./constants";
 import { useHeroTransition } from "./hero";
-import useMeasure from "./useMeasure";
 
 import type { Photo } from "./photos";
 
@@ -882,7 +850,6 @@ function PhotoPreview({ photo, onOpen }: Props) {
   return (
     <TouchableWithoutFeedback onPress={onPress}>
       <View
-        // @ts-expect-error ref type mismatch between View component and host instance
         ref={ref}
         style={{
           height: THUMB_SIZE,
@@ -1552,7 +1519,6 @@ The thumbnail and the full-res image must have the same aspect ratio and the sam
 ### 🎬 Starting the animation on Android[​](#starting-the-animation-on-android "Direct link to 🎬 Starting the animation on Android")
 
 * **Blank frame when the animation starts.** Keep animated styles attached for the component's whole lifetime instead of adding them when the animation begins.
-* **Wrong start position.** With edge-to-edge enabled, `measureInWindow` can be offset by the status bar height. `useMeasure` compensates for it.
 
 ### 🔁 After the handoff[​](#after-the-handoff "Direct link to 🔁 After the handoff")
 

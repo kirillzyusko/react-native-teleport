@@ -405,11 +405,10 @@ Let's fix that!
 
 ## Step 3: Add the `teleport` infrastructure[​](#step-3-add-the-teleport-infrastructure "Direct link to step-3-add-the-teleport-infrastructure")
 
-This is where the magic happens. We need three things:
+This is where the magic happens. We need two things:
 
 1. **A Zustand store** to coordinate the transition state between screens
 2. **A root-level `PortalHost`** to render content above all screens
-3. **A `useMeasure` hook** to get the tapped video's position on screen
 
 ### The transition store[​](#the-transition-store "Direct link to The transition store")
 
@@ -517,35 +516,6 @@ export default function App() {
 }
 ```
 
-### The `useMeasure` hook[​](#the-usemeasure-hook "Direct link to the-usemeasure-hook")
-
-Before animating, we need to know **where** the tapped video is on screen. `measureInWindow` gives us the absolute coordinates:
-
-`hooks/useMeasure.ts`
-
-```
-import { Platform, type View } from "react-native";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
-
-const useMeasure = (viewRef: React.RefObject<View | null>) => {
-  const insets = useSafeAreaInsets();
-
-  return (callback: (x: number, y: number) => void) => {
-    viewRef.current?.measureInWindow((x, y) => {
-      // Android edge-to-edge mode can produce incorrect offsets
-      if (Platform.OS === "android") {
-        return callback(x, y + insets.top);
-      }
-      return callback(x, y);
-    });
-  };
-};
-
-export default useMeasure;
-```
-
-The measured `y` value tells the animation system how far the video needs to translate vertically to reach the top of the screen.
-
 ## Step 4: Add the `<Portal>` to share videos between screens[​](#step-4-add-the-portal-to-share-videos-between-screens "Direct link to step-4-add-the-portal-to-share-videos-between-screens")
 
 Now we connect everything. This is where `<Portal>` and `<PortalHost>` bring the transition to life.
@@ -554,11 +524,15 @@ Now we connect everything. This is where `<Portal>` and `<PortalHost>` bring the
 
 The `Post` component is the heart of the transition. It wraps the video in a `<Portal>` whose destination changes based on the transition state:
 
+Android edge-to-edge measurements
+
+`measureInWindow` had a bug that returned incorrect coordinates with edge-to-edge enabled on Android. This was [fixed in React Native 0.86](https://reactnative.dev/blog/2026/06/11/react-native-0.86#edge-to-edge-on-android). The code below assumes RN 0.86 or newer and uses the returned coordinates directly.
+
 `Post.tsx` (final)
 
 ```
 import { useNavigation } from "@react-navigation/native";
-import { useRef } from "react";
+import { type ComponentRef, useRef } from "react";
 import {
   Image,
   StyleSheet,
@@ -572,16 +546,13 @@ import Reanimated, {
 import { Portal } from "react-native-teleport";
 import Video, { ViewType } from "react-native-video";
 
-import useMeasure from "../../hooks/useMeasure";
-
 import SocialSection from "./components/SocialSection";
 import { CARD_HEIGHT, SCREEN_HEIGHT, VIDEO_HEIGHT } from "./constants";
 import { useTransition } from "./hooks/useTransition";
 
 const Post = ({ post, active }) => {
-  const videoRef = useRef(null);
+  const videoRef = useRef<ComponentRef<typeof View>>(null);
   const navigation = useNavigation();
-  const measure = useMeasure(videoRef);
 
   // Subscribe to only the state slices this post needs
   const shouldMove = useTransition((state) => state.id === post.id);
@@ -596,7 +567,7 @@ const Post = ({ post, active }) => {
   const onPress = () => {
     if (post.photo) return;
     setId(post.id);
-    measure((_x, _y) => {
+    videoRef.current?.measureInWindow((_x, _y) => {
       navigation.navigate("Reels", { post });
       goToReels(_y);
     });
@@ -657,7 +628,7 @@ export default Post;
 Here's what happens step by step when the user taps a video:
 
 1. **`setId(post.id)`** — Marks this post as the one being transitioned. Only this post's `shouldMove` becomes `true`.
-2. **`measure()`** — Gets the video's current Y position on screen.
+2. **`measureInWindow()`** — Gets the video's current Y position on screen.
 3. **`navigation.navigate("Reels", { post })`** — Opens the Reels screen (with `animation: "none"` so nothing visible happens yet).
 4. **`goToReels(_y)`** — Sets `destination: "overlay"` and starts the spring animation.
 5. The `<Portal>` now has `hostName="overlay"`, so the video **teleports** from the feed to the root overlay.
