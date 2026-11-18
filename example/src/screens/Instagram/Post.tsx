@@ -79,10 +79,7 @@ const Post = ({ post, active }: PostProps) => {
   return (
     <View style={{ height: CARD_HEIGHT }}>
       <TouchableWithoutFeedback onPress={onPress}>
-        <View
-          ref={videoRef}
-          style={styles.container}
-        >
+        <View ref={videoRef} style={styles.container}>
           <Portal hostName={shouldMove ? destination : undefined}>
             {/* The parent touchable owns presses; native video views must not consume them. */}
             <Reanimated.View
