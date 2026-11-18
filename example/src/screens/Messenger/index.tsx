@@ -4,7 +4,8 @@ import { Pressable, ScrollView, Text, View } from "react-native";
 import { Portal } from "react-native-teleport";
 
 import BlurView from "../../components/BlurView";
-import useMeasure from "../../hooks/useMeasure";
+
+import type { ComponentRef } from "react";
 
 const messages = [
   { text: "Hello, how are you", sender: true },
@@ -46,12 +47,11 @@ const Message = ({ sender, text }: MessageProps) => {
 };
 
 export default function Messenger() {
-  const viewRef = useRef<View>(null);
+  const viewRef = useRef<ComponentRef<typeof View>>(null);
   const timeoutId = useRef<number>(undefined);
   const [teleport, setTeleported] = useState(false);
   const [style, setStyle] = useState({ paddingTop: 0 });
   const [blur, setBlur] = useState(false);
-  const measure = useMeasure(viewRef);
 
   const handleClick = () => {
     if (blur) {
@@ -66,7 +66,7 @@ export default function Messenger() {
     }
     clearTimeout(timeoutId.current);
     setBlur(true);
-    measure((_x: number, y: number) => {
+    viewRef.current?.measureInWindow((_x, y) => {
       setTeleported(true);
       setStyle({
         paddingTop: y,
@@ -81,7 +81,6 @@ export default function Messenger() {
           <Message key={item.text} {...item} />
         ))}
         <View
-          // @ts-expect-error I don't know what's wrong with types here
           ref={viewRef}
           style={{
             width: "100%",
@@ -90,7 +89,12 @@ export default function Messenger() {
           }}
         >
           <Portal hostName={teleport ? "overlay" : undefined}>
-            <Pressable style={style} onPress={handleClick}>
+            <Pressable
+              accessibilityLabel="Animated message"
+              style={style}
+              testID={teleport ? "message-overlay" : "message-source"}
+              onPress={handleClick}
+            >
               <View style={{ width: 200, height: 200 }}>
                 <LottieView
                   autoPlay
