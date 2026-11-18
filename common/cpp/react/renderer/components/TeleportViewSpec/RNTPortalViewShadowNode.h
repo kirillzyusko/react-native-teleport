@@ -11,12 +11,23 @@
 #include <react/renderer/uimanager/consistency/ShadowTreeRevisionProvider.h>
 #include <jsi/jsi.h>
 
+#include <atomic>
 #include <memory>
 #include <utility>
 
 namespace facebook::react {
 
   JSI_EXPORT extern const char PortalViewComponentName[];
+
+  /*
+   * Lets a portal `ShadowNode` read the committed shadow tree, so the position
+   * of its host can be resolved at the moment of a measurement.
+   * The provider is owned by `UIManager`.
+   */
+  struct PortalShadowTreeAccess {
+    std::atomic<ShadowTreeRevisionProvider *> revisionProvider{nullptr};
+    std::atomic<bool> isConnecting{false};
+  };
 
   /*
    * `ShadowNode` for <PortalView> component.
@@ -64,10 +75,11 @@ namespace facebook::react {
         return ConcreteViewShadowNode::getTransform();
       }
 
-      // the transform of a root is the offset of its surface inside the window
-      auto viewportOffset = PortalShadowRegistry::getInstance().getViewportOffset(getSurfaceId());
+      // a teleported portal is measured as a root, so it takes the transform
+      // of the root: the offset of the surface inside the window
+      auto rootShadowNode = getCommittedRoot(getSurfaceId());
 
-      return Transform::Translate(viewportOffset.x, viewportOffset.y, 0);
+      return rootShadowNode != nullptr ? rootShadowNode->getTransform() : Transform{};
     }
 
     Point getContentOriginOffset(bool includeTransform) const override {
@@ -81,6 +93,14 @@ namespace facebook::react {
     }
 
    private:
+    // the tree of a surface as Fabric has committed it by this moment
+    RootShadowNode::Shared getCommittedRoot(SurfaceId surfaceId) const {
+      auto *revisionProvider =
+          shadowTreeAccess_ != nullptr ? shadowTreeAccess_->revisionProvider.load() : nullptr;
+
+      return revisionProvider != nullptr ? revisionProvider->getCurrentRevision(surfaceId) : nullptr;
+    }
+
     /*
      * Position of the host in the same revision of the tree that is being
      * measured. It is resolved on demand, so it can't be stale: it accounts
@@ -88,29 +108,18 @@ namespace facebook::react {
      * of the host exactly as Fabric knows them at this moment.
      */
     Point getHostOrigin() const {
-      static thread_local int depth = 0;
-      // a host can be mounted inside the content of another portal, but
-      // a portal can't be measured through itself
-      if (depth > 8) {
-        return {};
-      }
-
       auto hostFamily = PortalShadowRegistry::getInstance().getHostFamily(getStateData().hostTag);
-      auto *revisionProvider =
-          shadowTreeAccess_ != nullptr ? shadowTreeAccess_->revisionProvider.load() : nullptr;
-      if (hostFamily == nullptr || revisionProvider == nullptr) {
+      if (hostFamily == nullptr) {
         return {};
       }
 
-      auto rootShadowNode = revisionProvider->getCurrentRevision(hostFamily->getSurfaceId());
+      auto rootShadowNode = getCommittedRoot(hostFamily->getSurfaceId());
       if (rootShadowNode == nullptr) {
         return {};
       }
 
-      depth++;
       auto hostMetrics = LayoutableShadowNode::computeRelativeLayoutMetrics(
           *hostFamily, *rootShadowNode, {.includeTransform = true});
-      depth--;
 
       return hostMetrics.frame.origin;
     }

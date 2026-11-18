@@ -27,9 +27,6 @@ namespace facebook::react {
     void layout(LayoutContext layoutContext) override {
       ConcreteViewShadowNode::layout(layoutContext);
 
-      PortalShadowRegistry::getInstance().updateViewportOffset(
-          getSurfaceId(), layoutContext.viewportOffset);
-
       // After layout is complete, update the size in the registry
       auto &props = static_cast<const PortalHostViewProps &>(*getProps());
       if (!props.name.empty()) {

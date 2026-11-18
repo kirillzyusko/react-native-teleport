@@ -86,9 +86,8 @@ namespace facebook::react {
         return;
       }
 
-      // `RuntimeSchedulerKey` is exported only since React Native 0.78
       auto weakRuntimeScheduler =
-          contextContainer_->find<std::weak_ptr<RuntimeScheduler>>("RuntimeScheduler");
+          contextContainer_->find<std::weak_ptr<RuntimeScheduler>>(RuntimeSchedulerKey);
       auto runtimeScheduler =
           weakRuntimeScheduler.has_value() ? weakRuntimeScheduler.value().lock() : nullptr;
       if (runtimeScheduler == nullptr) {

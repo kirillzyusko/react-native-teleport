@@ -49,18 +49,4 @@ namespace facebook::react {
     return nullptr;
   }
 
-  void PortalShadowRegistry::updateViewportOffset(SurfaceId surfaceId, Point viewportOffset) {
-    std::lock_guard<std::mutex> lock(mutex_);
-    viewportOffsets_[surfaceId] = viewportOffset;
-  }
-
-  Point PortalShadowRegistry::getViewportOffset(SurfaceId surfaceId) const {
-    std::lock_guard<std::mutex> lock(mutex_);
-    auto it = viewportOffsets_.find(surfaceId);
-    if (it != viewportOffsets_.end()) {
-      return it->second;
-    }
-    return Point{};
-  }
-
 } // namespace facebook::react
