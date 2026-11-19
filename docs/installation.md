@@ -4,7 +4,7 @@
 
 New Architecture only
 
-This library is compatible **only** with the **new (Fabric)** architecture.
+This library is compatible **only** with the **new (Fabric)** architecture and requires **React Native 0.78** or newer.
 
 Install the `react-native-teleport` package in your React Native project.
 
