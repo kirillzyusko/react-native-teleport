@@ -35,7 +35,8 @@ namespace facebook::react {
             props.name,
             HostSize{
                 static_cast<float>(layoutMetrics.frame.size.width),
-                static_cast<float>(layoutMetrics.frame.size.height)});
+                static_cast<float>(layoutMetrics.frame.size.height),
+                getTag()});
       }
     }
   };
