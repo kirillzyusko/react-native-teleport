@@ -55,8 +55,12 @@ namespace facebook::react {
         HostSize hostSize{
             static_cast<float>(stateData.hostWidth),
             static_cast<float>(stateData.hostHeight)};
-        if (hostSize.width == 0 || hostSize.height == 0) {
-          hostSize = PortalShadowRegistry::getInstance().getHostSize(props.hostName);
+        auto registeredSize = PortalShadowRegistry::getInstance().getHostSize(props.hostName);
+        // Right after `hostName` changes the state still describes the
+        // previous host: the native side hasn't moved the children yet.
+        auto isStateOfAnotherHost = registeredSize.tag != 0 && registeredSize.tag != stateData.hostTag;
+        if (hostSize.width == 0 || hostSize.height == 0 || isStateOfAnotherHost) {
+          hostSize = registeredSize;
         }
 
         portalViewShadowNode.setDimensionsFromHost(hostSize);
