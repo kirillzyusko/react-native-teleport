@@ -95,7 +95,12 @@
     "NDEBUG",
     "IPHONEOS",
     "Pressability",
-    "scroller"
+    "scroller",
+    "runtimescheduler",
+    "performancetimeline",
+    "jsinspector",
+    "jsinspectortracing",
+    "moderntracing"
   ],
   "ignorePaths": [
     "node_modules",
