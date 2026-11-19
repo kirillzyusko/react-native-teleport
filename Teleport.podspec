@@ -19,6 +19,14 @@ Pod::Spec.new do |s|
 
   install_modules_dependencies(s)
 
+  # `RuntimeScheduler.h` and the headers it includes belong to pods that
+  # `install_modules_dependencies` doesn't expose to a pod built as a framework
+  if ENV["USE_FRAMEWORKS"]
+    add_dependency(s, "React-runtimescheduler")
+    add_dependency(s, "React-performancetimeline")
+    add_dependency(s, "React-jsinspectortracing", :framework_name => "jsinspector_moderntracing")
+  end
+
   s.subspec "common" do |ss|
     ss.source_files         = ["common/cpp/**/*.{cpp,h}"]
     ss.header_dir           = "react/renderer/components/TeleportViewSpec"

@@ -23,7 +23,8 @@ export type ExampleScreen =
   | ScreenNames.SCALED_HOST
   | ScreenNames.TRANSITION_REPARENT
   | ScreenNames.STABLE_HOST_REMOUNT
-  | ScreenNames.NESTED_STACK_POP;
+  | ScreenNames.NESTED_STACK_POP
+  | ScreenNames.SCROLLING_SOURCE;
 
 export type Example = {
   testID: string;

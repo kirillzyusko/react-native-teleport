@@ -144,4 +144,10 @@ export const fixtures: Example[] = [
     info: ScreenNames.NESTED_STACK_POP,
     icons: "🫥",
   },
+  {
+    title: "Scrolling portal source",
+    testID: "scrolling_source",
+    info: ScreenNames.SCROLLING_SOURCE,
+    icons: "📜",
+  },
 ];

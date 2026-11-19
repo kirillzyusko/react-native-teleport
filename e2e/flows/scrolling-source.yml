@@ -1,0 +1,67 @@
+appId: teleport.example
+---
+- launchApp
+- waitForAnimationToEnd
+- runFlow:
+    file: ../subflows/open-example.yml
+    env:
+      EXAMPLE_CATEGORY: "fixture"
+      EXAMPLE_ID: "scrolling_source"
+- assertVisible: "Presses: 0"
+# The host stays in place, an ancestor of the source scrolls.
+- runFlow: ../subflows/press-scrolling-source.yml
+- assertVisible: "Presses: 1"
+- tapOn:
+    id: "scroll-source"
+- waitForAnimationToEnd
+- runFlow: ../subflows/press-scrolling-source.yml
+- assertVisible: "Presses: 2"
+- tapOn:
+    id: "reset-source"
+- waitForAnimationToEnd
+- runFlow: ../subflows/press-scrolling-source.yml
+- assertVisible: "Presses: 3"
+# Teleport the panel into a host that lives inside its own ScrollView.
+- tapOn:
+    id: "placement-scroller"
+- waitForAnimationToEnd
+- runFlow: ../subflows/press-scrolling-source.yml
+- assertVisible: "Presses: 4"
+- tapOn:
+    id: "scroll-host"
+- waitForAnimationToEnd
+- runFlow: ../subflows/press-scrolling-source.yml
+- assertVisible: "Presses: 5"
+- tapOn:
+    id: "scroll-source"
+- waitForAnimationToEnd
+- runFlow: ../subflows/press-scrolling-source.yml
+- assertVisible: "Presses: 6"
+# The app-level host, declared outside of the navigator. The source scrolls
+# after the panel has been teleported.
+- tapOn:
+    id: "placement-root"
+- tapOn:
+    id: "reset-source"
+- waitForAnimationToEnd
+- runFlow: ../subflows/press-scrolling-source.yml
+- assertVisible: "Presses: 7"
+# A host that takes only a part of the screen.
+- tapOn:
+    id: "placement-middle"
+- tapOn:
+    id: "scroll-source"
+- waitForAnimationToEnd
+- runFlow: ../subflows/press-scrolling-source.yml
+- assertVisible: "Presses: 8"
+# A host inside the same ScrollView as the source: they scroll together.
+- tapOn:
+    id: "placement-inline"
+- waitForAnimationToEnd
+- runFlow: ../subflows/press-scrolling-source.yml
+- assertVisible: "Presses: 9"
+- tapOn:
+    id: "reset-source"
+- waitForAnimationToEnd
+- runFlow: ../subflows/press-scrolling-source.yml
+- assertVisible: "Presses: 10"

@@ -26,6 +26,7 @@ import RecycleRepro from "../../screens/RecycleRepro";
 import RichTextEditor from "../../screens/RichTextEditor";
 import RNTouchableExample from "../../screens/RNTouchable";
 import ScaledHost from "../../screens/ScaledHost";
+import ScrollingSource from "../../screens/ScrollingSource";
 import StableHostRemount from "../../screens/StableHostRemount";
 import TeleportationOrder from "../../screens/TeleportationOrder";
 import GestureHandlerTouchableExample from "../../screens/Touchable";
@@ -73,6 +74,7 @@ export type ExamplesStackParamList = {
   [ScreenNames.TRANSITION_REPARENT]: undefined;
   [ScreenNames.STABLE_HOST_REMOUNT]: undefined;
   [ScreenNames.NESTED_STACK_POP]: undefined;
+  [ScreenNames.SCROLLING_SOURCE]: undefined;
 };
 
 const Stack = createNativeStackNavigator<ExamplesStackParamList>();
@@ -154,6 +156,7 @@ const options = {
   [ScreenNames.TRANSITION_REPARENT]: { headerShown: false },
   [ScreenNames.STABLE_HOST_REMOUNT]: { headerShown: false },
   [ScreenNames.NESTED_STACK_POP]: { headerShown: false },
+  [ScreenNames.SCROLLING_SOURCE]: { title: "Scrolling portal source" },
 };
 
 const ExamplesStack = () => (
@@ -302,6 +305,11 @@ const ExamplesStack = () => (
       component={NestedStackPop}
       name={ScreenNames.NESTED_STACK_POP}
       options={options[ScreenNames.NESTED_STACK_POP]}
+    />
+    <Stack.Screen
+      component={ScrollingSource}
+      name={ScreenNames.SCROLLING_SOURCE}
+      options={options[ScreenNames.SCROLLING_SOURCE]}
     />
   </Stack.Navigator>
 );

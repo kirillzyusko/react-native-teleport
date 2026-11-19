@@ -20,7 +20,7 @@ class PortalView(
   PortalViewLifecycle {
   private var hostName: String? = null
   private var currentHost: PortalHostView? = null
-  private val layoutStateController = PortalLayoutStateController(this)
+  private val layoutStateController = PortalLayoutStateController()
   private val ownChildren: MutableList<View> = ArrayList()
 
   internal val isTeleported: Boolean
@@ -29,7 +29,7 @@ class PortalView(
   // region ViewManager methods
   override fun setStateWrapper(wrapper: StateWrapper?) {
     layoutStateController.setStateWrapper(wrapper)
-    layoutStateController.updateIfNeeded(hostName, currentHost)
+    layoutStateController.updateIfNeeded(currentHost)
   }
 
   override fun setHostName(name: String?) {
@@ -41,7 +41,7 @@ class PortalView(
     name?.let { PortalRegistry.registerPendingPortal(it, this) }
 
     moveChildrenTo(PortalRegistry.getHost(name))
-    layoutStateController.updateIfNeeded(hostName, currentHost)
+    layoutStateController.updateIfNeeded(currentHost)
   }
 
   override fun cleanup() {
@@ -58,11 +58,11 @@ class PortalView(
   // region Host lifecycle callbacks
   internal fun onHostChanged() {
     moveChildrenTo(PortalRegistry.getHost(hostName))
-    layoutStateController.updateIfNeeded(hostName, currentHost)
+    layoutStateController.updateIfNeeded(currentHost)
   }
 
   internal fun onHostLayoutChanged() {
-    layoutStateController.updateIfNeeded(hostName, currentHost)
+    layoutStateController.updateIfNeeded(currentHost)
   }
   // endregion
 
@@ -240,29 +240,6 @@ class PortalView(
     } else {
       super.removeViewAt(index)
     }
-  }
-  // endregion
-
-  // region Lifecycle
-  override fun onAttachedToWindow() {
-    super.onAttachedToWindow()
-    layoutStateController.updateIfNeeded(hostName, currentHost)
-  }
-
-  override fun onDetachedFromWindow() {
-    layoutStateController.resetIfNeeded()
-    super.onDetachedFromWindow()
-  }
-
-  override fun onLayout(
-    changed: Boolean,
-    left: Int,
-    top: Int,
-    right: Int,
-    bottom: Int,
-  ) {
-    super.onLayout(changed, left, top, right, bottom)
-    layoutStateController.updateIfNeeded(hostName, currentHost)
   }
   // endregion
 

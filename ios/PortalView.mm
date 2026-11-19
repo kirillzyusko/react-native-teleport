@@ -53,27 +53,17 @@ using namespace facebook::react;
   return self;
 }
 
-- (CGRect)screenRectForView:(UIView *)view
-{
-  if (!view.window) {
-    return CGRectNull;
-  }
-
-  return [view convertRect:view.bounds toCoordinateSpace:view.window.screen.coordinateSpace];
-}
-
-- (void)resetPortalLayoutStateIfNeeded
+- (void)publishPortalLayoutState:(PortalViewState)newData
 {
   if (!_state) {
     return;
   }
 
-  PortalViewState newData = {};
   _state->updateState(
       [=](const PortalViewShadowNode::ConcreteState::Data &oldData)
           -> PortalViewShadowNode::ConcreteState::SharedData {
         if (oldData.hostWidth == newData.hostWidth && oldData.hostHeight == newData.hostHeight &&
-            oldData.offsetX == newData.offsetX && oldData.offsetY == newData.offsetY) {
+            oldData.hostTag == newData.hostTag) {
           return nullptr;
         }
 
@@ -83,43 +73,23 @@ using namespace facebook::react;
 
 - (void)updatePortalLayoutStateIfNeeded
 {
-  if (!_state) {
-    return;
-  }
-
   if (!self.hostName || ![self.targetView isKindOfClass:[PortalHostView class]]) {
-    [self resetPortalLayoutStateIfNeeded];
+    PortalViewState emptyData = {};
+    [self publishPortalLayoutState:emptyData];
     return;
   }
 
-  CGRect sourceRect = [self screenRectForView:self];
-  CGRect hostRect = [self screenRectForView:self.targetView];
-
-  if (CGRectIsNull(sourceRect) || CGRectIsNull(hostRect)) {
-    return;
-  }
-
-  // Children are physically mounted under the host, but measured through this
-  // PortalView shadow node. Store the host's native layout so Fabric
-  // measurement follows the destination after it re-layouts.
+  // Children are physically mounted under the host, but laid out through this
+  // PortalView shadow node. Publish the host they live in and its native size,
+  // so Fabric can size and measure them against the destination.
   CGSize hostSize = self.targetView.bounds.size;
 
   PortalViewState newData = {
       static_cast<Float>(hostSize.width),
       static_cast<Float>(hostSize.height),
-      static_cast<Float>(hostRect.origin.x - sourceRect.origin.x),
-      static_cast<Float>(hostRect.origin.y - sourceRect.origin.y)};
+      static_cast<int>(self.targetView.tag)};
 
-  _state->updateState(
-      [=](const PortalViewShadowNode::ConcreteState::Data &oldData)
-          -> PortalViewShadowNode::ConcreteState::SharedData {
-        if (oldData.hostWidth == newData.hostWidth && oldData.hostHeight == newData.hostHeight &&
-            oldData.offsetX == newData.offsetX && oldData.offsetY == newData.offsetY) {
-          return nullptr;
-        }
-
-        return std::make_shared<const PortalViewShadowNode::ConcreteState::Data>(newData);
-      });
+  [self publishPortalLayoutState:newData];
 }
 
 - (void)moveOwnChildrenToTarget:(UIView *)target
@@ -231,19 +201,11 @@ using namespace facebook::react;
     [self moveOwnChildrenToTarget:newTarget];
   }
 
-  if (!hostView) {
-    [self resetPortalLayoutStateIfNeeded];
-  }
+  [self updatePortalLayoutStateIfNeeded];
 }
 
 - (void)onHostLayoutChanged
 {
-  [self updatePortalLayoutStateIfNeeded];
-}
-
-- (void)layoutSubviews
-{
-  [super layoutSubviews];
   [self updatePortalLayoutStateIfNeeded];
 }
 

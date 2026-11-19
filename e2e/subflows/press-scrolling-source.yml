@@ -1,0 +1,25 @@
+appId: teleport.example
+---
+# A zero-movement tap can pass with stale measurements. Exercise Pressability's
+# move-time bounds check as in the existing bottom-sheet regression flow.
+- runFlow:
+    when:
+      platform: Web
+    commands:
+      - tapOn:
+          id: "increment-portal"
+# The finger moves to the left: since iOS 26 a rightward movement that starts
+# inside a screen begins the back swipe, which cancels the touch.
+- runFlow:
+    when:
+      true: ${maestro.platform == 'ios' || maestro.platform == 'android'}
+    commands:
+      - swipe:
+          label: "Press, move, hold, and release Increment"
+          from:
+            id: "increment-portal"
+          direction: LEFT
+          duration: 3000
+      # The fixture compares `measure` with the position reported by the
+      # touch. Sub-point differences come from pixel rounding.
+      - assertVisible: "Delta: -?0(\\.\\d)?, -?0(\\.\\d)?"
