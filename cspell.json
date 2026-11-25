@@ -100,7 +100,8 @@
     "performancetimeline",
     "jsinspector",
     "jsinspectortracing",
-    "moderntracing"
+    "moderntracing",
+    "Subviews"
   ],
   "ignorePaths": [
     "node_modules",
