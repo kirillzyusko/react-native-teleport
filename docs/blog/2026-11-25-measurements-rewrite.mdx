@@ -1,6 +1,6 @@
 ---
 slug: 1-3-0-measurements-rewrite
-title: "What's coming in 1.3.0: teleported views always know where they are 🧭"
+title: "Version 1.3.0: teleported views always know where they are 🧭"
 authors: [kirill]
 tags: [react-native, teleport, fabric, shadow-tree, release]
 keywords:
@@ -18,7 +18,7 @@ keywords:
 
 `react-native-teleport` **1.3.0** is on its way. This release **rewrites how Fabric measures teleported content**: instead of keeping a pre-calculated offset in sync with the screen, a teleported `Portal` now looks up the position of its host directly in the shadow tree.
 
-The result: `measure()` and `Pressable` keep working after you scroll, and a whole class of "stale position" bugs is gone for good.
+The result: `measure()` and `Pressable` keep working after you scroll, and a whole class of "stale position" bugs is gone for good!
 
 <!-- truncate -->
 
@@ -27,15 +27,15 @@ The result: `measure()` and `Pressable` keep working after you scroll, and a who
 When you render something through a `Portal`, it lives in **two places at once**:
 
 - in the **React** tree (and in Fabric's **shadow tree**, which mirrors it) it's still a child of the `Portal`. This is what keeps context, state and props working;
-- on the **screen** (the native view hierarchy) it's a child of the `PortalHost`. This is where it's actually drawn.
+- on the **screen** (the native view hierarchy) it's a child of the `PortalHost`. This is where it's **actually drawn**.
 
 Most of the time nobody cares about this difference. But sometimes React Native asks: _"where exactly on the screen is this view?"_. `measure()` asks it, and `Pressable` asks it **all the time** while you hold your finger on a button: if the finger moves too far away from the button, the press gets cancelled.
 
-To answer this question Fabric walks **up the shadow tree** and adds up the positions of all parents. And in the shadow tree our button still sits inside the `Portal`, at its **old place**. So without any help Fabric points at the wrong spot.
+To answer this question Fabric walks **up the shadow tree** and adds up the positions of all parents. And in the shadow tree our button still sits inside the `Portal`, at its **old place**. So without any help Fabric points at the **wrong spot**.
 
 ## 🏠 The old way: "go to my old house and walk 3 blocks"
 
-Since [#150](https://github.com/kirillzyusko/react-native-teleport/pull/150) we helped Fabric with a correction. The native side measured where the host and the source are on the screen and stored the difference between them (`host − source`) as an offset in the portal state. Fabric then calculated the position as:
+Since `1.1.10` ([#150](https://github.com/kirillzyusko/react-native-teleport/pull/150)) we helped Fabric with a correction. The native side measured where the host and the source are on the screen and stored the difference between them (`host − source`) as an offset in the portal state. Fabric then calculated the position as:
 
 ```text
 position = Portal (shadow tree) + offset (native)
@@ -81,7 +81,7 @@ The two halves of the formula come from **two different worlds** that get update
 
 ## 🧭 The new way: just ask where the host is
 
-In 1.3.0 we stopped patching the formula and **removed the source from it entirely**.
+In `1.3.0` we stopped patching the formula and **removed the source from it entirely**.
 
 A teleported `Portal` is now marked as a **root node** in the shadow tree (the `RootNodeKind` trait). This is the same trick React Native uses for `<Modal>` and `react-native-screens` uses for `FullWindowOverlay` - both have the same _"lives here, drawn there"_ problem. When Fabric measures a view and reaches such a node, it **stops walking up**.
 
@@ -100,9 +100,9 @@ Back to the analogy: instead of _"old house + 3 blocks"_ you now hand out the **
 - **Less native code.** The native side now reports only _which_ host the children are mounted into and its size. The screen offset calculations and the layout and attachment hooks on iOS and Android are gone.
 - **One source of truth.** Layout, transforms and scroll offsets of the host's ancestors are taken exactly as Fabric knows them. A new way of moving something on the screen is covered automatically, instead of waiting for its own bug report and its own fix.
 
-On top of that, 1.3.0 removes a one-frame flash on Android when a `Portal` switches to another host ([#228](https://github.com/kirillzyusko/react-native-teleport/issues/228)): the `Portal` now takes the size of the new host in the same commit that changes `hostName`, instead of drawing one frame with the layout of the previous host.
+On top of that, `1.3.0` removes a one-frame flash on Android when a `Portal` switches to another host ([#228](https://github.com/kirillzyusko/react-native-teleport/issues/228)): the `Portal` now takes the size of the new host in the same commit that changes `hostName`, instead of drawing one frame with the layout of the previous host.
 
-## 📦 Why 1.3.0 and not 1.2.6?
+## 📦 Why `1.3.0` and not `1.2.6`?
 
 There are **no API changes** - your code stays exactly the same. But the way the library is linked into React Native **has changed**:
 
@@ -111,17 +111,6 @@ There are **no API changes** - your code stays exactly the same. But the way the
 
 Since this can affect your build, it deserves a minor version rather than a patch that you might pull in without noticing.
 
-## 🧐 Things to be aware of
-
-Because a teleported `Portal` is now a root node, React Native treats it like a `<Modal>` in a few more places:
-
-- `measureLayout` from teleported content to an ancestor outside of the `Portal` stops at the `Portal`;
-- `LayoutAnimation` applies the changes of the portal view itself immediately (its children are still animated);
-- view culling (`enableViewCulling`) doesn't cull teleported content by the visible frame of the source `ScrollView`;
-- the keyboard focus search of an Android `ScrollView` with `removeClippedSubviews` skips teleported content.
-
-In most cases this matches where the content actually is on the screen. But if you relied on the old behavior - let me know.
-
 ## 🚀 Upgrading
 
 ```sh
@@ -129,8 +118,8 @@ yarn add react-native-teleport@1.3.0
 cd ios && pod install
 ```
 
+:::info React-native < 0.78
 If you are on React Native older than 0.78 - stay on 1.2.x until you upgrade React Native.
-
-And one small bonus not related to the package itself: the [Instagram](/docs/recipes/instagram-shared-transitions) and [Photos](/docs/recipes/photo-gallery-transitions) recipes no longer need the `useMeasure` workaround for Android edge-to-edge - since React Native 0.86 you can call `measureInWindow` directly.
+:::
 
 If you notice a wrong position, a cancelled press or a build issue after upgrading, please [open an issue](https://github.com/kirillzyusko/react-native-teleport/issues) with your React Native version and a reproduction.
