@@ -1,0 +1,196 @@
+<?xml version="1.0" encoding="utf-8"?><?xml-stylesheet type="text/xsl" href="atom.xsl"?>
+<feed xmlns="http://www.w3.org/2005/Atom">
+    <id>https://kirillzyusko.github.io/react-native-teleport/pr-preview/pr-230/blog</id>
+    <title>Teleport Blog</title>
+    <updated>2026-11-25T00:00:00.000Z</updated>
+    <generator>https://github.com/jpmonette/feed</generator>
+    <link rel="alternate" href="https://kirillzyusko.github.io/react-native-teleport/pr-preview/pr-230/blog"/>
+    <subtitle>Teleport Blog</subtitle>
+    <icon>https://kirillzyusko.github.io/react-native-teleport/pr-preview/pr-230/img/favicon.ico</icon>
+    <entry>
+        <title type="html"><![CDATA[What's coming in 1.3.0: teleported views always know where they are 🧭]]></title>
+        <id>https://kirillzyusko.github.io/react-native-teleport/pr-preview/pr-230/blog/1-3-0-measurements-rewrite</id>
+        <link href="https://kirillzyusko.github.io/react-native-teleport/pr-preview/pr-230/blog/1-3-0-measurements-rewrite"/>
+        <updated>2026-11-25T00:00:00.000Z</updated>
+        <summary type="html"><![CDATA[react-native-teleport 1.3.0 is on its way. This release rewrites how Fabric measures teleported content: instead of keeping a pre-calculated offset in sync with the screen, a teleported Portal now looks up the position of its host directly in the shadow tree.]]></summary>
+        <content type="html"><![CDATA[<p><code>react-native-teleport</code> <strong>1.3.0</strong> is on its way. This release <strong>rewrites how Fabric measures teleported content</strong>: instead of keeping a pre-calculated offset in sync with the screen, a teleported <code>Portal</code> now looks up the position of its host directly in the shadow tree.</p>
+<p>The result: <code>measure()</code> and <code>Pressable</code> keep working after you scroll, and a whole class of "stale position" bugs is gone for good.</p>
+<h2 class="anchor anchorWithStickyNavbar_LWe7" id="️-one-view-two-addresses">🗺️ One view, two addresses<a href="https://kirillzyusko.github.io/react-native-teleport/pr-preview/pr-230/blog/1-3-0-measurements-rewrite#%EF%B8%8F-one-view-two-addresses" class="hash-link" aria-label="Direct link to 🗺️ One view, two addresses" title="Direct link to 🗺️ One view, two addresses">​</a></h2>
+<p>When you render something through a <code>Portal</code>, it lives in <strong>two places at once</strong>:</p>
+<ul>
+<li>in the <strong>React</strong> tree (and in Fabric's <strong>shadow tree</strong>, which mirrors it) it's still a child of the <code>Portal</code>. This is what keeps context, state and props working;</li>
+<li>on the <strong>screen</strong> (the native view hierarchy) it's a child of the <code>PortalHost</code>. This is where it's actually drawn.</li>
+</ul>
+<p>Most of the time nobody cares about this difference. But sometimes React Native asks: <em>"where exactly on the screen is this view?"</em>. <code>measure()</code> asks it, and <code>Pressable</code> asks it <strong>all the time</strong> while you hold your finger on a button: if the finger moves too far away from the button, the press gets cancelled.</p>
+<p>To answer this question Fabric walks <strong>up the shadow tree</strong> and adds up the positions of all parents. And in the shadow tree our button still sits inside the <code>Portal</code>, at its <strong>old place</strong>. So without any help Fabric points at the wrong spot.</p>
+<h2 class="anchor anchorWithStickyNavbar_LWe7" id="-the-old-way-go-to-my-old-house-and-walk-3-blocks">🏠 The old way: "go to my old house and walk 3 blocks"<a href="https://kirillzyusko.github.io/react-native-teleport/pr-preview/pr-230/blog/1-3-0-measurements-rewrite#-the-old-way-go-to-my-old-house-and-walk-3-blocks" class="hash-link" aria-label="Direct link to 🏠 The old way: &quot;go to my old house and walk 3 blocks&quot;" title="Direct link to 🏠 The old way: &quot;go to my old house and walk 3 blocks&quot;">​</a></h2>
+<p>Since <a href="https://github.com/kirillzyusko/react-native-teleport/pull/150" target="_blank" rel="noopener noreferrer">#150</a> we helped Fabric with a correction. The native side measured where the host and the source are on the screen and stored the difference between them (<code>host − source</code>) as an offset in the portal state. Fabric then calculated the position as:</p>
+<div class="language-text codeBlockContainer_Ckt0 theme-code-block" style="--prism-color:#393A34;--prism-background-color:#f6f8fa"><div class="codeBlockContent_QJqH"><pre tabindex="0" class="prism-code language-text codeBlock_bY9V thin-scrollbar" style="color:#393A34;background-color:#f6f8fa"><code class="codeBlockLines_e6Vv"><span class="token-line" style="color:#393A34"><span class="token plain">position = Portal (shadow tree) + offset (native)</span><br></span></code></pre></div></div>
+<p>Think of it as directions like <em>"go to my old house, then walk 3 blocks east"</em>. It works perfectly - as long as <strong>the old house doesn't move</strong>.</p>
+<p>But it can! Declare a <code>Portal</code> inside a <code>ScrollView</code> and scroll it: the first part of the formula changes (Fabric knows about the scroll), while the second part stays the same (scrolling doesn't trigger any layout callback on the native side, so nobody recalculates the "3 blocks"). Now the answer is off by exactly the scroll distance, and <code>Pressable</code> cancels your press as soon as the finger moves a little (<a href="https://github.com/kirillzyusko/react-native-teleport/issues/220" target="_blank" rel="noopener noreferrer">#220</a>):</p>
+<!-- -->
+<table><tbody><tr style="border:none"><td style="border:none"><img decoding="async" loading="lazy" width="280" alt="1.2.5: after scrolling the source by 240 the measured position is off by 240 and the press is cancelled" src="https://kirillzyusko.github.io/react-native-teleport/pr-preview/pr-230/assets/images/scrolled-source-before-bbf7df78a3fa51848c842e7414a795ec.png" class="img_ev3q"></td><td style="border:none"><img decoding="async" loading="lazy" width="280" alt="1.3.0: after scrolling the source by 240 the measured position matches the actual one and the press is counted" src="https://kirillzyusko.github.io/react-native-teleport/pr-preview/pr-230/assets/images/scrolled-source-after-a99add2fdd37db34464725c17dada1dc.png" class="img_ev3q"></td></tr><tr style="border:none;background-color:#00000000"><td style="border:none;max-width:400px;text-align:center"><i>1.2.5: the measured position is off by the scroll distance (240), the second press is cancelled</i></td><td style="border:none;max-width:400px;text-align:center"><i>1.3.0: the measured position matches the actual one, the press is counted</i></td></tr></tbody></table>
+<p>The two halves of the formula come from <strong>two different worlds</strong> that get updated at <strong>different moments</strong>. We had already fixed another case where these two parts drifted apart (<a href="https://github.com/kirillzyusko/react-native-teleport/pull/172" target="_blank" rel="noopener noreferrer">#172</a>), and every such fix meant one more native hook whose only job was to keep two numbers in sync. Recalculating the offset on every frame would have worked too, but then every teleported view would cost you work on <strong>every frame</strong>, even when nothing moves.</p>
+<h2 class="anchor anchorWithStickyNavbar_LWe7" id="-the-new-way-just-ask-where-the-host-is">🧭 The new way: just ask where the host is<a href="https://kirillzyusko.github.io/react-native-teleport/pr-preview/pr-230/blog/1-3-0-measurements-rewrite#-the-new-way-just-ask-where-the-host-is" class="hash-link" aria-label="Direct link to 🧭 The new way: just ask where the host is" title="Direct link to 🧭 The new way: just ask where the host is">​</a></h2>
+<p>In 1.3.0 we stopped patching the formula and <strong>removed the source from it entirely</strong>.</p>
+<p>A teleported <code>Portal</code> is now marked as a <strong>root node</strong> in the shadow tree (the <code>RootNodeKind</code> trait). This is the same trick React Native uses for <code>&lt;Modal&gt;</code> and <code>react-native-screens</code> uses for <code>FullWindowOverlay</code> - both have the same <em>"lives here, drawn there"</em> problem. When Fabric measures a view and reaches such a node, it <strong>stops walking up</strong>.</p>
+<p>At that point the <code>Portal</code> tells Fabric where to continue from: the <strong>position of the host</strong>, read from <strong>the same revision of the shadow tree</strong> that is being measured.</p>
+<div class="language-text codeBlockContainer_Ckt0 theme-code-block" style="--prism-color:#393A34;--prism-background-color:#f6f8fa"><div class="codeBlockContent_QJqH"><pre tabindex="0" class="prism-code language-text codeBlock_bY9V thin-scrollbar" style="color:#393A34;background-color:#f6f8fa"><code class="codeBlockLines_e6Vv"><span class="token-line" style="color:#393A34"><span class="token plain">position = host (shadow tree)</span><br></span></code></pre></div></div>
+<p>Back to the analogy: instead of <em>"old house + 3 blocks"</em> you now hand out the <strong>real address</strong>. Scroll the source, scroll the host, transform, rotate, re-layout - the answer is calculated at the moment of the question, from the data Fabric already has.</p>
+<h2 class="anchor anchorWithStickyNavbar_LWe7" id="-why-its-better">✨ Why it's better<a href="https://kirillzyusko.github.io/react-native-teleport/pr-preview/pr-230/blog/1-3-0-measurements-rewrite#-why-its-better" class="hash-link" aria-label="Direct link to ✨ Why it's better" title="Direct link to ✨ Why it's better">​</a></h2>
+<ul>
+<li><strong>Nothing can get stale.</strong> There is no cached offset anymore, so there is nothing to keep in sync. Scrolling the source and scrolling the host are fixed by the same change.</li>
+<li><strong>Nothing runs per frame.</strong> The position is calculated only when somebody asks for it.</li>
+<li><strong>Less native code.</strong> The native side now reports only <em>which</em> host the children are mounted into and its size. The screen offset calculations and the layout and attachment hooks on iOS and Android are gone.</li>
+<li><strong>One source of truth.</strong> Layout, transforms and scroll offsets of the host's ancestors are taken exactly as Fabric knows them. A new way of moving something on the screen is covered automatically, instead of waiting for its own bug report and its own fix.</li>
+</ul>
+<p>On top of that, 1.3.0 removes a one-frame flash on Android when a <code>Portal</code> switches to another host (<a href="https://github.com/kirillzyusko/react-native-teleport/issues/228" target="_blank" rel="noopener noreferrer">#228</a>): the <code>Portal</code> now takes the size of the new host in the same commit that changes <code>hostName</code>, instead of drawing one frame with the layout of the previous host.</p>
+<h2 class="anchor anchorWithStickyNavbar_LWe7" id="-why-130-and-not-126">📦 Why 1.3.0 and not 1.2.6?<a href="https://kirillzyusko.github.io/react-native-teleport/pr-preview/pr-230/blog/1-3-0-measurements-rewrite#-why-130-and-not-126" class="hash-link" aria-label="Direct link to 📦 Why 1.3.0 and not 1.2.6?" title="Direct link to 📦 Why 1.3.0 and not 1.2.6?">​</a></h2>
+<p>There are <strong>no API changes</strong> - your code stays exactly the same. But the way the library is linked into React Native <strong>has changed</strong>:</p>
+<ul>
+<li>to read the shadow tree the library now uses Fabric's <code>UIManager</code> (through <code>ShadowTreeRevisionProvider</code>) and <code>RuntimeScheduler</code>. Everything it needs is available starting from <strong>React Native 0.78</strong>, so this is the new <strong>minimum supported version</strong>;</li>
+<li>on iOS the library depends on more React Native pods. With <code>use_frameworks!</code> and React Native built from source, the podspec now declares <code>React-runtimescheduler</code>, <code>React-performancetimeline</code> and (up to React Native 0.81) <code>React-jsinspectortracing</code> for you.</li>
+</ul>
+<p>Since this can affect your build, it deserves a minor version rather than a patch that you might pull in without noticing.</p>
+<h2 class="anchor anchorWithStickyNavbar_LWe7" id="-things-to-be-aware-of">🧐 Things to be aware of<a href="https://kirillzyusko.github.io/react-native-teleport/pr-preview/pr-230/blog/1-3-0-measurements-rewrite#-things-to-be-aware-of" class="hash-link" aria-label="Direct link to 🧐 Things to be aware of" title="Direct link to 🧐 Things to be aware of">​</a></h2>
+<p>Because a teleported <code>Portal</code> is now a root node, React Native treats it like a <code>&lt;Modal&gt;</code> in a few more places:</p>
+<ul>
+<li><code>measureLayout</code> from teleported content to an ancestor outside of the <code>Portal</code> stops at the <code>Portal</code>;</li>
+<li><code>LayoutAnimation</code> applies the changes of the portal view itself immediately (its children are still animated);</li>
+<li>view culling (<code>enableViewCulling</code>) doesn't cull teleported content by the visible frame of the source <code>ScrollView</code>;</li>
+<li>the keyboard focus search of an Android <code>ScrollView</code> with <code>removeClippedSubviews</code> skips teleported content.</li>
+</ul>
+<p>In most cases this matches where the content actually is on the screen. But if you relied on the old behavior - let me know.</p>
+<h2 class="anchor anchorWithStickyNavbar_LWe7" id="-upgrading">🚀 Upgrading<a href="https://kirillzyusko.github.io/react-native-teleport/pr-preview/pr-230/blog/1-3-0-measurements-rewrite#-upgrading" class="hash-link" aria-label="Direct link to 🚀 Upgrading" title="Direct link to 🚀 Upgrading">​</a></h2>
+<div class="language-sh codeBlockContainer_Ckt0 theme-code-block" style="--prism-color:#393A34;--prism-background-color:#f6f8fa"><div class="codeBlockContent_QJqH"><pre tabindex="0" class="prism-code language-sh codeBlock_bY9V thin-scrollbar" style="color:#393A34;background-color:#f6f8fa"><code class="codeBlockLines_e6Vv"><span class="token-line" style="color:#393A34"><span class="token function" style="color:#d73a49">yarn</span><span class="token plain"> </span><span class="token function" style="color:#d73a49">add</span><span class="token plain"> react-native-teleport@1.3.0</span><br></span><span class="token-line" style="color:#393A34"><span class="token plain"></span><span class="token builtin class-name">cd</span><span class="token plain"> ios </span><span class="token operator" style="color:#393A34">&amp;&amp;</span><span class="token plain"> pod </span><span class="token function" style="color:#d73a49">install</span><br></span></code></pre></div></div>
+<p>If you are on React Native older than 0.78 - stay on 1.2.x until you upgrade React Native.</p>
+<p>And one small bonus not related to the package itself: the <a href="https://kirillzyusko.github.io/react-native-teleport/pr-preview/pr-230/docs/recipes/instagram-shared-transitions">Instagram</a> and <a href="https://kirillzyusko.github.io/react-native-teleport/pr-preview/pr-230/docs/recipes/photo-gallery-transitions">Photos</a> recipes no longer need the <code>useMeasure</code> workaround for Android edge-to-edge - since React Native 0.86 you can call <code>measureInWindow</code> directly.</p>
+<p>If you notice a wrong position, a cancelled press or a build issue after upgrading, please <a href="https://github.com/kirillzyusko/react-native-teleport/issues" target="_blank" rel="noopener noreferrer">open an issue</a> with your React Native version and a reproduction.</p>]]></content>
+        <author>
+            <name>Kirill Zyusko</name>
+            <uri>https://github.com/kirillzyusko</uri>
+        </author>
+        <category label="react-native" term="react-native"/>
+        <category label="teleport" term="teleport"/>
+        <category label="fabric" term="fabric"/>
+        <category label="shadow-tree" term="shadow-tree"/>
+        <category label="release" term="release"/>
+    </entry>
+    <entry>
+        <title type="html"><![CDATA[What's coming in 1.2.0: smoother teleportation on Android 🚀]]></title>
+        <id>https://kirillzyusko.github.io/react-native-teleport/pr-preview/pr-230/blog/1-2-0-android-fast-reparenting</id>
+        <link href="https://kirillzyusko.github.io/react-native-teleport/pr-preview/pr-230/blog/1-2-0-android-fast-reparenting"/>
+        <updated>2026-08-23T00:00:00.000Z</updated>
+        <summary type="html"><![CDATA[react-native-teleport 1.2.0 is just around the corner. This release focuses on one major improvement: a reworked reparenting mechanism on Android.]]></summary>
+        <content type="html"><![CDATA[<p><code>react-native-teleport</code> <strong>1.2.0</strong> is just around the corner. This release focuses on one major improvement: a <strong>reworked reparenting</strong> mechanism on <strong>Android</strong>.</p>
+<p>With the new fast path, you should see in most cases no empty frames while teleporting views. The difference is especially noticeable for surface-backed content such as videos and maps.</p>
+<h2 class="anchor anchorWithStickyNavbar_LWe7" id="-why-did-empty-frames-appear">⬜ Why did empty frames appear?<a href="https://kirillzyusko.github.io/react-native-teleport/pr-preview/pr-230/blog/1-2-0-android-fast-reparenting#-why-did-empty-frames-appear" class="hash-link" aria-label="Direct link to ⬜ Why did empty frames appear?" title="Direct link to ⬜ Why did empty frames appear?">​</a></h2>
+<p>Teleport moves an existing native view between parents without remounting the React component. On Android, that move previously used the regular <code>removeView()</code> and <code>addView()</code> APIs.</p>
+<p>Although the same React component and native view were preserved, Android temporarily detached the view from the window. For content backed by a <code>SurfaceView</code> or <code>TextureView</code>, that could disconnect or recreate the rendering surface. While Android waited for the next frame, the background underneath became visible as a black, white, or otherwise empty flash.</p>
+<p>This was easier to spot on older devices, but it could also happen intermittently on newer versions of Android.</p>
+<h2 class="anchor anchorWithStickyNavbar_LWe7" id="-a-faster-reparenting-path">🚀 A faster reparenting path<a href="https://kirillzyusko.github.io/react-native-teleport/pr-preview/pr-230/blog/1-2-0-android-fast-reparenting#-a-faster-reparenting-path" class="hash-link" aria-label="Direct link to 🚀 A faster reparenting path" title="Direct link to 🚀 A faster reparenting path">​</a></h2>
+<p>In 1.2.0, Teleport can move an already attached view using Android's lightweight <code>detachViewFromParent()</code> and <code>attachViewToParent()</code> APIs.</p>
+<p>The view is removed from one parent's child list and inserted into the other <strong>synchronously, without leaving the Android window</strong>. This keeps its rendering resources alive and lets the compositor continue displaying the previously submitted frame throughout the move.</p>
+<p>In practice, teleporting videos, maps, and other surface-backed views should now feel much more seamless.</p>
+<!-- -->
+<table><tbody><tr style="border:none"><td style="border:none"><div class="center video"><video autoplay="" loop="" muted="" playsinline="" height="100%" src="/react-native-teleport/pr-preview/pr-230/video/fast-reparenting-before.mp4" width="50%" aria-label="Android teleportation with regular reparenting"></video></div></td><td style="border:none"><div class="center video"><video autoplay="" loop="" muted="" playsinline="" height="100%" src="/react-native-teleport/pr-preview/pr-230/video/fast-reparenting-after.mp4" width="51%" aria-label="Android teleportation with the fast reparenting path"></video></div></td></tr><tr style="border:none;background-color:#00000000"><td style="border:none;max-width:400px;text-align:center"><i>Video is flickering while teleporting</i></td><td style="border:none;max-width:400px;text-align:center"><i>Video gets teleported without flickering</i></td></tr></tbody></table>
+<h2 class="anchor anchorWithStickyNavbar_LWe7" id="️-safe-by-default">🛡️ Safe by default<a href="https://kirillzyusko.github.io/react-native-teleport/pr-preview/pr-230/blog/1-2-0-android-fast-reparenting#%EF%B8%8F-safe-by-default" class="hash-link" aria-label="Direct link to 🛡️ Safe by default" title="Direct link to 🛡️ Safe by default">​</a></h2>
+<p>The fast path is used only when Teleport can safely preserve the view's window attachment - for example, when both parents belong to the same Android window and no active focus or layout transition requires the full detach lifecycle.</p>
+<p>When those conditions are not met, Teleport automatically falls back to the existing <code>removeView()</code> and <code>addView()</code> behavior. There is no new API or configuration to adopt: the optimization happens internally.</p>
+<h2 class="anchor anchorWithStickyNavbar_LWe7" id="-tested-against-empty-frames">🧪 Tested against empty frames<a href="https://kirillzyusko.github.io/react-native-teleport/pr-preview/pr-230/blog/1-2-0-android-fast-reparenting#-tested-against-empty-frames" class="hash-link" aria-label="Direct link to 🧪 Tested against empty frames" title="Direct link to 🧪 Tested against empty frames">​</a></h2>
+<p>Alongside the new mechanism, we added an end-to-end regression test that records a video teleportation and checks the result for empty frames. This gives us a way to catch the original visual glitch automatically before it reaches another release.</p>
+<p>The fast path has also been tested with video and map content across Android API levels 28, 31, and 36.</p>
+<h2 class="anchor anchorWithStickyNavbar_LWe7" id="-upgrading">✨ Upgrading<a href="https://kirillzyusko.github.io/react-native-teleport/pr-preview/pr-230/blog/1-2-0-android-fast-reparenting#-upgrading" class="hash-link" aria-label="Direct link to ✨ Upgrading" title="Direct link to ✨ Upgrading">​</a></h2>
+<p>There are no breaking API changes in 1.2.0. Upgrade as usual:</p>
+<div class="language-sh codeBlockContainer_Ckt0 theme-code-block" style="--prism-color:#393A34;--prism-background-color:#f6f8fa"><div class="codeBlockContent_QJqH"><pre tabindex="0" class="prism-code language-sh codeBlock_bY9V thin-scrollbar" style="color:#393A34;background-color:#f6f8fa"><code class="codeBlockLines_e6Vv"><span class="token-line" style="color:#393A34"><span class="token function" style="color:#d73a49">yarn</span><span class="token plain"> </span><span class="token function" style="color:#d73a49">add</span><span class="token plain"> react-native-teleport@1.2.0</span><br></span></code></pre></div></div>
+<p>That's it - existing teleports will automatically use the new Android fast path whenever it is safe to do so.</p>
+<p>If you still notice an empty frame after upgrading, please <a href="https://github.com/kirillzyusko/react-native-teleport/issues" target="_blank" rel="noopener noreferrer">open an issue</a> with your device, Android version, and the type of view being teleported.</p>]]></content>
+        <author>
+            <name>Kirill Zyusko</name>
+            <uri>https://github.com/kirillzyusko</uri>
+        </author>
+        <category label="react-native" term="react-native"/>
+        <category label="android" term="android"/>
+        <category label="teleport" term="teleport"/>
+        <category label="reparenting" term="reparenting"/>
+        <category label="release" term="release"/>
+    </entry>
+    <entry>
+        <title type="html"><![CDATA[Illusion of portals in React Native 🛸]]></title>
+        <id>https://kirillzyusko.github.io/react-native-teleport/pr-preview/pr-230/blog/illusion-of-portals</id>
+        <link href="https://kirillzyusko.github.io/react-native-teleport/pr-preview/pr-230/blog/illusion-of-portals"/>
+        <updated>2026-06-23T00:00:00.000Z</updated>
+        <summary type="html"><![CDATA[Ever wondered what really happens when you render something through a portal in React Native?]]></summary>
+        <content type="html"><![CDATA[<p><strong>Ever wondered what really happens when you render something through a portal in React Native?</strong></p>
+<p>In my talk <strong>The Illusion of Portals in React Native</strong> at <a href="https://appjs.co/" target="_blank" rel="noopener noreferrer">App.js Conf</a>, we look beyond the familiar <strong>Portal</strong> API to understand how different implementations actually work, how they affect the React tree, and what a true portal should look like internally — from the illusion created at the React layer to native portals, view re-parenting, and the new possibilities they unlock.</p>
+<p>Step through the portal and join me for the ride!</p>
+<iframe width="560" height="315" src="https://www.youtube.com/embed/w90acmyrTXk" title="Illusion of Portals" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen=""></iframe>]]></content>
+        <author>
+            <name>Kirill Zyusko</name>
+            <uri>https://github.com/kirillzyusko</uri>
+        </author>
+        <category label="react-native" term="react-native"/>
+        <category label="portal" term="portal"/>
+        <category label="teleport" term="teleport"/>
+        <category label="reparenting" term="reparenting"/>
+    </entry>
+    <entry>
+        <title type="html"><![CDATA[Meet teleport!]]></title>
+        <id>https://kirillzyusko.github.io/react-native-teleport/pr-preview/pr-230/blog/welcome</id>
+        <link href="https://kirillzyusko.github.io/react-native-teleport/pr-preview/pr-230/blog/welcome"/>
+        <updated>2026-01-30T00:00:00.000Z</updated>
+        <summary type="html"><![CDATA[I'm excited to announce the first stable release of react-native-teleport! 🎉]]></summary>
+        <content type="html"><![CDATA[<p>I'm excited to announce the <strong>first stable release of <code>react-native-teleport</code></strong>! 🎉</p>
+<p>After extensive development, community feedback and integrating the lib into many prod apps, we've reached a big milestone: a <strong>production-ready</strong> portal solution that brings <strong>true native portals</strong> to react-native — something the framework has been missing for years.</p>
+<h2 class="anchor anchorWithStickyNavbar_LWe7" id="what-is-react-native-teleport">What is <code>react-native-teleport</code>?<a href="https://kirillzyusko.github.io/react-native-teleport/pr-preview/pr-230/blog/welcome#what-is-react-native-teleport" class="hash-link" aria-label="Direct link to what-is-react-native-teleport" title="Direct link to what-is-react-native-teleport">​</a></h2>
+<p><code>react-native-teleport</code> solves a fundamental problem in React Native development: it brings missing <a href="https://react.dev/reference/react-dom/createPortal" target="_blank" rel="noopener noreferrer">Portal</a> component to react-native.</p>
+<p>Historically, developers had to use JS based solutions to render modals, tooltips, overlays, and other components that need to visually appear in a different part of your UI tree. While they work, they have significant limitation: they <strong>physically</strong> render components in a <strong>different part of React tree</strong>, <strong>breaking context</strong> and bringing other related problems.</p>
+<p>The <code>react-native-teleport</code> solves this problem by moving rendering of components in the native layer. This library provides a <strong>declarative API</strong>, doesn't rely on <strong><em>internal</em></strong> React implementation details, and <strong>works identically</strong> on <strong>iOS, Android, and Web</strong>.</p>
+<h2 class="anchor anchorWithStickyNavbar_LWe7" id="not-only-portal">Not only Portal<a href="https://kirillzyusko.github.io/react-native-teleport/pr-preview/pr-230/blog/welcome#not-only-portal" class="hash-link" aria-label="Direct link to Not only Portal" title="Direct link to Not only Portal">​</a></h2>
+<p>As you may noticed from the library title this library is <strong>not only a portal solution</strong>. It also provides a <strong>re-parenting pattern</strong> that allows you to <strong>move existing components without unmounting or remounting</strong> them.</p>
+<p>With that technique you can build <strong>advanced and seamless</strong> transitions, implement <strong>shared-element-style</strong> transitions between screens, and more.</p>
+<p>For example you can implement photos app transitions like this without flickering, white/black screens, jumps and other distracting things:</p>
+<!-- -->
+<div class="center video"><video autoplay="" loop="" muted="" playsinline="" height="100%" src="/react-native-teleport/pr-preview/pr-230/video/photos.mp4" width="35%"></video></div>
+<br>
+<p>The great thing is that view is <strong>not re-created or destroyed</strong> when it's moved between different parents. This mean you can use this lib for stateful components, like <code>Video</code>/<code>Lottie</code> etc. and you can easily replicate patterns that you've seen in many well-known apps, for example you can re-build Instagram-like reels transition:</p>
+<div class="center video"><video autoplay="" loop="" muted="" playsinline="" height="100%" src="/react-native-teleport/pr-preview/pr-230/video/instagram.mp4" width="35%"></video></div>
+<br>
+<h2 class="anchor anchorWithStickyNavbar_LWe7" id="not-only-about-transitions-and-rendering-outside">Not only about transitions and rendering outside<a href="https://kirillzyusko.github.io/react-native-teleport/pr-preview/pr-230/blog/welcome#not-only-about-transitions-and-rendering-outside" class="hash-link" aria-label="Direct link to Not only about transitions and rendering outside" title="Direct link to Not only about transitions and rendering outside">​</a></h2>
+<p>Traditionally, React has three operations in its reconciliation mechanism: <strong>create</strong>, <strong>update</strong>, and <strong>destroy</strong>. When you <strong>move</strong> a component from one parent to another in the React tree, it gets <strong>destroyed</strong> and <strong>recreated</strong>.</p>
+<p>But effectively <code>react-native-teleport</code> <strong>unlocks a new dimension</strong> and introduces a fourth operation: <strong>move</strong>. This is a game-changer because it allows you to:</p>
+<h3 class="anchor anchorWithStickyNavbar_LWe7" id="pre-render-components-offscreen">Pre-render Components Offscreen<a href="https://kirillzyusko.github.io/react-native-teleport/pr-preview/pr-230/blog/welcome#pre-render-components-offscreen" class="hash-link" aria-label="Direct link to Pre-render Components Offscreen" title="Direct link to Pre-render Components Offscreen">​</a></h3>
+<p>You can render expensive components off-screen and move them into view only when needed. This is particularly useful for complex overlays, modals, or bottom sheets that require significant setup time.</p>
+<div class="language-tsx codeBlockContainer_Ckt0 theme-code-block" style="--prism-color:#393A34;--prism-background-color:#f6f8fa"><div class="codeBlockContent_QJqH"><pre tabindex="0" class="prism-code language-tsx codeBlock_bY9V thin-scrollbar" style="color:#393A34;background-color:#f6f8fa"><code class="codeBlockLines_e6Vv"><span class="token-line" style="color:#393A34"><span class="token comment" style="color:#999988;font-style:italic">// Pre-render the editor off-screen</span><span class="token plain"></span><br></span><span class="token-line" style="color:#393A34"><span class="token plain"></span><span class="token tag punctuation" style="color:#393A34">&lt;</span><span class="token tag class-name" style="color:#00009f">Portal</span><span class="token tag" style="color:#00009f"> </span><span class="token tag attr-name" style="color:#00a4db">hostName</span><span class="token tag script language-javascript script-punctuation punctuation" style="color:#393A34">=</span><span class="token tag script language-javascript punctuation" style="color:#393A34">{</span><span class="token tag script language-javascript" style="color:#00009f">used </span><span class="token tag script language-javascript operator" style="color:#393A34">?</span><span class="token tag script language-javascript" style="color:#00009f"> </span><span class="token tag script language-javascript string" style="color:#e3116c">"editor"</span><span class="token tag script language-javascript" style="color:#00009f"> </span><span class="token tag script language-javascript operator" style="color:#393A34">:</span><span class="token tag script language-javascript" style="color:#00009f"> </span><span class="token tag script language-javascript keyword" style="color:#00009f">undefined</span><span class="token tag script language-javascript punctuation" style="color:#393A34">}</span><span class="token tag punctuation" style="color:#393A34">&gt;</span><span class="token plain-text"></span><br></span><span class="token-line" style="color:#393A34"><span class="token plain-text">  </span><span class="token tag punctuation" style="color:#393A34">&lt;</span><span class="token tag class-name" style="color:#00009f">ExpensiveRichTextEditor</span><span class="token tag" style="color:#00009f"> </span><span class="token tag punctuation" style="color:#393A34">/&gt;</span><span class="token plain-text"></span><br></span><span class="token-line" style="color:#393A34"><span class="token plain-text"></span><span class="token tag punctuation" style="color:#393A34">&lt;/</span><span class="token tag class-name" style="color:#00009f">Portal</span><span class="token tag punctuation" style="color:#393A34">&gt;</span><span class="token plain"></span><br></span><span class="token-line" style="color:#393A34"><span class="token plain" style="display:inline-block"></span><br></span><span class="token-line" style="color:#393A34"><span class="token plain"></span><span class="token comment" style="color:#999988;font-style:italic">// Later, when user triggers an action, simply move it into view</span><span class="token plain"></span><br></span><span class="token-line" style="color:#393A34"><span class="token plain"></span><span class="token comment" style="color:#999988;font-style:italic">// No re-rendering, no state loss, just a native view reposition</span><br></span></code></pre></div></div>
+<h3 class="anchor anchorWithStickyNavbar_LWe7" id="re-use-views-between-screens">Re-use Views Between Screens<a href="https://kirillzyusko.github.io/react-native-teleport/pr-preview/pr-230/blog/welcome#re-use-views-between-screens" class="hash-link" aria-label="Direct link to Re-use Views Between Screens" title="Direct link to Re-use Views Between Screens">​</a></h3>
+<p>One of the most powerful patterns enabled by the "<strong>move</strong>" operation is <strong>view reuse across navigation transitions</strong>. You can render the same component instance on multiple screens and seamlessly move it as users navigate.</p>
+<p>Imagine you have the same component rendered twice on two different screens. If it's heavy for rendering a typical path is to dig into performance bottlenecks, fixing them etc. But with <code>react-native-teleport</code> you can <strong>simply move</strong> the component between screens 🤯</p>
+<h3 class="anchor anchorWithStickyNavbar_LWe7" id="and-more">And more<a href="https://kirillzyusko.github.io/react-native-teleport/pr-preview/pr-230/blog/welcome#and-more" class="hash-link" aria-label="Direct link to And more" title="Direct link to And more">​</a></h3>
+<p>I'm still exploring of what can be done with this library. Things that I discovered helped to build flicker free transitions while moving heavy views and helped to optimize performance from the angle that I never thought about (just re-using the view without re-creating it).</p>
+<p>But I continue to explore what other patterns and use cases can be enabled with this library. I'm also looking for feedback from the community and I'm open to suggestions and ideas.</p>
+<h2 class="anchor anchorWithStickyNavbar_LWe7" id="whats-next">What's Next?<a href="https://kirillzyusko.github.io/react-native-teleport/pr-preview/pr-230/blog/welcome#whats-next" class="hash-link" aria-label="Direct link to What's Next?" title="Direct link to What's Next?">​</a></h2>
+<p>I have exciting plans for future releases:</p>
+<ul>
+<li>🪞 Mirror support for advanced mirroring patterns</li>
+<li>🚀 Performance optimizations</li>
+<li>🤓 Additional platform support</li>
+<li>🙌 Community-driven features based on feedback</li>
+</ul>
+<h2 class="anchor anchorWithStickyNavbar_LWe7" id="thank-you">Thank You<a href="https://kirillzyusko.github.io/react-native-teleport/pr-preview/pr-230/blog/welcome#thank-you" class="hash-link" aria-label="Direct link to Thank You" title="Direct link to Thank You">​</a></h2>
+<p>This milestone wouldn't be possible without the incredible react-native community. Thank you to everyone who tested, provided feedback, reported issues, and contributed to making <code>react-native-teleport</code> better.</p>
+<p>If you find this library useful, please consider:</p>
+<ul>
+<li>⭐ Starring on <a href="https://github.com/kirillzyusko/react-native-teleport" target="_blank" rel="noopener noreferrer">GitHub</a></li>
+<li>📢 Sharing with the community</li>
+<li>🐛 Reporting issues and providing feedback</li>
+<li>🤝 Contributing improvements</li>
+</ul>]]></content>
+        <author>
+            <name>Kirill Zyusko</name>
+            <uri>https://github.com/kirillzyusko</uri>
+        </author>
+        <category label="portal" term="portal"/>
+        <category label="teleport" term="teleport"/>
+        <category label="react-native" term="react-native"/>
+    </entry>
+</feed>
