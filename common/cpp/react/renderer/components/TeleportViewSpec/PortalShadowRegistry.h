@@ -13,6 +13,8 @@ namespace facebook::react {
   struct HostSize {
     float width;
     float height;
+    // the host that has this size
+    Tag tag{0};
   };
 
   class PortalShadowRegistry {
